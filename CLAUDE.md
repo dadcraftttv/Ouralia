@@ -65,8 +65,11 @@ As of Oct 17:
   ring String, Rustle squash + Step duck (pocket), Pitch tracker / Pitch shifter / Sudden-sound detector New.
   Settings that use our C objects show " *" after their name. Kit levels were matched to Classic by measurement
   only; each kit's sound is one line per part in `app/src/main/assets/kits/<name>.txt`.
-- **Next on the kit plan** (ROADMAP 19): user kits (load a kit folder/zip with kit.txt + samples, a format page
-  for sound designers), then retire the stems player. Smaller open items: register Low for kit pads, kit drums
+- **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
+  reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
+- **Next on the kit plan** (ROADMAP 19): user kits stage 2, a sample engine in dcs_voice~ (drum one-shots,
+  pitched multi-samples, Java decodes the kit's files into Pd arrays), stage 3 a format page for sound designers,
+  then retire the stems player. Smaller open items: register Low for kit pads, kit drums
   in "Your steps" mode, the desktop app shows no Pd console prints.
 - **Release:** rc3 is with testers; rc4 not built yet (our pd-core, the unplug fix, input gain 1, and whatever of
   the above DadCraft approves). Rename to Ouralia (no USPTO/EUIPO hits) waits for release prep.

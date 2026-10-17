@@ -177,8 +177,24 @@ to date in the same commit when behaviour changes.
   lowend.txt: marimba melody at chance 0.45 (level 8), 808 bass decay 2.5 s drive 0.35 glide 90 (level 2.5), pad
   3 saws an octave down, attack 2 s, drums ktune 42 kdecay 900, hats at hchance 0.4, no pump. Kit tests play every
   note (chance and hchance dropped there; sparseness is test_dcs's, over 200 notes: 55-64 of 200 at 0.3).
-  Not yet: user kits, register Low for kit pads, kit drums in "Your steps" mode (the old step drums send no
-  drum_* messages).
+  **User kits** (Oct 17, step d, stage 1: text only; DadCraft chose kit.txt over kit.json, text kits before samples,
+  and presets that carry the kit's text): `files/kits/<NNN title>/kit.txt` (phone and desktop:
+  `~/.local/share/pdscenes/kits`; `Kits.userDir`, set in `ParamStore.loadOnce`), numbered in import order and listed
+  after the built-in kits (menu index BUILT_IN.length + n; Params `kit`/`kitp_*` ranges have room for MAX_USER 99,
+  `Kits.refreshChoices()` sets the menus; Android rows and desktop combos swap their adapter when `p.choices`
+  changes). Music tab "Your kits": Import kit (a kit.txt or a zip), Import kit folder (kit.txt at the top or one
+  folder down; the whole folder is kept, for samples later), How to make a kit, Delete a kit (its users go back to the
+  first choice, later kits move up: `Kits.afterDelete`, `ParamStore.kitDeleted`). An import plays at once as the Kit
+  and reports what won't play (`Kits.check`: unknown parts, settings, engines). The same text twice is one kit; a
+  copy of a built-in kit is the built-in one. **Presets carry user kits**: `toJson` adds `"kits": {paramId: text}`,
+  `parse` installs each (or finds an identical one) and points the setting at it; a user kit index without its text
+  plays Classic. So a deleted kit comes back when a preset that uses it is loaded. `Kits.send` now remembers each
+  part's settings, not the kit index: an edited kit resends only the parts that changed, a renumbering resends
+  nothing. **Desktop bench**: each second the app compares `Kits.signature()` (folders, kit.txt times and sizes)
+  and on a change refreshes the menus and resends (a saved kit plays at once). Tests: Q (install, reuse, menus,
+  edit, delete, preset round trip, check, folder one level down). Not yet: samples (stage 2: a sample engine in
+  dcs_voice~), a format page (stage 3), register Low for kit pads, kit drums in "Your steps" mode (the old step
+  drums send no drum_* messages).
 - Waiting on DadCraft's ears for both. Not in the tester guide (prototype). `dcs_derustle~` (Oct 17): see Pocket rustle. Ideas next: analog-style ladder filter,
   oversampled distortion/crush, a lighter pitch tracker than sigmund~, a dcs phaser, more glitch kinds.
 

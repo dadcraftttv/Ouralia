@@ -10,6 +10,7 @@ public class JSONObject {
   public double optDouble(String k,double d){ Object o=m.get(k); return o instanceof Number?((Number)o).doubleValue():d; }
   public int getInt(String k) throws JSONException { return (int)getDouble(k); }
   public boolean has(String k){ return m.containsKey(k); }
+  public int length(){ return m.size(); }
   public double getDouble(String k) throws JSONException { Object o=m.get(k); if(o instanceof Number) return ((Number)o).doubleValue(); throw new JSONException("not number: "+k); }
   public JSONObject getJSONObject(String k) throws JSONException { Object o=m.get(k); if(o instanceof JSONObject) return (JSONObject)o; throw new JSONException("not object: "+k); }
   public JSONObject optJSONObject(String k){ Object o=m.get(k); return o instanceof JSONObject?(JSONObject)o:null; }

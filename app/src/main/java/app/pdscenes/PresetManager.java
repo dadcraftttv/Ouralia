@@ -470,6 +470,10 @@ final class PresetManager {
             root.put("version", 1);
             root.put("name", name);
             root.put("values", vals);
+            JSONObject kits = userKits(values);
+            if (kits.length() > 0) {
+                root.put("kits", kits);
+            }
             return root.toString(2);
         } catch (JSONException e) {
             throw new IllegalStateException(e);
@@ -490,7 +494,49 @@ final class PresetManager {
         if (map.isEmpty()) {
             throw new JSONException("No known parameters in file");
         }
+        resolveUserKits(map, root.optJSONObject("kits"));
         return new Preset(root.optString("name", "Imported preset"), map);
+    }
+
+    /** The text of each user kit the values play (Kit, or a part's "from"), by Param id: a preset carries its user
+     *  kits, so a friend who loads it hears the same (DadCraft, Oct 17). */
+    private static JSONObject userKits(Map<String, Float> values) throws JSONException {
+        JSONObject kits = new JSONObject();
+        for (String id : Kits.PARAMS) {
+            Float v = values.get(id);
+            int index = v == null ? -1 : Math.round(v) - (Kits.ID.equals(id) ? 0 : 1);
+            String text = index >= Kits.BUILT_IN.length ? Kits.text(index) : null;
+            if (text != null) {
+                kits.put(id, text);
+            }
+        }
+        return kits;
+    }
+
+    /** Points a preset's user kit settings at this phone's copy of each kit, adding the kit if it isn't here (an
+     *  identical one is reused). A user kit the preset doesn't carry, or can't be added, plays as the first choice. */
+    private static void resolveUserKits(Map<String, Float> map, JSONObject kits) {
+        for (String id : Kits.PARAMS) {
+            Float v = map.get(id);
+            int offset = Kits.ID.equals(id) ? 0 : 1;
+            if (v == null || Math.round(v) - offset < Kits.BUILT_IN.length) {
+                continue;
+            }
+            float local = 0f;
+            String text = kits == null ? null : kits.optString(id, null);
+            if (text != null && Kits.hasParts(text)) {
+                try {
+                    int index = Kits.install(text);
+                    local = index < 0 ? 0f : index + offset;
+                } catch (IOException e) {
+                    // (no room or no kits folder: Classic)
+                }
+            }
+            map.put(id, local);
+        }
+        if (kits != null && kits.length() > 0) {
+            Kits.refreshChoices();
+        }
     }
 
     static String readAll(InputStream in) throws IOException {

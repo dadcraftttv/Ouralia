@@ -201,7 +201,9 @@ and microphone declarations, icon, store listing, numbered pd-core release.
       bass (supersaw chords with wobble, chopped found voice, pump), Low end (808 sub, deep pad, sparse top).
     - **Mix and match:** Music tab "Kit" picks a whole kit; each part can be taken from another kit (drums from
       Acoustic, bass from Low end...). Saved in presets, so a shared preset sounds the same for the friend who loads it.
-    - **User kits:** a kit is a folder or zip: kit.json (parts, engines, settings, mix) + its sample files. Imported
+    - **User kits:** a kit is a folder or zip: kit.txt (the built-in kits' format; DadCraft, Oct 17) + its sample files.
+      Stage 1 built Oct 17: text kits (import, menus, delete, presets carry them, the desktop bench); stage 2 a sample
+      engine in dcs_voice~; stage 3 the format page. Imported
       like stem packs today (reusing PackLibrary's import and decoding), shared like presets, and listed beside the
       built-in ones. A documented format and a page for sound designers; the desktop app doubles as a kit-making
       bench (hear a kit on the big speakers while editing kit.json).

@@ -60,7 +60,10 @@ public class MainActivity extends Activity {
     private static final int REQ_IMPORT_SCENE_FOLDER = 5;
     private static final int REQ_IMPORT_PACK = 21;
     private static final int REQ_IMPORT_PACK_FOLDER = 22;
+    private static final int REQ_IMPORT_KIT = 23;
+    private static final int REQ_IMPORT_KIT_FOLDER = 24;
     private TextView packStatus;
+    private TextView kitStatus;
 
     private final List<Row> rows = new ArrayList<>();
     /** The mover controls under each slider, greyed out while their section's movers are off. */
@@ -145,6 +148,7 @@ public class MainActivity extends Activity {
         final SeekBar slider;     // slider rows only
         final Switch switchView;  // toggle rows only
         final Spinner spinner;    // pick-one rows only
+        String[] choicesShown;    // the spinner's names (the Kit menus change when user kits come and go)
 
         Row(Param param, TextView label, SeekBar slider, Switch switchView, Spinner spinner) {
             this.param = param;
@@ -152,6 +156,7 @@ public class MainActivity extends Activity {
             this.slider = slider;
             this.switchView = switchView;
             this.spinner = spinner;
+            this.choicesShown = param.choices;
         }
     }
 
@@ -373,6 +378,7 @@ public class MainActivity extends Activity {
                     body -> fillEffectSection(body, section));
         }
 
+        addSection(music, "kits", getString(R.string.section_kits), false, this::fillKitsSection);
         addSection(music, "packs", getString(R.string.section_packs), false, this::fillPacksSection);
 
         // ---- Setup ----
@@ -1434,13 +1440,10 @@ public class MainActivity extends Activity {
         parent.addView(label);
 
         Spinner spinner = new Spinner(this);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, p.choices);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
+        spinner.setAdapter(choiceAdapter(p.choices));
         // Select the stored choice BEFORE listening: a Spinner reports its first entry as "selected" when it is first
         // laid out, and a folded row isn't refreshed, so that once saved C major over the user's key and scale.
-        spinner.setSelection(Math.round(ParamStore.get(p.id)), false);
+        spinner.setSelection(choiceIndex(p, ParamStore.get(p.id)), false);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View v, int position, long id) {
@@ -1455,6 +1458,18 @@ public class MainActivity extends Activity {
         });
         parent.addView(spinner);
         rows.add(new Row(p, label, null, null, spinner));
+    }
+
+    private ArrayAdapter<String> choiceAdapter(String[] names) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, names);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        return adapter;
+    }
+
+    /** The entry a pick-one value shows: the first one if the value points past the list (a user kit gone). */
+    private static int choiceIndex(Param p, float v) {
+        int i = Math.round(v);
+        return i >= 0 && i < p.choices.length ? i : 0;
     }
 
     /** The movement, speed and depth controls of one slider's mover, indented under it. */
@@ -1525,7 +1540,12 @@ public class MainActivity extends Activity {
             if (r.switchView != null) {
                 r.switchView.setChecked(v >= 0.5f);
             } else if (r.spinner != null) {
-                r.spinner.setSelection(Math.round(v));
+                if (r.choicesShown != r.param.choices) {   // (a user kit came or went)
+                    r.choicesShown = r.param.choices;
+                    r.spinner.setAdapter(choiceAdapter(r.param.choices));
+                    updateKitStatus();
+                }
+                r.spinner.setSelection(choiceIndex(r.param, v), false);
             } else {
                 r.slider.setProgress(Math.round(r.param.toNorm(v) * 1000f));
                 r.label.setText(valueText(r.param, v));
@@ -1685,7 +1705,126 @@ public class MainActivity extends Activity {
             importSceneFolderFrom(uri);
         } else if (requestCode == REQ_IMPORT_PACK || requestCode == REQ_IMPORT_PACK_FOLDER) {
             importPackFrom(uri, requestCode == REQ_IMPORT_PACK_FOLDER);
+        } else if (requestCode == REQ_IMPORT_KIT || requestCode == REQ_IMPORT_KIT_FOLDER) {
+            importKitFrom(uri, requestCode == REQ_IMPORT_KIT_FOLDER);
         }
+    }
+
+    // ---- user kits ----
+
+    /** Music tab: your own kits (Kits: text files, folders or zips), imported into the Kit menus. */
+    private void fillKitsSection(LinearLayout body) {
+        kitStatus = new TextView(this);
+        kitStatus.setTextSize(15);
+        kitStatus.setPadding(0, dp(4), 0, dp(4));
+        body.addView(kitStatus);
+        LinearLayout row = newButtonRow(body);
+        addButton(row, R.string.kit_import, () -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
+                .addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), REQ_IMPORT_KIT));
+        addButton(row, R.string.kit_import_folder, () -> startActivityForResult(
+                new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_IMPORT_KIT_FOLDER));
+        LinearLayout row2 = newButtonRow(body);
+        addButton(row2, R.string.kit_howto, () -> new AlertDialog.Builder(this).setTitle(R.string.kit_howto)
+                .setMessage(R.string.kit_howto_text).setPositiveButton(R.string.close, null).show());
+        addButton(row2, R.string.kit_delete, this::deleteKit);
+        updateKitStatus();
+    }
+
+    private void updateKitStatus() {
+        if (kitStatus == null) {
+            return;
+        }
+        List<String> titles = new ArrayList<>();
+        for (Kits.UserKit u : Kits.userKits()) {
+            titles.add(u.title);
+        }
+        kitStatus.setText(titles.isEmpty() ? getString(R.string.kit_none_status)
+                : getString(R.string.kit_status, String.join(", ", titles)));
+    }
+
+    private void deleteKit() {
+        List<Kits.UserKit> kits = Kits.userKits();
+        if (kits.isEmpty()) {
+            toast(R.string.kit_none_to_delete);
+            return;
+        }
+        String[] items = new String[kits.size()];
+        for (int i = 0; i < items.length; i++) {
+            items[i] = kits.get(i).title;
+        }
+        new AlertDialog.Builder(this).setTitle(R.string.kit_delete).setItems(items, (d, which) ->
+                new AlertDialog.Builder(this).setMessage(getString(R.string.kit_delete_confirm, items[which]))
+                        .setPositiveButton(R.string.kit_delete, (d2, w2) -> {
+                            int index = Kits.BUILT_IN.length + which;
+                            Kits.delete(index);
+                            Kits.refreshChoices();
+                            ParamStore.kitDeleted(index);
+                            updateKitStatus();
+                            refreshRows();
+                        }).setNegativeButton(android.R.string.cancel, null).show())
+                .setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    /** Copies a kit in (a kit.txt, a zip or a folder) off the main thread, then plays it as the Kit. */
+    private void importKitFrom(Uri uri, boolean folder) {
+        String name = folder ? "" : displayName(uri).toLowerCase(java.util.Locale.ROOT);
+        new Thread(() -> {
+            File kitsDir = Kits.userDir;
+            File staging = null;
+            try {
+                if (kitsDir == null || (!kitsDir.isDirectory() && !kitsDir.mkdirs())) {
+                    throw new IOException("Cannot create the kits folder");
+                }
+                int index;
+                if (folder) {
+                    staging = SceneLibrary.newStaging(kitsDir);
+                    TreeImporter.copyAll(getContentResolver(), uri, staging);
+                    index = Kits.installFolder(staging);
+                } else {
+                    try (InputStream in = getContentResolver().openInputStream(uri)) {
+                        if (in == null) {
+                            throw new IOException(getString(R.string.err_open_file));
+                        }
+                        if (name.endsWith(".zip")) {
+                            staging = PackLibrary.unzipToStaging(in, kitsDir);
+                            index = Kits.installFolder(staging);
+                        } else {
+                            String text = PresetManager.readAll(in);   // (a kit.txt: at most 64 KB)
+                            if (!Kits.hasParts(text)) {
+                                throw new IOException(Kits.check(text).get(0));
+                            }
+                            index = Kits.install(text);
+                        }
+                    }
+                }
+                if (index < 0) {
+                    throw new IOException("Cannot add the kit");
+                }
+                String text = Kits.text(index);
+                List<String> problems = text == null ? new ArrayList<>() : Kits.check(text);
+                runOnUiThread(() -> {
+                    Kits.refreshChoices();
+                    ParamStore.set(Kits.ID, index);
+                    updateKitStatus();
+                    refreshRows();
+                    String title = Params.byId(Kits.ID).choices[index];
+                    String msg = getString(R.string.kit_imported, title);
+                    if (!problems.isEmpty()) {
+                        msg += "\n\n" + getString(R.string.kit_warnings) + "\n\u2022 " + String.join("\n\u2022 ", problems);
+                    }
+                    new AlertDialog.Builder(this).setTitle(R.string.kit_import_done).setMessage(msg)
+                            .setPositiveButton(R.string.close, null).show();
+                });
+            } catch (IOException | RuntimeException e) {
+                String why = e.getMessage();
+                runOnUiThread(() -> new AlertDialog.Builder(this).setTitle(R.string.kit_import_failed)
+                        .setMessage(why).setPositiveButton(R.string.close, null).show());
+            } finally {
+                if (staging != null) {
+                    SceneLibrary.deleteRecursively(staging);
+                }
+            }
+        }, "kit-import").start();
     }
 
     // ---- stem packs ----

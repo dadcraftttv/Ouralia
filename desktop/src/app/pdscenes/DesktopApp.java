@@ -63,7 +63,8 @@ final class DesktopApp {
     private static String worldShown;
     private static float calmChimesSent;
     private static int minuteOfDay = Worlds.minuteOfDayNow();
-    private static long lastTick = System.nanoTime(), lastClock;
+    private static long lastTick = System.nanoTime(), lastClock, lastKitCheck;
+    private static String kitSignature;
     private static Consumer<String> say = System.out::println;
 
     private DesktopApp() { }
@@ -237,6 +238,19 @@ final class DesktopApp {
                 float cue = world == null ? 0f : worldShown == null ? 1f : 2f;   // up into a Realm, home, sideways
                 worldShown = world;
                 PdBase.sendFloat("realm_cue", cue);
+            }
+            if (now - lastKitCheck > 1_000_000_000L) {   // the kit bench: a kit saved, added or removed plays at once
+                lastKitCheck = now;
+                String sig = Kits.signature();
+                if (!sig.equals(kitSignature)) {
+                    boolean first = kitSignature == null;
+                    kitSignature = sig;
+                    if (!first) {
+                        Kits.refreshChoices();
+                        ParamStore.sendKit(false);
+                        say.accept("Your kits changed: " + Kits.userKits().size() + " in " + Kits.userDir + ".");
+                    }
+                }
             }
             if (now - lastClock > 30_000_000_000L) {
                 minuteOfDay = Worlds.minuteOfDayNow();

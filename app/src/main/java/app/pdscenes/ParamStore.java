@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.puredata.core.PdBase;
 
+import java.io.File;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -262,6 +263,17 @@ final class ParamStore {
         Kits.send(Math.round(get(Kits.ID)), from, all, (recv, sel, val) -> PdBase.sendMessage(recv, sel, val));
     }
 
+    /** After the user kit at Kit menu index `removed` was deleted: the kit settings that pointed at it go back to
+     *  the first choice, the ones after it move up with their kits (Kits.afterDelete). */
+    static synchronized void kitDeleted(int removed) {
+        for (String id : Kits.PARAMS) {
+            values.put(id, (float) Kits.afterDelete(Math.round(get(id)), removed, !Kits.ID.equals(id)));
+        }
+        if (AudioService.isRunning()) {
+            sendKit(false);   // (only a part that played the deleted kit changes)
+        }
+    }
+
     private static void applyValues(Map<String, Float> map) {
         for (Param p : Params.ALL) {
             if (!p.inPreset) {
@@ -312,6 +324,8 @@ final class ParamStore {
             return;
         }
         loaded = true;
+        Kits.userDir = new File(context.getFilesDir(), "kits");   // user kits (phone and desktop alike)
+        Kits.refreshChoices();
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String saved = prefs.getString(KEY, null);
         if (saved == null) {

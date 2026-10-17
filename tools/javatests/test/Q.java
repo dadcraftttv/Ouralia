@@ -4,6 +4,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /** Kits: the kit files parse, and choosing a kit sends each part its defaults, then its settings, then its engine. */
 public class Q {
@@ -62,6 +63,78 @@ public class Q {
         Kits.Kit odd = Kits.parse("title: X\nmel: engine pluck, wobble 3, bright high, bright 0.2\nnoise: engine bowed\n");
         check(odd.parts.size() == 1 && odd.parts.get("mel").size() == 3,
                 "unknown parts and unreadable values are skipped (" + odd.parts.get("mel").size() + " settings kept)");
+        userKits();
         System.out.println(fails == 0 ? "ALL PASSED" : fails + " FAILED");
+    }
+
+    /** User kits (Oct 17): installed into a folder, listed after the built-in ones, deleted, carried by presets. */
+    static void userKits() throws Exception {
+        Path dir = Files.createTempDirectory("kits");
+        Kits.userDir = dir.toFile();
+        int b = Kits.BUILT_IN.length;
+        String mine = "title: Night Glass\nmel: engine modal, modal bell, bright 0.6, level 6\nbass: engine sub, decay 2000\n";
+        int a = Kits.install(mine);
+        Kits.refreshChoices();
+        String[] kitMenu = Params.byId(Kits.ID).choices, fromMenu = Params.byId("kitp_mel").choices;
+        check(a == b && kitMenu.length == b + 1 && kitMenu[b].equals("Night Glass") && kitMenu[1].startsWith("Acoustic (")
+                        && fromMenu.length == b + 2 && fromMenu[b + 1].equals("Night Glass"),
+                "an installed kit is the next entry of the Kit and 'from' menus (built-in labels kept)");
+        check(Kits.install(mine + "\n") == a && Kits.userKits().size() == 1, "the same kit installed again is reused");
+        check(Kits.install(Kits.source.read("synth")) == 2 && Kits.userKits().size() == 1,
+                "a copy of a built-in kit is the built-in one");
+        List<String> sent = new ArrayList<>();
+        Kits.send(a, (r, s, v) -> sent.add(r + " " + s + " " + v));
+        check(sent.contains("kit_mel engine 3.0") && sent.contains("kit_mel modal 1.0") && sent.contains("kit_bass engine 7.0")
+                && sent.stream().noneMatch(m -> m.startsWith("kit_pad engine") && !m.endsWith(" 0.0")),
+                "a user kit plays: melody modal bell, bass sub, the pad Classic");
+        // the desktop bench: the kit file edited, only the part that changed is sent again
+        String sig = Kits.signature();
+        Path file = Kits.userKits().get(0).dir.toPath().resolve(Kits.FILE);
+        Files.writeString(file, mine.replace("decay 2000", "decay 900"));
+        file.toFile().setLastModified(System.currentTimeMillis() + 5000);
+        sent.clear();
+        Kits.send(a, new int[4], false, (r, s, v) -> sent.add(r + " " + s + " " + v));
+        check(!Kits.signature().equals(sig) && sent.contains("kit_bass decay 900.0")
+                        && sent.stream().noneMatch(m -> m.startsWith("kit_mel")),
+                "an edited kit file plays again at once, only the parts that changed");
+        Files.writeString(file, mine);
+        int c = Kits.install("title: Second\npad: engine bowed\n");
+        check(c == b + 1, "a second kit comes after the first (import order)");
+        // a preset carries its user kits, by text: the kits deleted here, loading it brings them back
+        Map<String, Float> values = ParamStore.snapshot();
+        values.put(Kits.ID, (float) c);
+        values.put("kitp_mel", (float) (a + 1));
+        String json = PresetManager.toJson("With kits", values);
+        check(json.contains("\"kits\"") && json.contains("Night Glass") && json.contains("Second"),
+                "a preset saved with user kits carries their text");
+        Kits.delete(a);
+        Kits.refreshChoices();
+        check(Kits.userKits().size() == 1 && Kits.userKits().get(0).title.equals("Second")
+                        && Params.byId(Kits.ID).choices.length == b + 1,
+                "deleting a kit removes it from the menus");
+        check(Kits.afterDelete(c, a, false) == b && Kits.afterDelete(a, a, false) == 0 && Kits.afterDelete(2, a, false) == 2
+                        && Kits.afterDelete(a + 1, a, true) == 0 && Kits.afterDelete(c + 1, a, true) == b + 1,
+                "after a delete: its users go back to the first choice, later kits move up one");
+        Kits.delete(b);
+        Map<String, Float> loaded = PresetManager.parse(json).values;
+        int k = Math.round(loaded.get(Kits.ID)), m = Math.round(loaded.get("kitp_mel")) - 1;
+        check(Kits.userKits().size() == 2 && Kits.text(k).contains("Second") && Kits.text(m).contains("Night Glass")
+                        && Params.byId(Kits.ID).choices.length == b + 2,
+                "loading the preset installs its kits again and points at them (" + k + ", " + m + ")");
+        loaded = PresetManager.parse(json.replaceAll("(?s),\\s*\"kits\".*\\}\\s*\\}", "}")).values;
+        check(Math.round(loaded.get(Kits.ID)) == 0, "a preset naming a user kit it doesn't carry plays Classic");
+        // import checks: what won't play is reported; a folder with kit.txt one level down installs
+        List<String> problems = Kits.check("title: X\nmel: engine harp, wobble 0.5, flutter 2\nlead: engine pluck\n");
+        check(problems.size() == 3 && problems.get(0).contains("harp") && problems.get(1).contains("flutter")
+                        && problems.get(2).contains("lead") && Kits.check(mine).isEmpty()
+                        && Kits.check("# just a note\n").get(0).startsWith("No parts"),
+                "check() names unknown engines, settings and parts, and a file with no parts");
+        Path staging = Files.createTempDirectory(dir, ".import-");
+        Files.createDirectories(staging.resolve("Wrapped"));
+        Files.writeString(staging.resolve("Wrapped").resolve(Kits.FILE), "title: Wrapped\ndrums: engine drums\n");
+        int w = Kits.installFolder(staging.toFile());
+        check(w == b + 2 && Kits.userKits().get(2).title.equals("Wrapped"), "a zip or folder with kit.txt inside installs");
+        Kits.userDir = null;
+        Kits.refreshChoices();
     }
 }

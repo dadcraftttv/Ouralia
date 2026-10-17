@@ -90,14 +90,17 @@ final class DesktopWindow {
         final JComponent control;
         final JLabel value;
         JCheckBox lock;
+        String[] choicesShown;    // (the Kit menus change when user kits come and go)
 
         Row(Param p, JLabel label, JComponent control, JLabel value) {
             this.p = p;
             this.label = label;
             this.control = control;
             this.value = value;
+            this.choicesShown = p.choices;
         }
 
+        @SuppressWarnings("unchecked")
         void refresh() {
             float v = valueOf(p.id);
             if (control instanceof JSlider) {
@@ -109,7 +112,11 @@ final class DesktopWindow {
             } else if (control instanceof JCheckBox) {
                 ((JCheckBox) control).setSelected(v >= 0.5f);
             } else if (control instanceof JComboBox) {
-                JComboBox<?> c = (JComboBox<?>) control;
+                JComboBox<String> c = (JComboBox<String>) control;
+                if (choicesShown != p.choices) {
+                    choicesShown = p.choices;
+                    c.setModel(new javax.swing.DefaultComboBoxModel<>(p.choices));
+                }
                 int i = Math.round(p.clamp(v));
                 if (c.getSelectedIndex() != i && i < c.getItemCount()) {
                     c.setSelectedIndex(i);
