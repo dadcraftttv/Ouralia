@@ -217,6 +217,22 @@ to date in the same commit when behaviour changes.
   178 ms. futurebass.txt: chop melody (saws 5 fallback), sub bass, pad 7 saws 35 c wobble 0.7 wrate 2 bend -2,
   drums with pump 0.7 / 320 ms. The test runner now silences checks run only as another section's dependency
   (they ran under other random choices and counted), and the glitch cost check interleaves its three setups.
+  **Chiptune kits** (Oct 18; DadCraft heard the Crusher styles and wanted "the console music sound" more than a
+  console voice: a kit, since the chips played notes, not processed sound). Engine 8 `chip`: `chip` 1 NES / 2 Game
+  Boy / 3 Genesis, `wave` pulse (PolyBLEP, `duty`) / triangle (NES: 32 steps, 15 down to 0 and back) / wave (Game
+  Boy: 32 four-bit samples, a soft ramp) / fm (two operators, modulator feedback `fmfb`, `fmratio`, `fmindex`
+  falling with the note, output to 9 bits as the YM2612's DAC). Pitch through the chip's period register (NES
+  CPU/(16 or 32 x (t+1)), Game Boy 131072/(2048-x), the wave channel half that): high notes land slightly off, as on
+  the hardware (3520 Hz plays 12 cents flat). Volume in 16 steps (not Genesis): `sus` = where it falls to over
+  `decay`. `vib` cents after 150 ms. One note per part at a time (a channel: the new note takes over the old one's
+  phase). `arp` ms: held notes (the pad's chord) take turns on one channel, ranked by slot; a chord change is
+  instant. Output stage per console: NES high-passes 90 and 440 Hz, low-pass 14 kHz (the bass triangle comes out
+  thin, as it did: its level is 30 to match Classic); Game Boy HP 30, LP 12 kHz; Genesis LP 7 kHz. Drums on a chip
+  (`hit`): the noise channel (15-bit LFSR at the console's rates; NES hats in short mode, metallic), the kick a
+  sweep on the triangle (NES, cut rather than faded), a pulse (Game Boy) or a sine (Genesis), plus a noise click.
+  Kits chipnes, chipgb, chipgenesis (Genesis has six FM channels: its chords stay chords). Levels matched to
+  Classic by the kits test. Adding built-in kits moves user kits' menu numbers up (DadCraft's imported kit needs
+  choosing again; presets carry the text, so they find it).
   **Low end kit** (Oct 17, step 4, the last style): engine 7 sub (an 808): a sine x `drive` through tanh, falling
   60 dB over `decay` from each note; a held slot that moves glides there (`glide` ms, ~ x 0.3 time constant) and
   starts its level again; `retrig` restarts held 808 notes, sent by the patch on each kick while beat_level > 0,

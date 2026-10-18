@@ -60,8 +60,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 
 ## Current state (update this when it changes)
 As of Oct 17:
-- **Waiting on DadCraft's ears** (all behind switches or kits, the old sound the default): the five kits (Acoustic,
-  Synth, EDM, Future bass, Low end; Music tab, Kit * and Melody/Bass/Pad/Drums from *), Glitch voice New, Found note
+- **Waiting on DadCraft's ears** (all behind switches or kits, the old sound the default): the kits (Acoustic,
+  Synth, EDM, Future bass, Low end, 3 Chiptune; Music tab, Kit * and Melody/Bass/Pad/Drums from *), Glitch voice New, Found note
   ring String, Rustle squash + Step duck (pocket), Pitch tracker / Pitch shifter / Sudden-sound detector New,
   Crusher style (heard Oct 18: "don't sound like the consoles", kept; Chip voice is the answer).
   Settings that use our C objects show " *" after their name. Kit levels were matched to Classic by measurement
@@ -69,8 +69,9 @@ As of Oct 17:
 - **Effect ports done** (DadCraft, Oct 17: dcs versions of every effect, for CPU): all 13 match the old Pd chains
   (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
 - **Sing in key** built Oct 18 (section "Sing in key", dcs_shift~ snap mode; off by default): waiting on DadCraft's
-  ears. **Next (DadCraft, Oct 18): Chip voice** (pitch tracker plays the voice on NES / Game Boy / Genesis channels,
-  folded together with the vocoder idea), then a Chiptune kit; user kits stage 2 (samples) after that.
+  ears. **Chiptune kits** built Oct 18 (NES, Game Boy, Genesis; dcs_voice~ engine `chip`): waiting on his ears.
+  **Next (DadCraft, Oct 18): the vocoder** (carriers: the music's chords, a synth following your pitch, later chip
+  waves); a chip voice for singing is lower priority. User kits stage 2 (samples) after that.
 - **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
   reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
 - **Next on the kit plan** (ROADMAP 19): user kits stage 2, a sample engine in dcs_voice~ (drum one-shots,

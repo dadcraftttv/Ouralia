@@ -488,6 +488,35 @@ check(abs(rw - 4) < 0.2 and sw_ > 5 * s0_, f"wobble: 2 a beat at 120 BPM pulses 
 yb = play(an + [("cutoff", 8), ("bend", -2), ("bendms", 150), ("pnote", 0, 220)], 1.0)
 check(peak_hz(yb[int(0.005 * SR):int(0.04 * SR)], 150, 260) < 210 and abs(peak_hz(yb[int(0.5 * SR):], 200, 240) / 220 - 1) < 0.003,
       f"bend: a note starts low ({peak_hz(yb[int(0.005 * SR):int(0.04 * SR)], 150, 260):.0f} Hz) and glides to 220")
+# chip: a console's sound chip
+def chipnote(chip, wave, hz, secs=0.6, extra=()):
+    return play([("chip", chip), ("wave", wave), ("sus", 1), ("level", 1)] + list(extra) + [("engine", 8), ("note", hz, 0.8, secs * 1000)], secs + 0.1)
+y = chipnote(1, 0, 440)[int(0.05 * SR):int(0.5 * SR)]
+nes = 1789773 / (16 * (round(1789773 / (16 * 440) - 1) + 1))
+check(abs(peak_hz(y, 400, 480) - nes) < 1.5 and harm(y, nes, 2) < 0.1 * harm(y, nes, 1), f"chip NES pulse: in tune on the NES's own period ({peak_hz(y, 400, 480):.1f} Hz, chip {nes:.1f}), a square has no 2nd harmonic")
+y = chipnote(1, 0, 440, extra=[("duty", 0.125)])[int(0.05 * SR):int(0.5 * SR)]
+check(harm(y, nes, 2) > 0.5 * harm(y, nes, 1), "chip NES pulse at 12.5%: a thin, nasal tone (a strong 2nd harmonic)")
+y = chipnote(1, 0, 3520)[int(0.05 * SR):int(0.5 * SR)]
+f = peak_hz(y, 3300, 3700)
+check(abs(1200 * np.log2(f / 3520) + 12.2) < 3, f"chip NES: a high note lands where the chip's period can ({f:.0f} Hz, {1200 * np.log2(f / 3520):+.0f} cents, as the real one)")
+for chip, wave, name in ((1, 1, "NES triangle"), (2, 0, "Game Boy pulse"), (2, 2, "Game Boy wave"), (3, 3, "Genesis FM")):
+    y = chipnote(chip, wave, 220)[int(0.05 * SR):int(0.5 * SR)]
+    f = peak_hz(y, 200, 240)
+    check(abs(1200 * np.log2(f / 220)) < 8 and 0.02 < np.abs(y).max() < 1, f"chip {name}: in tune ({f:.1f} Hz), level {np.abs(y).max():.2f}")
+y = play([("chip", 1), ("engine", 8), ("note", 440, 0.8, 1000)], 1.0, then=[("note", 660, 0.8, 500)], then_at=0.4)
+w = y[int(0.5 * SR):int(0.85 * SR)]
+check(harm(w, 440, 1) < 0.05 * harm(w, 660, 1), "chip: one note at a time on a channel (the new one cuts the old)")
+y = play([("chip", 1), ("arp", 40), ("engine", 8), ("pnote", 0, 262), ("pnote", 1, 330), ("pnote", 2, 392)], 1.2)[int(0.2 * SR):]
+win = int(0.02 * SR); doms = []
+for i in range(0, len(y) - win, win):
+    seg = y[i:i + win]; doms.append(max((262, 330, 392), key=lambda f: harm(seg, f, 1)))
+check(len(set(doms)) == 3 and sum(a != b for a, b in zip(doms, doms[1:])) >= 15,
+      f"chip arp: a chord's notes take turns on the one channel ({sum(a != b for a, b in zip(doms, doms[1:]))} changes in 1 s)")
+kick, snare, hat = (play([("chip", 1), ("engine", 8), ("hit", r, 1)], 0.4) for r in (0, 1, 2))
+cen = lambda y: float((np.abs(np.fft.rfft(y)) * np.fft.rfftfreq(len(y), 1 / SR)).sum() / np.abs(np.fft.rfft(y)).sum())
+check(min(rms(kick), rms(snare), rms(hat)) > 0.005 and cen(kick) < cen(snare) < cen(hat),
+      f"chip drums: kick, snare, hat, each brighter ({cen(kick):.0f}, {cen(snare):.0f}, {cen(hat):.0f} Hz)")
+
 cp = patch("chop", ["r vc", "dcs_voice~", "dac~", "table fpad_0 48000", "table fpad_f0 2", "table fpad_g 2", "table fpad_n 2"],
            [(0, 0, 1, 0), (1, 0, 2, 0), (1, 0, 2, 1)])
 def chop(kept, secs=0.6):

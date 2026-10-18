@@ -1830,20 +1830,23 @@ KIT_DEFAULTS = (("bright", 0.4), ("level", 1), ("attack", 300), ("release", 800)
                 ("cutoff", 4), ("reso", 0.3), ("fenv", 6), ("detune", 8), ("sub", 0.3), ("saws", 2), ("ktune", 50),
                 ("kdecay", 350), ("kdrive", 0.3), ("stone", 185), ("sdecay", 180), ("hdecay", 45), ("pump", 0), ("pumprel", 250),
                 ("wobble", 0), ("wrate", 2), ("bend", 0), ("bendms", 120), ("chop", 180), ("octave", 0), ("chance", 1),
-                ("hchance", 1), ("glide", 0), ("drive", 0.3))
+                ("hchance", 1), ("glide", 0), ("drive", 0.3), ("chip", 1), ("wave", 0), ("duty", 0.5), ("sus", 0.6),
+                ("vib", 0), ("arp", 0), ("fmratio", 1), ("fmindex", 2), ("fmfb", 0))
 def read_kit(name):
     """A kit file as Kits.java reads it: part -> [(setting, value)], the engine last."""
-    eng, modal, kit = ["classic", "pluck", "bowed", "modal", "analog", "drums", "chop", "sub"], ["", "bell", "marimba", "bowl"], {}
+    eng, modal, kit = ["classic", "pluck", "bowed", "modal", "analog", "drums", "chop", "sub", "chip"], ["", "bell", "marimba", "bowl"], {}
+    words = {"chip": ["", "nes", "gameboy", "genesis"], "wave": ["pulse", "triangle", "wave", "fm"]}
     for line in open(os.path.join(ROOT, "app/src/main/assets/kits", name + ".txt")):
         key, _, rest = line.strip().partition(":")
         if line.startswith("#") or key not in ("mel", "bass", "pad", "drums"):
             continue
         items = [w.split() for w in rest.split(",") if len(w.split()) >= 2]
-        vals = [(k, eng.index(v) if k == "engine" else modal.index(v) if k == "modal" else float(v)) for k, v, *_ in items]
+        vals = [(k, eng.index(v) if k == "engine" else modal.index(v) if k == "modal" else words[k].index(v) if k in words
+                 else float(v)) for k, v, *_ in items]
         kit[key] = [kv for kv in vals if kv[0] != "engine"] + [kv for kv in vals if kv[0] == "engine"]
     return kit
 ACOUSTIC = read_kit("acoustic")
-KITS = {name: read_kit(name) for name in ("acoustic", "synth", "edm", "futurebass", "lowend")}
+KITS = {name: read_kit(name) for name in ("acoustic", "synth", "edm", "futurebass", "lowend", "chipnes", "chipgb", "chipgenesis")}
 def send_kit(e, kit):
     for part in ("mel", "bass", "pad", "drums"):
         e.send_msg("kit_" + part, "engine", 0)

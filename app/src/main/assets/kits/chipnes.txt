@@ -1,0 +1,10 @@
+# Chiptune: NES (Oct 18): the NES's own channels. Two pulse waves (melody, pad), the stepped triangle (bass), the
+# noise channel (drums). Chords become fast arpeggios on one channel, as NES composers wrote them.
+#   chip nes | gameboy | genesis; wave pulse | triangle | wave (Game Boy) | fm (Genesis)
+#   duty = the pulse's width (0.125 thin, 0.25, 0.5 hollow); sus = where a note's volume falls to over decay (ms)
+#   vib = vibrato in cents (after 150 ms); arp = ms per chord note (0 = all together)
+title: Chiptune: NES
+mel: engine chip, chip nes, wave pulse, duty 0.25, sus 0.45, decay 500, vib 18, attack 2, release 40, level 6.5
+bass: engine chip, chip nes, wave triangle, sus 1, attack 2, release 20, level 30
+pad: engine chip, chip nes, wave pulse, duty 0.125, arp 45, sus 0.7, decay 1500, attack 2, release 20, level 1
+drums: engine chip, chip nes, ktune 55, kdecay 160, sdecay 110, hdecay 25, level 2.5

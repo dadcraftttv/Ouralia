@@ -5,7 +5,7 @@
  *
  *   [dcs_voice~]
  *   inlet:   messages
- *     engine <0 off | 1 pluck | 2 bowed | 3 modal | 4 analog | 5 drums | 6 chop | 7 sub>
+ *     engine <0 off | 1 pluck | 2 bowed | 3 modal | 4 analog | 5 drums | 6 chop | 7 sub | 8 chip>
  *     note <Hz> <velocity 0..1> <length ms> [<brightness 0..1>]   a note that rings and dies away by itself
  *     pnote <slot> <Hz> [<velocity>]   a held note in a slot (a pad's chord tone, the bass): when the slot gets a new
  *                                      pitch, the old note fades out over `release` while the new one comes in
@@ -25,6 +25,15 @@
  *     sub: an 808: a sine with `drive` (0..1), dying over `decay` ms from each note; a held note that moves glides
  *             there over `glide` ms (the slide), its level starting again; `retrig` starts the held notes' level
  *             again (the patch sends it on the kicks, so the 808 plays in rhythm)
+ *     chip: a game console's sound chip: chip <1 NES | 2 Game Boy | 3 Genesis>, wave <0 pulse | 1 triangle (NES) |
+ *             2 wave (Game Boy's 4-bit wave channel) | 3 FM (Genesis, two operators)>, duty <0.125 | 0.25 | 0.5>
+ *             (the pulse's width), sus <0..1> (where a note's volume falls to over `decay` ms, in the chip's 16
+ *             steps), vib <cents> (a vibrato after 150 ms), arp <ms> (held notes, a pad's chord, take turns on the one
+ *             channel this fast, as chip composers wrote chords), fmratio, fmindex, fmfb (Genesis); bend/bendms as
+ *             analog (a pitch sweep). One note at a time per part, as a channel; pitches land where the chip's own
+ *             period registers can (high notes a little out, as on the real thing); the console's output filters.
+ *             Drums (hit) on a chip: the noise channel (a 15-bit shift register, NES / Game Boy short mode for
+ *             metallic hats) and a kick swept down on the triangle (NES), a pulse (Game Boy) or FM (Genesis)
  *     any engine: octave <n> (notes n octaves up or down), chance <0..1> (a ringing note plays with this chance:
  *             a sparser part); hchance <0..1>: the same for drum hats
  *     pump, pumprel: accepted and ignored (a kit's sidechain settings, read by the patch)
@@ -54,7 +63,12 @@
 #define PLUCK_GAIN 1.5f               /* each engine near the classic voices' loudness at velocity 1 */
 #define BOWED_GAIN 6.f
 
-enum { E_OFF, E_PLUCK, E_BOWED, E_MODAL, E_ANALOG, E_DRUMS, E_CHOP, E_SUB };
+enum { E_OFF, E_PLUCK, E_BOWED, E_MODAL, E_ANALOG, E_DRUMS, E_CHOP, E_SUB, E_CHIP };
+enum { C_NES = 1, C_GB, C_GEN };
+enum { W_PULSE, W_TRI, W_WAVE, W_FM };
+#define CHIP_GAIN 0.3f
+#define NES_CPU 1789773.
+#define GB_CLOCK 131072.
 #define SUB_GAIN 0.5f
 #define MAXSAWS 7
 #define CHOP_GAIN 0.15f               /* a chop near the analog fallback at the same `level` */
@@ -100,6 +114,11 @@ typedef struct _vvoice
     double cpos, crate, ctotal;
     float cgain;
     float lad[4], fenv, fenvk;
+    /* chip */
+    double cph, mph, mprev, held, nt;      /* carrier and modulator phases, the modulator's last output, time held, noise clock */
+    unsigned int lfsr;
+    float nval;
+    int arpm, arprank;                 /* a held chip note (takes turns with `arp`), its place in the turns */
 } t_vvoice;
 
 typedef struct _dcs_voice
@@ -114,6 +133,10 @@ typedef struct _dcs_voice
     float x_octave, x_chance, x_hchance, x_glide, x_drive;
     double x_bpm, x_lfoph;
     float x_ktune, x_kdecay, x_kdrive, x_stone, x_sdecay, x_hdecay;
+    int x_chip, x_wave;
+    float x_duty, x_sus, x_vib, x_arp, x_fmratio, x_fmindex, x_fmfb;
+    double x_arpclock;
+    float x_hp1x, x_hp1y, x_hp2x, x_hp2y, x_lpy;   /* the console's output filters */
     unsigned long x_count;
     unsigned int x_seed;
     t_vvoice x_v[NV];
@@ -185,6 +208,88 @@ static void voice_modal(t_dcs_voice *x, t_vvoice *v, double hz, double decay_ms)
         v->y1[v->nmodes] = v->y2[v->nmodes] = 0;
         v->nmodes++;
     }
+}
+
+/* the pitch the chip can actually play nearest `hz`: its period register is a whole number */
+static double chip_pitch(int chip, int wave, double hz)
+{
+    double t;
+    if (chip == C_NES)
+    {
+        double div = wave == W_TRI ? 32 : 16;              /* (the triangle's sequence is twice as long) */
+        t = floor(NES_CPU / (div * hz) - 1 + 0.5);
+        if (t < 8) t = 8;
+        if (t > 2047) t = 2047;
+        return NES_CPU / (div * (t + 1));
+    }
+    if (chip == C_GB)
+    {
+        double clk = wave == W_WAVE ? GB_CLOCK / 2 : GB_CLOCK;
+        t = floor(2048 - clk / hz + 0.5);
+        if (t < 0) t = 0;
+        if (t > 2047) t = 2047;
+        return clk / (2048 - t);
+    }
+    return hz;                                             /* (the Genesis FM's pitch steps are finer than an ear) */
+}
+
+/* the noise channel: a 15-bit shift register clocked at `rate` Hz; short = the 93-step metallic mode */
+static float chip_noise(t_vvoice *v, double rate, double sr, int shortmode)
+{
+    v->nt += rate / sr;
+    while (v->nt >= 1)
+    {
+        unsigned int b = (v->lfsr ^ (v->lfsr >> (shortmode ? 6 : 1))) & 1;
+        v->lfsr = (v->lfsr >> 1) | (b << 14);
+        v->nt -= 1;
+        v->nval = (v->lfsr & 1) ? -1.f : 1.f;
+    }
+    return v->nval;
+}
+
+static inline double chip_blep(double t, double dt)
+{
+    if (t < dt) { double q = t / dt; return q + q - q * q - 1; }
+    if (t > 1 - dt) { double q = (t - 1) / dt; return q * q + q + q + 1; }
+    return 0;
+}
+
+/* one sample of the chip's tone channel at phase increment dt */
+static double chip_osc(t_dcs_voice *x, t_vvoice *v, double dt, double fmenv)
+{
+    double t = v->cph, s;
+    int wave = x->x_wave;
+    if (x->x_chip == C_GEN) wave = W_FM;
+    else if (x->x_chip == C_GB && wave == W_TRI) wave = W_WAVE;
+    else if (x->x_chip == C_NES && wave == W_WAVE) wave = W_TRI;
+    if (wave == W_PULSE)
+    {
+        double d = x->x_duty <= 0.05f ? 0.5 : (x->x_duty >= 0.95f ? 0.5 : x->x_duty), t2 = t + 1 - d;
+        t2 -= floor(t2);
+        s = (t < d ? 1 : -1) + chip_blep(t, dt) - chip_blep(t2, dt);
+    }
+    else if (wave == W_TRI)
+    {                                                      /* NES: 32 steps, 15 down to 0 and back up */
+        int k = (int)(t * 32), lvl = k < 16 ? 15 - k : k - 16;
+        s = lvl / 7.5 - 1;
+    }
+    else if (wave == W_WAVE)
+    {                                                      /* Game Boy: 32 four-bit samples, a soft ramp */
+        static const unsigned char tab[32] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+                                              15, 15, 14, 14, 13, 12, 11, 10, 9, 8, 6, 5, 4, 3, 2, 1};
+        s = tab[(int)(t * 32) & 31] / 7.5 - 1;
+    }
+    else
+    {                                                      /* two operators: a modulator (with feedback) into a carrier */
+        double m = sin(2 * M_PI * v->mph + x->x_fmfb * v->mprev);
+        v->mprev = m;
+        v->mph += dt * (x->x_fmratio > 0 ? x->x_fmratio : 1);
+        v->mph -= floor(v->mph);
+        s = sin(2 * M_PI * t + x->x_fmindex * fmenv * m);
+        s = floor(s * 256 + 0.5) / 256;                    /* (the YM2612's 9-bit DAC) */
+    }
+    v->cph = t + dt - floor(t + dt);
+    return s;
 }
 
 static t_vvoice *voice_alloc(t_dcs_voice *x)
@@ -276,6 +381,24 @@ static void voice_start(t_dcs_voice *x, t_vvoice *v, double hz, float vel, doubl
         v->fenvk = (float)exp(-1. / ((slot < 0 ? len_ms : x->x_decay) * 0.25 * sr / 1000.));
         v->life = slot < 0 ? len_ms * sr / 1000 : 0;
         break;
+    case E_CHIP:
+        v->cph = v->mph = v->mprev = v->held = 0;
+        if (slot < 0)
+        {                                /* one channel: a new note takes over from the one before, in its phase */
+            int k;
+            for (k = 0; k < NV; k++)
+                if (&x->x_v[k] != v && x->x_v[k].on && x->x_v[k].engine == E_CHIP && x->x_v[k].slot < 0
+                    && x->x_v[k].role == 0)
+                    x->x_v[k].on = 0, v->cph = x->x_v[k].cph, v->mph = x->x_v[k].mph;
+        }
+        v->hz = chip_pitch(x->x_chip, x->x_wave, hz);
+        v->bendcur = x->x_bend;
+        v->bendk = (float)exp(-1. / ((x->x_bendms > 1 ? x->x_bendms : 1) * 0.25 * sr / 1000.));
+        v->gstep = (float)(1000. / ((x->x_attack > 1 ? x->x_attack : 1) * sr));
+        v->fenv = 1;
+        v->arpm = slot >= 0;
+        v->life = slot < 0 ? len_ms * sr / 1000 : 0;
+        break;
     case E_MODAL:
         voice_modal(x, v, hz, len_ms);                   /* (struck in perform, on its first sample) */
         v->gain = 1; v->gstep = 0;
@@ -355,7 +478,27 @@ static t_int *dcs_voice_perform(t_int *w)
     t_sample *out = (t_sample *)(w[2]);
     int n = (int)(w[3]), i, k, m;
     float level = x->x_level;
+    int arpturn = 0;
     memset(out, 0, n * sizeof(t_sample));
+    if (x->x_arp > 0)
+    {                                                    /* held chip notes, ranked by slot, take turns */
+        int cnt = 0, j;
+        for (k = 0; k < NV; k++)
+        {
+            t_vvoice *v = &x->x_v[k];
+            if (!(v->on && v->engine == E_CHIP && v->arpm && !v->releasing)) continue;
+            v->arprank = 0;
+            for (j = 0; j < NV; j++)
+            {
+                t_vvoice *u = &x->x_v[j];
+                if (u->on && u->engine == E_CHIP && u->arpm && !u->releasing && (u->slot < v->slot || (u->slot == v->slot && j < k)))
+                    v->arprank++;
+            }
+            cnt++;
+        }
+        if (cnt) arpturn = (int)fmod(floor(x->x_arpclock / (x->x_arp * x->x_sr / 1000.)), cnt);
+        x->x_arpclock += n;
+    }
     for (k = 0; k < NV; k++)
     {
         t_vvoice *v = &x->x_v[k];
@@ -421,6 +564,83 @@ static t_int *dcs_voice_perform(t_int *w)
             for (m = 0; m < 4; m++)
                 if (PD_BIGORSMALL(v->lad[m])) v->lad[m] = 0;
             if (v->releasing && v->gain <= 0) v->on = 0;
+        }
+        else if (v->engine == E_CHIP && v->role == 0)
+        {
+            /* a chip channel: its pitch (swept by a bend, a vibrato after 150 ms), its volume in 16 steps (Genesis:
+               smooth), and with `arp` held notes take turns */
+            double sr = x->x_sr, dk = exp(-1000. / ((x->x_decay > 10 ? x->x_decay : 10) * 0.33 * sr));
+            float sus = x->x_sus < 0 ? 0 : (x->x_sus > 1 ? 1 : x->x_sus);
+            int quant = x->x_chip != C_GEN, mine = 1;
+            if (v->arpm && v->releasing) { v->on = 0; continue; }   /* (a chord change on a chip is instant) */
+            if (v->arpm && x->x_arp > 0) mine = v->arprank == arpturn;
+            for (i = 0; i < n; i++)
+            {
+                double f = v->hz * pow(2, v->bendcur / 12.), e, s_;
+                if (x->x_vib > 0 && v->held > 0.15 * sr)
+                    f *= pow(2, x->x_vib / 1200. * sin(2 * M_PI * 6 * (v->held / sr - 0.15)));
+                if (v->gain != v->gtarget)
+                {
+                    if (v->gain < v->gtarget) { v->gain += v->gstep; if (v->gain > v->gtarget) v->gain = v->gtarget; }
+                    else { v->gain -= v->gstep; if (v->gain < v->gtarget) v->gain = v->gtarget; }
+                }
+                e = v->gain * v->amp * (sus + (1 - sus) * v->fenv);
+                v->fenv *= (float)dk;
+                if (quant) e = floor(e * 15 + 0.5) / 15;
+                s_ = chip_osc(x, v, f / sr, 0.3 + 0.7 * v->fenv);
+                if (mine) out[i] += (float)(s_ * e) * CHIP_GAIN * level;
+                v->held += 1;
+            }
+            v->bendcur *= (float)pow(v->bendk, n);
+            if (v->releasing && v->gain <= 0) v->on = 0;
+        }
+        else if (v->engine == E_CHIP)
+        {
+            /* chip drums: the noise channel, and a kick swept down on the tone channel */
+            double sr = x->x_sr;
+            int nes = x->x_chip == C_NES, gen = x->x_chip == C_GEN;
+            for (i = 0; i < n; i++)
+            {
+                double t = v->t / sr, s_ = 0, e;
+                if (v->role == 1)
+                {                                          /* kick */
+                    double f = x->x_ktune * (1 + 5 * exp(-t / 0.025));
+                    if (nes)
+                    {
+                        int k = (int)(v->cph * 32), lvl = k < 16 ? 15 - k : k - 16;
+                        s_ = lvl / 7.5 - 1;                /* (the NES triangle has no volume: it just stops) */
+                        e = t * 1000 < x->x_kdecay * 0.4 ? 1 : 0;
+                    }
+                    else if (gen)
+                    {
+                        s_ = sin(2 * M_PI * v->cph);
+                        e = exp(-t * 1000. / (x->x_kdecay > 10 ? x->x_kdecay : 10));
+                    }
+                    else
+                    {
+                        s_ = v->cph < 0.5 ? 1 : -1;
+                        e = floor(15 * exp(-t * 1000. / (x->x_kdecay > 10 ? x->x_kdecay : 10)) + 0.5) / 15;
+                    }
+                    v->cph += f / sr; v->cph -= floor(v->cph);
+                    s_ *= e;
+                    if (t < 0.012) s_ += 0.6 * chip_noise(v, NES_CPU / 762, sr, 0) * (1 - t / 0.012);
+                }
+                else if (v->role == 2)
+                {                                          /* snare: noise at a mid rate, a tone under it */
+                    e = floor(15 * exp(-t * 1000. / (x->x_sdecay > 10 ? x->x_sdecay : 10)) + 0.5) / 15;
+                    s_ = chip_noise(v, nes ? NES_CPU / 202 : 262144. / 12, sr, 0) * e;
+                    v->cph += x->x_stone * 2 / sr; v->cph -= floor(v->cph);
+                    s_ += 0.4 * (v->cph < 0.5 ? 1 : -1) * floor(15 * exp(-t * 1000. / 40.) + 0.5) / 15;
+                }
+                else
+                {                                          /* hat: fast noise, short mode (metallic) on the NES */
+                    e = floor(15 * exp(-t * 1000. / (v->dec > 5 ? v->dec : 5)) + 0.5) / 15;
+                    s_ = chip_noise(v, nes ? NES_CPU / 16 : 262144. / 2, sr, nes) * e * 0.6;
+                }
+                out[i] += (float)(s_ * v->amp) * 0.5f * level;
+                v->t += 1;
+            }
+            if (v->t > sr * 2) v->on = 0;
         }
         else if (v->engine == E_SUB)
         {
@@ -553,10 +773,30 @@ static t_int *dcs_voice_perform(t_int *w)
             v->life -= n;
             if (v->life <= 0)
             {
-                if (v->engine == E_BOWED || v->engine == E_ANALOG) voice_release(x, v);
+                if (v->engine == E_BOWED || v->engine == E_ANALOG || (v->engine == E_CHIP && v->role == 0)) voice_release(x, v);
                 else v->on = 0;
             }
         }
+    }
+    if (x->x_engine == E_CHIP)
+    {
+        /* the console's output stage: NES high-passes at 90 and 440 Hz, low-passes at 14 kHz; Game Boy high-passes
+           (its output capacitor) and low-passes at 12 kHz; Genesis (model 1) low-passes at ~7 kHz */
+        double sr = x->x_sr, h1 = x->x_chip == C_NES ? 90 : 30, h2 = x->x_chip == C_NES ? 440 : 0,
+            lp = x->x_chip == C_NES ? 14000 : (x->x_chip == C_GB ? 12000 : 7000);
+        float r1 = (float)exp(-2 * M_PI * h1 / sr), r2 = (float)exp(-2 * M_PI * (h2 > 0 ? h2 : 1) / sr),
+            a = (float)(1 - exp(-2 * M_PI * (lp < 0.45 * sr ? lp : 0.45 * sr) / sr));
+        for (i = 0; i < n; i++)
+        {
+            float u = out[i], y1 = u - x->x_hp1x + r1 * x->x_hp1y, y2;
+            x->x_hp1x = u; x->x_hp1y = y1;
+            if (h2 > 0) { y2 = y1 - x->x_hp2x + r2 * x->x_hp2y; x->x_hp2x = y1; x->x_hp2y = y2; } else y2 = y1;
+            x->x_lpy += a * (y2 - x->x_lpy);
+            out[i] = x->x_lpy;
+        }
+        if (PD_BIGORSMALL(x->x_hp1y)) x->x_hp1y = 0;
+        if (PD_BIGORSMALL(x->x_hp2y)) x->x_hp2y = 0;
+        if (PD_BIGORSMALL(x->x_lpy)) x->x_lpy = 0;
     }
     x->x_lfoph += x->x_wrate * x->x_bpm / 60. / x->x_sr * n;   /* the wobble, `wrate` cycles a beat */
     x->x_lfoph -= floor(x->x_lfoph);
@@ -573,7 +813,7 @@ static void dcs_voice_dsp(t_dcs_voice *x, t_signal **sp)
     dsp_add(dcs_voice_perform, 3, x, sp[0]->s_vec, (t_int)sp[0]->s_n);
 }
 
-static void dcs_voice_engine(t_dcs_voice *x, t_floatarg f) { x->x_engine = (int)f >= 0 && (int)f <= 7 ? (int)f : 0; if (!x->x_engine) dcs_voice_alloff(x); }
+static void dcs_voice_engine(t_dcs_voice *x, t_floatarg f) { x->x_engine = (int)f >= 0 && (int)f <= 8 ? (int)f : 0; if (!x->x_engine) dcs_voice_alloff(x); }
 static void dcs_voice_wobble(t_dcs_voice *x, t_floatarg f) { x->x_wobble = f; }
 static void dcs_voice_wrate(t_dcs_voice *x, t_floatarg f) { x->x_wrate = f > 0 ? f : 0; }
 static void dcs_voice_bend(t_dcs_voice *x, t_floatarg f) { x->x_bend = f; }
@@ -614,12 +854,23 @@ static void dcs_voice_hdecay(t_dcs_voice *x, t_floatarg f) { dcs_voice_set(x, ge
 static void dcs_voice_hit(t_dcs_voice *x, t_floatarg role, t_floatarg vel, t_floatarg dec)
 {
     t_vvoice *v;
-    if (x->x_engine != E_DRUMS || vel <= 0 || x->x_sr <= 0) return;
+    if ((x->x_engine != E_DRUMS && x->x_engine != E_CHIP) || vel <= 0 || x->x_sr <= 0) return;
     if ((int)role == 2 && x->x_hchance < 1 && 0.5 + 0.5 * voice_noise(x) >= x->x_hchance) return;
     v = voice_alloc(x);
-    v->on = 1; v->slot = -1; v->engine = E_DRUMS; v->role = (int)role; v->amp = vel;
+    v->on = 1; v->slot = -1; v->engine = x->x_engine; v->amp = vel;
+    v->role = x->x_engine == E_CHIP ? (int)role + 1 : (int)role;     /* (a chip's tone notes are role 0) */
+    v->lfsr = 1;
     v->dec = dec > 0 ? dec : x->x_hdecay;
 }
+static void dcs_voice_chipm(t_dcs_voice *x, t_floatarg f) { x->x_chip = (int)f >= 1 && (int)f <= 3 ? (int)f : 1; }
+static void dcs_voice_wave(t_dcs_voice *x, t_floatarg f) { x->x_wave = (int)f >= 0 && (int)f <= 3 ? (int)f : 0; }
+static void dcs_voice_duty(t_dcs_voice *x, t_floatarg f) { x->x_duty = f; }
+static void dcs_voice_sus(t_dcs_voice *x, t_floatarg f) { x->x_sus = f; }
+static void dcs_voice_vib(t_dcs_voice *x, t_floatarg f) { x->x_vib = f > 0 ? f : 0; }
+static void dcs_voice_arp(t_dcs_voice *x, t_floatarg f) { x->x_arp = f > 0 ? (f < 10 ? 10 : f) : 0; }
+static void dcs_voice_fmratio(t_dcs_voice *x, t_floatarg f) { x->x_fmratio = f; }
+static void dcs_voice_fmindex(t_dcs_voice *x, t_floatarg f) { x->x_fmindex = f > 0 ? f : 0; }
+static void dcs_voice_fmfb(t_dcs_voice *x, t_floatarg f) { x->x_fmfb = f; }
 static void dcs_voice_cutoff(t_dcs_voice *x, t_floatarg f) { x->x_cutoff = f > 0.1f ? f : 0.1f; }
 static void dcs_voice_reso(t_dcs_voice *x, t_floatarg f) { x->x_reso = f; }
 static void dcs_voice_fenv(t_dcs_voice *x, t_floatarg f) { x->x_fenv = f > 0 ? f : 0; }
@@ -640,6 +891,8 @@ static void *dcs_voice_new(void)
     x->x_cutoff = 4; x->x_reso = 0.3f; x->x_fenv = 6; x->x_detune = 8; x->x_sub = 0.3f; x->x_saws = 2;
     x->x_octave = 0; x->x_chance = 1; x->x_hchance = 1; x->x_glide = 0; x->x_drive = 0.3f;
     x->x_wobble = 0; x->x_wrate = 2; x->x_bend = 0; x->x_bendms = 120; x->x_chop = 180; x->x_bpm = 100;
+    x->x_chip = 1; x->x_wave = 0; x->x_duty = 0.5f; x->x_sus = 0.6f; x->x_vib = 0; x->x_arp = 0;
+    x->x_fmratio = 1; x->x_fmindex = 2; x->x_fmfb = 0;
     x->x_ktune = 50; x->x_kdecay = 350; x->x_kdrive = 0.3f; x->x_stone = 185; x->x_sdecay = 180; x->x_hdecay = 45;
     x->x_seed = (unsigned int)(size_t)x;
     outlet_new(&x->x_obj, &s_signal);
@@ -687,6 +940,15 @@ void dcs_voice_tilde_setup(void)
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_stone, gensym("stone"), A_FLOAT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_sdecay, gensym("sdecay"), A_FLOAT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_hdecay, gensym("hdecay"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_chipm, gensym("chip"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_wave, gensym("wave"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_duty, gensym("duty"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_sus, gensym("sus"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_vib, gensym("vib"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_arp, gensym("arp"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_fmratio, gensym("fmratio"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_fmindex, gensym("fmindex"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_fmfb, gensym("fmfb"), A_FLOAT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_ignore, gensym("pump"), A_FLOAT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_ignore, gensym("pumprel"), A_FLOAT, 0);
 }

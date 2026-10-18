@@ -200,20 +200,23 @@ final class Params {
             // Saved in presets, so a shared preset sounds the same. Not reset when a preset or Realm says nothing
             // about it (a Realm would otherwise switch the kit back to Classic).
             // User kits come after the built-in ones (Kits.refreshChoices puts them in the menus).
-            new Param("kit", "Kit (the sound of the music)", 0f, 5f + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kit", "Kit (the sound of the music)", 0f, Kits.BUILT_IN.length - 1f + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic", "Acoustic (plucked and bowed strings)", "Synth (saws through a resonant filter)",
                             "EDM (supersaws, a drum machine, sidechain pump)",
                             "Future bass (wobbly chords, chops of your voice, a deep pump)",
-                            "Low end (an 808 that slides, a deep pad, a sparse top)")
+                            "Low end (an 808 that slides, a deep pad, a sparse top)",
+                            "Chiptune: NES (pulse waves, the triangle bass, noise drums)",
+                            "Chiptune: Game Boy (pulses, the 4-bit wave bass, noise drums)",
+                            "Chiptune: Genesis (FM synthesis)")
                     .inSection("music").noRandom().noPd().dcs(),
             // Mix and match (Oct 17): each part can take its sound from another kit. "The kit" = the Kit above.
-            new Param("kitp_mel", "Melody from", 0f, 6f + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kitp_mel", "Melody from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_bass", "Bass from", 0f, 6f + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kitp_bass", "Bass from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_pad", "Pad from", 0f, 6f + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kitp_pad", "Pad from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_drums", "Drums from", 0f, 6f + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kitp_drums", "Drums from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
             // Melody rhythm (Oct 15): the walking notes and the standing-still chimes follow one-bar rhythm patterns
             // (whole to 8th notes, or dotted and syncopated ones), each note ringing as long as it lasts. Off = as before.

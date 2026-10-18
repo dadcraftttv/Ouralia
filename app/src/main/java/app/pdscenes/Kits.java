@@ -32,23 +32,28 @@ final class Kits {
     static final String ID = "kit";
     static final String[] PARTS = {"mel", "bass", "pad", "drums"};
     /** The Kit menu, in order (Params' choices for "kit" follow it). */
-    static final String[] BUILT_IN = {"classic", "acoustic", "synth", "edm", "futurebass", "lowend"};
+    static final String[] BUILT_IN = {"classic", "acoustic", "synth", "edm", "futurebass", "lowend", "chipnes",
+            "chipgb", "chipgenesis"};
     /** The built-in kits' short names ("Melody from" etc.). */
-    static final String[] TITLES = {"Classic", "Acoustic", "Synth", "EDM", "Future bass", "Low end"};
+    static final String[] TITLES = {"Classic", "Acoustic", "Synth", "EDM", "Future bass", "Low end", "Chiptune: NES",
+            "Chiptune: Game Boy", "Chiptune: Genesis"};
     /** Room for user kits in the Params' ranges (the menus list only the kits there are). */
     static final int MAX_USER = 99;
     static final String FILE = "kit.txt";
     /** The Params holding a kit's menu index: the Kit, then each part's "from" (whose index is one more). */
     static final String[] PARAMS = {ID, "kitp_mel", "kitp_bass", "kitp_pad", "kitp_drums"};
-    static final String[] ENGINES = {"classic", "pluck", "bowed", "modal", "analog", "drums", "chop", "sub"};
+    static final String[] ENGINES = {"classic", "pluck", "bowed", "modal", "analog", "drums", "chop", "sub", "chip"};
     static final String[] MODAL = {"", "bell", "marimba", "bowl"};
+    static final String[] CHIPS = {"", "nes", "gameboy", "genesis"};
+    static final String[] WAVES = {"pulse", "triangle", "wave", "fm"};
     /** The voice's own defaults, sent before a kit's settings (so nothing lingers from the kit before). */
     static final String[][] DEFAULTS = {{"engine", "0"}, {"bright", "0.4"}, {"level", "1"}, {"attack", "300"},
             {"release", "800"}, {"decay", "3000"}, {"modal", "1"}, {"cutoff", "4"}, {"reso", "0.3"}, {"fenv", "6"},
             {"detune", "8"}, {"sub", "0.3"}, {"saws", "2"}, {"ktune", "50"}, {"kdecay", "350"}, {"kdrive", "0.3"},
             {"stone", "185"}, {"sdecay", "180"}, {"hdecay", "45"}, {"pump", "0"}, {"pumprel", "250"}, {"wobble", "0"},
             {"wrate", "2"}, {"bend", "0"}, {"bendms", "120"}, {"chop", "180"}, {"octave", "0"}, {"chance", "1"},
-            {"hchance", "1"}, {"glide", "0"}, {"drive", "0.3"}};
+            {"hchance", "1"}, {"glide", "0"}, {"drive", "0.3"}, {"chip", "1"}, {"wave", "0"}, {"duty", "0.5"},
+            {"sus", "0.6"}, {"vib", "0"}, {"arp", "0"}, {"fmratio", "1"}, {"fmindex", "2"}, {"fmfb", "0"}};
 
     /** Reads a built-in kit's text (assets on the phone, files on the desktop); null if missing. */
     interface Source {
@@ -120,6 +125,10 @@ final class Kits {
                     value = indexOf(ENGINES, w[1]);
                 } else if (name.equals("modal")) {
                     value = indexOf(MODAL, w[1]);
+                } else if (name.equals("chip") && indexOf(CHIPS, w[1]) > 0) {
+                    value = indexOf(CHIPS, w[1]);
+                } else if (name.equals("wave") && indexOf(WAVES, w[1]) >= 0) {
+                    value = indexOf(WAVES, w[1]);
                 } else {
                     try {
                         value = Float.parseFloat(w[1]);
@@ -333,6 +342,12 @@ final class Kits {
                     if (indexOf(MODAL, w[1]) <= 0) {
                         problems.add("Line " + lineNo + ": unknown modal \"" + w[1] + "\" (bell, marimba, bowl)");
                     }
+                } else if (name.equals("chip") && indexOf(CHIPS, w[1]) <= 0) {
+                    problems.add("Line " + lineNo + ": unknown chip \"" + w[1] + "\" (nes, gameboy, genesis)");
+                } else if (name.equals("wave") && indexOf(WAVES, w[1]) < 0) {
+                    problems.add("Line " + lineNo + ": unknown wave \"" + w[1] + "\" (pulse, triangle, wave, fm)");
+                } else if (name.equals("chip") || name.equals("wave")) {
+                    continue;
                 } else if (!isSetting(name)) {
                     problems.add("Line " + lineNo + ": unknown setting \"" + name + "\"");
                 } else {
