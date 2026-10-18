@@ -23,7 +23,7 @@ LIB = os.path.join(TOOLS, ".libpd", "libpd.so")
 PATCH_TESTS = os.path.join(TOOLS, "test_patch.py")
 COSTS = os.path.join(TOOLS, ".test_costs.json")
 OTHER_PD = ["test_scene_loader.py", "test_scene_sensors.py", "test_rj_analysis.py", "test_bundled_scenes.py",
-            "test_scene_helpers.py", "test_scene_graphics.py", "test_dcs.py"]
+            "test_scene_helpers.py", "test_scene_graphics.py", "test_dcs.py", "test_fx_port.py"]
 SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
 
 

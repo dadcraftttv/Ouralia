@@ -10,8 +10,11 @@ graph from named nodes instead, so adding an effect is a few lines. Run from any
 import math
 import os
 import re
+import sys
 
 BS = chr(92)  # a literal backslash; Pd writes escaped semicolons as "\;"
+# --legacy-fx: the effects as the Pd objects they were before their dcs ports (tools/test_fx_port.py compares the two)
+LEGACY_FX = "--legacy-fx" in sys.argv
 OUT = os.path.join(os.path.dirname(__file__), "..", "app", "src", "main", "assets",
                    "patches", "test_scene.pd")
 
@@ -21,7 +24,7 @@ DEFAULTS = [
     ("gain", 1), ("dry", 1), ("echo_on", 1), ("echo_time", 350), ("echo_sync", 2), ("feedback", 0.4),
     ("wet", 0), ("ring_on", 1), ("ring_freq", 80), ("ring_mix", 0), ("smooth", 30),
     ("pitch_on", 1), ("pitch_semi", 0), ("pitch_mix", 0), ("pitch_window", 60),
-    ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000),
+    ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000), ("crush_style", 0),
     ("space_on", 1), ("space_pan", 0), ("space_shift", 0),
     ("filter_on", 1), ("filter_mix", 0), ("filter_type", 0), ("filter_freq", 1500), ("filter_q", 1),
     ("reverb_on", 1), ("reverb_mix", 0), ("reverb_size", 0.5), ("reverb_tone", 6000),
@@ -582,6 +585,21 @@ def soft_limit(P, n, src, limit, gain=1.0, x=0, y=0):
     P.sig2(f"{n}_q", "/~", f"{n}_num", f"{n}_den", x, y + 75)
     P.obj(f"{n}", f"*~ {limit}", x, y + 90); P.c(f"{n}_q", f"{n}")
     return n
+
+
+def fx(P, name, text, src, *params, x=0, y=0, smooth="r_smooth"):
+    """A dcs effect object `name` (`text`) fed by the signal `src`; each (receiver, selector) pair becomes
+    [r receiver] -> [selector $1( into it, and the smoothing time arrives as "smooth" (from `smooth`)."""
+    P.obj(name, text, x, y)
+    P.c(src, name)
+    for k, (recv, sel) in enumerate(params):
+        P.obj(f"{name}_r{k}", f"r {recv}", x + 70 * k, y - 40)
+        P.msg(f"{name}_m{k}", f"{sel} {BS}$1", x + 70 * k, y - 20)
+        P.c(f"{name}_r{k}", f"{name}_m{k}"); P.c(f"{name}_m{k}", name)
+    if smooth:
+        P.msg(f"{name}_ms", f"smooth {BS}$1", x + 70 * len(params), y - 20)
+        P.c(smooth, f"{name}_ms"); P.c(f"{name}_ms", name)
+    return name
 
 
 def smoothed(P, key, recv, x, y, ramp=30, mult=None):
@@ -3988,19 +4006,23 @@ def build():
     P.sig2("mic_comp", "*~", "mic_comp1", "hush_ln", 20, 395)
 
     # --- ring modulator with bypass ---
-    P.obj("r_ring_freq", "r ring_freq", 250, 20)
-    P.obj("osc", "osc~ 80", 250, 50)
-    P.c("r_ring_freq", "osc")
-    mix = smoothed(P, "ring_mix", "ring_mix", 340, 20)
-    on = smoothed(P, "ring_on", "ring_on", 450, 20)
-    P.sig2("mix_eff", "*~", mix, on, 340, 100)            # amount, forced to 0 when bypassed
-    P.sig2("osc_amt", "*~", "osc", "mix_eff", 250, 140)
-    P.obj("mix_minus1", "-~ 1", 340, 140)
-    P.c("mix_eff", "mix_minus1")
-    P.obj("one_minus_mix", "*~ -1", 340, 170)             # 1 - amount
-    P.c("mix_minus1", "one_minus_mix")
-    P.sig2("carrier", "+~", "osc_amt", "one_minus_mix", 250, 200)
-    P.sig2("ring_out", "*~", "mic_comp", "carrier", 20, 230)   # amount 0 -> carrier is 1 -> unchanged
+    if LEGACY_FX:
+        P.obj("r_ring_freq", "r ring_freq", 250, 20)
+        P.obj("osc", "osc~ 80", 250, 50)
+        P.c("r_ring_freq", "osc")
+        mix = smoothed(P, "ring_mix", "ring_mix", 340, 20)
+        on = smoothed(P, "ring_on", "ring_on", 450, 20)
+        P.sig2("mix_eff", "*~", mix, on, 340, 100)            # amount, forced to 0 when bypassed
+        P.sig2("osc_amt", "*~", "osc", "mix_eff", 250, 140)
+        P.obj("mix_minus1", "-~ 1", 340, 140)
+        P.c("mix_eff", "mix_minus1")
+        P.obj("one_minus_mix", "*~ -1", 340, 170)             # 1 - amount
+        P.c("mix_minus1", "one_minus_mix")
+        P.sig2("carrier", "+~", "osc_amt", "one_minus_mix", 250, 200)
+        P.sig2("ring_out", "*~", "mic_comp", "carrier", 20, 230)   # amount 0 -> carrier is 1 -> unchanged
+    else:   # dcs_ring~ (Oct 17): the same, sample for sample, and nothing to compute while the amount is 0
+        fx(P, "ring_out", "dcs_ring~ 80", "mic_comp", ("ring_freq", "freq"), ("ring_mix", "mix"), ("ring_on", "on"),
+           x=250, y=50)
 
     # --- pitch shifter: two delay taps sweeping through a buffer, crossfaded with Hann windows ---
     # Reading a delay line whose delay changes at rate (1 - ratio) shifts pitch by 'ratio'.
@@ -4070,140 +4092,155 @@ def build():
     P.sig2("pitched", "+~", "kept_amt", "shifted_amt", 400, 740)
 
     # --- bit crusher: sample-rate reduction (sample & hold), then bit-depth reduction ---
-    # A phasor at the target rate clocks a sample-and-hold: [samphold~] grabs a new input
-    # value each time the phasor wraps, so the signal only changes 'crush_rate' times a second.
-    # Bit depth rounds to the nearest of 2^(bits-1) steps per polarity, using
-    # round(x) = (x + 0.5) - wrap(x + 0.5).
-    P.obj("crush_in", "clip~ -1 1", 700, 560)                   # bit depth assumes -1..1
-    P.c("pitched", "crush_in")
-    crate = smoothed(P, "crush_rate", "crush_rate", 800, 560)
-    P.obj("crush_clock", "phasor~", 800, 650)
-    P.c(crate, "crush_clock")
-    P.obj("crush_hold", "samphold~", 700, 690)
-    P.c("crush_in", "crush_hold", 0, 0)
-    P.c("crush_clock", "crush_hold", 0, 1)
+    if LEGACY_FX:
+        # A phasor at the target rate clocks a sample-and-hold: [samphold~] grabs a new input
+        # value each time the phasor wraps, so the signal only changes 'crush_rate' times a second.
+        # Bit depth rounds to the nearest of 2^(bits-1) steps per polarity, using
+        # round(x) = (x + 0.5) - wrap(x + 0.5).
+        P.obj("crush_in", "clip~ -1 1", 700, 560)                   # bit depth assumes -1..1
+        P.c("pitched", "crush_in")
+        crate = smoothed(P, "crush_rate", "crush_rate", 800, 560)
+        P.obj("crush_clock", "phasor~", 800, 650)
+        P.c(crate, "crush_clock")
+        P.obj("crush_hold", "samphold~", 700, 690)
+        P.c("crush_in", "crush_hold", 0, 0)
+        P.c("crush_clock", "crush_hold", 0, 1)
 
-    P.obj("r_crush_bits", "r crush_bits", 900, 560)
-    P.obj("bits_m1", "- 1", 900, 590)
-    P.obj("bits_ln", "* 0.693147", 900, 620)                     # times ln(2)
-    P.obj("levels", "exp", 900, 650)                             # levels = 2^(bits-1)
-    P.obj("pk_levels", "pack f 30", 900, 680)
-    P.obj("ln_levels", "line~", 900, 710)
-    P.c("r_crush_bits", "bits_m1"); P.c("bits_m1", "bits_ln"); P.c("bits_ln", "levels")
-    P.c("levels", "pk_levels"); P.c("pk_levels", "ln_levels"); P.c("r_smooth", "pk_levels", 0, 1)
+        P.obj("r_crush_bits", "r crush_bits", 900, 560)
+        P.obj("bits_m1", "- 1", 900, 590)
+        P.obj("bits_ln", "* 0.693147", 900, 620)                     # times ln(2)
+        P.obj("levels", "exp", 900, 650)                             # levels = 2^(bits-1)
+        P.obj("pk_levels", "pack f 30", 900, 680)
+        P.obj("ln_levels", "line~", 900, 710)
+        P.c("r_crush_bits", "bits_m1"); P.c("bits_m1", "bits_ln"); P.c("bits_ln", "levels")
+        P.c("levels", "pk_levels"); P.c("pk_levels", "ln_levels"); P.c("r_smooth", "pk_levels", 0, 1)
 
-    P.sig2("scaled", "*~", "crush_hold", "ln_levels", 700, 740)
-    P.obj("scaled_half", "+~ 0.5", 700, 770)
-    P.c("scaled", "scaled_half")
-    P.obj("scaled_frac", "wrap~", 800, 770)
-    P.c("scaled_half", "scaled_frac")
-    P.sig2("rounded", "-~", "scaled_half", "scaled_frac", 700, 800)
-    P.sig2("crushed", "/~", "rounded", "ln_levels", 700, 830)
+        P.sig2("scaled", "*~", "crush_hold", "ln_levels", 700, 740)
+        P.obj("scaled_half", "+~ 0.5", 700, 770)
+        P.c("scaled", "scaled_half")
+        P.obj("scaled_frac", "wrap~", 800, 770)
+        P.c("scaled_half", "scaled_frac")
+        P.sig2("rounded", "-~", "scaled_half", "scaled_frac", 700, 800)
+        P.sig2("crushed", "/~", "rounded", "ln_levels", 700, 830)
 
-    cmix = smoothed(P, "crush_mix", "crush_mix", 1000, 560)
-    con = smoothed(P, "crush_on", "crush_on", 1100, 560)
-    P.sig2("cmix_eff", "*~", cmix, con, 1000, 650)               # amount, forced to 0 when bypassed
-    P.sig2("crush_diff", "-~", "crushed", "pitched", 700, 860)
-    P.sig2("crush_amt", "*~", "crush_diff", "cmix_eff", 700, 890)
-    P.sig2("crushed_mix", "+~", "pitched", "crush_amt", 700, 920)
+        cmix = smoothed(P, "crush_mix", "crush_mix", 1000, 560)
+        con = smoothed(P, "crush_on", "crush_on", 1100, 560)
+        P.sig2("cmix_eff", "*~", cmix, con, 1000, 650)               # amount, forced to 0 when bypassed
+        P.sig2("crush_diff", "-~", "crushed", "pitched", 700, 860)
+        P.sig2("crush_amt", "*~", "crush_diff", "cmix_eff", 700, 890)
+        P.sig2("crushed_mix", "+~", "pitched", "crush_amt", 700, 920)
+    else:   # dcs_crush~ (Oct 17): Classic the same, sample for sample, nothing but its clock while the amount is 0;
+            # Style picks a machine's own sound (8-bit sampler, SP-1200, NES, Game Boy, SNES, Genesis)
+        fx(P, "crushed_mix", "dcs_crush~", "pitched", ("crush_rate", "rate"), ("crush_bits", "bits"),
+           ("crush_mix", "mix"), ("crush_on", "on"), ("crush_style", "style"), x=700, y=600)
 
     # --- distortion: drive the signal into a clipper (three shapes), crossfaded with the clean sound ---
     # Each shape has a small-signal gain of 1, so drive 1 is close to clean and louder only gets
     # grittier. soft = x / (1 + |x|) (never quite reaches 1, so it stays smooth at any drive),
     # hard = x limited to +-1, fold = sin(drive * x * pi/2) * 2/pi (a cosine lookup shifted a
     # quarter cycle).
-    drive = smoothed(P, "dist_drive", "dist_drive", 1000, 1000)
-    P.sig2("dist_u", "*~", "crushed_mix", drive, 700, 1000)
-    P.obj("dist_hard", "clip~ -1 1", 700, 1030)
-    P.c("dist_u", "dist_hard")
-    P.obj("dist_abs", "abs~", 800, 1030)
-    P.obj("dist_den", "+~ 1", 800, 1060)
-    P.c("dist_u", "dist_abs"); P.c("dist_abs", "dist_den")
-    P.sig2("dist_soft", "/~", "dist_u", "dist_den", 800, 1090)
-    P.obj("dist_f1", "*~ 0.25", 900, 1030)
-    P.obj("dist_f2", "-~ 0.25", 900, 1060)
-    P.obj("dist_f3", "wrap~", 900, 1090)
-    P.obj("dist_f4", "cos~", 900, 1120)
-    P.obj("dist_fold", "*~ 0.63662", 900, 1150)
-    P.c("dist_u", "dist_f1"); P.c("dist_f1", "dist_f2"); P.c("dist_f2", "dist_f3")
-    P.c("dist_f3", "dist_f4"); P.c("dist_f4", "dist_fold")
-    # shape menu -> three smoothed weights (one is 1, the others 0)
-    P.obj("r_dist_type", "r dist_type", 1000, 1030)
-    P.obj("dist_sel", "sel 0 1 2", 1000, 1060)
-    P.msg("dist_m0", "1 0 0", 1000, 1090); P.msg("dist_m1", "0 1 0", 1060, 1090); P.msg("dist_m2", "0 0 1", 1120, 1090)
-    P.obj("dist_unpack", "unpack f f f", 1000, 1120)
-    P.c("r_dist_type", "dist_sel")
-    for k in range(3):
-        P.c("dist_sel", f"dist_m{k}", k)
-        P.c(f"dist_m{k}", "dist_unpack")
-    shapes = []
-    for k, src in enumerate(("dist_soft", "dist_hard", "dist_fold")):
-        P.obj(f"dist_pk{k}", "pack f 30", 1000 + 100 * k, 1150)
-        P.obj(f"dist_ln{k}", "line~", 1000 + 100 * k, 1180)
-        P.c("dist_unpack", f"dist_pk{k}", k)
-        P.c(f"dist_pk{k}", f"dist_ln{k}")
-        P.c("r_smooth", f"dist_pk{k}", 0, 1)
-        shapes.append(P.sig2(f"dist_w{k}", "*~", src, f"dist_ln{k}", 1000 + 100 * k, 1210))
-    P.sig2("dist_s01", "+~", shapes[0], shapes[1], 1000, 1240)
-    P.sig2("dist_shaped", "+~", "dist_s01", shapes[2], 1000, 1270)
-    dmix = smoothed(P, "dist_mix", "dist_mix", 1300, 1000)
-    don = smoothed(P, "dist_on", "dist_on", 1400, 1000)
-    P.sig2("dmix_eff", "*~", dmix, don, 1300, 1060)              # amount, forced to 0 when bypassed
-    P.sig2("dist_diff", "-~", "dist_shaped", "crushed_mix", 1000, 1300)
-    P.sig2("dist_amt", "*~", "dist_diff", "dmix_eff", 1000, 1330)
-    P.sig2("dist_out", "+~", "crushed_mix", "dist_amt", 1000, 1360)
+    if LEGACY_FX:
+        drive = smoothed(P, "dist_drive", "dist_drive", 1000, 1000)
+        P.sig2("dist_u", "*~", "crushed_mix", drive, 700, 1000)
+        P.obj("dist_hard", "clip~ -1 1", 700, 1030)
+        P.c("dist_u", "dist_hard")
+        P.obj("dist_abs", "abs~", 800, 1030)
+        P.obj("dist_den", "+~ 1", 800, 1060)
+        P.c("dist_u", "dist_abs"); P.c("dist_abs", "dist_den")
+        P.sig2("dist_soft", "/~", "dist_u", "dist_den", 800, 1090)
+        P.obj("dist_f1", "*~ 0.25", 900, 1030)
+        P.obj("dist_f2", "-~ 0.25", 900, 1060)
+        P.obj("dist_f3", "wrap~", 900, 1090)
+        P.obj("dist_f4", "cos~", 900, 1120)
+        P.obj("dist_fold", "*~ 0.63662", 900, 1150)
+        P.c("dist_u", "dist_f1"); P.c("dist_f1", "dist_f2"); P.c("dist_f2", "dist_f3")
+        P.c("dist_f3", "dist_f4"); P.c("dist_f4", "dist_fold")
+        # shape menu -> three smoothed weights (one is 1, the others 0)
+        P.obj("r_dist_type", "r dist_type", 1000, 1030)
+        P.obj("dist_sel", "sel 0 1 2", 1000, 1060)
+        P.msg("dist_m0", "1 0 0", 1000, 1090); P.msg("dist_m1", "0 1 0", 1060, 1090); P.msg("dist_m2", "0 0 1", 1120, 1090)
+        P.obj("dist_unpack", "unpack f f f", 1000, 1120)
+        P.c("r_dist_type", "dist_sel")
+        for k in range(3):
+            P.c("dist_sel", f"dist_m{k}", k)
+            P.c(f"dist_m{k}", "dist_unpack")
+        shapes = []
+        for k, src in enumerate(("dist_soft", "dist_hard", "dist_fold")):
+            P.obj(f"dist_pk{k}", "pack f 30", 1000 + 100 * k, 1150)
+            P.obj(f"dist_ln{k}", "line~", 1000 + 100 * k, 1180)
+            P.c("dist_unpack", f"dist_pk{k}", k)
+            P.c(f"dist_pk{k}", f"dist_ln{k}")
+            P.c("r_smooth", f"dist_pk{k}", 0, 1)
+            shapes.append(P.sig2(f"dist_w{k}", "*~", src, f"dist_ln{k}", 1000 + 100 * k, 1210))
+        P.sig2("dist_s01", "+~", shapes[0], shapes[1], 1000, 1240)
+        P.sig2("dist_shaped", "+~", "dist_s01", shapes[2], 1000, 1270)
+        dmix = smoothed(P, "dist_mix", "dist_mix", 1300, 1000)
+        don = smoothed(P, "dist_on", "dist_on", 1400, 1000)
+        P.sig2("dmix_eff", "*~", dmix, don, 1300, 1060)              # amount, forced to 0 when bypassed
+        P.sig2("dist_diff", "-~", "dist_shaped", "crushed_mix", 1000, 1300)
+        P.sig2("dist_amt", "*~", "dist_diff", "dmix_eff", 1000, 1330)
+        P.sig2("dist_out", "+~", "crushed_mix", "dist_amt", 1000, 1360)
+    else:   # dcs_dist~ (Oct 17): the same, sample for sample, and nothing to compute while the amount is 0
+        fx(P, "dist_out", "dcs_dist~", "crushed_mix", ("dist_drive", "drive"), ("dist_type", "type"),
+           ("dist_mix", "mix"), ("dist_on", "on"), x=700, y=1000)
 
     # --- filter: one biquad (low-pass / high-pass / band-pass) with coefficients from [expr] ---
     # Standard "audio EQ cookbook" formulas. Frequency changes glide (via [line]); the sample
     # rate comes from [samplerate~]. The max()/min() guards keep the maths finite before the
     # first values arrive, because a NaN would lock the filter up.
-    S = "max($f4\\, 8000)"
-    W = "6.283185*min(max(exp($f1)\\, 20)\\, 0.45*%s)/%s" % (S, S)   # $f1 is ln(frequency)
-    A = "sin(%s)/(2*max($f2\\, 0.1))" % W
-    C = "cos(%s)" % W
-    a0 = "(1+%s)" % A
-    lp, hp, bp = "($f3<0.5)", "(($f3>0.5)*($f3<1.5))", "($f3>1.5)"
-    coefs = [
-        "2*%s/%s" % (C, a0),                                                      # feedback 1
-        "-(1-%s)/%s" % (A, a0),                                                   # feedback 2
-        "(%s*(1-%s)/2+%s*(1+%s)/2+%s*%s)/%s" % (lp, C, hp, C, bp, A, a0),         # feedforward 1
-        "(%s*(1-%s)-%s*(1+%s))/%s" % (lp, C, hp, C, a0),                          # feedforward 2
-        "(%s*(1-%s)/2+%s*(1+%s)/2-%s*%s)/%s" % (lp, C, hp, C, bp, A, a0),         # feedforward 3
-    ]
-    P.obj("coef", "expr " + (" " + BS + "; ").join(coefs).replace("$", BS + "$"), 1600, 20)
-    P.obj("coef_pack", "pack f f f f f", 1600, 70)
-    for i in range(5):
-        P.c("coef", "coef_pack", i, i)
-    P.obj("filt", "biquad~", 1600, 100)
-    P.c("coef_pack", "filt")
-    P.c("dist_out", "filt")
-
-    P.obj("r_filter_freq", "r filter_freq", 1750, 20)
-    P.obj("filter_freq_log", "log", 1750, 35)                    # glide in log frequency: equal-sounding steps
-    P.obj("pk_filter_freq", "pack f 30", 1750, 50)
-    P.obj("ln_filter_freq", "line 0 3", 1750, 80)                # control-rate glide in 3 ms steps
-    P.c("r_filter_freq", "filter_freq_log"); P.c("filter_freq_log", "pk_filter_freq")
-    P.c("pk_filter_freq", "ln_filter_freq")
-    P.c("r_smooth", "pk_filter_freq", 0, 1)
-    P.c("ln_filter_freq", "coef", 0, 0)
-    for name, inlet in (("filter_q", 1), ("filter_type", 2)):
-        P.obj(f"r_{name}", f"r {name}", 1850 + 100 * inlet, 20)
-        P.obj(f"t_{name}", "t b f", 1850 + 100 * inlet, 50)
-        P.c(f"r_{name}", f"t_{name}")
-        P.c(f"t_{name}", "coef", 1, inlet)                      # value into the cold inlet...
-        P.c(f"t_{name}", "coef", 0, 0)                          # ...then re-evaluate
-    P.obj("loadbang_sr", "loadbang", 2150, 20)
+    P.obj("loadbang_sr", "loadbang", 2150, 20)                # the sample rate (other parts use it too)
     P.obj("sr", "samplerate~", 2150, 50)
-    P.obj("t_sr", "t b f", 2150, 80)
-    P.c("loadbang_sr", "sr"); P.c("sr", "t_sr")
-    P.c("t_sr", "coef", 1, 3); P.c("t_sr", "coef", 0, 0)
+    P.c("loadbang_sr", "sr")
+    if LEGACY_FX:
+        S = "max($f4\\, 8000)"
+        W = "6.283185*min(max(exp($f1)\\, 20)\\, 0.45*%s)/%s" % (S, S)   # $f1 is ln(frequency)
+        A = "sin(%s)/(2*max($f2\\, 0.1))" % W
+        C = "cos(%s)" % W
+        a0 = "(1+%s)" % A
+        lp, hp, bp = "($f3<0.5)", "(($f3>0.5)*($f3<1.5))", "($f3>1.5)"
+        coefs = [
+            "2*%s/%s" % (C, a0),                                                      # feedback 1
+            "-(1-%s)/%s" % (A, a0),                                                   # feedback 2
+            "(%s*(1-%s)/2+%s*(1+%s)/2+%s*%s)/%s" % (lp, C, hp, C, bp, A, a0),         # feedforward 1
+            "(%s*(1-%s)-%s*(1+%s))/%s" % (lp, C, hp, C, a0),                          # feedforward 2
+            "(%s*(1-%s)/2+%s*(1+%s)/2-%s*%s)/%s" % (lp, C, hp, C, bp, A, a0),         # feedforward 3
+        ]
+        P.obj("coef", "expr " + (" " + BS + "; ").join(coefs).replace("$", BS + "$"), 1600, 20)
+        P.obj("coef_pack", "pack f f f f f", 1600, 70)
+        for i in range(5):
+            P.c("coef", "coef_pack", i, i)
+        P.obj("filt", "biquad~", 1600, 100)
+        P.c("coef_pack", "filt")
+        P.c("dist_out", "filt")
 
-    fmix = smoothed(P, "filter_mix", "filter_mix", 1600, 160)
-    fon = smoothed(P, "filter_on", "filter_on", 1700, 160)
-    P.sig2("fmix_eff", "*~", fmix, fon, 1600, 220)               # amount, forced to 0 when bypassed
-    P.sig2("filt_diff", "-~", "filt", "dist_out", 1600, 250)
-    P.sig2("filt_amt", "*~", "filt_diff", "fmix_eff", 1600, 280)
-    P.sig2("filtered_pre", "+~", "dist_out", "filt_amt", 1600, 310)
+        P.obj("r_filter_freq", "r filter_freq", 1750, 20)
+        P.obj("filter_freq_log", "log", 1750, 35)                    # glide in log frequency: equal-sounding steps
+        P.obj("pk_filter_freq", "pack f 30", 1750, 50)
+        P.obj("ln_filter_freq", "line 0 3", 1750, 80)                # control-rate glide in 3 ms steps
+        P.c("r_filter_freq", "filter_freq_log"); P.c("filter_freq_log", "pk_filter_freq")
+        P.c("pk_filter_freq", "ln_filter_freq")
+        P.c("r_smooth", "pk_filter_freq", 0, 1)
+        P.c("ln_filter_freq", "coef", 0, 0)
+        for name, inlet in (("filter_q", 1), ("filter_type", 2)):
+            P.obj(f"r_{name}", f"r {name}", 1850 + 100 * inlet, 20)
+            P.obj(f"t_{name}", "t b f", 1850 + 100 * inlet, 50)
+            P.c(f"r_{name}", f"t_{name}")
+            P.c(f"t_{name}", "coef", 1, inlet)                      # value into the cold inlet...
+            P.c(f"t_{name}", "coef", 0, 0)                          # ...then re-evaluate
+        P.obj("t_sr", "t b f", 2150, 80)
+        P.c("sr", "t_sr")
+        P.c("t_sr", "coef", 1, 3); P.c("t_sr", "coef", 0, 0)
+
+        fmix = smoothed(P, "filter_mix", "filter_mix", 1600, 160)
+        fon = smoothed(P, "filter_on", "filter_on", 1700, 160)
+        P.sig2("fmix_eff", "*~", fmix, fon, 1600, 220)               # amount, forced to 0 when bypassed
+        P.sig2("filt_diff", "-~", "filt", "dist_out", 1600, 250)
+        P.sig2("filt_amt", "*~", "filt_diff", "fmix_eff", 1600, 280)
+        P.sig2("filtered_pre", "+~", "dist_out", "filt_amt", 1600, 310)
+    else:   # dcs_filter~ (Oct 17): the same biquad, coefficients and 3 ms glide steps, sample for sample
+        fx(P, "filtered_pre", "dcs_filter~", "dist_out", ("filter_freq", "freq"), ("filter_q", "q"),
+           ("filter_type", "type"), ("filter_mix", "mix"), ("filter_on", "on"), x=1600, y=100)
+
     # The music joins here, after the tone-changing effects (so pitch shifter and crusher cannot push it
     # out of key) but before chorus, flanger, phaser, tremolo, echo, reverb and the spatial stage.
     # The Dry level scales the mic here, before the music joins, so the music keeps its own level whatever Dry is
@@ -4334,20 +4371,24 @@ def build():
     P.sig2("phased", "+~", "ph_wet_part", "ph_dry_part", 3300, 1430)
 
     # --- tremolo: the level swings between full and (1 - depth) at the LFO rate ---
-    trate = smoothed(P, "trem_rate", "trem_rate", 2950, 20)
-    P.obj("trem_osc", "osc~", 2950, 110)
-    P.c(trate, "trem_osc")
-    tdepth = smoothed(P, "trem_depth", "trem_depth", 3100, 20)
-    ton = smoothed(P, "trem_on", "trem_on", 3200, 20)
-    P.sig2("trem_depth_eff", "*~", tdepth, ton, 3100, 110)       # depth, forced to 0 when bypassed
-    P.obj("trem_half", "*~ -0.5", 2950, 150)
-    P.obj("trem_unit", "+~ 0.5", 2950, 180)                      # (1 - sine) / 2, from 0 to 1
-    P.c("trem_osc", "trem_half"); P.c("trem_half", "trem_unit")
-    P.sig2("trem_dip", "*~", "trem_unit", "trem_depth_eff", 2950, 210)
-    P.obj("trem_neg", "*~ -1", 2950, 240)
-    P.obj("trem_gain", "+~ 1", 2950, 270)                        # 1 - dip
-    P.c("trem_dip", "trem_neg"); P.c("trem_neg", "trem_gain")
-    P.sig2("trem_out", "*~", "phased", "trem_gain", 2950, 310)
+    if LEGACY_FX:
+        trate = smoothed(P, "trem_rate", "trem_rate", 2950, 20)
+        P.obj("trem_osc", "osc~", 2950, 110)
+        P.c(trate, "trem_osc")
+        tdepth = smoothed(P, "trem_depth", "trem_depth", 3100, 20)
+        ton = smoothed(P, "trem_on", "trem_on", 3200, 20)
+        P.sig2("trem_depth_eff", "*~", tdepth, ton, 3100, 110)       # depth, forced to 0 when bypassed
+        P.obj("trem_half", "*~ -0.5", 2950, 150)
+        P.obj("trem_unit", "+~ 0.5", 2950, 180)                      # (1 - sine) / 2, from 0 to 1
+        P.c("trem_osc", "trem_half"); P.c("trem_half", "trem_unit")
+        P.sig2("trem_dip", "*~", "trem_unit", "trem_depth_eff", 2950, 210)
+        P.obj("trem_neg", "*~ -1", 2950, 240)
+        P.obj("trem_gain", "+~ 1", 2950, 270)                        # 1 - dip
+        P.c("trem_dip", "trem_neg"); P.c("trem_neg", "trem_gain")
+        P.sig2("trem_out", "*~", "phased", "trem_gain", 2950, 310)
+    else:   # dcs_trem~ (Oct 17): the same, sample for sample, and nothing to compute while the depth is 0
+        fx(P, "trem_out", "dcs_trem~", "phased", ("trem_rate", "rate"), ("trem_depth", "depth"), ("trem_on", "on"),
+           x=2950, y=110)
 
     # --- reverse echo: plays the sound backwards in short chunks, mixed in behind the original ---
     # The same two-tap crossfading delay line as the pitch shifter, with playback speed -1: the
@@ -4743,7 +4784,7 @@ def build():
 
 
 if __name__ == "__main__":
-    path = os.path.normpath(OUT)
+    path = os.path.normpath(sys.argv[sys.argv.index("--legacy-fx") + 1] if LEGACY_FX else OUT)
     with open(path, "w") as f:
         f.write(build().text())
     print("wrote", path)

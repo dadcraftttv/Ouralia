@@ -352,6 +352,37 @@ diff = np.abs(outs[0] - outs[1]).max(); peak = np.abs(outs[0]).max()
 check(peak > 0.05 and diff < 1e-5 * max(peak, 1), f"matches the Pd-object reverb sample for sample (worst {diff:.1e}, peak {peak:.2f}), both ears")
 check(costs[1] < 0.75 * costs[0], f"costs {100 * costs[1] / costs[0]:.0f}% of the Pd-object version (the maths is the same: it saves the overhead of ~100 objects)")
 
+# ---------------------------------------------------------------- dcs_crush~ styles
+print("dcs_crush~ styles:")
+cp = patch("crush", ["adc~", "r c", "dcs_crush~", "dac~"], [(0, 0, 2, 0), (1, 0, 2, 0), (2, 0, 3, 0), (2, 0, 3, 1)])
+t = np.arange(SR) / SR
+sine = (0.5 * np.sin(2 * np.pi * 440 * t)).astype(np.float32)
+def crushed(style):
+    e = Engine(LIB, cp)
+    for m in (("mix", 1), ("on", 1), ("style", style), ("smooth", 0)):
+        e.send_msg("c", *m)
+    y = e.run(sine)[int(0.2 * SR):, 0]; e.close(); return y
+def above(y, hz):
+    Y = np.abs(np.fft.rfft(y * np.hanning(len(y)))) ** 2; f = np.fft.rfftfreq(len(y), 1 / SR)
+    return Y[f > hz].sum() / Y.sum()
+names = ["", "8-bit sampler", "SP-1200", "NES", "Game Boy", "SNES", "Genesis"]
+hi = {}
+for k in range(1, 7):
+    y = crushed(k)
+    gain = 20 * np.log10(rms(y) / rms(sine[int(0.2 * SR):]))
+    hi[k] = above(y, 7000)
+    check(np.isfinite(y).all() and abs(peak_hz(y, 300, 600) / 440 - 1) < 0.01 and -7 < gain < 3,
+          f"{names[k]}: in tune, level {gain:+.1f} dB, {100 * hi[k]:.2f}% of the energy over 7 kHz")
+check(hi[1] < 0.01 and hi[5] < 0.01 and hi[4] > 10 * hi[1],
+      "the filtered machines (sampler, SNES) are smooth up top, the Game Boy buzzes (aliasing images)")
+loud = (0.9 * np.sin(2 * np.pi * 3000 * t)).astype(np.float32)
+e = Engine(LIB, cp)
+for m in (("mix", 1), ("on", 1), ("style", 3), ("smooth", 0)):
+    e.send_msg("c", *m)
+y = e.run(loud)[int(0.2 * SR):, 0]; e.close()
+g = 20 * np.log10(rms(y) / rms(loud))
+check(g < -10, f"NES: the DPCM channel's 1-bit steps can't follow a loud 3 kHz tone ({g:+.1f} dB), as on the console")
+
 # ---------------------------------------------------------------- dcs_voice~
 print("dcs_voice~:")
 vp = patch("voice", ["r vc", "dcs_voice~", "dac~"], [(0, 0, 1, 0), (1, 0, 2, 0), (1, 0, 2, 1)])

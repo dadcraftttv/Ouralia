@@ -62,9 +62,14 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 As of Oct 17:
 - **Waiting on DadCraft's ears** (all behind switches or kits, the old sound the default): the five kits (Acoustic,
   Synth, EDM, Future bass, Low end; Music tab, Kit * and Melody/Bass/Pad/Drums from *), Glitch voice New, Found note
-  ring String, Rustle squash + Step duck (pocket), Pitch tracker / Pitch shifter / Sudden-sound detector New.
+  ring String, Rustle squash + Step duck (pocket), Pitch tracker / Pitch shifter / Sudden-sound detector New,
+  Crusher style (8-bit sampler, SP-1200, NES, Game Boy, SNES, Genesis).
   Settings that use our C objects show " *" after their name. Kit levels were matched to Classic by measurement
   only; each kit's sound is one line per part in `app/src/main/assets/kits/<name>.txt`.
+- **Effect ports in progress** (DadCraft, Oct 17: dcs versions of every effect, for CPU; then "sing in key"): each
+  matches the old Pd chain sample for sample (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"). Done: ring,
+  tremolo, crusher, distortion, filter. Next: echo, phaser, reverse echo, Classic pitch shifter, chorus, flanger,
+  freeze, spatial. User kits stage 2 (samples) waits until after these.
 - **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
   reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
 - **Next on the kit plan** (ROADMAP 19): user kits stage 2, a sample engine in dcs_voice~ (drum one-shots,

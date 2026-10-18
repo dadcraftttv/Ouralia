@@ -29,6 +29,12 @@ objects or with anyone's abstractions.
   crossfade when they move.
 - Also: `dcs_pitch~` (YIN pitch tracker), `dcs_shift~` (PSOLA pitch shifter that keeps a voice's tone colour),
   `dcs_onset~` (spectral-flux onset detector), `dcs_reverb~` (Freeverb-style stereo reverb in one object).
+- Effects that each replace a chain of Pd objects sample for sample (`dcs_fx.h` holds Pd's own `line~`, `osc~`,
+  `cos~`, `phasor~`, `wrap~` and `delread4~` arithmetic), doing almost nothing while their amount is 0:
+  `dcs_ring~` (ring modulator), `dcs_trem~` (tremolo), `dcs_crush~` (bit crusher, plus machine styles: 8-bit
+  sampler, SP-1200, NES DPCM, Game Boy, SNES BRR, Genesis DAC), `dcs_dist~` (soft / hard / fold distortion),
+  `dcs_filter~` (cookbook biquad with [line]'s 3 ms glide steps). Files that include `dcs_fx.h` are built without
+  `-ffast-math` (exact rounding).
 
 Each object's source file starts with a full description of what it does.
 

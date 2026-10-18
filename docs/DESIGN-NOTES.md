@@ -99,6 +99,30 @@ to date in the same commit when behaviour changes.
   0.4 s swell: none. Patch: `add_onset_switch` reroutes every listener of gc_det_sel / fs_det_sel to on_gc / on_fs,
   fed by the classic detectors or dcs_onset~ (on `mic`, always running); `s onset_heard` for the tests. In the
   patch a swell triggers Classic once, New never; a clap both once.
+- **Effect ports** (Oct 17, DadCraft: "dcs versions of the effects we have. I want the performance benefits"; the
+  crusher "more accurate 8 or 16 bit sounds", as a Style menu). Each effect becomes one dcs object that does what its
+  Pd objects did **sample for sample** (`dcs/src/dcs_fx.h`: line~ in whole blocks, osc~/cos~ with Pd 0.55's 2048-point
+  table and the tabfudge phase, phasor~, wrap~, delwrite~/delread4~ laid out alike, [line]'s clock in Pd time units:
+  a clock fires before the block whose end is past it), so no switch: nothing changes to the ear. The in-line effects
+  (ring, crusher, distortion, filter, tremolo) ran even at amount 0 (they sit in the chain, so a Pd switch~ couldn't
+  stop them); a port passes the input through and only keeps its clocks, LFO phases and filter state moving.
+  **Exact float**: files including dcs_fx.h build without -ffast-math (it rewrote `x - (x - k)` as k: the crusher's
+  rounding flipped a step; the clang pragma is ignored on armv7, so the Makefile and Android.mk build them apart).
+  **Test**: `tools/test_fx_port.py` builds the patch both ways (`make_patch.py --legacy-fx <file>` keeps the old Pd
+  chains) and plays the same input and setting changes (on, glides, smoothing changes, off, back on) through both:
+  ring and tremolo 0 difference, crusher / distortion 1.2e-7, filter 2.4e-7 (one float step). `tools/bench_effects.py`
+  times each effect in the whole patch. Ported so far: ring, tremolo, crusher, distortion, filter (whole patch 91-97%
+  of its old time in those tests). Order next: echo, phaser (+29% when on), reverse echo (+13%), the Classic pitch
+  shifter (+12%), chorus (+11.5%), flanger (+6%), freeze, spatial. **Crusher Style** (`crush_style`, noPreset, dcs,
+  Classic the default; models by ear and by the machines' known numbers, not emulators): 8-bit sampler 11025 Hz
+  unsigned 8-bit truncation, 4-pole anti-alias in and 2-pole out; SP-1200 26040 Hz 12-bit, no input filter, 12 kHz out;
+  NES the DPCM channel (steps of 2 on a 7-bit counter at 33144 Hz) and the console's HP 90 / HP 440 / LP 14 kHz;
+  Game Boy 4-bit 8192 Hz, a DC block only; SNES 32 kHz BRR (best of 4 predictors x 13 shifts per 16-sample block,
+  decoded as the S-DSP does) then the Gaussian interpolation's taps at rest 0.18 / 0.64 / 0.18; Genesis 8-bit ~13.3 kHz
+  with the YM2612 ladder step either side of zero and a 6 kHz first-order low-pass. Bit depth and Sample rate apply
+  to Classic only. Measured (test_dcs): every style in tune at the input's level (NES -4 dB: its 440 Hz high-pass),
+  the sampler and SNES under 0.1% of their energy over 7 kHz, the Game Boy's images ~100x more, the NES channel
+  can't follow a loud 3 kHz tone (-21 dB, as on the console).
 - **CPU round, Oct 17** (desktop, 20 s of noise; process time): whole patch with defaults 0.205 -> 0.172 s, with
   DadCraft-like settings (reverb 0.6, phaser 0.4, chorus 0.5, pitch 0.25, glitch 1, music, beat 0.6, echo 0.4)
   0.603 -> 0.493 s (2.5% of a desktop core; the phone is ~10x slower). (1) **The prototype twins no longer both

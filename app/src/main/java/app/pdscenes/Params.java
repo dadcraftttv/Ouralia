@@ -329,6 +329,12 @@ final class Params {
                     .resetWhenAbsent(),
             new Param("crush_rate", "Sample-rate reduction", 500f, 24000f, 8000f, " Hz",
                     Param.Curve.LOG).inSection("crush").rand(1500f, 16000f).resetWhenAbsent(),
+            // Style (Oct 17, DadCraft: "more accurate 8 or 16 bit sounds"): a machine's own rate, bits and filters
+            // (dcs_crush~), so Bit depth and Sample rate apply to Classic only. A switch for now: Classic the default.
+            new Param("crush_style", "Crusher style", 0f, 6f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Classic (Bit depth and Sample rate below)", "8-bit sampler (11 kHz)",
+                            "SP-1200 (12-bit, 26 kHz)", "NES", "Game Boy", "SNES", "Genesis / Mega Drive")
+                    .inSection("crush").noPreset().resetWhenAbsent().dcs(),
 
             // ---- Spatial ---- (added after the first presets: older presets centre it)
             new Param("space_on", "Spatial enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
