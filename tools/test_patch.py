@@ -77,7 +77,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "stem_on", "stem_file", "stem_bars", "stem_lvl", "stem_start", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "drum_kick", "drum_snare"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "stem_on", "stem_file", "stem_bars", "stem_lvl", "stem_start", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "drum_kick", "drum_snare", "voc_ctl"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -750,6 +750,24 @@ e = fresh(wet=0, dry=1, tune_amount=0)
 e.run(sine(450, 0.1, 0.5)); e.send("tune_amount", 1)
 yy = e.run(sine(450, 0.1, 1.0))[:, 0]
 check(max_jump(yy) < 0.05, "turning sing in key on live: no click (max step %.4f)" % max_jump(yy))
+
+# ---- 7n. vocoder: the voice's words on the music's chords, a synth on your pitch, or noise ----
+def buzz(f0=150, secs=2.5, amp=0.1):
+    t = np.arange(int(secs * SR)) / SR
+    return (amp * sum(np.sin(2 * np.pi * f0 * k * t) / k for k in range(1, 30) if f0 * k < 8000)).astype(np.float32)
+def vocoded(**over):
+    e = fresh(**{**dict(wet=0, dry=1, voc_mix=1), **over})
+    return e.run(buzz())[SR:, 0]
+def peak_near(y, f, w=2):
+    S_ = np.abs(np.fft.rfft(y * np.hanning(len(y)))); fr = np.fft.rfftfreq(len(y), 1 / SR)
+    return S_[(fr > f - w) & (fr < f + w)].max()
+y = vocoded(music_key=0)
+check(min(peak_near(y, f) for f in (130.81, 164.81, 196.0)) > 3 * peak_near(y, 150) and 0.3 < rms(y) / rms(buzz()[SR:]) < 3,
+      "vocoder, music off: the voice speaks on the key's triad (C E G), not its own 150 Hz (level x%.2f)" % (rms(y) / rms(buzz()[SR:])))
+y = vocoded(music_key=0, voc_carrier=1)
+check(peak_near(y, 146.83, 1) > 3 * peak_near(y, 150, 1), "vocoder, your own pitch: 150 Hz sung, D played (in key)")
+y = vocoded(voc_mix=0)
+check(abs(rms(y) / rms(buzz()[SR:]) - 1) < 0.02, "vocoder at 0: the voice as it was")
 
 # ---- 9. walking beat: footsteps play drums ----
 def beat_run(steps, secs=2.0, **over):

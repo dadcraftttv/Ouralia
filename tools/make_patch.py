@@ -25,6 +25,7 @@ DEFAULTS = [
     ("wet", 0), ("ring_on", 1), ("ring_freq", 80), ("ring_mix", 0), ("smooth", 30),
     ("pitch_on", 1), ("pitch_semi", 0), ("pitch_mix", 0), ("pitch_window", 60),
     ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000), ("crush_style", 0), ("tune_amount", 0), ("tune_glide", 40),
+    ("voc_on", 1), ("voc_mix", 0), ("voc_carrier", 0), ("voc_sib", 0.5), ("voc_octave", 0), ("voc_snap", 1),
     ("space_on", 1), ("space_pan", 0), ("space_shift", 0),
     ("filter_on", 1), ("filter_mix", 0), ("filter_type", 0), ("filter_freq", 1500), ("filter_q", 1),
     ("reverb_on", 1), ("reverb_mix", 0), ("reverb_size", 0.5), ("reverb_tone", 6000),
@@ -2650,6 +2651,7 @@ def add_music(P):
         P.c(f"mu_pad{i}_deg", dg_in)
         P.obj(f"mu_pad{i}_kf", "f", vx + 60, 270); P.c(dg_hz, f"mu_pad{i}_kf")
         P.msg(f"mu_pad{i}_kpn", f"pnote {i} {BS}$1", vx + 60, 280); P.c(f"mu_pad{i}_kf", f"mu_pad{i}_kpn"); P.c(f"mu_pad{i}_kpn", "mu_kv_pad")
+        P.msg(f"mu_pad{i}_vcn", f"{BS}; voc_ctl cnote {i} {BS}$1", vx + 120, 280); P.c(dg_hz, f"mu_pad{i}_vcn")   # (the vocoder's chord)
         P.obj(f"mu_pad{i}_kre", "r kit_pad_new", vx + 100, 260); P.c(f"mu_pad{i}_kre", f"mu_pad{i}_kf")
         parts = []
         for k in (0, 1):                                   # the two crossfaded sets of this voice
@@ -4035,6 +4037,21 @@ def build():
     P.sig2("tune_dry", "*~", "mic_comp", "tune_keep", 20, 495)
     P.sig2("mic_tuned", "+~", "tune_dry", "tune_wet", 20, 510)
 
+    # --- vocoder (Oct 18): dcs_vocoder~ lays the voice's words onto a carrier: the music's chords (the pad's notes,
+    # sent as cnote from the music; before any, the key's triad), a synth on your own pitch (snapped to the key by
+    # voc_snap), or noise. No delay; passes the voice through untouched at amount 0.
+    fx(P, "voc_out", "dcs_vocoder~", "mic_tuned", ("voc_mix", "mix"), ("voc_on", "on"), ("voc_carrier", "carrier"),
+       ("voc_sib", "sib"), ("voc_octave", "octave"), ("voc_snap", "snap"), x=120, y=560)
+    P.obj("voc_ctl", "r voc_ctl", 600, 520); P.c("voc_ctl", "voc_out")
+    P.obj("voc_r_key", "r music_key", 680, 520)
+    P.msg("voc_key", f"key {BS}$1", 680, 540); P.c("voc_r_key", "voc_key"); P.c("voc_key", "voc_out")
+    P.obj("voc_r_sc", "r music_scale", 760, 520)
+    vsel = P.obj("voc_sc_sel", "sel " + " ".join(str(i) for i in range(len(SCALES))), 760, 540)
+    P.c("voc_r_sc", vsel)
+    for i, iv in enumerate(SCALES):
+        P.msg(f"voc_sc{i}", "scale " + " ".join(str(v) for v in iv), 760 + 40 * i, 560)
+        P.c(vsel, f"voc_sc{i}", i, 0); P.c(f"voc_sc{i}", "voc_out")
+
     # --- ring modulator with bypass ---
     if LEGACY_FX:
         P.obj("r_ring_freq", "r ring_freq", 250, 20)
@@ -4049,9 +4066,9 @@ def build():
         P.obj("one_minus_mix", "*~ -1", 340, 170)             # 1 - amount
         P.c("mix_minus1", "one_minus_mix")
         P.sig2("carrier", "+~", "osc_amt", "one_minus_mix", 250, 200)
-        P.sig2("ring_out", "*~", "mic_tuned", "carrier", 20, 230)   # amount 0 -> carrier is 1 -> unchanged
+        P.sig2("ring_out", "*~", "voc_out", "carrier", 20, 230)   # amount 0 -> carrier is 1 -> unchanged
     else:   # dcs_ring~ (Oct 17): the same, sample for sample, and nothing to compute while the amount is 0
-        fx(P, "ring_out", "dcs_ring~ 80", "mic_tuned", ("ring_freq", "freq"), ("ring_mix", "mix"), ("ring_on", "on"),
+        fx(P, "ring_out", "dcs_ring~ 80", "voc_out", ("ring_freq", "freq"), ("ring_mix", "mix"), ("ring_on", "on"),
            x=250, y=50)
 
     # --- pitch shifter: two delay taps sweeping through a buffer, crossfaded with Hann windows ---

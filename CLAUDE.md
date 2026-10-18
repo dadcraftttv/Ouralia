@@ -70,8 +70,8 @@ As of Oct 17:
   (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
 - **Sing in key** built Oct 18 (section "Sing in key", dcs_shift~ snap mode; off by default): waiting on DadCraft's
   ears. **Chiptune kits** built Oct 18 (NES, Game Boy, Genesis; dcs_voice~ engine `chip`): waiting on his ears.
-  **Next (DadCraft, Oct 18): the vocoder** (carriers: the music's chords, a synth following your pitch, later chip
-  waves); a chip voice for singing is lower priority. User kits stage 2 (samples) after that.
+  **Vocoder** built Oct 18 (section "Vocoder", dcs_vocoder~: chords / your pitch / whisper; off by default): waiting
+  on his ears. Later: chip carriers for the vocoder (low priority). Next: user kits stage 2 (samples).
 - **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
   reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
 - **Next on the kit plan** (ROADMAP 19): user kits stage 2, a sample engine in dcs_voice~ (drum one-shots,

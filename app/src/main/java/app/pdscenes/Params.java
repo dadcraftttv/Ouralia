@@ -36,6 +36,7 @@ final class Params {
             new Section("music", "Music", true),
             new Section("mix", "Mix (the level of each part)", false),
             new Section("tune", "Sing in key", false),
+            new Section("voc", "Vocoder", false),
             new Section("echo", "Echo", false),
             new Section("ring", "Ring modulator", false),
             new Section("pitch", "Pitch shifter", false),
@@ -306,6 +307,21 @@ final class Params {
                     Param.Curve.LINEAR).inSection("tune").noRandom().resetWhenAbsent().dcs(),
             new Param("tune_glide", "Sing in key glide (0 = robotic jumps)", 0f, 300f, 40f, " ms",
                     Param.Curve.LINEAR).inSection("tune").noRandom().decimals(0).resetWhenAbsent().dcs(),
+
+            // ---- Vocoder (Oct 18) ---- dcs_vocoder~: the voice's words on a carrier. Older presets turn it off.
+            new Param("voc_on", "Vocoder enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+                    .inSection("voc").toggle().resetWhenAbsent(),
+            new Param("voc_mix", "Vocoder amount (0 = off)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .inSection("voc").noRandom().resetWhenAbsent().dcs(),
+            new Param("voc_carrier", "Vocoder sings on", 0f, 2f, 0f, "", Param.Curve.LINEAR)
+                    .choices("The music's chords", "Your own pitch (a synth)", "Whisper (noise)")
+                    .inSection("voc").noRandom().resetWhenAbsent().dcs(),
+            new Param("voc_octave", "Vocoder octave", -2f, 2f, 0f, "", Param.Curve.LINEAR)
+                    .inSection("voc").noRandom().decimals(0).resetWhenAbsent().dcs(),
+            new Param("voc_snap", "Vocoder synth in key (Your own pitch)", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+                    .inSection("voc").noRandom().resetWhenAbsent().dcs(),
+            new Param("voc_sib", "Vocoder hiss (keeps s and t clear)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+                    .inSection("voc").noRandom().resetWhenAbsent().dcs(),
 
             // ---- Ring modulator ----
             new Param("ring_on", "Ring mod enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)

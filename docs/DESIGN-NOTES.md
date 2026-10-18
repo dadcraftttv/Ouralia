@@ -99,6 +99,17 @@ to date in the same commit when behaviour changes.
   0.4 s swell: none. Patch: `add_onset_switch` reroutes every listener of gc_det_sel / fs_det_sel to on_gc / on_fs,
   fed by the classic detectors or dcs_onset~ (on `mic`, always running); `s onset_heard` for the tests. In the
   patch a swell triggers Classic once, New never; a clap both once.
+- **Vocoder** (Oct 18, section "Vocoder": `voc_mix`, `voc_on`, `voc_carrier`, `voc_octave`, `voc_snap`, `voc_sib`;
+  after Sing in key, before the ring modulator). dcs_vocoder~: 20 bands 120 Hz to 7 kHz (constant-peak band-passes,
+  two in series, Q from the band spacing), the voice's band envelopes (3 ms up, 25 down) laid on the carrier's bands,
+  each carrier band first divided by its own envelope (10/60 ms) so a saw's tilt and a chord's gaps don't colour the
+  words (2-3% noise under the saws keeps every band alive). Carriers: 0 the music's chords (the pad's four notes, each
+  as two saws +-6 cents; the music sends `cnote` from each pad degree; with no music yet, or after a key or scale
+  change, the key's own triad from C3), 1 your own pitch (YIN every 10 ms, snapped to the key by `voc_snap`, ~10 ms
+  glide, two saws), 2 whisper (noise). `sib` adds the voice above 5 kHz (two one-pole high-passes) so s and t stay
+  clear. No delay. At amount 0 the voice passes untouched and nothing is computed; on again, the bands start afresh.
+  Level about the input's (x1.0 on a vowel). DadCraft (Oct 18) chose console music (the Chiptune kits) over a console
+  voice; chip carriers for the vocoder can come later. Tests: test_dcs.py, test_patch.py 7n.
 - **Sing in key** (Oct 18, `tune_amount`, `tune_glide`; section "Sing in key", before the ring modulator in the
   chain). dcs_shift~ got a snap mode: `key`, `scale <steps>`, `snap 0..1`, `glide ms`, `run`. Each 10 ms hop the
   tracked pitch picks the nearest note of the scale (it keeps its note until another is nearer by 0.2 semitone: no

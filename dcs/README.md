@@ -27,7 +27,7 @@ objects or with anyone's abstractions.
 - **`[dcs_voice~]`** — one part of a kit: a small polyphonic instrument (engines: plucked string, bowed string,
   modal bell / marimba / bowl, analog: detuned saws or a supersaw and a sub through a resonant ladder filter, drums: a drum machine, chop: slices of a kept voice take, sub: an 808 that slides; a tempo-synced wobble, pitch bends, octave and chance), configured by messages, playing one-shot notes or held "slot" notes that
   crossfade when they move.
-- Also: `dcs_pitch~` (YIN pitch tracker), `dcs_shift~` (PSOLA pitch shifter that keeps a voice's tone colour; also snaps a voice to a key and scale),
+- Also: `dcs_pitch~` (YIN pitch tracker), `dcs_shift~` (PSOLA pitch shifter that keeps a voice's tone colour; also snaps a voice to a key and scale), `dcs_vocoder~` (20-band vocoder: chords, your pitch or noise),
   `dcs_onset~` (spectral-flux onset detector), `dcs_reverb~` (Freeverb-style stereo reverb in one object).
 - Effects that each replace a chain of Pd objects sample for sample (`dcs_fx.h` holds Pd's own `line~`, `osc~`,
   `cos~`, `phasor~`, `wrap~` and `delread4~` arithmetic), doing almost nothing while their amount is 0:

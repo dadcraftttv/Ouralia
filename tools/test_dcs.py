@@ -302,6 +302,39 @@ got, y = sung(50.4, glide=60)
 d = db_frames(y)
 check(abs(got - 50) < 0.06 and d.max() - d.min() < 2, f"with a 60 ms glide it settles too ({got:.2f}), no warble ({d.max() - d.min():.1f} dB)")
 
+# ---------------------------------------------------------------- dcs_vocoder~
+print("dcs_vocoder~:")
+vcp = patch("vocoder", ["adc~", "dcs_vocoder~", "dac~", "r v"], [(0, 0, 1, 0), (1, 0, 2, 0), (1, 0, 2, 1), (3, 0, 1, 0)])
+def vocode(x, *msgs):
+    e = Engine(LIB, vcp)
+    for m in (("smooth", 0), ("mix", 1)) + msgs:
+        e.send_msg("v", m[0], *m[1:])
+    y = e.run(x)[:, 0]; e.close(); return y
+def spec(y):
+    S_ = np.abs(np.fft.rfft(y * np.hanning(len(y)))); return S_, np.fft.rfftfreq(len(y), 1 / SR)
+def near(S_, fr, f, w=3): return S_[(fr > f - w) & (fr < f + w)].max()
+v = vowel(f0=150, secs=2.0)
+chord = (130.81, 164.81, 196.0)
+y = vocode(v, ("carrier", 0), *[("cnote", k, f) for k, f in enumerate(chord)])[SR // 2:]
+S_, fr = spec(y)
+check(min(near(S_, fr, f) for f in chord) > 5 * near(S_, fr, 150) and 0.4 < rms(y) / rms(v[SR // 2:]) < 2.5,
+      f"chords: the voice speaks on the chord's notes, not its own pitch (level x{rms(y) / rms(v[SR // 2:]):.2f})")
+cen = lambda y: float((spec(y)[0] * spec(y)[1]).sum() / spec(y)[0].sum())
+lo, hi = (vocode(vowel(f0=150, secs=2.0, formant=f), ("carrier", 0), *[("cnote", k, c) for k, c in enumerate(chord)])[SR // 2:] for f in (500, 2000))
+check(cen(hi) > cen(lo) * 1.4, f"the words come through: a brighter vowel stays brighter ({cen(lo):.0f} vs {cen(hi):.0f} Hz)")
+y = vocode(np.zeros(SR, np.float32), ("carrier", 0))
+check(np.abs(y).max() < 1e-3, f"silence in, silence out (peak {np.abs(y).max():.1e}): the carrier never leaks")
+y = vocode(v, ("carrier", 1), ("snap", 0))[SR // 2:]; S_, fr = spec(y)
+check(abs(peak_hz(y, 135, 165) - 150) < 1.5, f"your pitch: the synth follows the voice ({peak_hz(y, 135, 165):.1f} Hz for 150)")
+y = vocode(v, ("carrier", 1), ("snap", 1), ("key", 0), ("scale", 0, 2, 4, 5, 7, 9, 11))[SR // 2:]; S_, fr = spec(y)
+check(near(S_, fr, 146.83, 1.5) > 3 * near(S_, fr, 150, 1.5), "your pitch, snapped: 150 Hz sung, D (146.8) played (C major)")
+y = vocode(v, ("carrier", 2))[SR // 2:]
+check(0.3 < rms(y) / rms(v[SR // 2:]) < 3, f"whisper: noise speaks (level x{rms(y) / rms(v[SR // 2:]):.2f})")
+y = vocode(v, ("mix", 0))
+check(np.array_equal(y, v), "mix 0: the voice passes through untouched")
+y = vocode(v, ("carrier", 0), ("key", 2), ("scale", 0, 2, 4, 5, 7, 9, 11))[SR // 2:]; S_, fr = spec(y)
+check(near(S_, fr, 146.83) > 3 * near(S_, fr, 130.81), "no chord sent yet: it plays the key's own triad (D major)")
+
 # ---------------------------------------------------------------- dcs_onset~
 print("dcs_onset~:")
 op = patch("onset", ["adc~", "dcs_onset~", "f 1", "s on_b"], [(0, 0, 1, 0), (1, 0, 2, 0), (2, 0, 3, 0)])   # (the test hears numbers, not bangs)

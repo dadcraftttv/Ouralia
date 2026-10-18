@@ -158,6 +158,17 @@ Pulls your singing onto the notes of the Music key and scale (set on the Music t
 
 While it's on, your voice comes through a tiny bit later (30 ms).
 
+### Vocoder
+
+Makes your voice "sing" through a synth: the classic robot-choir sound. Your words, someone else's notes.
+
+- **Vocoder amount:** 0 is off. 1 is only the vocoder.
+- **Vocoder sings on:** *The music's chords* (your voice speaks the chords the music is playing; with the music off,
+  the key's main chord), *Your own pitch* (a synth follows the notes you sing), or *Whisper* (a breathy, noisy voice).
+- **Vocoder octave:** moves the synth notes up or down.
+- **Vocoder synth in key:** for Your own pitch: 1 keeps the synth on the notes of the key, 0 follows you exactly.
+- **Vocoder hiss:** keeps "s", "t" and "f" sounds clear. Turn it down for a smoother, less wordy sound.
+
 ### Pitch shifter
 
 Makes your voice higher (chipmunk) or lower (monster).
