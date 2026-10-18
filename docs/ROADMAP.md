@@ -203,7 +203,7 @@ and microphone declarations, icon, store listing, numbered pd-core release.
       Acoustic, bass from Low end...). Saved in presets, so a shared preset sounds the same for the friend who loads it.
     - **User kits:** a kit is a folder or zip: kit.txt (the built-in kits' format; DadCraft, Oct 17) + its sample files.
       Stage 1 built Oct 17: text kits (import, menus, delete, presets carry them, the desktop bench); stage 2 built
-      Oct 18 (engine `sample`: WAV in dcs_voice~, other formats decoded at import); stage 3 the format page. Imported
+      Oct 18 (engine `sample`: WAV in dcs_voice~, other formats decoded at import); stage 3 the format page (`docs/KIT-FORMAT.md`, Oct 18). Imported
       like stem packs today (reusing PackLibrary's import and decoding), shared like presets, and listed beside the
       built-in ones. A documented format and a page for sound designers; the desktop app doubles as a kit-making
       bench (hear a kit on the big speakers while editing kit.json).
