@@ -71,7 +71,10 @@ As of Oct 17:
 - **Sing in key** built Oct 18 (section "Sing in key", dcs_shift~ snap mode; off by default): waiting on DadCraft's
   ears. **Chiptune kits** built Oct 18 (NES, Game Boy, Genesis; dcs_voice~ engine `chip`): waiting on his ears.
   **Vocoder** built Oct 18 (section "Vocoder", dcs_vocoder~: chords / your pitch / whisper; off by default): waiting
-  on his ears. Later: chip carriers for the vocoder (low priority). Next: user kits stage 2 (samples).
+  on his ears. Later: chip carriers for the vocoder (low priority).
+- **User kits stage 2 (samples)** built Oct 18: engine `sample` (WAV read by dcs_voice~, other formats decoded at
+  import), kit.txt `sample <file> <note>` / `kick <file>`...: waiting on DadCraft's phone check. Next: stage 3 (a format
+  page for sound designers), then retire the stems player.
 - **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
   reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
 - **Next on the kit plan** (ROADMAP 19): user kits stage 2, a sample engine in dcs_voice~ (drum one-shots,

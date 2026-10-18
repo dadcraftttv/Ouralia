@@ -270,6 +270,22 @@ to date in the same commit when behaviour changes.
   edit, delete, preset round trip, check, folder one level down). Not yet: samples (stage 2: a sample engine in
   dcs_voice~), a format page (stage 3), register Low for kit pads, kit drums in "Your steps" mode (the old step
   drums send no drum_* messages).
+  **Stage 2, samples** (Oct 18). Engine 9 `sample` in dcs_voice~ reads WAV itself (dcs_wav.h: PCM 8/16/24/32,
+  float 32/64, extensible; channels averaged; kept at the file's rate, played at file rate / Pd rate x the note's
+  ratio, linear between samples): `sample <path> <root>` (up to 16 a part; a note takes the nearest root),
+  `dsample <role> <path>` (kick, snare, hat, open hat: a hat over 150 ms takes the open hat), `oneshot` (default 1:
+  ring to the end; 0: the note's length, then release), `loop`/`loopstart`/`loopend` (held notes loop, 30 ms
+  crossfade; loopend 0 = 50 ms before the end), `clear` (sent with the defaults on every part change), `sgain` (per
+  part, Kits.SAMPLE_GAIN 6.7/6/0.26/6, measured so a normalised recording at level 1 is about Classic's loudness).
+  Limits: 30 s a file, 120 s (at 48 kHz) a part. kit.txt: `sample piano c4.wav C4` (the file may have spaces; the
+  last word is the root if it is a note: C4 = 60, F#3, Bb2, 72; default C4), `kick kick.wav`. Files stay inside the
+  kit's folder (no ".." or absolute paths). Android decodes non-WAV at import (Kits.decoder = PackLibrary.decode,
+  to `.decoded-<name>.wav` beside it); the desktop plays WAV only. Missing files: the part stays Classic and the
+  import report lists them (`Kits.missingFiles`). A preset brings the kit's text only; when the kit is later
+  imported with its files, they fill in the text-only copy (same index). Loading happens on the message (the Pd
+  thread): a long kit can glitch the sound once as it loads. Tests: test_dcs.py (pitch, nearest root, 44.1 kHz
+  file, oneshot, loop, 16/24-bit/float alike, drums, missing file, clear), test_patch.py "a sample kit" (every part
+  in key at Classic's level), Q (note names, paths, Classic when missing, the text-only copy filled in).
 - Waiting on DadCraft's ears for both. Not in the tester guide (prototype). `dcs_derustle~` (Oct 17): see Pocket rustle. Ideas next: analog-style ladder filter,
   oversampled distortion/crush, a lighter pitch tracker than sigmund~, a dcs phaser, more glitch kinds.
 

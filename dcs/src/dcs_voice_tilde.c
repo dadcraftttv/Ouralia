@@ -5,7 +5,7 @@
  *
  *   [dcs_voice~]
  *   inlet:   messages
- *     engine <0 off | 1 pluck | 2 bowed | 3 modal | 4 analog | 5 drums | 6 chop | 7 sub | 8 chip>
+ *     engine <0 off | 1 pluck | 2 bowed | 3 modal | 4 analog | 5 drums | 6 chop | 7 sub | 8 chip | 9 sample>
  *     note <Hz> <velocity 0..1> <length ms> [<brightness 0..1>]   a note that rings and dies away by itself
  *     pnote <slot> <Hz> [<velocity>]   a held note in a slot (a pad's chord tone, the bass): when the slot gets a new
  *                                      pitch, the old note fades out over `release` while the new one comes in
@@ -34,6 +34,13 @@
  *             period registers can (high notes a little out, as on the real thing); the console's output filters.
  *             Drums (hit) on a chip: the noise channel (a 15-bit shift register, NES / Game Boy short mode for
  *             metallic hats) and a kick swept down on the triangle (NES), a pulse (Game Boy) or FM (Genesis)
+ *     sample: a kit's own recordings (WAV files, read into memory, mono, at their own rate): sample <path> <root MIDI>
+ *             adds one (a note plays the one whose root is nearest, at the speed that puts it on the note);
+ *             dsample <0 kick | 1 snare | 2 hat | 3 open hat> <path> (drum hits; a hat longer than 150 ms takes the
+ *             open hat if there is one); oneshot <0|1> (1: a note plays its sample to the end, 0: for the note's
+ *             length, then `release`); loop <0|1> (held notes, and notes when not oneshot, loop the sample between
+ *             loopstart and loopend ms, crossfaded; loopend 0 = 50 ms before its end); clear (forgets them all); sgain <gain>
+ *             (the part's own scale, sent by Kits.java, so `level 1` is about the Classic part's loudness)
  *     any engine: octave <n> (notes n octaves up or down), chance <0..1> (a ringing note plays with this chance:
  *             a sparser part); hchance <0..1>: the same for drum hats
  *     pump, pumprel: accepted and ignored (a kit's sidechain settings, read by the patch)
@@ -52,6 +59,7 @@
  * Copyright (c) 2026 dadcraft (DadCraft Studios)
  */
 #include "m_pd.h"
+#include "dcs_wav.h"
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -67,6 +75,14 @@ enum { E_OFF, E_PLUCK, E_BOWED, E_MODAL, E_ANALOG, E_DRUMS, E_CHOP, E_SUB, E_CHI
 enum { C_NES = 1, C_GB, C_GEN };
 enum { W_PULSE, W_TRI, W_WAVE, W_FM };
 #define CHIP_GAIN 0.3f
+#define E_SAMPLE 9
+#define MAXSMP 16
+#define SMP_MAX_S 30.                 /* the longest sample kept (s) */
+#define SMP_TOTAL_S 120.              /* all of one part's samples together (s, at 48 kHz) */
+#define SAMPLE_GAIN 0.25f
+#define LOOP_XF_MS 30.
+
+typedef struct { float *data; long len; double sr, root; } t_vsample;
 #define NES_CPU 1789773.
 #define GB_CLOCK 131072.
 #define SUB_GAIN 0.5f
@@ -119,6 +135,10 @@ typedef struct _vvoice
     unsigned int lfsr;
     float nval;
     int arpm, arprank;                 /* a held chip note (takes turns with `arp`), its place in the turns */
+    /* sample */
+    const t_vsample *smp;
+    double spos, sinc;
+    int sloop, sdrum;
 } t_vvoice;
 
 typedef struct _dcs_voice
@@ -136,6 +156,10 @@ typedef struct _dcs_voice
     int x_chip, x_wave;
     float x_duty, x_sus, x_vib, x_arp, x_fmratio, x_fmindex, x_fmfb;
     double x_arpclock;
+    t_vsample x_smp[MAXSMP], x_dsmp[4];
+    int x_nsmp, x_oneshot, x_loop;
+    float x_loopstart, x_loopend, x_sgain;
+    long x_smptotal;
     float x_hp1x, x_hp1y, x_hp2x, x_hp2y, x_lpy;   /* the console's output filters */
     unsigned long x_count;
     unsigned int x_seed;
@@ -399,6 +423,22 @@ static void voice_start(t_dcs_voice *x, t_vvoice *v, double hz, float vel, doubl
         v->arpm = slot >= 0;
         v->life = slot < 0 ? len_ms * sr / 1000 : 0;
         break;
+    case E_SAMPLE:
+        {
+            double m = 69 + 12 * log2(hz / 440.), best = 1e9;
+            int k;
+            v->smp = 0;
+            for (k = 0; k < x->x_nsmp; k++)
+                if (fabs(m - x->x_smp[k].root) < best) best = fabs(m - x->x_smp[k].root), v->smp = &x->x_smp[k];
+            if (!v->smp) { v->on = 0; break; }
+            v->spos = 0;
+            v->sinc = v->smp->sr / sr * pow(2, (m - v->smp->root) / 12.);
+            v->sloop = x->x_loop && (slot >= 0 || !x->x_oneshot);
+            v->sdrum = 0;
+            v->gstep = (float)(1000. / ((x->x_attack > 1 ? x->x_attack : 1) * sr));
+            v->life = slot < 0 && !x->x_oneshot ? len_ms * sr / 1000 : 0;
+        }
+        break;
     case E_MODAL:
         voice_modal(x, v, hz, len_ms);                   /* (struck in perform, on its first sample) */
         v->gain = 1; v->gstep = 0;
@@ -563,6 +603,47 @@ static t_int *dcs_voice_perform(t_int *w)
             v->fenv *= (float)pow(v->fenvk, n);
             for (m = 0; m < 4; m++)
                 if (PD_BIGORSMALL(v->lad[m])) v->lad[m] = 0;
+            if (v->releasing && v->gain <= 0) v->on = 0;
+        }
+        else if (v->engine == E_SAMPLE)
+        {
+            /* a recording at the note's speed (linear between samples), looped if asked, with the envelope */
+            const t_vsample *sm = v->smp;
+            double ls = 0, le = 0, xf = 0;
+            if (v->sloop)
+            {
+                ls = x->x_loopstart * sm->sr / 1000;
+                le = x->x_loopend > 0 ? x->x_loopend * sm->sr / 1000 : sm->len - 0.05 * sm->sr;
+                if (le > sm->len - 2) le = sm->len - 2;
+                if (ls < 0) ls = 0;
+                if (le - ls < 0.02 * sm->sr) v->sloop = 0;
+                xf = LOOP_XF_MS * sm->sr / 1000;
+                if (xf > (le - ls) / 2) xf = (le - ls) / 2;
+            }
+            for (i = 0; i < n; i++)
+            {
+                double p = v->spos;
+                long ip;
+                float s_, fr;
+                if (p >= sm->len - 1) { v->on = 0; break; }
+                ip = (long)p; fr = (float)(p - ip);
+                s_ = sm->data[ip] + fr * (sm->data[ip + 1] - sm->data[ip]);
+                if (v->sloop && p > le - xf)
+                {                                    /* the crossfade: the loop's start fades in as its end fades out */
+                    double q = p - (le - ls), a = (p - (le - xf)) / xf;
+                    long iq = (long)q;
+                    float fq = (float)(q - iq), s2 = sm->data[iq] + fq * (sm->data[iq + 1] - sm->data[iq]);
+                    s_ = (float)(s_ * (1 - a) + s2 * a);
+                }
+                if (!v->sdrum && v->gain != v->gtarget)
+                {
+                    if (v->gain < v->gtarget) { v->gain += v->gstep; if (v->gain > v->gtarget) v->gain = v->gtarget; }
+                    else { v->gain -= v->gstep; if (v->gain < v->gtarget) v->gain = v->gtarget; }
+                }
+                out[i] += s_ * (v->sdrum ? 1 : v->gain) * v->amp * SAMPLE_GAIN * x->x_sgain * level;
+                v->spos = p + v->sinc;
+                if (v->sloop && v->spos >= le) v->spos -= le - ls;
+            }
             if (v->releasing && v->gain <= 0) v->on = 0;
         }
         else if (v->engine == E_CHIP && v->role == 0)
@@ -773,7 +854,8 @@ static t_int *dcs_voice_perform(t_int *w)
             v->life -= n;
             if (v->life <= 0)
             {
-                if (v->engine == E_BOWED || v->engine == E_ANALOG || (v->engine == E_CHIP && v->role == 0)) voice_release(x, v);
+                if (v->engine == E_BOWED || v->engine == E_ANALOG || (v->engine == E_CHIP && v->role == 0)
+                    || (v->engine == E_SAMPLE && !v->sdrum)) voice_release(x, v);
                 else v->on = 0;
             }
         }
@@ -813,7 +895,7 @@ static void dcs_voice_dsp(t_dcs_voice *x, t_signal **sp)
     dsp_add(dcs_voice_perform, 3, x, sp[0]->s_vec, (t_int)sp[0]->s_n);
 }
 
-static void dcs_voice_engine(t_dcs_voice *x, t_floatarg f) { x->x_engine = (int)f >= 0 && (int)f <= 8 ? (int)f : 0; if (!x->x_engine) dcs_voice_alloff(x); }
+static void dcs_voice_engine(t_dcs_voice *x, t_floatarg f) { x->x_engine = (int)f >= 0 && (int)f <= 9 ? (int)f : 0; if (!x->x_engine) dcs_voice_alloff(x); }
 static void dcs_voice_wobble(t_dcs_voice *x, t_floatarg f) { x->x_wobble = f; }
 static void dcs_voice_wrate(t_dcs_voice *x, t_floatarg f) { x->x_wrate = f > 0 ? f : 0; }
 static void dcs_voice_bend(t_dcs_voice *x, t_floatarg f) { x->x_bend = f; }
@@ -854,8 +936,19 @@ static void dcs_voice_hdecay(t_dcs_voice *x, t_floatarg f) { dcs_voice_set(x, ge
 static void dcs_voice_hit(t_dcs_voice *x, t_floatarg role, t_floatarg vel, t_floatarg dec)
 {
     t_vvoice *v;
-    if ((x->x_engine != E_DRUMS && x->x_engine != E_CHIP) || vel <= 0 || x->x_sr <= 0) return;
+    if ((x->x_engine != E_DRUMS && x->x_engine != E_CHIP && x->x_engine != E_SAMPLE) || vel <= 0 || x->x_sr <= 0) return;
     if ((int)role == 2 && x->x_hchance < 1 && 0.5 + 0.5 * voice_noise(x) >= x->x_hchance) return;
+    if (x->x_engine == E_SAMPLE)
+    {
+        int r = (int)role < 0 || (int)role > 2 ? 0 : (int)role;
+        const t_vsample *sm = &x->x_dsmp[r];
+        if (r == 2 && (dec > 0 ? dec : x->x_hdecay) > 150 && x->x_dsmp[3].data) sm = &x->x_dsmp[3];
+        if (!sm->data) return;
+        v = voice_alloc(x);
+        v->on = 1; v->slot = -1; v->engine = E_SAMPLE; v->amp = vel; v->smp = sm; v->sdrum = 1;
+        v->sinc = sm->sr / x->x_sr; v->gain = 1; v->gtarget = 1;
+        return;
+    }
     v = voice_alloc(x);
     v->on = 1; v->slot = -1; v->engine = x->x_engine; v->amp = vel;
     v->role = x->x_engine == E_CHIP ? (int)role + 1 : (int)role;     /* (a chip's tone notes are role 0) */
@@ -871,6 +964,58 @@ static void dcs_voice_arp(t_dcs_voice *x, t_floatarg f) { x->x_arp = f > 0 ? (f 
 static void dcs_voice_fmratio(t_dcs_voice *x, t_floatarg f) { x->x_fmratio = f; }
 static void dcs_voice_fmindex(t_dcs_voice *x, t_floatarg f) { x->x_fmindex = f > 0 ? f : 0; }
 static void dcs_voice_fmfb(t_dcs_voice *x, t_floatarg f) { x->x_fmfb = f; }
+/* (every sample voice stops first: the memory it reads goes) */
+static void dcs_voice_clear(t_dcs_voice *x, t_floatarg f)
+{
+    int k;
+    for (k = 0; k < NV; k++)
+        if (x->x_v[k].engine == E_SAMPLE) x->x_v[k].on = 0;
+    for (k = 0; k < MAXSMP; k++) free(x->x_smp[k].data);
+    for (k = 0; k < 4; k++) free(x->x_dsmp[k].data);
+    memset(x->x_smp, 0, sizeof(x->x_smp)); memset(x->x_dsmp, 0, sizeof(x->x_dsmp));
+    x->x_nsmp = 0; x->x_smptotal = 0;
+}
+
+static int voice_load(t_dcs_voice *x, t_symbol *path, t_vsample *into)
+{
+    long len, room = (long)(SMP_TOTAL_S * 48000) - x->x_smptotal;
+    double sr;
+    const char *why;
+    float *d;
+    if (room < 1000) { pd_error(x, "dcs_voice~: %s: the kit's samples are too long all together", path->s_name); return 0; }
+    d = dcs_wav_read(path->s_name, (long)(SMP_MAX_S * 96000) < room ? (long)(SMP_MAX_S * 96000) : room, &len, &sr, &why);
+    if (!d) { pd_error(x, "dcs_voice~: %s: %s", path->s_name, why); return 0; }
+    if (len > SMP_MAX_S * sr) len = (long)(SMP_MAX_S * sr);
+    if (len < 4) { free(d); return 0; }
+    into->data = d; into->len = len; into->sr = sr;
+    x->x_smptotal += len;
+    return 1;
+}
+
+static void dcs_voice_sample(t_dcs_voice *x, t_symbol *path, t_floatarg root)
+{
+    if (x->x_nsmp >= MAXSMP) { pd_error(x, "dcs_voice~: at most %d samples a part", MAXSMP); return; }
+    if (voice_load(x, path, &x->x_smp[x->x_nsmp])) x->x_smp[x->x_nsmp++].root = root;
+}
+
+static void dcs_voice_dsample(t_dcs_voice *x, t_floatarg role, t_symbol *path)
+{
+    int r = (int)role, k;
+    if (r < 0 || r > 3) return;
+    for (k = 0; k < NV; k++)
+        if (x->x_v[k].engine == E_SAMPLE && x->x_v[k].smp == &x->x_dsmp[r]) x->x_v[k].on = 0;
+    if (x->x_dsmp[r].data) { x->x_smptotal -= x->x_dsmp[r].len; free(x->x_dsmp[r].data); x->x_dsmp[r].data = 0; }
+    voice_load(x, path, &x->x_dsmp[r]);
+}
+
+static void dcs_voice_sgain(t_dcs_voice *x, t_floatarg f) { x->x_sgain = f > 0 ? f : 0; }
+static void dcs_voice_oneshot(t_dcs_voice *x, t_floatarg f) { x->x_oneshot = f != 0; }
+static void dcs_voice_loop(t_dcs_voice *x, t_floatarg f) { x->x_loop = f != 0; }
+static void dcs_voice_loopstart(t_dcs_voice *x, t_floatarg f) { x->x_loopstart = f > 0 ? f : 0; }
+static void dcs_voice_loopend(t_dcs_voice *x, t_floatarg f) { x->x_loopend = f > 0 ? f : 0; }
+
+static void dcs_voice_free(t_dcs_voice *x) { dcs_voice_clear(x, 0); }
+
 static void dcs_voice_cutoff(t_dcs_voice *x, t_floatarg f) { x->x_cutoff = f > 0.1f ? f : 0.1f; }
 static void dcs_voice_reso(t_dcs_voice *x, t_floatarg f) { x->x_reso = f; }
 static void dcs_voice_fenv(t_dcs_voice *x, t_floatarg f) { x->x_fenv = f > 0 ? f : 0; }
@@ -893,6 +1038,7 @@ static void *dcs_voice_new(void)
     x->x_wobble = 0; x->x_wrate = 2; x->x_bend = 0; x->x_bendms = 120; x->x_chop = 180; x->x_bpm = 100;
     x->x_chip = 1; x->x_wave = 0; x->x_duty = 0.5f; x->x_sus = 0.6f; x->x_vib = 0; x->x_arp = 0;
     x->x_fmratio = 1; x->x_fmindex = 2; x->x_fmfb = 0;
+    x->x_oneshot = 1; x->x_loop = 0; x->x_sgain = 1; x->x_loopstart = 0; x->x_loopend = 0;
     x->x_ktune = 50; x->x_kdecay = 350; x->x_kdrive = 0.3f; x->x_stone = 185; x->x_sdecay = 180; x->x_hdecay = 45;
     x->x_seed = (unsigned int)(size_t)x;
     outlet_new(&x->x_obj, &s_signal);
@@ -901,7 +1047,7 @@ static void *dcs_voice_new(void)
 
 void dcs_voice_tilde_setup(void)
 {
-    dcs_voice_class = class_new(gensym("dcs_voice~"), (t_newmethod)dcs_voice_new, 0,
+    dcs_voice_class = class_new(gensym("dcs_voice~"), (t_newmethod)dcs_voice_new, (t_method)dcs_voice_free,
         sizeof(t_dcs_voice), CLASS_DEFAULT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_dsp, gensym("dsp"), A_CANT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_engine, gensym("engine"), A_FLOAT, 0);
@@ -949,6 +1095,14 @@ void dcs_voice_tilde_setup(void)
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_fmratio, gensym("fmratio"), A_FLOAT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_fmindex, gensym("fmindex"), A_FLOAT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_fmfb, gensym("fmfb"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_clear, gensym("clear"), A_DEFFLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_sample, gensym("sample"), A_SYMBOL, A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_dsample, gensym("dsample"), A_FLOAT, A_SYMBOL, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_sgain, gensym("sgain"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_oneshot, gensym("oneshot"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_loop, gensym("loop"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_loopstart, gensym("loopstart"), A_FLOAT, 0);
+    class_addmethod(dcs_voice_class, (t_method)dcs_voice_loopend, gensym("loopend"), A_FLOAT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_ignore, gensym("pump"), A_FLOAT, 0);
     class_addmethod(dcs_voice_class, (t_method)dcs_voice_ignore, gensym("pumprel"), A_FLOAT, 0);
 }

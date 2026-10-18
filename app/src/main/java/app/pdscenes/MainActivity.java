@@ -220,6 +220,7 @@ public class MainActivity extends Activity {
         setTheme(UiSettings.themeResource(theme));   // must be set before any view is created
         super.onCreate(savedInstanceState);
         ParamStore.loadOnce(this);
+        Kits.decoder = PackLibrary::decode;               // (a kit's MP3, OGG, FLAC... recordings, at import)
         SceneLibrary.installBuiltIns(this, SceneSettings.scenesDir(this));
         audioManager = getSystemService(AudioManager.class);
 
@@ -1802,6 +1803,11 @@ public class MainActivity extends Activity {
                 }
                 String text = Kits.text(index);
                 List<String> problems = text == null ? new ArrayList<>() : Kits.check(text);
+                if (text != null) {
+                    for (String f : Kits.missingFiles(text, Kits.dir(index))) {
+                        problems.add(getString(R.string.kit_missing_file, f));
+                    }
+                }
                 runOnUiThread(() -> {
                     Kits.refreshChoices();
                     ParamStore.set(Kits.ID, index);

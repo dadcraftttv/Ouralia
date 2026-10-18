@@ -27,6 +27,11 @@ import java.util.Map;
  * import order, listed after the built-in ones: menu index BUILT_IN.length + n is the n-th. Mix and match: each part can take its sound from another kit ("Melody from" etc.,
  * Params kitp_<part>: 0 = the Kit, else BUILT_IN[n - 1]). A part whose kit changed (or every part when the patch
  * opens) first gets the voice's defaults, then its kit's settings, the engine last, as messages to kit_<part>.
+ *
+ * Samples (stage 2, Oct 18): a user kit's folder can hold recordings, named in its kit.txt: "sample <file> <root>"
+ * (a melodic part: the file and the note it plays, C4 = 60), "kick/snare/hat/ohat <file>" (drums). The voice reads
+ * WAV files itself; other formats are decoded to WAV at import (Android's decoders). A part whose files are missing
+ * (a preset carried the kit's text but not its files) stays Classic.
  */
 final class Kits {
     static final String ID = "kit";
@@ -42,10 +47,16 @@ final class Kits {
     static final String FILE = "kit.txt";
     /** The Params holding a kit's menu index: the Kit, then each part's "from" (whose index is one more). */
     static final String[] PARAMS = {ID, "kitp_mel", "kitp_bass", "kitp_pad", "kitp_drums"};
-    static final String[] ENGINES = {"classic", "pluck", "bowed", "modal", "analog", "drums", "chop", "sub", "chip"};
+    static final String[] ENGINES = {"classic", "pluck", "bowed", "modal", "analog", "drums", "chop", "sub", "chip", "sample"};
     static final String[] MODAL = {"", "bell", "marimba", "bowl"};
     static final String[] CHIPS = {"", "nes", "gameboy", "genesis"};
     static final String[] WAVES = {"pulse", "triangle", "wave", "fm"};
+    /** Settings that name a file: "sample" (with its root note), and the drums' kick, snare, hat, open hat. */
+    static final String[] DRUM_FILES = {"kick", "snare", "hat", "ohat"};
+    /** The sample engine's scale per part (PARTS order): a normalised recording at `level 1` plays about as loud as
+     *  the Classic part (measured, test_patch.py "a sample kit"). */
+    static final float[] SAMPLE_GAIN = {6.7f, 6f, 0.26f, 6f};
+    private static final String[] NOTE_NAMES = {"c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"};
     /** The voice's own defaults, sent before a kit's settings (so nothing lingers from the kit before). */
     static final String[][] DEFAULTS = {{"engine", "0"}, {"bright", "0.4"}, {"level", "1"}, {"attack", "300"},
             {"release", "800"}, {"decay", "3000"}, {"modal", "1"}, {"cutoff", "4"}, {"reso", "0.3"}, {"fenv", "6"},
@@ -53,7 +64,8 @@ final class Kits {
             {"stone", "185"}, {"sdecay", "180"}, {"hdecay", "45"}, {"pump", "0"}, {"pumprel", "250"}, {"wobble", "0"},
             {"wrate", "2"}, {"bend", "0"}, {"bendms", "120"}, {"chop", "180"}, {"octave", "0"}, {"chance", "1"},
             {"hchance", "1"}, {"glide", "0"}, {"drive", "0.3"}, {"chip", "1"}, {"wave", "0"}, {"duty", "0.5"},
-            {"sus", "0.6"}, {"vib", "0"}, {"arp", "0"}, {"fmratio", "1"}, {"fmindex", "2"}, {"fmfb", "0"}};
+            {"sus", "0.6"}, {"vib", "0"}, {"arp", "0"}, {"fmratio", "1"}, {"fmindex", "2"}, {"fmfb", "0"},
+            {"clear", "0"}, {"oneshot", "1"}, {"loop", "0"}, {"loopstart", "0"}, {"loopend", "0"}};
 
     /** Reads a built-in kit's text (assets on the phone, files on the desktop); null if missing. */
     interface Source {
@@ -63,11 +75,24 @@ final class Kits {
     /** Where the messages go (the app: PdBase.sendMessage). */
     interface Out {
         void send(String receiver, String selector, float value);
+
+        /** A message with words (a sample's path). */
+        default void sendMessage(String receiver, String selector, Object... args) {
+        }
     }
+
+    /** Decodes a recording that isn't WAV into a WAV file (the app: PackLibrary.decode; null on the desktop). */
+    interface Decoder {
+        void decode(File in, File out) throws IOException;
+    }
+
+    static volatile Decoder decoder;
 
     static final class Kit {
         String title = "";
-        /** part -> (setting, value), in file order */
+        /** The kit's folder (a user kit: where its samples are), else null. */
+        File dir;
+        /** part -> (setting, value), in file order; a file setting is (name, file, root note or null) */
         final Map<String, List<Object[]>> parts = new LinkedHashMap<>();
     }
 
@@ -120,6 +145,10 @@ final class Kits {
                     continue;
                 }
                 String name = w[0].toLowerCase(Locale.ROOT);
+                if (isFileSetting(name)) {
+                    settings.add(fileSetting(name, w));
+                    continue;
+                }
                 float value;
                 if (name.equals("engine")) {
                     value = indexOf(ENGINES, w[1]);
@@ -145,6 +174,88 @@ final class Kits {
         return kit;
     }
 
+    static boolean isFileSetting(String name) {
+        return name.equals("sample") || indexOf(DRUM_FILES, name) >= 0;
+    }
+
+    /** (name, file, root): "sample piano c4.wav C4" is the file "piano c4.wav" at C4; the root defaults to C4. */
+    private static Object[] fileSetting(String name, String[] w) {
+        int end = w.length;
+        Float root = null;
+        if (name.equals("sample")) {
+            root = 60f;
+            int n = w.length >= 3 ? noteNumber(w[w.length - 1]) : -1;
+            if (n >= 0) {
+                root = (float) n;
+                end = w.length - 1;
+            }
+        }
+        return new Object[]{name, String.join(" ", Arrays.asList(w).subList(1, end)), root};
+    }
+
+    /** A note's MIDI number from "60", "C4", "f#3" or "Bb2" (C4 = 60), -1 if it isn't one. */
+    static int noteNumber(String word) {
+        String w = word.toLowerCase(Locale.ROOT);
+        if (w.matches("\\d{1,3}")) {
+            int n = Integer.parseInt(w);
+            return n <= 127 ? n : -1;
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("([a-g])([#b]?)(-?\\d)").matcher(w);
+        if (!m.matches()) {
+            return -1;
+        }
+        int pc = indexOf(NOTE_NAMES, m.group(1)) + (m.group(2).equals("#") ? 1 : m.group(2).equals("b") ? -1 : 0);
+        return pc + 12 * (Integer.parseInt(m.group(3)) + 1);
+    }
+
+    /** Where a kit's file plays from: the file itself if WAV, else its decoded copy; null if the name leaves the
+     *  kit's folder. */
+    static File sampleFile(File dir, String name) {
+        if (dir == null || name.contains("..") || name.startsWith("/")) {
+            return null;
+        }
+        return name.toLowerCase(Locale.ROOT).endsWith(".wav") ? new File(dir, name)
+                : new File(dir, ".decoded-" + name.replace('/', '_') + ".wav");
+    }
+
+    /** The files a kit's text names that its folder doesn't have (nothing to play them from). */
+    static List<String> missingFiles(String text, File dir) {
+        List<String> out = new ArrayList<>();
+        for (List<Object[]> settings : parse(text).parts.values()) {
+            for (Object[] st : settings) {
+                if (st.length == 3 && st[1] instanceof String) {
+                    File f = sampleFile(dir, (String) st[1]);
+                    if (f == null || !f.isFile()) {
+                        out.add((String) st[1]);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    /** Decodes every non-WAV recording a kit names (once: the decoded copy sits beside it). */
+    static void prepareSamples(File dir, String text) {
+        Decoder d = decoder;
+        if (d == null) {
+            return;
+        }
+        for (List<Object[]> settings : parse(text).parts.values()) {
+            for (Object[] st : settings) {
+                if (st.length == 3 && st[1] instanceof String && !((String) st[1]).toLowerCase(Locale.ROOT).endsWith(".wav")) {
+                    File in = new File(dir, (String) st[1]), out = sampleFile(dir, (String) st[1]);
+                    if (out != null && in.isFile() && !out.isFile()) {
+                        try {
+                            d.decode(in, out);
+                        } catch (IOException e) {
+                            out.delete();      // (reported as missing)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     /** The kit (BUILT_IN index) a part plays: its own choice (1 = the first kit...), or the Kit when 0. */
     static int kitFor(int kit, int from) {
         return from > 0 ? from - 1 : kit;
@@ -154,9 +265,13 @@ final class Kits {
      *  `from` = each part's "from" choice (Params kitp_<part>), in PARTS order. */
     static synchronized void send(int kit, int[] from, boolean force, Out out) {
         for (int k = 0; k < PARTS.length; k++) {
-            String text = text(kitFor(kit, k < from.length ? from[k] : 0));
+            int index = kitFor(kit, k < from.length ? from[k] : 0);
+            String text = text(index);
             Kit parsed = text == null ? null : parse(text);
-            String key = parsed == null ? "" : describe(parsed.parts.get(PARTS[k]));
+            if (parsed != null) {
+                parsed.dir = dir(index);
+            }
+            String key = parsed == null ? "" : describe(parsed.parts.get(PARTS[k])) + (parsed.dir == null ? "" : parsed.dir);
             if (!force && key.equals(sentPart[k])) {
                 continue;
             }
@@ -174,10 +289,20 @@ final class Kits {
         StringBuilder sb = new StringBuilder();
         if (settings != null) {
             for (Object[] st : settings) {
-                sb.append(st[0]).append(' ').append(st[1]).append(',');
+                for (Object o : st) {
+                    sb.append(o).append(' ');
+                }
+                sb.append(',');
             }
         }
         return sb.toString();
+    }
+
+    /** The folder of the user kit at menu index `index`, null for a built-in kit or none. */
+    static File dir(int index) {
+        List<UserKit> user = userKits();
+        int n = index - BUILT_IN.length;
+        return n >= 0 && n < user.size() ? user.get(n).dir : null;
     }
 
     /** The text of the kit at menu index `index` (built-in or user), null if there is none. */
@@ -197,15 +322,32 @@ final class Kits {
             for (String[] d : DEFAULTS) {
                 out.send(recv, d[0], Float.parseFloat(d[1]));
             }
+            out.send(recv, "sgain", SAMPLE_GAIN[indexOf(PARTS, part)]);
             List<Object[]> settings = kit == null ? null : kit.parts.get(part);
             if (settings == null) {
                 return;
+            }
+            // a part whose recordings aren't all here stays Classic (its defaults are sent: engine 0)
+            for (Object[] st : settings) {
+                if (st.length == 3) {
+                    File f = sampleFile(kit.dir, (String) st[1]);
+                    if (f == null || !f.isFile()) {
+                        return;
+                    }
+                }
             }
             // settings first, the engine last: a note arriving in between hears the new sound whole
             Object[] engine = null;
             for (Object[] st : settings) {
                 if (st[0].equals("engine")) {
                     engine = st;
+                } else if (st.length == 3) {
+                    String path = sampleFile(kit.dir, (String) st[1]).getPath();
+                    if (st[0].equals("sample")) {
+                        out.sendMessage(recv, "sample", path, st[2]);
+                    } else {
+                        out.sendMessage(recv, "dsample", (float) indexOf(DRUM_FILES, (String) st[0]), path);
+                    }
                 } else {
                     out.send(recv, (String) st[0], (Float) st[1]);
                 }
@@ -348,6 +490,12 @@ final class Kits {
                     problems.add("Line " + lineNo + ": unknown wave \"" + w[1] + "\" (pulse, triangle, wave, fm)");
                 } else if (name.equals("chip") || name.equals("wave")) {
                     continue;
+                } else if (isFileSetting(name)) {
+                    if (name.equals("sample") && w.length >= 3 && noteNumber(w[w.length - 1]) < 0
+                            && !w[w.length - 1].toLowerCase(Locale.ROOT).matches(".*\\.\\w{2,4}")) {
+                        problems.add("Line " + lineNo + ": \"" + w[w.length - 1] + "\" is not a note (C4, F#3, 60)");
+                    }
+                    continue;
                 } else if (!isSetting(name)) {
                     problems.add("Line " + lineNo + ": unknown setting \"" + name + "\"");
                 } else {
@@ -400,8 +548,20 @@ final class Kits {
         if (!hasParts(text)) {
             throw new IOException(check(text).get(0));
         }
+        prepareSamples(root, text);
         int same = find(text);
         if (same >= BUILT_IN.length) {
+            File old = dir(same);
+            if (old == null || missingFiles(text, old).isEmpty() || !missingFiles(text, root).isEmpty()) {
+                return same;
+            }
+            // the same kit without its recordings (a preset brought its text): this one has them
+            File aside = new File(old.getPath() + ".old");
+            if (!old.renameTo(aside) || !root.renameTo(old)) {
+                throw new IOException("Cannot move the kit into " + old);
+            }
+            deleteTree(aside);
+            sentPart[0] = sentPart[1] = sentPart[2] = sentPart[3] = null;   // (played again, now with them)
             return same;
         }
         File dir = newFolder(parse(text).title);
@@ -490,6 +650,16 @@ final class Kits {
     static int afterDelete(int value, int removed, boolean fromMenu) {
         int r = fromMenu ? removed + 1 : removed;
         return value == r ? 0 : value > r ? value - 1 : value;
+    }
+
+    private static void deleteTree(File f) {
+        File[] kids = f.listFiles();
+        if (kids != null) {
+            for (File k : kids) {
+                deleteTree(k);
+            }
+        }
+        f.delete();
     }
 
     private static boolean isSetting(String name) {

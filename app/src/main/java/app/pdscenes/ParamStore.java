@@ -260,7 +260,17 @@ final class ParamStore {
         for (int k = 0; k < from.length; k++) {
             from[k] = Math.round(get("kitp_" + Kits.PARTS[k]));
         }
-        Kits.send(Math.round(get(Kits.ID)), from, all, (recv, sel, val) -> PdBase.sendMessage(recv, sel, val));
+        Kits.send(Math.round(get(Kits.ID)), from, all, new Kits.Out() {
+            @Override
+            public void send(String receiver, String selector, float value) {
+                PdBase.sendMessage(receiver, selector, value);
+            }
+
+            @Override
+            public void sendMessage(String receiver, String selector, Object... args) {
+                PdBase.sendMessage(receiver, selector, args);
+            }
+        });
     }
 
     /** After the user kit at Kit menu index `removed` was deleted: the kit settings that pointed at it go back to

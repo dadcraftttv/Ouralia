@@ -1865,13 +1865,37 @@ def read_kit(name):
     return kit
 ACOUSTIC = read_kit("acoustic")
 KITS = {name: read_kit(name) for name in ("acoustic", "synth", "edm", "futurebass", "lowend", "chipnes", "chipgb", "chipgenesis")}
+# a sample kit (stage 2): normalised recordings, each part at level 1, so a sound designer's kit starts near Classic
+import wave as _wave, tempfile as _tf
+def _wav(name, x):
+    path = os.path.join(_tf.gettempdir(), "pdtest_kit_" + name + ".wav")
+    with _wave.open(path, "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((np.clip(x, -1, 1) * 32767).astype("<i2").tobytes())
+    return path
+_t = np.arange(2 * SR) / SR
+_tone = _wav("tone", 0.9 * (np.sin(2 * np.pi * 261.63 * _t) + 0.3 * np.sin(2 * np.pi * 523.25 * _t)) / 1.3 * np.exp(-_t * 1.2))
+_pad = _wav("pad", 0.9 * (np.sin(2 * np.pi * 261.63 * _t) + 0.3 * np.sin(2 * np.pi * 523.25 * _t)) / 1.3)
+_kick = _wav("kick", 0.95 * np.sin(2 * np.pi * (50 * _t[:SR // 3] + 120 * (1 - np.exp(-_t[:SR // 3] / 0.03)) * 0.03)) * np.exp(-_t[:SR // 3] * 12))
+_noise = np.random.default_rng(4).standard_normal(SR // 3)
+_snare = _wav("snare", 0.9 * _noise / np.abs(_noise).max() * np.exp(-_t[:SR // 3] * 18))
+_hat = _wav("hat", 0.9 * np.diff(_noise, prepend=0) / np.abs(np.diff(_noise)).max() * np.exp(-_t[:SR // 3] * 60))
+KITS["samples"] = {"mel": [("attack", 2), ("sample", (_tone, 60)), ("engine", 9)],
+                   "bass": [("attack", 2), ("loop", 1), ("loopstart", 300), ("sample", (_pad, 60)), ("engine", 9)],
+                   "pad": [("attack", 300), ("loop", 1), ("loopstart", 300), ("sample", (_pad, 60)), ("engine", 9)],
+                   "drums": [("kick", (_kick,)), ("snare", (_snare,)), ("hat", (_hat,)), ("engine", 9)]}
 def send_kit(e, kit):
     for part in ("mel", "bass", "pad", "drums"):
         e.send_msg("kit_" + part, "engine", 0)
         for k, v in KIT_DEFAULTS:
             e.send_msg("kit_" + part, k, v)
+        e.send_msg("kit_" + part, "sgain", (6.7, 6, 0.26, 6)[("mel", "bass", "pad", "drums").index(part)])   # (as Kits.SAMPLE_GAIN)
         for k, v in kit.get(part, ()):
-            e.send_msg("kit_" + part, k, v)
+            if k in ("kick", "snare", "hat", "ohat"):
+                e.send_msg("kit_" + part, "dsample", ("kick", "snare", "hat", "ohat").index(k), *v)
+            elif isinstance(v, tuple):
+                e.send_msg("kit_" + part, k, *v)
+            else:
+                e.send_msg("kit_" + part, k, v)
 def kit_run(kit, part):
     """Music with only `part` audible (melody: motif notes; bass: Pad register Low; pad: Mid), the kit sent or not."""
     if part == "drums":                                                     # the beat alone, synth drums for Classic

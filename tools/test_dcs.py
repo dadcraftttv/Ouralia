@@ -550,6 +550,53 @@ cen = lambda y: float((np.abs(np.fft.rfft(y)) * np.fft.rfftfreq(len(y), 1 / SR))
 check(min(rms(kick), rms(snare), rms(hat)) > 0.005 and cen(kick) < cen(snare) < cen(hat),
       f"chip drums: kick, snare, hat, each brighter ({cen(kick):.0f}, {cen(snare):.0f}, {cen(hat):.0f} Hz)")
 
+# sample: a kit's own WAV files
+import wave, struct
+def wav(name, x, sr=SR, bits=16, chans=1, flt=False):
+    path = os.path.join(TMP, name); x = np.asarray(x, np.float64)
+    data = np.repeat(x[:, None], chans, axis=1).ravel()
+    if flt:                                                  # (wave can't write float: a hand-made header)
+        raw = data.astype("<f4").tobytes()
+        fmt = struct.pack("<HHIIHH", 3, chans, sr, sr * 4 * chans, 4 * chans, 32)
+        with open(path, "wb") as f:
+            f.write(b"RIFF" + struct.pack("<I", 4 + 8 + len(fmt) + 8 + len(raw)) + b"WAVE" + b"fmt " + struct.pack("<I", len(fmt)) + fmt
+                    + b"data" + struct.pack("<I", len(raw)) + raw)
+        return path
+    with wave.open(path, "wb") as w:
+        w.setnchannels(chans); w.setsampwidth(bits // 8); w.setframerate(sr)
+        q = np.round(data * (2 ** (bits - 1) - 1)).astype(np.int64)
+        w.writeframes(b"".join(int(v).to_bytes(bits // 8, "little", signed=True) for v in q) if bits == 24 else q.astype("<i2").tobytes())
+    return path
+tt = np.arange(SR) / SR
+c4 = wav("c4.wav", 0.5 * np.sin(2 * np.pi * 261.63 * tt) * np.exp(-tt * 0.5))
+t44 = np.arange(44100) / 44100
+c5 = wav("c5.wav", 0.5 * (np.sin(2 * np.pi * 523.25 * t44) + 0.8 * np.sin(2 * np.pi * 523.25 * 3 * t44)) / 1.8, sr=44100)
+y = play([("sample", c4, 60), ("attack", 2), ("engine", 9), ("note", 392, 0.8, 500)], 0.6)[int(0.05 * SR):int(0.5 * SR)]
+check(abs(1200 * np.log2(peak_hz(y, 350, 430) / 392)) < 5 and np.abs(y).max() > 0.02, f"sample: a C4 recording plays G4 ({peak_hz(y, 350, 430):.1f} Hz)")
+y = play([("sample", c4, 60), ("sample", c5, 72), ("attack", 2), ("engine", 9), ("note", 466.16, 0.8, 500)], 0.6)[int(0.05 * SR):int(0.5 * SR)]
+check(abs(peak_hz(y, 430, 500) - 466.16) < 2 and harm(y, 466.16, 3) > 0.3 * harm(y, 466.16, 1),
+      "sample: a note takes the nearest recording (A#4 from the C5 one, at 44.1 kHz, its own tone)")
+y = play([("sample", c4, 60), ("attack", 2), ("release", 30), ("oneshot", 0), ("engine", 9), ("note", 261.63, 0.8, 200)], 0.8)
+y1 = play([("sample", c4, 60), ("attack", 2), ("engine", 9), ("note", 261.63, 0.8, 200)], 0.8)
+check(rms(y[int(0.35 * SR):]) < 1e-4 and rms(y1[int(0.35 * SR):]) > 0.03, "sample: oneshot 0 stops at the note's length, oneshot 1 plays to the end")
+y = play([("sample", c4, 60), ("attack", 2), ("loop", 1), ("loopstart", 200), ("engine", 9), ("pnote", 0, 261.63)], 3.0)
+d = np.abs(np.diff(y[int(0.1 * SR):]))
+check(rms(y[int(2.0 * SR):int(2.9 * SR)]) > 0.02 and d.max() < 0.05, f"sample: a held note loops past the recording's end, smoothly (max step {d.max():.3f})")
+c4b = wav("c4_24.wav", 0.5 * np.sin(2 * np.pi * 261.63 * tt) * np.exp(-tt * 0.5), bits=24, chans=2)
+c4f = wav("c4_f.wav", 0.5 * np.sin(2 * np.pi * 261.63 * tt) * np.exp(-tt * 0.5), chans=2, flt=True)
+ys = [play([("sample", f, 60), ("attack", 2), ("engine", 9), ("note", 261.63, 0.8, 500)], 0.5) for f in (c4, c4b, c4f)]
+check(all(np.abs(a - ys[0]).max() < 1e-3 for a in ys[1:]), "sample: 16-bit, 24-bit stereo and float files read alike")
+kick = wav("kick.wav", np.sin(2 * np.pi * 60 * tt[:SR // 4]) * np.exp(-tt[:SR // 4] * 20))
+ohat = wav("ohat.wav", np.random.default_rng(1).standard_normal(SR // 2) * 0.2)
+yk = play([("dsample", 0, kick), ("engine", 9), ("hit", 0, 1)], 0.4)
+yh = play([("dsample", 2, kick), ("dsample", 3, ohat), ("engine", 9), ("hit", 2, 1, 300)], 0.4)
+check(rms(yk) > 0.01 and abs(peak_hz(yk, 40, 100) - 60) < 3 and rms(yh) > 0.01 and peak_hz(yh, 40, 100) != 60,
+      "sample drums: a kick plays its file, a long hat its open hat")
+y = play([("sample", os.path.join(TMP, "nothing.wav"), 60), ("engine", 9), ("note", 261.63, 0.8, 500)], 0.3)
+check(np.abs(y).max() == 0, "sample: a missing file is skipped (silence, no crash)")
+y = play([("sample", c4, 60), ("attack", 2), ("engine", 9), ("pnote", 0, 261.63)], 1.0, then=[("clear",)], then_at=0.3)
+check(rms(y[int(0.35 * SR):]) == 0, "sample: clear stops and forgets them")
+
 cp = patch("chop", ["r vc", "dcs_voice~", "dac~", "table fpad_0 48000", "table fpad_f0 2", "table fpad_g 2", "table fpad_n 2"],
            [(0, 0, 1, 0), (1, 0, 2, 0), (1, 0, 2, 1)])
 def chop(kept, secs=0.6):

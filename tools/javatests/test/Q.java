@@ -134,7 +134,47 @@ public class Q {
         Files.writeString(staging.resolve("Wrapped").resolve(Kits.FILE), "title: Wrapped\ndrums: engine drums\n");
         int w = Kits.installFolder(staging.toFile());
         check(w == b + 2 && Kits.userKits().get(2).title.equals("Wrapped"), "a zip or folder with kit.txt inside installs");
+        sampleKits(dir);
         Kits.userDir = null;
         Kits.refreshChoices();
+    }
+
+    /** Sample kits (stage 2, Oct 18): files named in kit.txt, played from the kit's folder, Classic when missing. */
+    static void sampleKits(Path dir) throws Exception {
+        check(Kits.noteNumber("C4") == 60 && Kits.noteNumber("f#3") == 54 && Kits.noteNumber("Bb2") == 46
+                        && Kits.noteNumber("72") == 72 && Kits.noteNumber("piano.wav") == -1,
+                "note names: C4 = 60, sharps and flats, plain numbers");
+        String text = "title: Keys\nmel: engine sample, sample piano c4.wav C4, sample piano c5.wav 72, attack 2\n"
+                + "drums: engine sample, kick kick.wav, ohat open hat.wav\n";
+        Kits.Kit k = Kits.parse(text);
+        Object[] s0 = k.parts.get("mel").get(1);
+        check(s0[1].equals("piano c4.wav") && ((Float) s0[2]) == 60f && k.parts.get("drums").get(2)[1].equals("open hat.wav"),
+                "a sample line: the file (spaces allowed) and its root note");
+        check(Kits.sampleFile(dir.toFile(), "../x.wav") == null && Kits.sampleFile(dir.toFile(), "a.mp3").getName().endsWith(".wav"),
+                "a kit's files stay in its folder; a non-WAV file plays from its decoded copy");
+        int a = Kits.install(text);                    // (text only, as a preset would bring it)
+        List<String> sent = new ArrayList<>();
+        Kits.Out out = new Kits.Out() {
+            public void send(String r, String s, float v) { sent.add(r + " " + s + " " + v); }
+            public void sendMessage(String r, String s, Object... args) { sent.add(r + " " + s + " " + java.util.Arrays.toString(args)); }
+        };
+        Kits.send(a, new int[4], true, out);
+        check(sent.stream().noneMatch(m -> m.contains("engine 9")) && Kits.missingFiles(text, Kits.dir(a)).size() == 4,
+                "a sample kit without its files plays Classic, and says which are missing");
+        Path staging = Files.createTempDirectory(dir, ".import-");
+        Files.writeString(staging.resolve(Kits.FILE), text);
+        for (String f : new String[]{"piano c4.wav", "piano c5.wav", "kick.wav", "open hat.wav"}) {
+            Files.write(staging.resolve(f), new byte[]{1});
+        }
+        int b = Kits.installFolder(staging.toFile());
+        sent.clear();
+        Kits.send(a, new int[4], true, out);
+        String c4 = Kits.dir(a).toPath().resolve("piano c4.wav").toString();
+        check(b == a && Kits.missingFiles(text, Kits.dir(a)).isEmpty() && sent.contains("kit_mel sample [" + c4 + ", 60.0]")
+                        && sent.contains("kit_drums dsample [3.0, " + Kits.dir(a).toPath().resolve("open hat.wav") + "]")
+                        && sent.contains("kit_mel engine 9.0") && sent.indexOf("kit_mel clear 0.0") < sent.indexOf("kit_mel sample [" + c4 + ", 60.0]"),
+                "the kit imported with its files fills in the text-only copy: it plays them, cleared first, engine last");
+        check(!Kits.check("mel: engine sample, sample a.wav Q9\n").isEmpty() && Kits.check(text).isEmpty(),
+                "check() names a root that isn't a note");
     }
 }

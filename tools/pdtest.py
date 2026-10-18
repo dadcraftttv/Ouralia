@@ -125,11 +125,15 @@ class Engine:
         L.libpd_finish_list(name.encode())
 
     def send_msg(self, name, selector, *values):
-        """Send `selector v1 v2 ...` to a receiver, like PdBase.sendMessage (floats only)."""
+        """Send `selector v1 v2 ...` to a receiver, like PdBase.sendMessage (words too, e.g. a file path)."""
         L = self.lib
         L.libpd_start_message(len(values))
+        L.libpd_add_symbol.argtypes = [ctypes.c_char_p]
         for v in values:
-            L.libpd_add_float(float(v))
+            if isinstance(v, str):
+                L.libpd_add_symbol(v.encode())
+            else:
+                L.libpd_add_float(float(v))
         L.libpd_finish_message(name.encode(), selector.encode())
 
     def run(self, mic):
