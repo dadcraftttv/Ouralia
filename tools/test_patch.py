@@ -735,6 +735,22 @@ check(not np.isnan(y).any() and float(np.abs(y).max()) <= 1.0 + 1e-6, "loud nois
 e = fresh(wet=0, phaser_mix=1, phaser_fb=0.9)
 check(rms(e.run(e.silence(1.0))[SR // 10:]) < 1e-6, "phaser adds no noise on silent input")
 
+# ---- 7m. sing in key: the voice moves to the nearest note of the Music key and scale ----
+def tuned(amount, freq=450, **over):
+    e = fresh(wet=0, dry=1, tune_amount=amount, **over)
+    return e.run(sine(freq, 0.1, 2.5))[SR:, 0]
+for amount, key, want, what in ((1, 0, 440.0, "C major: 39 cents sharp of A lands on A"),
+                                (1, 1, 466.16, "C# major: no A, so it goes up to A#"),
+                                (0.5, 0, 444.95, "amount 0.5 goes half way")):
+    y = tuned(amount, music_key=key)
+    check(band_share(y, want, 0.006) > 0.8, "sing in key, %s: %.0f%% at %.1f Hz" % (what, 100 * band_share(y, want, 0.006), want))
+y = tuned(0)
+check(band_share(y, 450, 0.006) > 0.95, "sing in key at 0 leaves the voice alone (%.0f%% at 450 Hz)" % (100 * band_share(y, 450, 0.006)))
+e = fresh(wet=0, dry=1, tune_amount=0)
+e.run(sine(450, 0.1, 0.5)); e.send("tune_amount", 1)
+yy = e.run(sine(450, 0.1, 1.0))[:, 0]
+check(max_jump(yy) < 0.05, "turning sing in key on live: no click (max step %.4f)" % max_jump(yy))
+
 # ---- 9. walking beat: footsteps play drums ----
 def beat_run(steps, secs=2.0, **over):
     """steps = [(time_s, interval_s)]; returns the left channel after sending [step( at those times."""

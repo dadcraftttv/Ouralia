@@ -279,6 +279,29 @@ check(abs(form - 700) < f0 * 0.75, f"its tone colour stays: the strongest harmon
 d = db_frames(y)
 check(d.max() - d.min() < 2, f"no warble: the level holds within {d.max() - d.min():.1f} dB")
 
+# sing in key: C major; a voice sung between notes lands on the nearest one of the scale
+tp = patch("tune", ["adc~", "dcs_shift~ 0", "dac~", "r tune"], [(0, 0, 1, 0), (1, 0, 2, 0), (1, 0, 2, 1), (3, 0, 1, 0)])
+def sung(midi, snap=1, glide=0, key=0, scale=(0, 2, 4, 5, 7, 9, 11)):
+    e = Engine(LIB, tp)
+    e.send_msg("tune", "key", key); e.send_msg("tune", "scale", *scale)
+    e.send_msg("tune", "snap", snap); e.send_msg("tune", "glide", glide)
+    f = 440 * 2 ** ((midi - 69) / 12)
+    y = e.run(vowel(f0=f))[:, 0][SR:]; e.close()
+    return 69 + 12 * np.log2(peak_hz(y, f * 0.8, f * 1.25) / 440), y
+for m, want, what in ((50.4, 50, "40 cents sharp of D"), (51.7, 52, "between D# and E (not in the scale)"),
+                      (53.35, 53, "35 cents sharp of F")):
+    got, _ = sung(m)
+    check(abs(got - want) < 0.06, f"sung {what}: lands on {got:.2f} (MIDI {want})")
+got, _ = sung(50.4, snap=0)
+check(abs(got - 50.4) < 0.06, f"snap 0 leaves the voice alone ({got:.2f})")
+got, _ = sung(50.4, snap=0.5)
+check(abs(got - 50.2) < 0.06, f"snap 0.5 goes half way ({got:.2f})")
+got, _ = sung(61.4, key=2, scale=(0, 2, 4, 5, 7, 9, 11))
+check(abs(got - 61) < 0.06, f"key D major: C# is in it ({got:.2f})")
+got, y = sung(50.4, glide=60)
+d = db_frames(y)
+check(abs(got - 50) < 0.06 and d.max() - d.min() < 2, f"with a 60 ms glide it settles too ({got:.2f}), no warble ({d.max() - d.min():.1f} dB)")
+
 # ---------------------------------------------------------------- dcs_onset~
 print("dcs_onset~:")
 op = patch("onset", ["adc~", "dcs_onset~", "f 1", "s on_b"], [(0, 0, 1, 0), (1, 0, 2, 0), (2, 0, 3, 0)])   # (the test hears numbers, not bangs)

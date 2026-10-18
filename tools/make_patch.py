@@ -24,7 +24,7 @@ DEFAULTS = [
     ("gain", 1), ("dry", 1), ("echo_on", 1), ("echo_time", 350), ("echo_sync", 2), ("feedback", 0.4),
     ("wet", 0), ("ring_on", 1), ("ring_freq", 80), ("ring_mix", 0), ("smooth", 30),
     ("pitch_on", 1), ("pitch_semi", 0), ("pitch_mix", 0), ("pitch_window", 60),
-    ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000), ("crush_style", 0),
+    ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000), ("crush_style", 0), ("tune_amount", 0), ("tune_glide", 40),
     ("space_on", 1), ("space_pan", 0), ("space_shift", 0),
     ("filter_on", 1), ("filter_mix", 0), ("filter_type", 0), ("filter_freq", 1500), ("filter_q", 1),
     ("reverb_on", 1), ("reverb_mix", 0), ("reverb_size", 0.5), ("reverb_tone", 6000),
@@ -4007,6 +4007,34 @@ def build():
     P.sig2("mic_comp1", "+~", "mic_comp0", "pg_part", 20, 390)
     P.sig2("mic_comp", "*~", "mic_comp1", "hush_ln", 20, 395)
 
+    # --- sing in key (Oct 18): dcs_shift~ moves each sung note to the nearest note of the music's key and scale.
+    # Amount = how far (0 = off: the plain voice, nothing computed); glide = how long a correction takes (0 = the
+    # hard robotic jump). On, the voice is 30 ms late (the grains need what follows), so it replaces the plain
+    # voice instead of mixing with it (a late copy beside it would comb).
+    P.obj("tune_dcs", "dcs_shift~ 0", 120, 440); P.c("mic_comp", "tune_dcs")
+    P.obj("tune_r_amt", "r tune_amount", 200, 400)
+    P.msg("tune_snap", f"snap {BS}$1", 200, 420); P.c("tune_r_amt", "tune_snap"); P.c("tune_snap", "tune_dcs")
+    P.obj("tune_r_gl", "r tune_glide", 280, 400)
+    P.msg("tune_gl", f"glide {BS}$1", 280, 420); P.c("tune_r_gl", "tune_gl"); P.c("tune_gl", "tune_dcs")
+    P.obj("tune_r_sw", "r sw_tune", 360, 400)
+    P.msg("tune_run", f"run {BS}$1", 360, 420); P.c("tune_r_sw", "tune_run"); P.c("tune_run", "tune_dcs")
+    P.obj("tune_r_key", "r music_key", 440, 400)
+    P.msg("tune_key", f"key {BS}$1", 440, 420); P.c("tune_r_key", "tune_key"); P.c("tune_key", "tune_dcs")
+    P.obj("tune_r_sc", "r music_scale", 520, 400)
+    tsel = P.obj("tune_sc_sel", "sel " + " ".join(str(i) for i in range(len(SCALES))), 520, 420)
+    P.c("tune_r_sc", tsel)
+    for i, iv in enumerate(SCALES):
+        P.msg(f"tune_sc{i}", "scale " + " ".join(str(v) for v in iv), 520 + 40 * i, 440)
+        P.c(tsel, f"tune_sc{i}", i, 0); P.c(f"tune_sc{i}", "tune_dcs")
+    P.obj("tune_on", "> 0", 200, 450); P.c("tune_r_amt", "tune_on")
+    P.obj("tune_pk", "pack f 30", 200, 465); P.c("tune_on", "tune_pk"); P.c("r_smooth", "tune_pk", 0, 1)
+    P.obj("tune_xf", "line~", 200, 480); P.c("tune_pk", "tune_xf")
+    P.sig2("tune_wet", "*~", "tune_dcs", "tune_xf", 120, 495)
+    P.obj("tune_keep0", "-~ 1", 200, 495); P.c("tune_xf", "tune_keep0")
+    P.obj("tune_keep", "*~ -1", 200, 505); P.c("tune_keep0", "tune_keep")     # 1 - on
+    P.sig2("tune_dry", "*~", "mic_comp", "tune_keep", 20, 495)
+    P.sig2("mic_tuned", "+~", "tune_dry", "tune_wet", 20, 510)
+
     # --- ring modulator with bypass ---
     if LEGACY_FX:
         P.obj("r_ring_freq", "r ring_freq", 250, 20)
@@ -4021,9 +4049,9 @@ def build():
         P.obj("one_minus_mix", "*~ -1", 340, 170)             # 1 - amount
         P.c("mix_minus1", "one_minus_mix")
         P.sig2("carrier", "+~", "osc_amt", "one_minus_mix", 250, 200)
-        P.sig2("ring_out", "*~", "mic_comp", "carrier", 20, 230)   # amount 0 -> carrier is 1 -> unchanged
+        P.sig2("ring_out", "*~", "mic_tuned", "carrier", 20, 230)   # amount 0 -> carrier is 1 -> unchanged
     else:   # dcs_ring~ (Oct 17): the same, sample for sample, and nothing to compute while the amount is 0
-        fx(P, "ring_out", "dcs_ring~ 80", "mic_comp", ("ring_freq", "freq"), ("ring_mix", "mix"), ("ring_on", "on"),
+        fx(P, "ring_out", "dcs_ring~ 80", "mic_tuned", ("ring_freq", "freq"), ("ring_mix", "mix"), ("ring_on", "on"),
            x=250, y=50)
 
     # --- pitch shifter: two delay taps sweeping through a buffer, crossfaded with Hann windows ---
@@ -4762,6 +4790,7 @@ def build():
     if LEGACY_FX:
         P.group("pitch", r"^(rate_hz|ph1|ph2|ph2_off|delwrite_p|tap[12]_\w+|rd[12]|cos[12]|cos[12]_neg|win[12]|grain[12]|shifted)$")
     add_switch(P, "pitch", ("pitch_on", "pitch_mix", "shift_voice_c"), 300, dsp=LEGACY_FX)
+    add_switch(P, "tune", ("tune_amount",), 300, dsp=False)    # (dcs_shift~ hears "run")
     P.group("pshiftn", r"^pshift_dcs$")
     add_switch(P, "pshiftn", ("pitch_on", "pitch_mix", "shift_voice"), 300)
     if LEGACY_FX:

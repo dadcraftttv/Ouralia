@@ -35,6 +35,7 @@ final class Params {
             new Section("beat", "Rhythm", false),
             new Section("music", "Music", true),
             new Section("mix", "Mix (the level of each part)", false),
+            new Section("tune", "Sing in key", false),
             new Section("echo", "Echo", false),
             new Section("ring", "Ring modulator", false),
             new Section("pitch", "Pitch shifter", false),
@@ -295,6 +296,13 @@ final class Params {
                     .inSection("echo").rand(0f, 0.8f),
             new Param("echo_scatter", "Echo scatter (each repeat lands somewhere else)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("echo").rand(0f, 1f).resetWhenAbsent(),
+
+            // ---- Sing in key (Oct 18) ---- dcs_shift~ moves each sung note to the nearest note of the Music key
+            // and scale (the music needn't be playing). On, the voice runs 30 ms late. Older presets turn it off.
+            new Param("tune_amount", "Sing in key (0 = off, 1 = right on the note)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("tune").noRandom().resetWhenAbsent().dcs(),
+            new Param("tune_glide", "Sing in key glide (0 = robotic jumps)", 0f, 300f, 40f, " ms",
+                    Param.Curve.LINEAR).inSection("tune").noRandom().decimals(0).resetWhenAbsent().dcs(),
 
             // ---- Ring modulator ----
             new Param("ring_on", "Ring mod enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)

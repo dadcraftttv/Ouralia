@@ -148,6 +148,16 @@ A robotic, metallic, "Dalek" kind of sound.
 - **Ring-mod frequency:** the pitch of the metallic buzz. Low sounds growly, high sounds bell-like.
 - **Ring-mod amount:** how much of the effect you hear.
 
+### Sing in key
+
+Pulls your singing onto the notes of the Music key and scale (set on the Music tab, even if the music is off).
+
+- **Sing in key:** 0 is off. 1 puts every note right on the scale. In between nudges you part of the way.
+- **Sing in key glide:** how fast a note is pulled. 0 jumps straight there (the robotic pop-star sound). Higher is
+  gentler and more natural.
+
+While it's on, your voice comes through a tiny bit later (30 ms).
+
 ### Pitch shifter
 
 Makes your voice higher (chipmunk) or lower (monster).

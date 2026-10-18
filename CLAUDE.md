@@ -63,13 +63,14 @@ As of Oct 17:
 - **Waiting on DadCraft's ears** (all behind switches or kits, the old sound the default): the five kits (Acoustic,
   Synth, EDM, Future bass, Low end; Music tab, Kit * and Melody/Bass/Pad/Drums from *), Glitch voice New, Found note
   ring String, Rustle squash + Step duck (pocket), Pitch tracker / Pitch shifter / Sudden-sound detector New,
-  Crusher style (8-bit sampler, SP-1200, NES, Game Boy, SNES, Genesis).
+  Crusher style (heard Oct 18: "don't sound like the consoles", kept; Chip voice is the answer).
   Settings that use our C objects show " *" after their name. Kit levels were matched to Classic by measurement
   only; each kit's sound is one line per part in `app/src/main/assets/kits/<name>.txt`.
 - **Effect ports done** (DadCraft, Oct 17: dcs versions of every effect, for CPU): all 13 match the old Pd chains
   (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
-  **Next: "sing in key"** (dcs_pitch~ + dcs_shift~ snapping the voice to the music's scale, behind a switch).
-  User kits stage 2 (samples) after that.
+- **Sing in key** built Oct 18 (section "Sing in key", dcs_shift~ snap mode; off by default): waiting on DadCraft's
+  ears. **Next (DadCraft, Oct 18): Chip voice** (pitch tracker plays the voice on NES / Game Boy / Genesis channels,
+  folded together with the vocoder idea), then a Chiptune kit; user kits stage 2 (samples) after that.
 - **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
   reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
 - **Next on the kit plan** (ROADMAP 19): user kits stage 2, a sample engine in dcs_voice~ (drum one-shots,

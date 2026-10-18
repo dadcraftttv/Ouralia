@@ -99,6 +99,19 @@ to date in the same commit when behaviour changes.
   0.4 s swell: none. Patch: `add_onset_switch` reroutes every listener of gc_det_sel / fs_det_sel to on_gc / on_fs,
   fed by the classic detectors or dcs_onset~ (on `mic`, always running); `s onset_heard` for the tests. In the
   patch a swell triggers Classic once, New never; a clap both once.
+- **Sing in key** (Oct 18, `tune_amount`, `tune_glide`; section "Sing in key", before the ring modulator in the
+  chain). dcs_shift~ got a snap mode: `key`, `scale <steps>`, `snap 0..1`, `glide ms`, `run`. Each 10 ms hop the
+  tracked pitch picks the nearest note of the scale (it keeps its note until another is nearer by 0.2 semitone: no
+  flipping between two), and the correction eases there over `glide` (0 = the hard robotic jump); with no pitch it
+  lets go within ~30 ms. The correction used is the one from 2 hops back (the grains are cut 30 ms late). Follows
+  the Music key and scale whether or not the music plays. On, the voice is 30 ms late, so the effect replaces the
+  plain voice (a crossfade on Amount > 0) instead of mixing (a late copy would comb). Off = `run 0`: nothing computed,
+  and a fresh start when on again (no old sound in the grains). Old presets turn it off; not in the randomiser.
+  Tests: test_dcs.py (lands within 6 cents, half way at 0.5, other keys, glide), test_patch.py 7m. Planned next
+  (DadCraft, Oct 18): **Chip voice** (the pitch tracker plays your voice on NES/Game Boy/Genesis channels, with a
+  chip-wave vocoder so words stay clear), then a Chiptune kit. DadCraft: the Crusher styles "don't seem to really make
+  my voice or sounds sound like they're coming from the console systems": they copy each console's sample playback,
+  not the chip voices people remember.
 - **Effect ports** (Oct 17, DadCraft: "dcs versions of the effects we have. I want the performance benefits"; the
   crusher "more accurate 8 or 16 bit sounds", as a Style menu). Each effect becomes one dcs object that does what its
   Pd objects did **sample for sample** (`dcs/src/dcs_fx.h`: line~ in whole blocks, osc~/cos~ with Pd 0.55's 2048-point

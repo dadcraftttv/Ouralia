@@ -7,8 +7,14 @@
  * shape, so the tone colour stays where it was, and grains in step don't beat against each other (no warble).
  * Sounds with no clear pitch (breath, noise, a room) are shifted with 8 ms grains instead.
  *
+ * Sing in key: given a key and a scale, it also moves each sung note to the nearest note of the scale (`snap` how
+ * much, 0..1; `glide` how many ms the correction takes to settle: 0 = the hard, robotic jump). A note must move
+ * past the middle of two scale notes, plus a little, before the target changes (no flipping between two).
+ *
  *   [dcs_shift~ <semitones>]
- *   inlet:   signal; `semi <semitones>`; `freq <Hz>` (the pitch, if you know it; 0 = find it)
+ *   inlet:   signal; `semi <semitones>`; `freq <Hz>` (the pitch, if you know it; 0 = find it);
+ *            `key <0..11>` (0 = C); `scale <semitones above the key...>`; `snap <0..1>`; `glide <ms>`;
+ *            `run <0|1>` (0: stopped, silent, nothing computed; 1: starts afresh)
  *   outlet:  the shifted signal, 30 ms late (the grains need what follows them)
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -24,6 +30,8 @@
 #define HOLD_MS 60.             /* a pitch is kept this long through a blip of no pitch */
 #define MAXGRAINS 24
 #define HANNLEN 1024
+#define SNAP_HYST 0.2           /* semitones past the midpoint before a sung note's target changes */
+#define SNAP_LAG 2              /* hops: the correction for the pitch heard this long ago (the grains are 30 ms back) */
 
 static t_class *dcs_shift_class;
 static float shift_hann[HANNLEN + 1];
@@ -46,6 +54,10 @@ typedef struct _dcs_shift
     double x_nextmark, x_lasta;
     int x_hopcount;
     t_grain x_g[MAXGRAINS];
+    /* sing in key */
+    int x_key, x_inscale[12], x_hasscale, x_target;
+    double x_snap, x_glide, x_corr, x_lag[SNAP_LAG + 1];
+    int x_lagi, x_run;
 } t_dcs_shift;
 
 static inline float shift_read(const float *b, double p)
@@ -65,7 +77,9 @@ static inline float shift_win(double ph)
 
 static void dcs_shift_spawn(t_dcs_shift *x)
 {
-    double sr = x->x_yin.sr, P = x->x_P, r = pow(2, x->x_semi / 12.), S = P / r;
+    double sr = x->x_yin.sr, P = x->x_P, S;
+    double r = pow(2, (x->x_semi + x->x_snap * x->x_lag[(x->x_lagi + 1) % (SNAP_LAG + 1)]) / 12.);
+    S = P / r;
     double lat = LAT_MS * sr / 1000, target = x->x_now - lat, a, L;
     int k;
     /* the analysis point: whole periods on from the last one (in step), as near as can be to `target` */
@@ -89,11 +103,52 @@ static void dcs_shift_spawn(t_dcs_shift *x)
     x->x_nextmark += S;
 }
 
+/* the nearest scale note to the pitch `m` (MIDI), keeping the last one unless another is nearer by SNAP_HYST */
+static int dcs_shift_target(t_dcs_shift *x, double m)
+{
+    int n = -1000, d;
+    for (d = 0; d <= 6 && n == -1000; d++)
+    {
+        int lo = (int)floor(m) - d, hi = (int)ceil(m) + d;
+        int okl = x->x_inscale[((lo - x->x_key) % 12 + 12) % 12], okh = x->x_inscale[((hi - x->x_key) % 12 + 12) % 12];
+        if (okl && (!okh || m - lo <= hi - m)) n = lo;
+        else if (okh) n = hi;
+    }
+    if (x->x_target > -1000 && x->x_inscale[((x->x_target - x->x_key) % 12 + 12) % 12]
+        && fabs(m - x->x_target) - fabs(m - n) < SNAP_HYST)
+        return x->x_target;
+    return n;
+}
+
+/* once a hop: the correction (semitones) eases toward the one that puts the sung note on the scale */
+static void dcs_shift_snap(t_dcs_shift *x, double voicedP, double hopsamps)
+{
+    double sr = x->x_yin.sr, want = 0, k;
+    if (x->x_hasscale && x->x_snap > 0 && voicedP > 0)
+    {
+        double m = 69 + 12 * log2(sr / voicedP / 440.);
+        int t = dcs_shift_target(x, m);
+        if (t > -1000) x->x_target = t, want = t - m;
+    }
+    else if (voicedP <= 0)
+        x->x_target = -1000;
+    k = x->x_glide > 0 ? 1 - exp(-hopsamps / (x->x_glide * sr / 1000)) : 1;
+    if (voicedP <= 0) k = 1 - exp(-hopsamps / (0.03 * sr));   /* (no pitch: let go within ~30 ms) */
+    x->x_corr += (want - x->x_corr) * k;
+    x->x_lagi = (x->x_lagi + 1) % (SNAP_LAG + 1);
+    x->x_lag[x->x_lagi] = x->x_corr;
+}
+
 static t_int *dcs_shift_perform(t_int *w)
 {
     t_dcs_shift *x = (t_dcs_shift *)(w[1]);
     t_sample *in = (t_sample *)(w[2]), *out = (t_sample *)(w[3]);
     int n = (int)(w[4]), i, k;
+    if (!x->x_run)
+    {
+        memset(out, 0, n * sizeof(t_sample));
+        return (w + 5);
+    }
     double sr = x->x_yin.sr, hop = HOP_MS * sr / 1000, noise = NOISE_MS * sr / 1000, hold = HOLD_MS * sr / 1000;
     for (i = 0; i < n; i++)
     {
@@ -109,6 +164,7 @@ static t_int *dcs_shift_perform(t_int *w)
                 x->x_P = P, x->x_lastvoiced = x->x_now;
             else if (x->x_now - x->x_lastvoiced > hold)
                 x->x_P = noise;
+            dcs_shift_snap(x, P > 0 ? P : (x->x_now - x->x_lastvoiced > hold ? 0 : x->x_P), hop);
         }
         if (x->x_now >= x->x_nextmark)
             dcs_shift_spawn(x);
@@ -124,27 +180,63 @@ static t_int *dcs_shift_perform(t_int *w)
     return (w + 5);
 }
 
+static void dcs_shift_reset(t_dcs_shift *x)
+{
+    x->x_P = NOISE_MS * x->x_yin.sr / 1000;
+    x->x_now = x->x_nextmark = x->x_lastvoiced = 0;
+    x->x_hopcount = 0;
+    x->x_lasta = -1;
+    x->x_target = -1000;
+    x->x_corr = 0;
+    memset(x->x_lag, 0, sizeof(x->x_lag));
+    memset(x->x_g, 0, sizeof(x->x_g));
+    memset(x->x_buf, 0, sizeof(x->x_buf));
+}
+
 static void dcs_shift_dsp(t_dcs_shift *x, t_signal **sp)
 {
     if (sp[0]->s_sr != x->x_yin.sr)
     {
         dcs_yin_init(&x->x_yin, sp[0]->s_sr);
-        x->x_P = NOISE_MS * sp[0]->s_sr / 1000;
-        x->x_now = x->x_nextmark = 0;
-        x->x_lasta = -1;
-        memset(x->x_g, 0, sizeof(x->x_g));
+        dcs_shift_reset(x);
     }
     dsp_add(dcs_shift_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, (t_int)sp[0]->s_n);
 }
 
 static void dcs_shift_semi(t_dcs_shift *x, t_floatarg f) { x->x_semi = f < -24 ? -24 : (f > 24 ? 24 : f); }
 static void dcs_shift_freq(t_dcs_shift *x, t_floatarg f) { x->x_freq = f > 20 ? f : 0; }
+static void dcs_shift_key(t_dcs_shift *x, t_floatarg f) { x->x_key = ((int)f % 12 + 12) % 12; x->x_target = -1000; }
+static void dcs_shift_snapamt(t_dcs_shift *x, t_floatarg f) { x->x_snap = f < 0 ? 0 : (f > 1 ? 1 : f); }
+static void dcs_shift_glide(t_dcs_shift *x, t_floatarg f) { x->x_glide = f > 0 ? f : 0; }
+
+static void dcs_shift_run(t_dcs_shift *x, t_floatarg f)
+{
+    int run = f != 0;
+    if (run && !x->x_run && x->x_yin.sr > 0)
+    {
+        dcs_yin_init(&x->x_yin, x->x_yin.sr);     /* (forget the old sound) */
+        dcs_shift_reset(x);
+    }
+    x->x_run = run;
+}
+
+static void dcs_shift_scale(t_dcs_shift *x, t_symbol *s, int argc, t_atom *argv)
+{
+    int i;
+    memset(x->x_inscale, 0, sizeof(x->x_inscale));
+    for (i = 0; i < argc; i++)
+        x->x_inscale[((int)atom_getfloat(argv + i) % 12 + 12) % 12] = 1;
+    x->x_hasscale = argc > 0;
+    x->x_target = -1000;
+}
 
 static void *dcs_shift_new(t_floatarg semi)
 {
     t_dcs_shift *x = (t_dcs_shift *)pd_new(dcs_shift_class);
     x->x_semi = semi;
     x->x_lasta = -1;
+    x->x_target = -1000;
+    x->x_run = 1;
     outlet_new(&x->x_obj, &s_signal);
     return (x);
 }
@@ -160,4 +252,9 @@ void dcs_shift_tilde_setup(void)
     class_addmethod(dcs_shift_class, (t_method)dcs_shift_dsp, gensym("dsp"), A_CANT, 0);
     class_addmethod(dcs_shift_class, (t_method)dcs_shift_semi, gensym("semi"), A_FLOAT, 0);
     class_addmethod(dcs_shift_class, (t_method)dcs_shift_freq, gensym("freq"), A_FLOAT, 0);
+    class_addmethod(dcs_shift_class, (t_method)dcs_shift_key, gensym("key"), A_FLOAT, 0);
+    class_addmethod(dcs_shift_class, (t_method)dcs_shift_scale, gensym("scale"), A_GIMME, 0);
+    class_addmethod(dcs_shift_class, (t_method)dcs_shift_snapamt, gensym("snap"), A_FLOAT, 0);
+    class_addmethod(dcs_shift_class, (t_method)dcs_shift_glide, gensym("glide"), A_FLOAT, 0);
+    class_addmethod(dcs_shift_class, (t_method)dcs_shift_run, gensym("run"), A_FLOAT, 0);
 }
