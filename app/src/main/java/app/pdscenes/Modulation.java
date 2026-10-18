@@ -267,7 +267,7 @@ final class Modulation {
         float v = moved(p, base);
         v = Intensity.scales(p.id) ? Intensity.apply(p, v, intensityNow()) : v;
         v = CalmBuild.scales(p.id) ? CalmBuild.apply(p, v) : v;   // (a calm build lifts a few layers)
-        return PackPlayer.overrides(p.id) ? PackPlayer.apply(p.id, v) : v;   // (a stem pack's tempo, key, beat)
+        return v;
     }
 
     /** Intensity as it plays now: its slider, moved by its own mover if it has one. */

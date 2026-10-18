@@ -62,11 +62,10 @@ final class DesktopWindow {
     private static final Map<String, String> SHORT = Map.of("intensity", "Intensity (calmer - busier)");
     /**
      * Settings that only mean something on a phone: the pocket and handling hushes, notes following light and
-     * stairs, the beat following your steps or playing only while walking, and the stem packs' level (packs stay on
-     * the phone). Kept at their defaults here (the beat on its own clock, always playing) and out of sight.
+     * stairs, the beat following your steps or playing only while walking. Kept at their defaults here (the beat on its own clock, always playing) and out of sight.
      */
     static final java.util.Set<String> PHONE_ONLY = java.util.Set.of("pocket_hush", "pocket_guard", "pocket_rustle", "pocket_steps", "handling_hush",
-            "music_follow", "beat_follow", "beat_when", "stems_level");
+            "music_follow", "beat_follow", "beat_when");
 
     private final JFrame frame = new JFrame("PdScenes");
     private JTabbedPane tabs;

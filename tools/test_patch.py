@@ -77,7 +77,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "stem_on", "stem_file", "stem_bars", "stem_lvl", "stem_start", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "drum_kick", "drum_snare", "voc_ctl"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "drum_kick", "drum_snare", "voc_ctl"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2564,24 +2564,6 @@ played = [int(v) for v in e.heard["chime_deg"]][-len(seq):]
 check(len(bars) >= 12 and order_ok and rep_ok and ans_ok and gen_ok and max(steps) <= 3 and played == seq,
       "melody phrases: %d bars in order A A' B A; the last A repeats A, A' answers it ending on the root, chord tones on "
       "beats 1 and 3, steps of at most %d inside a bar; every note played as chosen" % (len(bars), max(steps)))
-
-# stem packs: a loop plays at its file's own speed (any sample rate), locked to the tempo clock's bars, fading in over a bar
-import wave, tempfile
-def stem_run(rate, bars=1, lock=True):
-    d = tempfile.mkdtemp(); p = os.path.join(d, "s.wav")
-    n = int(rate * bars * 2.0); t = np.arange(n) / rate
-    w = wave.open(p, "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(rate)
-    w.writeframes((0.5 * np.sin(2 * np.pi * 220 * t) * 32767).astype(np.int16).tobytes()); w.close()
-    e = fresh(dry=0, wet=0, beat_level=0, tempo_mode=2 if lock else 0, tempo_bpm=120, stems_level=1)
-    e.send("stem_on", 1); e.send_list("stem_file", 0, p); e.send_list("stem_bars", 0, bars); e.send_list("stem_lvl", 0, 1); e.send("stem_start", 1)
-    return e.run(np.zeros(SR * 8, np.float32))[:, 0]
-ys44, ys22 = stem_run(44100), stem_run(22050)
-def peak(y): S = np.abs(np.fft.rfft(y)); return float(np.fft.rfftfreq(len(y), 1 / SR)[np.argmax(S)])
-envs = [rms(ys44[i:i + SR // 20]) for i in range(5 * SR, 8 * SR - SR // 20, SR // 20)]
-check(abs(peak(ys44[5 * SR:]) - 220) < 1 and abs(peak(ys22[5 * SR:]) - 220) < 1 and min(envs) > 0.9 * max(envs) and rms(ys44[:SR // 2]) < rms(ys44[5 * SR:]) / 3,
-      "stems: a 220 Hz loop plays at 220 Hz from a 44.1 or a 22.05 kHz file, fades in over its first bar, and loops with no gap (level %.3f-%.3f)" % (min(envs), max(envs)))
-e = fresh(stems_level=1); e.send("stem_on", 1); e.send_list("stem_lvl", 0, 1)
-check(rms(e.run(e.silence(2))[:, 0]) < 1e-6, "stems: nothing loaded plays nothing")
 
 # call and response: the pitch tracker runs for it even with Harmony at 0 and reports each steady note as a scale step
 def heard(answer):

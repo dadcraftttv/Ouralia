@@ -338,15 +338,6 @@ What to expect:
 - The music passes through your other effects, so Echo, Reverb, Chorus, Spatial and the rest all shape it. The Pitch, Ring, Bit-crush, Distortion and Filter effects do not touch it.
 - In Realms, Tranquil keeps the music very soft, Flux keeps the notes light but lets the loud room ring in key, Kinetic lets the notes grow with your pace, and Pocket switches Room notes off. Realms never switch the music on or off for you.
 
-### Stem packs (your own loops)
-
-A stem pack is a set of loops from a song (pad, bass, drums, lead, texture) that plays with the built-in sound and follows where you are and how you move: the pad is always there, bass and drums come in when you walk, the lead in a lively place or on a brisk walk, the texture at night, in a pocket or in the Ghost realm. Parts change only at the start of a bar, fading over one bar, and if the pack has sections (like a verse and a chorus) it moves between them every few loops.
-
-- **Choose pack** picks the pack that plays (or None). **Import zip** and **Import folder** add one. **How to make a pack** explains the format. **Delete a pack** removes one from the phone.
-- While a pack plays, the tempo locks to the pack's tempo (walking changes which parts play, not the tempo), the chimes, pad and harmony follow the pack's key, and the app's own beat steps back while the pack's drums play. Your own settings come back when you choose None.
-- **Stems level** (in Mix) sets how loud the pack is.
-- Packs only play with the built-in sound, not with scenes. A pack can have up to 8 loops, together at most 4 minutes of stereo audio, because the whole pack is held in memory while it plays.
-
 ### Mix
 
 One place to set how loud each part of the music and rhythm is, so you can turn any part down or take it out completely (0). The Mix is saved with your presets, so a preset you share carries your mix along with everything else. (Presets made before the Mix keep whatever mix you have.)
@@ -452,7 +443,7 @@ On the Setup tab is a **Reset everything to defaults** button. It asks you to co
 
 If you ever uninstall the app, everything in it is erased, including your saved presets. To keep your favorites, use Presets > Export on each one first and Import them again afterward.
 
-A preset file holds the effect sliders, their movers, the Music and Rhythm levels, Chime character, and the Dry level. It does not hold: Input gain, noise gate and compressor (and their shape); Pocket hush, Mic-down protection and Handling hush; Intensity; Smoothing and Nudge strength; whether Music is switched on, its key and scale, Pad register, the home-chord drift and "Light, pocket and stairs move the notes" switches, Calm builds, and the Synth / Found sounds choices; the Rhythm's tempo settings and "Beat follows" and "Beat plays"; the Realm change sound; locks; the Realm choices; the stem pack choice; your audio device choices; imported scenes and packs; or the appearance look. Set those again by hand after reinstalling.
+A preset file holds the effect sliders, their movers, the Music and Rhythm levels, Chime character, and the Dry level. It does not hold: Input gain, noise gate and compressor (and their shape); Pocket hush, Mic-down protection and Handling hush; Intensity; Smoothing and Nudge strength; whether Music is switched on, its key and scale, Pad register, the home-chord drift and "Light, pocket and stairs move the notes" switches, Calm builds, and the Synth / Found sounds choices; the Rhythm's tempo settings and "Beat follows" and "Beat plays"; the Realm change sound; locks; the Realm choices; your audio device choices; imported scenes and kits; or the appearance look. Set those again by hand after reinstalling.
 
 ## The Setup tab
 

@@ -295,7 +295,7 @@ to date in the same commit when behaviour changes.
    (`hip~` multichannel error); move the pin only together with pd-core. numpy lives in `tools/.venv` (run the tests with `tools/.venv/bin/python`).
 2. `python3 tools/make_patch.py && tools/.venv/bin/python tools/test_patch.py tools/.libpd/libpd.so` — must end `ALL PASSED`.
    Also `tools/test_scene_loader.py`, `test_scene_sensors.py`, `test_rj_analysis.py`, `test_bundled_scenes.py`, `test_scene_helpers.py`, `test_dcs.py` (same libpd argument; dcs needs `make -C dcs`).
-3. Java logic tests (no Android): `tools/javatests/run.sh` (or one at a time: `tools/javatests/run.sh W`; D = diagnostics, H = handling, I = intensity, F = first run, B = calm build, G = scene graphics, K = stem packs). All must pass
+3. Java logic tests (no Android): `tools/javatests/run.sh` (or one at a time: `tools/javatests/run.sh W`; D = diagnostics, H = handling, I = intensity, F = first run, B = calm build, G = scene graphics). All must pass
    (C and P print no summary line, just no `FAIL:`). Android classes are stand-ins in `tools/javatests/stubs*`: when app code
    starts using a new Android method, add it there. Java is not on PATH: `export JAVA_HOME=~/.jdks/jbr-21.0.11` and put its
    `bin` on PATH (Android Studio's bundled JDK 25 is too new for Gradle 8.14). adb: `~/Android/Sdk/platform-tools/adb -s ZD222T44PP`.
@@ -420,7 +420,9 @@ to date in the same commit when behaviour changes.
   resent on a change > 0.005). The chimes layer goes to Pd as `calm_chimes`: an extra still-pattern chance of
   `CALM_CHIME_P` (40 in 1000 per 0.25 s at the top, about one soft chime every ~6 s in a quiet room). Event log
   "Calm build starts/ends"; the Now line says "building".
-- **Stems player** (roadmap 9 in ROADMAP.md, Oct 14; `StemPack` parse, `StemArrangement`, `PackPlayer`, `PackLibrary`,
+- **Stems player: REMOVED Oct 18** (DadCraft, asked whether loops should become a kit part first: "Just remove stems". Kits
+  replace it; its decoder and zip import live on in `AudioFiles` for kits; old files/packs folders are left on the
+  phone, unused). As it was: (roadmap 9 in ROADMAP.md, Oct 14; `StemPack` parse, `StemArrangement`, `PackPlayer`, `PackLibrary`,
   test K; `add_stems`, Pd test "stems:"; `tools/make_test_pack.py` writes a synth test pack): packs live in
   files/packs/<name>/ with pack.txt (title, bpm, key "A minor", bars; "file role: x [bars: n] [section: B]", _A/_B
   file suffixes = sections; max 8 stems). Import zip/folder (Music tab "Stem packs"); non-WAV stems are decoded once

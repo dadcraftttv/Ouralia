@@ -59,7 +59,7 @@ final class TreeImporter {
         return result;
     }
 
-    /** Copies the whole picked folder into {@code dest} (a stem pack: the caller finds pack.txt in it). */
+    /** Copies the whole picked folder into {@code dest} (a kit folder: the caller finds kit.txt in it). */
     static void copyAll(ContentResolver resolver, Uri tree, File dest) throws IOException {
         if (!dest.mkdirs()) {
             throw new IOException("Cannot create " + dest);

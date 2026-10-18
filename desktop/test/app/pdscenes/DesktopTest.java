@@ -72,10 +72,10 @@ public final class DesktopTest {
         check(stored.contains("reverb_mix"), "settings are written to ~/.config/pdscenes/pdscenes_state.json");
 
         // locks: every slider a Realm or the dice can move has one (the Mix trims too), the user's own controls don't
-        check(Params.lockable(Params.byId("mix_kick")) && Params.lockable(Params.byId("stems_level"))
+        check(Params.lockable(Params.byId("mix_kick")) && Params.lockable(Params.byId("mix_bass"))
                 && Params.lockable(Params.byId("wet")) && !Params.lockable(Params.byId("intensity"))
                 && !Params.lockable(Params.byId("echo_on")) && !Params.lockable(Params.byId("gain")),
-                "lock boxes: Mix trims, Stems level and effect sliders have one; Intensity, switches and gain don't");
+                "lock boxes: Mix trims and effect sliders have one; Intensity, switches and gain don't");
         ParamStore.setLocked("mix_kick", true);
         ParamStore.set("mix_kick", 0.4f);
         ParamStore.randomize();

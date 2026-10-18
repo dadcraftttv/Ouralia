@@ -57,7 +57,7 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
    shrink away. Opposite of the current behavior (quiet room = quiet notes), so only as an option, if DadCraft wants it.
 8. **(BUILT 2026-10-09: chimes thin out when lots was played in the last ~8 s) Density memory.** Generative rule sets that look at how dense the recent music has been and adapt (avoids too many
    notes in a row).
-9. **(BUILT 2026-10-14, imported packs; see CLAUDE.md) Stems player (hybrid approach).** Dimensions used stems made in a DAW, layered and faded by sensor data; all-Pd
+9. **(BUILT 2026-10-14, REMOVED 2026-10-18 for kits) Stems player (hybrid approach).** Dimensions used stems made in a DAW, layered and faded by sensor data; all-Pd
    synthesis was too heavy. DadCraft makes synthwave stems, so the app could play his loops. Plan: ship compressed audio,
    decode once with MediaExtractor/MediaCodec into WAV in the app's cache, stream with `readsf~` (from disk, not RAM).
    Needs a size budget for the APK/AAB and a layering/fade rule set.
@@ -207,8 +207,7 @@ and microphone declarations, icon, store listing, numbered pd-core release.
       like stem packs today (reusing PackLibrary's import and decoding), shared like presets, and listed beside the
       built-in ones. A documented format and a page for sound designers; the desktop app doubles as a kit-making
       bench (hear a kit on the big speakers while editing kit.json).
-    - **Stems player:** kept until kits cover what it does, then retired (open question: a kit part could still be
-      a loop, which would let old stem packs load as kits).
+    - **Stems player:** removed Oct 18 (DadCraft: "Just remove stems", rather than make loops a kit part first).
     - The mic still never touches disk: kits may bring their own files, and "found" parts stay in memory.
     - **Order** (DadCraft, Oct 17: the quick wins dcs_shift~, dcs_pitch~, dcs_onset~ first, then kits; first new kit
       style: Acoustic; **(a) and the first of (b) built Oct 17**: Classic = the Pd voices themselves, dcs_voice~ with
