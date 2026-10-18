@@ -109,11 +109,22 @@ to date in the same commit when behaviour changes.
   **Exact float**: files including dcs_fx.h build without -ffast-math (it rewrote `x - (x - k)` as k: the crusher's
   rounding flipped a step; the clang pragma is ignored on armv7, so the Makefile and Android.mk build them apart).
   **Test**: `tools/test_fx_port.py` builds the patch both ways (`make_patch.py --legacy-fx <file>` keeps the old Pd
-  chains) and plays the same input and setting changes (on, glides, smoothing changes, off, back on) through both:
-  ring and tremolo 0 difference, crusher / distortion 1.2e-7, filter 2.4e-7 (one float step). `tools/bench_effects.py`
-  times each effect in the whole patch. Ported so far: ring, tremolo, crusher, distortion, filter (whole patch 91-97%
-  of its old time in those tests). Order next: echo, phaser (+29% when on), reverse echo (+13%), the Classic pitch
-  shifter (+12%), chorus (+11.5%), flanger (+6%), freeze, spatial. **Crusher Style** (`crush_style`, noPreset, dcs,
+  chains) and plays the same input and setting changes (on, glides, smoothing changes, off long enough for a switch
+  to stop it, back on) through both; it pins echo_scatter at 0 (its [random] draws differ between two runs in one
+  process). Limit -80 dB: most ports match to the bit or a float step (ring, tremolo 0; others 3e-8..2.4e-7; spatial
+  1e-6); the phaser drifts to 4.8e-5 because libpd itself is built with -ffast-math, so expr's maths and biquad~
+  round as that compiler chose (the sweep steps land on the same blocks: a timing slip shows as 1e-3 or more).
+  **All 13 ported** (Oct 17): ring, tremolo, crusher, distortion, filter, echo (dcs_echo~: the time still glides in
+  Pd, which the scatter reads), freeze (dcs_freeze~), spatial (dcs_space~), chorus, flanger, phaser, and dcs_taps~
+  for both the Classic pitch shifter and the reverse echo. The switched ones (chorus, flanger, phaser, pitch, reverse)
+  keep the patch's gate (`add_switch(..., dsp=False)`) and take `sw_<g>` as `run`: off they stand still as switch~ left
+  them (LFO, buffer, the phaser's metro; output silent) and start off, as a switch~ does. Pd ran the chorus's reads
+  before its write (a read that crosses 1024 samples rounds differently the other way); the delays in feedback loops
+  (echo, freeze, flanger, phaser) read first, a block behind, as delread~ did. **Measured** (bench_effects, 20 s, best
+  of 3): at rest 0.167 -> 0.151 s (-10%), DadCraft-like settings 0.305 -> 0.261 s (-14%), the phaser on +0.051 -> +0.019 s
+  (its 4 [expr]s every 4 ms were the cost); chorus, pitch and reverse about as before (their per-sample work, delay
+  interpolation and the cos table, was already tight C in Pd's objects: an exact port can't skip it; a looser one
+  could, as a switch). **Crusher Style** (`crush_style`, noPreset, dcs,
   Classic the default; models by ear and by the machines' known numbers, not emulators): 8-bit sampler 11025 Hz
   unsigned 8-bit truncation, 4-pole anti-alias in and 2-pole out; SP-1200 26040 Hz 12-bit, no input filter, 12 kHz out;
   NES the DPCM channel (steps of 2 on a 7-bit counter at 33144 Hz) and the console's HP 90 / HP 440 / LP 14 kHz;

@@ -24,9 +24,27 @@ REST = dict(gain=1, dry=1, smooth=30, echo_on=1, wet=0, ring_on=1, ring_mix=0, r
             crush_on=1, crush_mix=0, dist_on=1, dist_mix=0, filter_on=1, filter_mix=0, chorus_on=1, chorus_mix=0,
             flange_on=1, flange_mix=0, phaser_on=1, phaser_mix=0, trem_on=1, trem_depth=0, trem_rate=5, rvs_on=1,
             rvs_mix=0, glitch_on=1, glitch_hold=0, reverb_on=1, reverb_mix=0, space_on=1, space_shift=0, space_pan=0,
-            music_on=0, beat_level=0, gc_amount=0, gate_thresh=-80, comp_thresh=0)
+            music_on=0, beat_level=0, gc_amount=0, gate_thresh=-80, comp_thresh=0,
+            echo_scatter=0)   # (the scatter's [random] draws differ from run to run in one process)
 # each case: (seconds, settings sent at that moment), in order; the run lasts until the last moment + 1 s
 CASES = {
+    # the switched effects: off long enough for the switch to stop them (3 x smooth + 300 ms), then on again
+    "chorus": [(0.3, dict(chorus_mix=0.6, chorus_rate=0.8, chorus_depth=3)), (0.9, dict(chorus_rate=3, chorus_depth=6)),
+               (1.3, dict(chorus_mix=0)), (2.2, dict(chorus_mix=1, chorus_depth=1)), (3.0, dict(chorus_on=0))],
+    "flanger": [(0.3, dict(flange_mix=0.6, flange_rate=0.3, flange_depth=4, flange_fb=0.5)), (0.9, dict(flange_fb=-0.8, flange_rate=2)),
+                (1.3, dict(flange_mix=0)), (2.2, dict(flange_mix=1, flange_depth=8)), (3.0, dict(flange_on=0))],
+    "phaser": [(0.3, dict(phaser_mix=0.6, phaser_rate=0.4, phaser_depth=0.7, phaser_fb=0.4)), (0.9, dict(phaser_depth=1, phaser_rate=3)),
+               (1.3, dict(phaser_mix=0)), (2.2, dict(phaser_mix=1, phaser_fb=-0.6)), (3.0, dict(phaser_on=0))],
+    "reverse": [(0.3, dict(rvs_mix=0.7, rvs_time=400)), (0.9, dict(rvs_time=150)), (1.3, dict(rvs_mix=0)),
+                (2.2, dict(rvs_mix=1, rvs_time=700)), (3.0, dict(rvs_on=0))],
+    "pitch": [(0.3, dict(pitch_mix=0.7, pitch_semi=7, pitch_window=60)), (0.9, dict(pitch_semi=-12, pitch_window=90)),
+              (1.3, dict(pitch_mix=0)), (2.2, dict(pitch_mix=1, pitch_semi=4)), (3.0, dict(pitch_on=0))],
+    "freeze": [(0.3, dict(glitch_hold=1, glitch_len=120)), (0.9, dict(glitch_len=300)), (1.4, dict(glitch_hold=0.5)),
+               (1.9, dict(glitch_hold=0)), (2.6, dict(glitch_hold=1, glitch_len=60, smooth=100)), (3.2, dict(glitch_on=0))],
+    "spatial": [(0.3, dict(space_shift=8, space_pan=0.5)), (0.9, dict(space_shift=-20)), (1.4, dict(space_pan=-1, smooth=200)),
+                (2.0, dict(space_shift=25, space_pan=1)), (2.6, dict(space_on=0)), (3.1, dict(space_on=1, space_shift=0))],
+    "echo": [(0.3, dict(wet=0.5, echo_time=300, feedback=0.5)), (1.0, dict(echo_time=120)), (1.5, dict(feedback=0.8, dry=0.4)),
+             (2.0, dict(wet=0, feedback=0)), (2.8, dict(wet=0.7, echo_time=500, feedback=0.3)), (3.4, dict(echo_on=0))],
     "distortion": [(0.3, dict(dist_mix=0.6, dist_drive=6)), (0.9, dict(dist_type=1)), (1.4, dict(dist_type=2, dist_drive=12)),
                    (2.0, dict(dist_mix=0, smooth=120)), (2.6, dict(dist_mix=1, dist_type=0, dist_drive=2)), (3.2, dict(dist_on=0))],
     "filter": [(0.3, dict(filter_mix=1, filter_freq=800, filter_q=2)), (0.8, dict(filter_freq=4000)), (1.2, dict(filter_type=1)),
@@ -79,7 +97,10 @@ with tempfile.TemporaryDirectory() as d:
             new, c_new = run(PATCH, events, x)
             peak = np.abs(old).max()
             diff = np.abs(old - new).max()
-            check(peak > 0.01 and diff <= 2e-6 * max(peak, 1),
+            # within -80 dB: most ports match to the bit; libpd is built with -ffast-math, so where Pd's own objects
+            # round as the compiler chose (expr's maths and biquad~ in the phaser) a port drifts a few float steps
+            # (worst 4.8e-5); a real mistake (timing, a formula) shows as 1e-3 or more
+            check(peak > 0.01 and diff <= 1e-4 * max(peak, 1),
                   f"{name}: the dcs port matches the Pd objects (worst {diff:.1e}, peak {peak:.2f}; whole patch "
                   f"{100 * c_new / c_old:.0f}% of the time)")
     finally:

@@ -33,8 +33,11 @@ objects or with anyone's abstractions.
   `cos~`, `phasor~`, `wrap~` and `delread4~` arithmetic), doing almost nothing while their amount is 0:
   `dcs_ring~` (ring modulator), `dcs_trem~` (tremolo), `dcs_crush~` (bit crusher, plus machine styles: 8-bit
   sampler, SP-1200, NES DPCM, Game Boy, SNES BRR, Genesis DAC), `dcs_dist~` (soft / hard / fold distortion),
-  `dcs_filter~` (cookbook biquad with [line]'s 3 ms glide steps). Files that include `dcs_fx.h` are built without
-  `-ffast-math` (exact rounding).
+  `dcs_filter~` (cookbook biquad with [line]'s 3 ms glide steps), `dcs_echo~`, `dcs_freeze~` (a feedback loop that
+  holds the last few hundred ms), `dcs_space~` (ear delays and balance pan), `dcs_chorus~`, `dcs_flanger~`,
+  `dcs_phaser~` (four swept allpasses, the sweep stepped every 4 ms), `dcs_taps~` (two Hann-windowed taps sweeping a
+  delay: a pitch shifter or a reverse echo). The switched ones take `run 0|1` and stand still while off, as a
+  `switch~`ed subpatch would. Files that include `dcs_fx.h` are built without `-ffast-math` (exact rounding).
 
 Each object's source file starts with a full description of what it does.
 

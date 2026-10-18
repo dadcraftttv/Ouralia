@@ -531,7 +531,7 @@ class Patch:
         return "\n".join(out) + "\n"
 
 
-def add_switch(P, g, factors, tail_ms, also=(), block=""):
+def add_switch(P, g, factors, tail_ms, also=(), block="", dsp=True):
     """Switches block g's DSP on while the product of the receivers `factors` is above 0, and off again
     3 x smoothing + tail_ms after it drops to 0 (so fades and ring-outs finish first). `also` are nodes
     that get the same 0/1 (e.g. a metro that only feeds the block)."""
@@ -564,6 +564,8 @@ def add_switch(P, g, factors, tail_ms, also=(), block=""):
     P.c(f"{n}_on", f"{n}_one", 0, 0); P.c(f"{n}_one", f"{n}_s")
     P.obj(f"{n}_wait", ("expr 3*$f1+" + str(tail_ms)).replace("$", BS + "$"), x + 120, y + 180)
     P.c("r_smooth", f"{n}_wait"); P.c(f"{n}_wait", f"{n}_del", 0, 1)
+    if not dsp:      # (a dcs object hears "sw_<g>" itself)
+        return
     # inside the block
     P.obj(f"grp_{g}_r", f"r sw_{g}", 10, 10)
     P.obj(f"grp_{g}_sw", ("switch~ " + block).strip(), 10, 40)
@@ -4033,43 +4035,49 @@ def build():
     P.obj("ratio", "exp", 20, 340)                              # pitch ratio = 2^(semi/12)
     P.obj("ratio_m1", "- 1", 20, 370)
     P.obj("one_minus_ratio", "* -1", 20, 400)                   # 1 - ratio
-    P.obj("pk_rate_a", "pack f 30", 20, 430)
-    P.obj("ln_rate_a", "line~", 20, 460)
     P.c("r_pitch_semi", "semi_to_ln"); P.c("semi_to_ln", "ratio"); P.c("ratio", "ratio_m1")
-    P.c("ratio_m1", "one_minus_ratio"); P.c("one_minus_ratio", "pk_rate_a"); P.c("pk_rate_a", "ln_rate_a")
-    P.c("r_smooth", "pk_rate_a", 0, 1)
-
+    P.c("ratio_m1", "one_minus_ratio")
     P.obj("r_pitch_window", "r pitch_window", 150, 280)         # grain/window length in ms
-    P.obj("pk_win", "pack f 30", 150, 310)
-    P.obj("ln_win", "line~", 150, 340)                          # window length, smoothed
-    P.c("r_pitch_window", "pk_win"); P.c("pk_win", "ln_win"); P.c("r_smooth", "pk_win", 0, 1)
     P.obj("win_inv", "pow -1", 250, 310)                        # 1 / window
     P.obj("win_inv_k", "* 1000", 250, 340)                      # 1000 / window_ms
-    P.obj("pk_rate_b", "pack f 30", 250, 370)
-    P.obj("ln_rate_b", "line~", 250, 400)
-    P.c("r_pitch_window", "win_inv"); P.c("win_inv", "win_inv_k"); P.c("win_inv_k", "pk_rate_b")
-    P.c("pk_rate_b", "ln_rate_b"); P.c("r_smooth", "pk_rate_b", 0, 1)
+    P.c("r_pitch_window", "win_inv"); P.c("win_inv", "win_inv_k")
+    if LEGACY_FX:
+        P.obj("pk_rate_a", "pack f 30", 20, 430)
+        P.obj("ln_rate_a", "line~", 20, 460)
+        P.c("one_minus_ratio", "pk_rate_a"); P.c("pk_rate_a", "ln_rate_a")
+        P.c("r_smooth", "pk_rate_a", 0, 1)
+        P.obj("pk_win", "pack f 30", 150, 310)
+        P.obj("ln_win", "line~", 150, 340)                          # window length, smoothed
+        P.c("r_pitch_window", "pk_win"); P.c("pk_win", "ln_win"); P.c("r_smooth", "pk_win", 0, 1)
+        P.obj("pk_rate_b", "pack f 30", 250, 370)
+        P.obj("ln_rate_b", "line~", 250, 400)
+        P.c("win_inv_k", "pk_rate_b")
+        P.c("pk_rate_b", "ln_rate_b"); P.c("r_smooth", "pk_rate_b", 0, 1)
 
-    P.sig2("rate_hz", "*~", "ln_rate_a", "ln_rate_b", 150, 460)
-    P.obj("ph1", "phasor~", 150, 490)
-    P.c("rate_hz", "ph1")
-    P.obj("ph2_off", "+~ 0.5", 250, 490)
-    P.obj("ph2", "wrap~", 250, 520)
-    P.c("ph1", "ph2_off"); P.c("ph2_off", "ph2")
+        P.sig2("rate_hz", "*~", "ln_rate_a", "ln_rate_b", 150, 460)
+        P.obj("ph1", "phasor~", 150, 490)
+        P.c("rate_hz", "ph1")
+        P.obj("ph2_off", "+~ 0.5", 250, 490)
+        P.obj("ph2", "wrap~", 250, 520)
+        P.c("ph1", "ph2_off"); P.c("ph2_off", "ph2")
 
-    P.obj("delwrite_p", "delwrite~ pitch_buf 400", 20, 500)
-    P.c("ring_out", "delwrite_p")
-    for n, ph, x in (("1", "ph1", 150), ("2", "ph2", 250)):
-        P.sig2(f"tap{n}_ms", "*~", ph, "ln_win", x, 560)
-        P.obj(f"tap{n}_off", "+~ 4", x, 590)                    # keep clear of the write head
-        P.obj(f"rd{n}", "delread4~ pitch_buf", x, 620)
-        P.obj(f"cos{n}", "cos~", x + 90, 560)
-        P.obj(f"cos{n}_neg", "*~ -0.5", x + 90, 590)
-        P.obj(f"win{n}", "+~ 0.5", x + 90, 620)                 # Hann: 0.5 - 0.5*cos(2*pi*phase)
-        P.c(f"tap{n}_ms", f"tap{n}_off"); P.c(f"tap{n}_off", f"rd{n}")
-        P.c(ph, f"cos{n}"); P.c(f"cos{n}", f"cos{n}_neg"); P.c(f"cos{n}_neg", f"win{n}")
-        P.sig2(f"grain{n}", "*~", f"rd{n}", f"win{n}", x, 650)
-    P.sig2("shifted", "+~", "grain1", "grain2", 200, 680)
+        P.obj("delwrite_p", "delwrite~ pitch_buf 400", 20, 500)
+        P.c("ring_out", "delwrite_p")
+        for n, ph, x in (("1", "ph1", 150), ("2", "ph2", 250)):
+            P.sig2(f"tap{n}_ms", "*~", ph, "ln_win", x, 560)
+            P.obj(f"tap{n}_off", "+~ 4", x, 590)                    # keep clear of the write head
+            P.obj(f"rd{n}", "delread4~ pitch_buf", x, 620)
+            P.obj(f"cos{n}", "cos~", x + 90, 560)
+            P.obj(f"cos{n}_neg", "*~ -0.5", x + 90, 590)
+            P.obj(f"win{n}", "+~ 0.5", x + 90, 620)                 # Hann: 0.5 - 0.5*cos(2*pi*phase)
+            P.c(f"tap{n}_ms", f"tap{n}_off"); P.c(f"tap{n}_off", f"rd{n}")
+            P.c(ph, f"cos{n}"); P.c(f"cos{n}", f"cos{n}_neg"); P.c(f"cos{n}_neg", f"win{n}")
+            P.sig2(f"grain{n}", "*~", f"rd{n}", f"win{n}", x, 650)
+        P.sig2("shifted", "+~", "grain1", "grain2", 200, 680)
+    else:   # dcs_taps~ (Oct 17): the same two taps, sample for sample; stopped with the pitch switch
+        fx(P, "shifted", "dcs_taps~ 400", "ring_out", ("sw_pitch", "run"), x=200, y=680)
+        for name, sel, src in (("ra", "ra", "one_minus_ratio"), ("rb", "rb", "win_inv_k"), ("win", "win", "r_pitch_window")):
+            P.msg(f"pt_{name}", f"{sel} {BS}$1", 200 + 60 * len(name), 640); P.c(src, f"pt_{name}"); P.c(f"pt_{name}", "shifted")
 
     pm = smoothed(P, "pitch_mix", "pitch_mix", 350, 280)
     pon = smoothed(P, "pitch_on", "pitch_on", 450, 280)
@@ -4252,123 +4260,137 @@ def build():
     P.sig2("filtered_mix", "+~", "filtered_dry", music, 1600, 340)
 
     # --- chorus: the signal mixed with two copies whose delay wobbles, which detunes them slightly ---
-    P.obj("chorus_wr", "delwrite~ chorus_buf 60", 2300, 20)
-    P.c("filtered_mix", "chorus_wr")
-    crate = smoothed(P, "chorus_rate", "chorus_rate", 2450, 20)
-    P.obj("chorus_ph", "phasor~", 2450, 110)
-    P.c(crate, "chorus_ph")
-    cdepth = smoothed(P, "chorus_depth", "chorus_depth", 2600, 20)
-    for k, (base, offset) in enumerate(zip(CHORUS_BASE_MS, (0, 0.25))):
-        n = f"ch{k}"
-        P.obj(f"{n}_off", f"+~ {offset}", 2300 + 150 * k, 150)   # quarter-cycle apart
-        P.obj(f"{n}_wrap", "wrap~", 2300 + 150 * k, 180)
-        P.obj(f"{n}_lfo", "cos~", 2300 + 150 * k, 210)
-        P.sig2(f"{n}_sweep", "*~", f"{n}_lfo", cdepth, 2300 + 150 * k, 240)   # +-depth ms
-        P.obj(f"{n}_ms", f"+~ {base}", 2300 + 150 * k, 270)
-        P.obj(f"{n}_rd", "delread4~ chorus_buf", 2300 + 150 * k, 300)
-        P.c("chorus_ph", f"{n}_off"); P.c(f"{n}_off", f"{n}_wrap"); P.c(f"{n}_wrap", f"{n}_lfo")
-        P.c(f"{n}_sweep", f"{n}_ms"); P.c(f"{n}_ms", f"{n}_rd")
-    P.sig2("ch_sum", "+~", "ch0_rd", "ch1_rd", 2300, 340)
-    P.obj("ch_wet", "*~ 0.5", 2300, 370)
-    P.c("ch_sum", "ch_wet")
-    cmix = smoothed(P, "chorus_mix", "chorus_mix", 2750, 20)
-    con = smoothed(P, "chorus_on", "chorus_on", 2850, 20)
-    P.sig2("cho_eff", "*~", cmix, con, 2750, 110)                # amount, forced to 0 when bypassed
-    P.sig2("cho_diff", "-~", "ch_wet", "filtered_mix", 2300, 400)
-    P.sig2("cho_amt", "*~", "cho_diff", "cho_eff", 2300, 430)
-    P.sig2("chorused", "+~", "filtered_mix", "cho_amt", 2300, 460)
+    if LEGACY_FX:
+        P.obj("chorus_wr", "delwrite~ chorus_buf 60", 2300, 20)
+        P.c("filtered_mix", "chorus_wr")
+        crate = smoothed(P, "chorus_rate", "chorus_rate", 2450, 20)
+        P.obj("chorus_ph", "phasor~", 2450, 110)
+        P.c(crate, "chorus_ph")
+        cdepth = smoothed(P, "chorus_depth", "chorus_depth", 2600, 20)
+        for k, (base, offset) in enumerate(zip(CHORUS_BASE_MS, (0, 0.25))):
+            n = f"ch{k}"
+            P.obj(f"{n}_off", f"+~ {offset}", 2300 + 150 * k, 150)   # quarter-cycle apart
+            P.obj(f"{n}_wrap", "wrap~", 2300 + 150 * k, 180)
+            P.obj(f"{n}_lfo", "cos~", 2300 + 150 * k, 210)
+            P.sig2(f"{n}_sweep", "*~", f"{n}_lfo", cdepth, 2300 + 150 * k, 240)   # +-depth ms
+            P.obj(f"{n}_ms", f"+~ {base}", 2300 + 150 * k, 270)
+            P.obj(f"{n}_rd", "delread4~ chorus_buf", 2300 + 150 * k, 300)
+            P.c("chorus_ph", f"{n}_off"); P.c(f"{n}_off", f"{n}_wrap"); P.c(f"{n}_wrap", f"{n}_lfo")
+            P.c(f"{n}_sweep", f"{n}_ms"); P.c(f"{n}_ms", f"{n}_rd")
+        P.sig2("ch_sum", "+~", "ch0_rd", "ch1_rd", 2300, 340)
+        P.obj("ch_wet", "*~ 0.5", 2300, 370)
+        P.c("ch_sum", "ch_wet")
+        cmix = smoothed(P, "chorus_mix", "chorus_mix", 2750, 20)
+        con = smoothed(P, "chorus_on", "chorus_on", 2850, 20)
+        P.sig2("cho_eff", "*~", cmix, con, 2750, 110)                # amount, forced to 0 when bypassed
+        P.sig2("cho_diff", "-~", "ch_wet", "filtered_mix", 2300, 400)
+        P.sig2("cho_amt", "*~", "cho_diff", "cho_eff", 2300, 430)
+        P.sig2("chorused", "+~", "filtered_mix", "cho_amt", 2300, 460)
+    else:   # dcs_chorus~ (Oct 17): the same, sample for sample; stopped with the chorus switch
+        fx(P, "chorused", f"dcs_chorus~ {CHORUS_BASE_MS[0]} {CHORUS_BASE_MS[1]} 60", "filtered_mix",
+           ("chorus_rate", "rate"), ("chorus_depth", "depth"), ("chorus_mix", "mix"), ("chorus_on", "on"),
+           ("sw_chorus", "run"), x=2300, y=460)
 
     # --- flanger: a short delay swept slowly, with feedback, mixed 50/50 with the original at amount 1 ---
-    P.obj("fl_wr", "delwrite~ flange_buf 30", 2300, 1000)
-    frate = smoothed(P, "flange_rate", "flange_rate", 2450, 1000)
-    P.obj("fl_ph", "phasor~", 2450, 1090)
-    P.c(frate, "fl_ph")
-    fdepth = smoothed(P, "flange_depth", "flange_depth", 2600, 1000)
-    P.obj("fl_cos", "cos~", 2450, 1120)
-    P.obj("fl_half", "*~ -0.5", 2450, 1150)
-    P.obj("fl_unit", "+~ 0.5", 2450, 1180)                       # (1 - cos) / 2, from 0 to 1
-    P.sig2("fl_sweep", "*~", "fl_unit", fdepth, 2450, 1210)      # 0 .. depth ms
-    P.obj("fl_ms", f"+~ {FLANGE_MIN_MS}", 2450, 1240)
-    P.obj("fl_rd", "delread4~ flange_buf", 2450, 1270)
-    P.c("fl_ph", "fl_cos"); P.c("fl_cos", "fl_half"); P.c("fl_half", "fl_unit")
-    P.c("fl_sweep", "fl_ms"); P.c("fl_ms", "fl_rd")
-    ffb = smoothed(P, "flange_fb", "flange_fb", 2750, 1000)
-    P.sig2("fl_fb_sig", "*~", "fl_rd", ffb, 2700, 1300)
-    P.sig2("fl_in", "+~", "chorused", "fl_fb_sig", 2300, 1330)
-    P.c("fl_in", "fl_wr")
-    # resonant peaks grow as 1 / (1 - |feedback|); take part of that back out
-    P.obj("fl_abs", "abs", 2750, 1050)
-    P.obj("fl_k", "* -0.5", 2750, 1080)
-    P.obj("fl_k1", "+ 1", 2750, 1110)
-    P.obj("pk_fl_k", "pack f 30", 2750, 1140); P.obj("ln_fl_k", "line~", 2750, 1170)
-    P.c("r_flange_fb", "fl_abs"); P.c("fl_abs", "fl_k"); P.c("fl_k", "fl_k1"); P.c("fl_k1", "pk_fl_k")
-    P.c("pk_fl_k", "ln_fl_k"); P.c("r_smooth", "pk_fl_k", 0, 1)
-    P.sig2("fl_wet", "*~", "fl_rd", "ln_fl_k", 2450, 1360)
-    fmx = smoothed(P, "flange_mix", "flange_mix", 2900, 1000)
-    fon2 = smoothed(P, "flange_on", "flange_on", 3000, 1000)
-    P.sig2("fl_eff", "*~", fmx, fon2, 2900, 1060)                # amount, forced to 0 when bypassed
-    P.obj("fl_wet_k", "*~ 0.5", 2900, 1090)                      # wet share: 0 .. 0.5
-    P.c("fl_eff", "fl_wet_k")
-    P.obj("fl_dry_k0", "*~ -1", 3000, 1090)
-    P.obj("fl_dry_k", "+~ 1", 3000, 1120)                        # dry share: 1 .. 0.5
-    P.c("fl_wet_k", "fl_dry_k0"); P.c("fl_dry_k0", "fl_dry_k")
-    P.sig2("fl_wet_part", "*~", "fl_wet", "fl_wet_k", 2450, 1390)
-    P.sig2("fl_dry_part", "*~", "chorused", "fl_dry_k", 2800, 1390)
-    P.sig2("flanged", "+~", "fl_wet_part", "fl_dry_part", 2450, 1420)
+    if LEGACY_FX:
+        P.obj("fl_wr", "delwrite~ flange_buf 30", 2300, 1000)
+        frate = smoothed(P, "flange_rate", "flange_rate", 2450, 1000)
+        P.obj("fl_ph", "phasor~", 2450, 1090)
+        P.c(frate, "fl_ph")
+        fdepth = smoothed(P, "flange_depth", "flange_depth", 2600, 1000)
+        P.obj("fl_cos", "cos~", 2450, 1120)
+        P.obj("fl_half", "*~ -0.5", 2450, 1150)
+        P.obj("fl_unit", "+~ 0.5", 2450, 1180)                       # (1 - cos) / 2, from 0 to 1
+        P.sig2("fl_sweep", "*~", "fl_unit", fdepth, 2450, 1210)      # 0 .. depth ms
+        P.obj("fl_ms", f"+~ {FLANGE_MIN_MS}", 2450, 1240)
+        P.obj("fl_rd", "delread4~ flange_buf", 2450, 1270)
+        P.c("fl_ph", "fl_cos"); P.c("fl_cos", "fl_half"); P.c("fl_half", "fl_unit")
+        P.c("fl_sweep", "fl_ms"); P.c("fl_ms", "fl_rd")
+        ffb = smoothed(P, "flange_fb", "flange_fb", 2750, 1000)
+        P.sig2("fl_fb_sig", "*~", "fl_rd", ffb, 2700, 1300)
+        P.sig2("fl_in", "+~", "chorused", "fl_fb_sig", 2300, 1330)
+        P.c("fl_in", "fl_wr")
+        # resonant peaks grow as 1 / (1 - |feedback|); take part of that back out
+        P.obj("fl_abs", "abs", 2750, 1050)
+        P.obj("fl_k", "* -0.5", 2750, 1080)
+        P.obj("fl_k1", "+ 1", 2750, 1110)
+        P.obj("pk_fl_k", "pack f 30", 2750, 1140); P.obj("ln_fl_k", "line~", 2750, 1170)
+        P.c("r_flange_fb", "fl_abs"); P.c("fl_abs", "fl_k"); P.c("fl_k", "fl_k1"); P.c("fl_k1", "pk_fl_k")
+        P.c("pk_fl_k", "ln_fl_k"); P.c("r_smooth", "pk_fl_k", 0, 1)
+        P.sig2("fl_wet", "*~", "fl_rd", "ln_fl_k", 2450, 1360)
+        fmx = smoothed(P, "flange_mix", "flange_mix", 2900, 1000)
+        fon2 = smoothed(P, "flange_on", "flange_on", 3000, 1000)
+        P.sig2("fl_eff", "*~", fmx, fon2, 2900, 1060)                # amount, forced to 0 when bypassed
+        P.obj("fl_wet_k", "*~ 0.5", 2900, 1090)                      # wet share: 0 .. 0.5
+        P.c("fl_eff", "fl_wet_k")
+        P.obj("fl_dry_k0", "*~ -1", 3000, 1090)
+        P.obj("fl_dry_k", "+~ 1", 3000, 1120)                        # dry share: 1 .. 0.5
+        P.c("fl_wet_k", "fl_dry_k0"); P.c("fl_dry_k0", "fl_dry_k")
+        P.sig2("fl_wet_part", "*~", "fl_wet", "fl_wet_k", 2450, 1390)
+        P.sig2("fl_dry_part", "*~", "chorused", "fl_dry_k", 2800, 1390)
+        P.sig2("flanged", "+~", "fl_wet_part", "fl_dry_part", 2450, 1420)
+    else:   # dcs_flanger~ (Oct 17): the same, sample for sample; stopped with the flanger switch
+        fx(P, "flanged", f"dcs_flanger~ {FLANGE_MIN_MS} 30", "chorused", ("flange_rate", "rate"), ("flange_depth", "depth"),
+           ("flange_fb", "fb"), ("flange_mix", "mix"), ("flange_on", "on"), ("sw_flanger", "run"), x=2450, y=1420)
 
     # --- phaser: four swept allpass filters (biquads), mixed 50/50 with the original at amount 1 ---
     # A control-rate LFO (every 4 ms) sets the sweep frequency; each stage computes its own
     # allpass coefficients from it with [expr] (audio-EQ-cookbook formulas).
-    P.obj("ph_start", "loadbang", 3300, 1000)
-    P.obj("ph_clock", "metro 4", 3300, 1030)
-    P.obj("ph_snap", "snapshot~", 3300, 1060)
-    P.c("ph_start", "ph_clock"); P.c("ph_clock", "ph_snap")
-    prate = smoothed(P, "phaser_rate", "phaser_rate", 3450, 1000)
-    P.obj("ph_osc", "osc~", 3450, 1090)
-    P.c(prate, "ph_osc"); P.c("ph_osc", "ph_snap")
-    P.obj("r_phaser_depth", "r phaser_depth", 3600, 1000)
-    P.obj("ph_sweep", ("expr %d*pow(2%s 2*$f1*$f2)" % (PHASER_CENTRE_HZ, BS + ",")).replace("$", BS + "$"), 3300, 1120)
-    P.c("ph_snap", "ph_sweep"); P.c("r_phaser_depth", "ph_sweep", 0, 1)
-    P.obj("ph_sr_start", "loadbang", 3750, 1000)
-    P.obj("ph_sr", "samplerate~", 3750, 1030)
-    P.c("ph_sr_start", "ph_sr")
-    S2 = "max($f2" + BS + ", 8000)"
-    pfb = smoothed(P, "phaser_fb", "phaser_fb", 3900, 1030)
-    P.obj("ph_fb_rd", "delread~ ph_fb 1.4", 3300, 1250)
-    P.sig2("ph_fb_sig", "*~", "ph_fb_rd", pfb, 3300, 1280)
-    for k, mult in enumerate(PHASER_STAGES):
-        W2 = "6.283185*min(max($f1*%s%s 20)%s 0.45*%s)/%s" % (mult, BS + ",", BS + ",", S2, S2)
-        A2 = "sin(%s)/(2*%s)" % (W2, PHASER_Q)
-        C2 = "cos(%s)" % W2
-        a02 = "(1+%s)" % A2
-        coefs2 = ["2*%s/%s" % (C2, a02), "-(1-%s)/%s" % (A2, a02),
-                  "(1-%s)/%s" % (A2, a02), "-2*%s/%s" % (C2, a02), "(1+%s)/%s" % (A2, a02)]
-        P.obj(f"ph_coef{k}", ("expr " + (" " + BS + "; ").join(coefs2)).replace("$", BS + "$"), 3300 + 150 * k, 1160)
-        P.obj(f"ph_pack{k}", "pack f f f f f", 3300 + 150 * k, 1190)
-        P.obj(f"ph_ap{k}", "biquad~", 3300 + 150 * k, 1220)
-        for i in range(5):
-            P.c(f"ph_coef{k}", f"ph_pack{k}", i, i)
-        P.c(f"ph_pack{k}", f"ph_ap{k}")
-        P.c("ph_sweep", f"ph_coef{k}")
-        P.c("ph_sr", f"ph_coef{k}", 0, 1)
-    P.sig2("ph_in", "+~", "flanged", "ph_fb_sig", 3300, 1310)
-    prev = "ph_in"
-    for k in range(len(PHASER_STAGES)):
-        P.c(prev, f"ph_ap{k}")
-        prev = f"ph_ap{k}"
-    P.obj("ph_fb_wr", "delwrite~ ph_fb 20", 3600, 1310)
-    P.c(prev, "ph_fb_wr")
-    pmx = smoothed(P, "phaser_mix", "phaser_mix", 4100, 1000)
-    pon2 = smoothed(P, "phaser_on", "phaser_on", 4200, 1000)
-    P.sig2("ph_eff", "*~", pmx, pon2, 4100, 1060)                # amount, forced to 0 when bypassed
-    P.obj("ph_wet_k", "*~ 0.5", 4100, 1090)
-    P.c("ph_eff", "ph_wet_k")
-    P.obj("ph_dry_k0", "*~ -1", 4200, 1090)
-    P.obj("ph_dry_k", "+~ 1", 4200, 1120)
-    P.c("ph_wet_k", "ph_dry_k0"); P.c("ph_dry_k0", "ph_dry_k")
-    P.sig2("ph_wet_part", "*~", prev, "ph_wet_k", 3300, 1400)
-    P.sig2("ph_dry_part", "*~", "flanged", "ph_dry_k", 3700, 1400)
-    P.sig2("phased", "+~", "ph_wet_part", "ph_dry_part", 3300, 1430)
+    if LEGACY_FX:
+        P.obj("ph_start", "loadbang", 3300, 1000)
+        P.obj("ph_clock", "metro 4", 3300, 1030)
+        P.obj("ph_snap", "snapshot~", 3300, 1060)
+        P.c("ph_start", "ph_clock"); P.c("ph_clock", "ph_snap")
+        prate = smoothed(P, "phaser_rate", "phaser_rate", 3450, 1000)
+        P.obj("ph_osc", "osc~", 3450, 1090)
+        P.c(prate, "ph_osc"); P.c("ph_osc", "ph_snap")
+        P.obj("r_phaser_depth", "r phaser_depth", 3600, 1000)
+        P.obj("ph_sweep", ("expr %d*pow(2%s 2*$f1*$f2)" % (PHASER_CENTRE_HZ, BS + ",")).replace("$", BS + "$"), 3300, 1120)
+        P.c("ph_snap", "ph_sweep"); P.c("r_phaser_depth", "ph_sweep", 0, 1)
+        P.obj("ph_sr_start", "loadbang", 3750, 1000)
+        P.obj("ph_sr", "samplerate~", 3750, 1030)
+        P.c("ph_sr_start", "ph_sr")
+        S2 = "max($f2" + BS + ", 8000)"
+        pfb = smoothed(P, "phaser_fb", "phaser_fb", 3900, 1030)
+        P.obj("ph_fb_rd", "delread~ ph_fb 1.4", 3300, 1250)
+        P.sig2("ph_fb_sig", "*~", "ph_fb_rd", pfb, 3300, 1280)
+        for k, mult in enumerate(PHASER_STAGES):
+            W2 = "6.283185*min(max($f1*%s%s 20)%s 0.45*%s)/%s" % (mult, BS + ",", BS + ",", S2, S2)
+            A2 = "sin(%s)/(2*%s)" % (W2, PHASER_Q)
+            C2 = "cos(%s)" % W2
+            a02 = "(1+%s)" % A2
+            coefs2 = ["2*%s/%s" % (C2, a02), "-(1-%s)/%s" % (A2, a02),
+                      "(1-%s)/%s" % (A2, a02), "-2*%s/%s" % (C2, a02), "(1+%s)/%s" % (A2, a02)]
+            P.obj(f"ph_coef{k}", ("expr " + (" " + BS + "; ").join(coefs2)).replace("$", BS + "$"), 3300 + 150 * k, 1160)
+            P.obj(f"ph_pack{k}", "pack f f f f f", 3300 + 150 * k, 1190)
+            P.obj(f"ph_ap{k}", "biquad~", 3300 + 150 * k, 1220)
+            for i in range(5):
+                P.c(f"ph_coef{k}", f"ph_pack{k}", i, i)
+            P.c(f"ph_pack{k}", f"ph_ap{k}")
+            P.c("ph_sweep", f"ph_coef{k}")
+            P.c("ph_sr", f"ph_coef{k}", 0, 1)
+        P.sig2("ph_in", "+~", "flanged", "ph_fb_sig", 3300, 1310)
+        prev = "ph_in"
+        for k in range(len(PHASER_STAGES)):
+            P.c(prev, f"ph_ap{k}")
+            prev = f"ph_ap{k}"
+        P.obj("ph_fb_wr", "delwrite~ ph_fb 20", 3600, 1310)
+        P.c(prev, "ph_fb_wr")
+        pmx = smoothed(P, "phaser_mix", "phaser_mix", 4100, 1000)
+        pon2 = smoothed(P, "phaser_on", "phaser_on", 4200, 1000)
+        P.sig2("ph_eff", "*~", pmx, pon2, 4100, 1060)                # amount, forced to 0 when bypassed
+        P.obj("ph_wet_k", "*~ 0.5", 4100, 1090)
+        P.c("ph_eff", "ph_wet_k")
+        P.obj("ph_dry_k0", "*~ -1", 4200, 1090)
+        P.obj("ph_dry_k", "+~ 1", 4200, 1120)
+        P.c("ph_wet_k", "ph_dry_k0"); P.c("ph_dry_k0", "ph_dry_k")
+        P.sig2("ph_wet_part", "*~", prev, "ph_wet_k", 3300, 1400)
+        P.sig2("ph_dry_part", "*~", "flanged", "ph_dry_k", 3700, 1400)
+        P.sig2("phased", "+~", "ph_wet_part", "ph_dry_part", 3300, 1430)
+    else:   # dcs_phaser~ (Oct 17): the same sweep steps and stages, sample for sample; stopped with the phaser switch
+        fx(P, "phased", f"dcs_phaser~ {PHASER_CENTRE_HZ} {PHASER_Q} 1.4 " + " ".join(str(m) for m in PHASER_STAGES),
+           "flanged", ("phaser_rate", "rate"), ("phaser_depth", "depth"), ("phaser_fb", "fb"), ("phaser_mix", "mix"),
+           ("phaser_on", "on"), ("sw_phaser", "run"), x=3300, y=1430)
 
     # --- tremolo: the level swings between full and (1 - depth) at the LFO rate ---
     if LEGACY_FX:
@@ -4396,30 +4418,36 @@ def build():
     # window is W = 2C ms and the sweep runs at 1000/C Hz.
     P.obj("r_rvs_time", "r rvs_time", 3400, 20)
     P.obj("rvs_w", "* 2", 3400, 50)
-    P.obj("pk_rvs_w", "pack f 30", 3400, 80); P.obj("ln_rvs_w", "line~", 3400, 110)
-    P.c("r_rvs_time", "rvs_w"); P.c("rvs_w", "pk_rvs_w"); P.c("pk_rvs_w", "ln_rvs_w"); P.c("r_smooth", "pk_rvs_w", 0, 1)
     P.obj("rvs_inv", "pow -1", 3500, 50)
     P.obj("rvs_hz", "* 1000", 3500, 80)
-    P.obj("pk_rvs_hz", "pack f 30", 3500, 110); P.obj("ln_rvs_hz", "line~", 3500, 140)
-    P.c("r_rvs_time", "rvs_inv"); P.c("rvs_inv", "rvs_hz"); P.c("rvs_hz", "pk_rvs_hz")
-    P.c("pk_rvs_hz", "ln_rvs_hz"); P.c("r_smooth", "pk_rvs_hz", 0, 1)
-    P.obj("rvs_ph1", "phasor~", 3500, 180)
-    P.c("ln_rvs_hz", "rvs_ph1")
-    P.obj("rvs_ph2_off", "+~ 0.5", 3600, 180); P.obj("rvs_ph2", "wrap~", 3600, 210)
-    P.c("rvs_ph1", "rvs_ph2_off"); P.c("rvs_ph2_off", "rvs_ph2")
-    P.obj("rvs_wr", "delwrite~ rvs_buf 2100", 3400, 250)
-    P.c("trem_out", "rvs_wr")
-    for n, ph, x in (("1", "rvs_ph1", 3400), ("2", "rvs_ph2", 3550)):
-        P.sig2(f"rvs_tap{n}_ms", "*~", ph, "ln_rvs_w", x, 290)
-        P.obj(f"rvs_tap{n}_off", "+~ 4", x, 320)
-        P.obj(f"rvs_rd{n}", "delread4~ rvs_buf", x, 350)
-        P.obj(f"rvs_cos{n}", "cos~", x + 80, 290)
-        P.obj(f"rvs_cos{n}_neg", "*~ -0.5", x + 80, 320)
-        P.obj(f"rvs_win{n}", "+~ 0.5", x + 80, 350)              # Hann window: 0.5 - 0.5*cos(2*pi*phase)
-        P.c(f"rvs_tap{n}_ms", f"rvs_tap{n}_off"); P.c(f"rvs_tap{n}_off", f"rvs_rd{n}")
-        P.c(ph, f"rvs_cos{n}"); P.c(f"rvs_cos{n}", f"rvs_cos{n}_neg"); P.c(f"rvs_cos{n}_neg", f"rvs_win{n}")
-        P.sig2(f"rvs_grain{n}", "*~", f"rvs_rd{n}", f"rvs_win{n}", x, 380)
-    P.sig2("rvs_sound", "+~", "rvs_grain1", "rvs_grain2", 3400, 410)
+    P.c("r_rvs_time", "rvs_w"); P.c("r_rvs_time", "rvs_inv"); P.c("rvs_inv", "rvs_hz")
+    if LEGACY_FX:
+        P.obj("pk_rvs_w", "pack f 30", 3400, 80); P.obj("ln_rvs_w", "line~", 3400, 110)
+        P.c("rvs_w", "pk_rvs_w"); P.c("pk_rvs_w", "ln_rvs_w"); P.c("r_smooth", "pk_rvs_w", 0, 1)
+        P.obj("pk_rvs_hz", "pack f 30", 3500, 110); P.obj("ln_rvs_hz", "line~", 3500, 140)
+        P.c("rvs_hz", "pk_rvs_hz")
+        P.c("pk_rvs_hz", "ln_rvs_hz"); P.c("r_smooth", "pk_rvs_hz", 0, 1)
+        P.obj("rvs_ph1", "phasor~", 3500, 180)
+        P.c("ln_rvs_hz", "rvs_ph1")
+        P.obj("rvs_ph2_off", "+~ 0.5", 3600, 180); P.obj("rvs_ph2", "wrap~", 3600, 210)
+        P.c("rvs_ph1", "rvs_ph2_off"); P.c("rvs_ph2_off", "rvs_ph2")
+        P.obj("rvs_wr", "delwrite~ rvs_buf 2100", 3400, 250)
+        P.c("trem_out", "rvs_wr")
+        for n, ph, x in (("1", "rvs_ph1", 3400), ("2", "rvs_ph2", 3550)):
+            P.sig2(f"rvs_tap{n}_ms", "*~", ph, "ln_rvs_w", x, 290)
+            P.obj(f"rvs_tap{n}_off", "+~ 4", x, 320)
+            P.obj(f"rvs_rd{n}", "delread4~ rvs_buf", x, 350)
+            P.obj(f"rvs_cos{n}", "cos~", x + 80, 290)
+            P.obj(f"rvs_cos{n}_neg", "*~ -0.5", x + 80, 320)
+            P.obj(f"rvs_win{n}", "+~ 0.5", x + 80, 350)              # Hann window: 0.5 - 0.5*cos(2*pi*phase)
+            P.c(f"rvs_tap{n}_ms", f"rvs_tap{n}_off"); P.c(f"rvs_tap{n}_off", f"rvs_rd{n}")
+            P.c(ph, f"rvs_cos{n}"); P.c(f"rvs_cos{n}", f"rvs_cos{n}_neg"); P.c(f"rvs_cos{n}_neg", f"rvs_win{n}")
+            P.sig2(f"rvs_grain{n}", "*~", f"rvs_rd{n}", f"rvs_win{n}", x, 380)
+        P.sig2("rvs_sound", "+~", "rvs_grain1", "rvs_grain2", 3400, 410)
+    else:   # dcs_taps~ (Oct 17): the same two taps, reading backwards, sample for sample; stopped with its switch
+        fx(P, "rvs_sound", "dcs_taps~ 2100", "trem_out", ("sw_reverse", "run"), x=3400, y=410)
+        P.msg("rvs_m_win", f"win {BS}$1", 3400, 380); P.c("rvs_w", "rvs_m_win"); P.c("rvs_m_win", "rvs_sound")
+        P.msg("rvs_m_ra", f"ra {BS}$1", 3500, 380); P.c("rvs_hz", "rvs_m_ra"); P.c("rvs_m_ra", "rvs_sound")
     rmx = smoothed(P, "rvs_mix", "rvs_mix", 3700, 20)
     ron = smoothed(P, "rvs_on", "rvs_on", 3800, 20)
     P.sig2("rvs_eff", "*~", rmx, ron, 3700, 110)                 # level, forced to 0 when bypassed
@@ -4428,20 +4456,24 @@ def build():
 
     # --- glitch / freeze: a feedback loop of 'glitch_len' ms. At hold = 1 the input is replaced by
     # the loop's own output, so the last glitch_len ms repeats until hold comes back down. ---
-    hold = smoothed(P, "glitch_hold", "glitch_hold", 3900, 20)
-    gon = smoothed(P, "glitch_on", "glitch_on", 4000, 20)
-    P.sig2("hold_eff", "*~", hold, gon, 3900, 110)               # forced to 0 when bypassed
-    P.obj("hold_inv", "*~ -1", 4000, 110)
-    P.obj("live_gain", "+~ 1", 4000, 140)                        # 1 - hold
-    P.c("hold_eff", "hold_inv"); P.c("hold_inv", "live_gain")
-    glen = smoothed(P, "glitch_len", "glitch_len", 4100, 20)
-    P.obj("glitch_rd", "delread4~ glitch_buf", 4100, 110)
-    P.c(glen, "glitch_rd")
-    P.sig2("glitch_live", "*~", "rvs_out", "live_gain", 3900, 200)
-    P.sig2("glitch_loop", "*~", "glitch_rd", "hold_eff", 4100, 200)
-    P.sig2("voice", "+~", "glitch_live", "glitch_loop", 4000, 260)   # what the rest of the chain hears
-    P.obj("glitch_wr", "delwrite~ glitch_buf 600", 4000, 300)
-    P.c("voice", "glitch_wr")
+    if LEGACY_FX:
+        hold = smoothed(P, "glitch_hold", "glitch_hold", 3900, 20)
+        gon = smoothed(P, "glitch_on", "glitch_on", 4000, 20)
+        P.sig2("hold_eff", "*~", hold, gon, 3900, 110)               # forced to 0 when bypassed
+        P.obj("hold_inv", "*~ -1", 4000, 110)
+        P.obj("live_gain", "+~ 1", 4000, 140)                        # 1 - hold
+        P.c("hold_eff", "hold_inv"); P.c("hold_inv", "live_gain")
+        glen = smoothed(P, "glitch_len", "glitch_len", 4100, 20)
+        P.obj("glitch_rd", "delread4~ glitch_buf", 4100, 110)
+        P.c(glen, "glitch_rd")
+        P.sig2("glitch_live", "*~", "rvs_out", "live_gain", 3900, 200)
+        P.sig2("glitch_loop", "*~", "glitch_rd", "hold_eff", 4100, 200)
+        P.sig2("voice", "+~", "glitch_live", "glitch_loop", 4000, 260)   # what the rest of the chain hears
+        P.obj("glitch_wr", "delwrite~ glitch_buf 600", 4000, 300)
+        P.c("voice", "glitch_wr")
+    else:   # dcs_freeze~ (Oct 17): the same loop, sample for sample; while hold is 0 it only writes the line
+        fx(P, "voice", "dcs_freeze~ 600", "rvs_out", ("glitch_hold", "hold"), ("glitch_on", "on"), ("glitch_len", "len"),
+           x=3900, y=200)
 
     # --- echo with feedback and bypass ---
     P.obj("r_echo_time", "r echo_time", 560, 20)
@@ -4483,22 +4515,26 @@ def build():
     P.c("ec_calc", "pk_echo_time")
     P.c("pk_echo_time", "ln_echo_time")
     P.c("smooth_x3", "pk_echo_time", 0, 1)
-    P.obj("delread", "delread4~ echo_buf", 560, 110)
-    P.c("ln_echo_time", "delread")
-    fb = smoothed(P, "feedback", "feedback", 560, 150)
-    P.sig2("fb_sig", "*~", "delread", fb, 560, 240)
     # the echo hears the mic at full level whatever Dry is: the voice (at the Dry level) plus the part Dry took away
     P.obj("dry_rest_n", "*~ -1", 460, 230); P.c("ln_dry", "dry_rest_n")
     P.obj("dry_rest", "+~ 1", 460, 245); P.c("dry_rest_n", "dry_rest")
     P.sig2("echo_mic_rest", "*~", "filtered_pre", "dry_rest", 460, 260)
-    P.sig2("echo_in0", "+~", "voice", "echo_mic_rest", 560, 262)
-    P.sig2("echo_in", "+~", "echo_in0", "fb_sig", 560, 270)
-    P.obj("delwrite", "delwrite~ echo_buf 2000", 560, 300)
-    P.c("echo_in", "delwrite")
-    wet = smoothed(P, "wet", "wet", 700, 150)
-    eon = smoothed(P, "echo_on", "echo_on", 800, 150)
-    P.sig2("wet_eff", "*~", wet, eon, 700, 240)           # level, forced to 0 when bypassed
-    P.sig2("wet_sig", "*~", "delread", "wet_eff", 700, 270)
+    if LEGACY_FX:
+        P.obj("delread", "delread4~ echo_buf", 560, 110)
+        P.c("ln_echo_time", "delread")
+        fb = smoothed(P, "feedback", "feedback", 560, 150)
+        P.sig2("fb_sig", "*~", "delread", fb, 560, 240)
+        P.sig2("echo_in0", "+~", "voice", "echo_mic_rest", 560, 262)
+        P.sig2("echo_in", "+~", "echo_in0", "fb_sig", 560, 270)
+        P.obj("delwrite", "delwrite~ echo_buf 2000", 560, 300)
+        P.c("echo_in", "delwrite")
+        wet = smoothed(P, "wet", "wet", 700, 150)
+        eon = smoothed(P, "echo_on", "echo_on", 800, 150)
+        P.sig2("wet_eff", "*~", wet, eon, 700, 240)           # level, forced to 0 when bypassed
+        P.sig2("wet_sig", "*~", "delread", "wet_eff", 700, 270)
+    else:   # dcs_echo~ (Oct 17): the same line, feedback and level, sample for sample (the time still glides here)
+        fx(P, "wet_sig", "dcs_echo~ 2000", "voice", ("feedback", "fb"), ("wet", "wet"), ("echo_on", "on"), x=560, y=270)
+        P.c("echo_mic_rest", "wet_sig", 0, 1); P.c("ln_echo_time", "wet_sig", 0, 2)
     # Echo scatter: each repeat lands somewhere else between the ears. The echo comes back every T ms (the delay time),
     # so a new place is picked every T ms: each repeat of a sound falls in its own window. A new place is at least
     # half the width away from the last (else the other side), and moves there in 15 ms. 0 = in the middle as before.
@@ -4574,35 +4610,42 @@ def build():
     # --- spatial: ear delay (time difference between the ears), then pan, then output ---
     # Positive 'space_shift' delays the right ear, so the sound seems to come from the left
     # (negative: from the right). Larger values (10-25 ms) widen the sound instead of moving it.
-    for side in ("l", "r"):
-        P.obj(f"space_wr_{side}", f"delwrite~ space_buf_{side} 100", 250, 440)
-        P.c(f"in_{side}", f"space_wr_{side}")
-    shift = smoothed(P, "space_shift", "space_shift", 1200, 20)
-    son = smoothed(P, "space_on", "space_on", 1300, 20)
-    P.sig2("shift_eff", "*~", shift, son, 1200, 110)            # forced to 0 when bypassed
-    P.obj("shift_neg", "*~ -1", 1300, 110)
-    P.c("shift_eff", "shift_neg")
-    for side, src, x in (("l", "shift_neg", 1300), ("r", "shift_eff", 1200)):
-        P.obj(f"d_{side}_pos", "clip~ 0 25", x, 150)            # only one ear is delayed at a time
-        P.obj(f"d_{side}_ms", f"+~ {EAR_BASE_MS}", x, 180)
-        P.obj(f"rd_{side}", f"delread4~ space_buf_{side}", x, 210)
-        P.c(src, f"d_{side}_pos"); P.c(f"d_{side}_pos", f"d_{side}_ms"); P.c(f"d_{side}_ms", f"rd_{side}")
+    if LEGACY_FX:
+        for side in ("l", "r"):
+            P.obj(f"space_wr_{side}", f"delwrite~ space_buf_{side} 100", 250, 440)
+            P.c(f"in_{side}", f"space_wr_{side}")
+        shift = smoothed(P, "space_shift", "space_shift", 1200, 20)
+        son = smoothed(P, "space_on", "space_on", 1300, 20)
+        P.sig2("shift_eff", "*~", shift, son, 1200, 110)            # forced to 0 when bypassed
+        P.obj("shift_neg", "*~ -1", 1300, 110)
+        P.c("shift_eff", "shift_neg")
+        for side, src, x in (("l", "shift_neg", 1300), ("r", "shift_eff", 1200)):
+            P.obj(f"d_{side}_pos", "clip~ 0 25", x, 150)            # only one ear is delayed at a time
+            P.obj(f"d_{side}_ms", f"+~ {EAR_BASE_MS}", x, 180)
+            P.obj(f"rd_{side}", f"delread4~ space_buf_{side}", x, 210)
+            P.c(src, f"d_{side}_pos"); P.c(f"d_{side}_pos", f"d_{side}_ms"); P.c(f"d_{side}_ms", f"rd_{side}")
 
-    # Balance-style pan: centre leaves both ears at full level, hard pan silences the far ear.
-    pan = smoothed(P, "space_pan", "space_pan", 1400, 20)
-    P.sig2("pan_eff", "*~", pan, son, 1400, 110)                # forced to 0 when bypassed
-    P.obj("pan_up", "clip~ 0 1", 1400, 150)                     # how far right of centre
-    P.obj("pan_up_neg", "*~ -1", 1400, 180)
-    P.obj("gain_l", "+~ 1", 1400, 210)                          # left gain = 1 - right-of-centre
-    P.c("pan_eff", "pan_up"); P.c("pan_up", "pan_up_neg"); P.c("pan_up_neg", "gain_l")
-    P.obj("pan_neg", "*~ -1", 1500, 110)
-    P.obj("pan_down", "clip~ 0 1", 1500, 150)                   # how far left of centre
-    P.obj("pan_down_neg", "*~ -1", 1500, 180)
-    P.obj("gain_r", "+~ 1", 1500, 210)                          # right gain = 1 - left-of-centre
-    P.c("pan_eff", "pan_neg"); P.c("pan_neg", "pan_down"); P.c("pan_down", "pan_down_neg")
-    P.c("pan_down_neg", "gain_r")
-    P.sig2("out_l", "*~", "rd_l", "gain_l", 1400, 260)
-    P.sig2("out_r", "*~", "rd_r", "gain_r", 1500, 260)
+        # Balance-style pan: centre leaves both ears at full level, hard pan silences the far ear.
+        pan = smoothed(P, "space_pan", "space_pan", 1400, 20)
+        P.sig2("pan_eff", "*~", pan, son, 1400, 110)                # forced to 0 when bypassed
+        P.obj("pan_up", "clip~ 0 1", 1400, 150)                     # how far right of centre
+        P.obj("pan_up_neg", "*~ -1", 1400, 180)
+        P.obj("gain_l", "+~ 1", 1400, 210)                          # left gain = 1 - right-of-centre
+        P.c("pan_eff", "pan_up"); P.c("pan_up", "pan_up_neg"); P.c("pan_up_neg", "gain_l")
+        P.obj("pan_neg", "*~ -1", 1500, 110)
+        P.obj("pan_down", "clip~ 0 1", 1500, 150)                   # how far left of centre
+        P.obj("pan_down_neg", "*~ -1", 1500, 180)
+        P.obj("gain_r", "+~ 1", 1500, 210)                          # right gain = 1 - left-of-centre
+        P.c("pan_eff", "pan_neg"); P.c("pan_neg", "pan_down"); P.c("pan_down", "pan_down_neg")
+        P.c("pan_down_neg", "gain_r")
+        P.sig2("out_l", "*~", "rd_l", "gain_l", 1400, 260)
+        P.sig2("out_r", "*~", "rd_r", "gain_r", 1500, 260)
+    else:   # dcs_space~ (Oct 17): the same ear delays and balance pan, sample for sample
+        fx(P, "space", f"dcs_space~ {EAR_BASE_MS} 100", "in_l", ("space_shift", "shift"), ("space_pan", "pan"),
+           ("space_on", "on"), x=1300, y=210)
+        P.c("in_r", "space", 0, 1)
+        P.obj("out_l", "*~ 1", 1400, 260); P.obj("out_r", "*~ 1", 1500, 260)   # (the names the rest of the patch uses)
+        P.c("space", "out_l", 0, 0); P.c("space", "out_r", 1, 0)
 
     # Duck: while another app plays (music, navigation), the app sends "duck <cut 0..1>" and the whole output dips a
     # little, so both can be heard. 0 = full level (also before anything arrives).
@@ -4716,18 +4759,23 @@ def build():
         P.obj(f"inv_{name}", "expr 1-$f1".replace("$", BS + "$"), 4400, 1515 + 40 * len(P.groups))
         P.obj(f"inv_{name}_s", f"s {name}_c", 4400, 1530 + 40 * len(P.groups))
         P.c(f"inv_{name}_r", f"inv_{name}"); P.c(f"inv_{name}", f"inv_{name}_s")
-    P.group("pitch", r"^(rate_hz|ph1|ph2|ph2_off|delwrite_p|tap[12]_\w+|rd[12]|cos[12]|cos[12]_neg|win[12]|grain[12]|shifted)$")
-    add_switch(P, "pitch", ("pitch_on", "pitch_mix", "shift_voice_c"), 300)
+    if LEGACY_FX:
+        P.group("pitch", r"^(rate_hz|ph1|ph2|ph2_off|delwrite_p|tap[12]_\w+|rd[12]|cos[12]|cos[12]_neg|win[12]|grain[12]|shifted)$")
+    add_switch(P, "pitch", ("pitch_on", "pitch_mix", "shift_voice_c"), 300, dsp=LEGACY_FX)
     P.group("pshiftn", r"^pshift_dcs$")
     add_switch(P, "pshiftn", ("pitch_on", "pitch_mix", "shift_voice"), 300)
-    P.group("chorus", r"^(chorus_wr|chorus_ph|ch[01]_\w+|ch_sum|ch_wet)$")
-    add_switch(P, "chorus", ("chorus_on", "chorus_mix"), 300)
-    P.group("flanger", r"^(fl_wr|fl_ph|fl_cos|fl_half|fl_unit|fl_sweep|fl_ms|fl_rd|fl_fb_sig|fl_in|fl_wet)$")
-    add_switch(P, "flanger", ("flange_on", "flange_mix"), 300)
-    P.group("phaser", r"^(ph_start|ph_clock|ph_snap|ph_osc|ph_sweep|ph_sr_start|ph_sr|ph_fb_rd|ph_fb_sig|ph_coef\d|ph_pack\d|ph_ap\d|ph_in|ph_fb_wr)$")
-    add_switch(P, "phaser", ("phaser_on", "phaser_mix"), 300, also=("ph_clock",))   # the 4 ms clock stops too
-    P.group("reverse", r"^(rvs_ph1|rvs_ph2_off|rvs_ph2|rvs_wr|rvs_tap\d_\w+|rvs_rd\d|rvs_cos\d\w*|rvs_win\d|rvs_grain\d|rvs_sound)$")
-    add_switch(P, "reverse", ("rvs_on", "rvs_mix"), 300)
+    if LEGACY_FX:
+        P.group("chorus", r"^(chorus_wr|chorus_ph|ch[01]_\w+|ch_sum|ch_wet)$")
+    add_switch(P, "chorus", ("chorus_on", "chorus_mix"), 300, dsp=LEGACY_FX)
+    if LEGACY_FX:
+        P.group("flanger", r"^(fl_wr|fl_ph|fl_cos|fl_half|fl_unit|fl_sweep|fl_ms|fl_rd|fl_fb_sig|fl_in|fl_wet)$")
+    add_switch(P, "flanger", ("flange_on", "flange_mix"), 300, dsp=LEGACY_FX)
+    if LEGACY_FX:
+        P.group("phaser", r"^(ph_start|ph_clock|ph_snap|ph_osc|ph_sweep|ph_sr_start|ph_sr|ph_fb_rd|ph_fb_sig|ph_coef\d|ph_pack\d|ph_ap\d|ph_in|ph_fb_wr)$")
+    add_switch(P, "phaser", ("phaser_on", "phaser_mix"), 300, also=("ph_clock",) if LEGACY_FX else (), dsp=LEGACY_FX)   # the 4 ms clock stops too
+    if LEGACY_FX:
+        P.group("reverse", r"^(rvs_ph1|rvs_ph2_off|rvs_ph2|rvs_wr|rvs_tap\d_\w+|rvs_rd\d|rvs_cos\d\w*|rvs_win\d|rvs_grain\d|rvs_sound)$")
+    add_switch(P, "reverse", ("rvs_on", "rvs_mix"), 300, dsp=LEGACY_FX)
     P.group("roomnotes", r"^rn\d*_")
     add_switch(P, "roomnotes", ("music_on", "music_res", "rn_ring"), 2500)
     for k in range(2):                                                  # Room notes, found: each voice on while it rings

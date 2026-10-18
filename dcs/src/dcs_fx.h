@@ -26,6 +26,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* the largest block an effect takes (its scratch buffers live on the stack) */
+#define DCS_BLOCKMAX 64
+
 /* ------------------------------------------------------------------ line~ */
 typedef struct {
     t_sample value, target;
@@ -262,8 +265,8 @@ static inline void dcs_delay_read4(const dcs_delay *d, const t_sample *ms, t_sam
     t_sample limit = nsamps - n, fn = n - 1;
     t_sample *vp = d->vec, *wp = vp + d->phase, *bp;
     t_float srms = sr * 0.001;
-    if (limit < 0) {
-        while (n--) *out++ = 0;
+    if (limit < 0 || n > DCS_BLOCKMAX) {
+        for (int i = 0; i < n && i < DCS_BLOCKMAX; i++) out[i] = 0;
         return;
     }
     for (int i = 0; i < n; i++) {
@@ -301,8 +304,6 @@ static inline void dcs_delay_read(const dcs_delay *d, t_float msval, t_sample *o
 }
 
 /* ------------------------------------------------------------------ common to the effects */
-/* The usual effect settings: the global smoothing time, each setting a line~ fed "value smooth". */
-#define DCS_BLOCKMAX 64
 #define DCS_SCRATCH(name) t_sample name[DCS_BLOCKMAX]
 
 #endif

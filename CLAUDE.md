@@ -66,10 +66,10 @@ As of Oct 17:
   Crusher style (8-bit sampler, SP-1200, NES, Game Boy, SNES, Genesis).
   Settings that use our C objects show " *" after their name. Kit levels were matched to Classic by measurement
   only; each kit's sound is one line per part in `app/src/main/assets/kits/<name>.txt`.
-- **Effect ports in progress** (DadCraft, Oct 17: dcs versions of every effect, for CPU; then "sing in key"): each
-  matches the old Pd chain sample for sample (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"). Done: ring,
-  tremolo, crusher, distortion, filter. Next: echo, phaser, reverse echo, Classic pitch shifter, chorus, flanger,
-  freeze, spatial. User kits stage 2 (samples) waits until after these.
+- **Effect ports done** (DadCraft, Oct 17: dcs versions of every effect, for CPU): all 13 match the old Pd chains
+  (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
+  **Next: "sing in key"** (dcs_pitch~ + dcs_shift~ snapping the voice to the music's scale, behind a switch).
+  User kits stage 2 (samples) after that.
 - **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
   reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
 - **Next on the kit plan** (ROADMAP 19): user kits stage 2, a sample engine in dcs_voice~ (drum one-shots,

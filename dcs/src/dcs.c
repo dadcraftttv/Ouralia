@@ -21,6 +21,13 @@ void dcs_trem_tilde_setup(void);
 void dcs_crush_tilde_setup(void);
 void dcs_dist_tilde_setup(void);
 void dcs_filter_tilde_setup(void);
+void dcs_echo_tilde_setup(void);
+void dcs_freeze_tilde_setup(void);
+void dcs_space_tilde_setup(void);
+void dcs_chorus_tilde_setup(void);
+void dcs_flanger_tilde_setup(void);
+void dcs_phaser_tilde_setup(void);
+void dcs_taps_tilde_setup(void);
 
 /* the cos~ table (dcs_fx.h): Pd 0.55's own, the same values */
 float *dcs_costab;
@@ -53,5 +60,12 @@ void dcs_setup(void)
     dcs_crush_tilde_setup();
     dcs_dist_tilde_setup();
     dcs_filter_tilde_setup();
-    post("dcs %s: dcs_glitch~ dcs_string~ dcs_derustle~ dcs_pitch~ dcs_shift~ dcs_onset~ dcs_reverb~ dcs_voice~ dcs_ring~ dcs_trem~ dcs_crush~ dcs_dist~ dcs_filter~", DCS_VERSION);
+    dcs_echo_tilde_setup();
+    dcs_freeze_tilde_setup();
+    dcs_space_tilde_setup();
+    dcs_chorus_tilde_setup();
+    dcs_flanger_tilde_setup();
+    dcs_phaser_tilde_setup();
+    dcs_taps_tilde_setup();
+    post("dcs %s: dcs_glitch~ dcs_string~ dcs_derustle~ dcs_pitch~ dcs_shift~ dcs_onset~ dcs_reverb~ dcs_voice~ dcs_ring~ dcs_trem~ dcs_crush~ dcs_dist~ dcs_filter~ dcs_echo~ dcs_freeze~ dcs_space~ dcs_chorus~ dcs_flanger~ dcs_phaser~ dcs_taps~", DCS_VERSION);
 }
