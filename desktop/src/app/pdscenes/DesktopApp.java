@@ -71,11 +71,16 @@ final class DesktopApp {
 
     /** Our own Pd objects (dcs/, `[declare -lib dcs]`) are a library Pd opens itself, and it needs libpd's functions:
      *  Java opens libpdnative.so privately, so it is opened here first with its symbols shared (RTLD_GLOBAL). */
+    /** Held for good (Oct 19): JNA closes a library whose NativeLibrary is garbage collected, and then our Pd objects
+     *  (dcs) couldn't find libpd's symbols. The window's slower start let a collection run first, so the window app
+     *  played without any of them (only the plain Pd parts: the Realm change sound), while --no-window worked. */
+    private static com.sun.jna.NativeLibrary libpdShared;
+
     static void shareLibpd() {
         for (String dir : System.getProperty("java.library.path", "").split(File.pathSeparator)) {
             File f = new File(dir, "libpdnative.so");
             if (f.isFile()) {
-                com.sun.jna.NativeLibrary.getInstance(f.getAbsolutePath(),
+                libpdShared = com.sun.jna.NativeLibrary.getInstance(f.getAbsolutePath(),
                         Map.of(com.sun.jna.Library.OPTION_OPEN_FLAGS, 0x102));   // RTLD_NOW | RTLD_GLOBAL
                 return;
             }
