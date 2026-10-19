@@ -25,7 +25,7 @@ def check(cond, msg):
 def java_params():
     src = open(PARAMS_JAVA).read()
     out = []
-    for m in re.finditer(r'new Param\("(\w+)",\s*"[^"]*",\s*([-\d.]+)f?,\s*([-\d.]+)f?,\s*([-\d.]+)f?,'
+    for m in re.finditer(r'new Param\("(\w+)",\s*"[^"]*",\s*([-\d.]+)f?,\s*([^,]+?)f?,\s*([-\d.]+)f?,'      # (max: a number or a sum)
                          r'[^;]*?(?=new Param\(|\)\);)', src, re.S):
         out.append((m.group(1), float(m.group(4)), ".noPd()" in m.group(0)))
     return out
