@@ -60,19 +60,19 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 
 ## Current state (update this when it changes)
 As of Oct 17:
-- **Waiting on DadCraft's ears** (all behind switches or kits, the old sound the default): the kits (Acoustic,
-  Synth, EDM, Future bass, Low end, 3 Chiptune; Music tab, Kit * and Melody/Bass/Pad/Drums from *), Glitch voice New, Found note
-  ring String, Rustle squash + Step duck (pocket), Pitch tracker / Pitch shifter / Sudden-sound detector New,
-  Crusher style (heard Oct 18: "don't sound like the consoles", kept; Chip voice is the answer).
-  Settings that use our C objects show " *" after their name. Kit levels were matched to Classic by measurement
-  only; each kit's sound is one line per part in `app/src/main/assets/kits/<name>.txt`.
+- **Approved by ear (DadCraft, Oct 19)**, all still behind their switches with the old sound the default until he says
+  to change the defaults: the kits (Acoustic, Synth, EDM, Future bass, Low end, 3 Chiptune), Glitch voice New, Found
+  note ring String, Pitch tracker / Pitch shifter / Sudden-sound detector New, Sing in key, Vocoder, Talk box. Rustle
+  squash + Step duck: kept though he hasn't needed them (the New detector does the job alone). Crusher style (Oct
+  18: "don't sound like the consoles", kept; Chip voice is the answer). Settings that use our C objects show " *"
+  after their name. Each kit's sound is one line per part in `app/src/main/assets/kits/<name>.txt`.
+- **Desktop: "<Part> from" reported not working** (Oct 19, DadCraft away from his mic, untested by ear): headless with
+  the desktop's own classes the patch takes Melody/Bass from correctly (values kemel/kebass). Not yet known what he
+  chose. Acoustic and Synth have no drums line, so "Drums from" either of them plays Classic's drums.
 - **Effect ports done** (DadCraft, Oct 17: dcs versions of every effect, for CPU): all 13 match the old Pd chains
   (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
-- **Sing in key** built Oct 18 (section "Sing in key", dcs_shift~ snap mode; off by default): waiting on DadCraft's
-  ears. **Chiptune kits** built Oct 18 (NES, Game Boy, Genesis; dcs_voice~ engine `chip`): waiting on his ears.
-  **Vocoder** built Oct 18 (section "Vocoder", dcs_vocoder~: chords / your pitch / whisper; off by default): waiting
-  on his ears. **Talk box** built Oct 19 (Vocoder style Talk box, LPC; carrier The music's melody): waiting on his
-  ears. Later: chip carriers for the vocoder (low priority).
+- Sing in key (dcs_shift~ snap), Vocoder (dcs_vocoder~) and Talk box (LPC) are off by default; approved Oct 19.
+  Later: chip carriers for the vocoder (low priority).
 - **User kits stage 2 (samples)** built Oct 18: engine `sample` (WAV read by dcs_voice~, other formats decoded at
   import), kit.txt `sample <file> <note>` / `kick <file>`...: waiting on DadCraft's phone check. Stage 3 done: `docs/KIT-FORMAT.md` (the format page
   for sound designers: keep it in step with Kits.java and dcs_voice~).
