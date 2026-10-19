@@ -83,7 +83,7 @@ to date in the same commit when behaviour changes.
   (vline~'s block timing, the fraction carried), ITD as before. Stretch: 4 Hann grains of 100 ms, each new grain
   placed within +-8 ms where its waveform best matches the playing grain (WSOLA, 5.3 ms compared, every 2nd
   sample): a held tone swings 0.1 dB (the old 2-grain stretch: grains half-cancel, 22 dB in the same test).
-  Cost while glitching +11% of the patch (Classic +7%); in the gcloud switch group, so nothing at Amount 0.
+  Cost while glitching +11% of the patch (Legacy +7%); in the gcloud switch group, so nothing at Amount 0.
 - `dcs_pitch~` (Pitch tracker = New, `harm_tracker`, Music, noPreset, default Classic) and `dcs_shift~` (Pitch shifter
   = New, `shift_voice`, Pitch section, noPreset, default Classic; also Your voice harmony), Oct 17, sharing
   `dcs_yin.h`: YIN at ~11 kHz (25 ms window, 60 Hz up), stopping once the dip under 0.15 bottoms out, every 2nd
@@ -116,7 +116,7 @@ to date in the same commit when behaviour changes.
   glide, two saws), 2 whisper (noise). `sib` adds the voice above 5 kHz (two one-pole high-passes) so s and t stay
   clear. No delay. At amount 0 the voice passes untouched and nothing is computed; on again, the bands start afresh.
   Level about the input's (x1.0 on a vowel). DadCraft (Oct 18) chose console music (the Chiptune kits) over a console
-  voice; chip carriers for the vocoder can come later. Tests: test_dcs.py, test_patch.py 7n.
+  voice; chip carriers for the vocoder came on Oct 19 (below). Tests: test_dcs.py, test_patch.py 7n.
   **Chip carriers** (Oct 19, `voc_wave`, "Vocoder synth sound", default Saws; both styles, every carrier but
   Whisper): one band-limited pulse per note (two of the polyBLEP saws, the second `duty` later, mean 0) at the mean
   of the two saws' pitches, no detune (the consoles had none): 1 = 25% (NES lead), 2 = 12.5%, 3 = 50% square (Game
@@ -308,8 +308,8 @@ to date in the same commit when behaviour changes.
   part's settings, not the kit index: an edited kit resends only the parts that changed, a renumbering resends
   nothing. **Desktop bench**: each second the app compares `Kits.signature()` (folders, kit.txt times and sizes)
   and on a change refreshes the menus and resends (a saved kit plays at once). Tests: Q (install, reuse, menus,
-  edit, delete, preset round trip, check, folder one level down). Not yet: samples (stage 2: a sample engine in
-  dcs_voice~), a format page (stage 3), register Low for kit pads (done Oct 19: Low already muted a kit's pad
+  edit, delete, preset round trip, check, folder one level down). Since built: samples (stage 2, below), the format page (stage 3,
+  `docs/KIT-FORMAT.md`), register Low for kit pads (Oct 19: Low already muted a kit's pad
   with Classic's and the kit's bass part plays the bass voice there, but the kit pad's voices kept running unheard
   and doubled the patch's cost, 0.29 -> 0.58 s per 20 s; now groups `kpad` / `kbass` (switch~) run a kit's pad
   voices only at Mid/Both and its bass voices only at Low/Both, and only with a kit or layer on the part:
@@ -332,8 +332,12 @@ to date in the same commit when behaviour changes.
   thread): a long kit can glitch the sound once as it loads. Tests: test_dcs.py (pitch, nearest root, 44.1 kHz
   file, oneshot, loop, 16/24-bit/float alike, drums, missing file, clear), test_patch.py "a sample kit" (every part
   in key at Classic's level), Q (note names, paths, Classic when missing, the text-only copy filled in).
-- Waiting on DadCraft's ears for both. Not in the tester guide (prototype). `dcs_derustle~` (Oct 17): see Pocket rustle. Ideas next: analog-style ladder filter,
-  oversampled distortion/crush, a lighter pitch tracker than sigmund~, a dcs phaser, more glitch kinds.
+- **Status (Oct 19):** DadCraft approved by ear every object above (Glitch voice New, Found note ring String, Pitch
+  tracker / Pitch shifter / Sudden-sound detector New, the kits, Sing in key, Vocoder, Talk box). All stay behind
+  their switches with the old sound the default (he wants them opt-in), except Glitch voice, where New became the
+  default and the old voice stays as Legacy. `dcs_derustle~` (Oct 17): see Pocket rustle. Of the Oct 17 ideas list,
+  built: the analog-style ladder filter (dcs_voice~ engine `analog`), a lighter pitch tracker (dcs_pitch~), a dcs
+  phaser (the effect ports). Still open: oversampled distortion/crush, more glitch kinds.
 
 ## Tests (run these after touching patch or Java logic)
 1. Desktop libpd is needed for the Pd tests: `tools/build_libpd.sh` builds it into `tools/.libpd/libpd.so` (needs git, make, gcc).
@@ -501,7 +505,8 @@ to date in the same commit when behaviour changes.
   quiet room already reads 12-20k zero crossings/s and highs only 5-7 dB under the whole (mic hiss); sleeve rubbing
   read as a few loud thumps (+33 dB, highs -6..-13, 1 burst), talking and music as 2-3 bursts a few dB over the room:
   no cheap feature separated them. Motion handling (fiddle) and pocket hush/guard are the protection.
-- **Pocket rustle: squash and step duck** (prototype, Oct 17; DadCraft: even with the hushes maxed he still got "tons
+- **Pocket rustle: squash and step duck** (Oct 17; kept Oct 19 though DadCraft hasn't needed them: the New
+  sudden-sound detector does the job alone; DadCraft: even with the hushes maxed he still got "tons
   of rustle", and turning gain/dry down lost the world, the point of the app; his event log: in a pocket while walking
   -38 dB against a -58 dB room, so a flat hush cuts both alike). `add_pocket_rustle`, both main section, noRandom,
   noPreset, default 0 = as before, phone-only on the desktop. Their gain joins `hush_ln` (everything that hears the
@@ -553,7 +558,7 @@ to date in the same commit when behaviour changes.
   0.4 + 0.45 x pace. The clock now starts ticking at load (50 ms, then 100 BPM), so standing still from Start has a pulse.
   Only with `beat_follow` 1; "Your steps" keeps the old one-hit-per-step drums. The level moves only on real changes
   (a ramp restarted every 100 ms never arrived). Tests hear `drum_kick/snare/hat` and `rh_bar_patterns`.
-  Next (C2/C3): found sounds from the mic become the kit; synth drums stay as the fallback.
+  C2/C3 (found sounds from the mic become the kit, synth drums the fallback) were built next: see below.
 - **Breakbeat** (Oct 15, from DadCraft's other chat; `beat_break` Rhythm 0..1, default 0, in presets; Pd test
   "breakbeat:"): at 0 nothing changes. Each pick takes `BREAK_KICK_PATS`/`BREAK_SNARE_PATS` (stored after the usual
   pools in `rh_kpat`/`rh_spat`, index + 5) with chance `BB_POOL` (0.8) x the slider. Per bar (decided at tick 15 into
@@ -926,10 +931,15 @@ to date in the same commit when behaviour changes.
   `pactl --format=json list sink-inputs` (portal app id -> "java (PrismLauncher)"; pw-dump's JSON repeats keys and
   org.json refuses it). Picking an entry ticks "Also hear a game" (he picked it, the box stayed off, nothing came).
   Device names match without PipeWire's ".N" suffix (`DesktopEngine.base`), and menus store the plain name.
-- Not yet: a walking/pace stand-in, more cleanup.
+- No walking stand-in on the desktop (DadCraft, Oct 19: the Rhythm's BPM setting is enough there).
 
 ## Open / next
-- **Ideas queue with details: `docs/ROADMAP.md`** (in-key resonators, pitch-following harmony, Ghost capture, Kinetic tiers, Unstable and Collective worlds, stems player).
+- **Ideas queue with details: `docs/ROADMAP.md`.** Its numbered items are built, removed or set aside by DadCraft
+  (Oct 19); still open there: the small items in 11 (location input, unported scene objects, `rj_zcr~` if a scene
+  needs it, a beat-offset slider if drift returns).
+- Our own objects still to build (Oct 17 list): oversampled distortion/crush, more glitch kinds.
+- Untested on the phone: wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt
+  timing, the found bass pulled far down.
 - Release prep: final name + applicationId, `source_url` in strings.xml, privacy policy, Play foreground-service + microphone declarations, icon, store listing.
 - Ideas, not requested: beat-offset slider if drift returns,
   location (`#loc`) scene input, unported scene objects.

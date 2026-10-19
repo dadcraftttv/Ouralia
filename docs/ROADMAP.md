@@ -130,8 +130,8 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
       and earbud mics (15-20 dB quieter than the phone's).
 
 16. **Found-sound rhythm section (DadCraft, Oct 12; steps B and C).** The walking beat is "neat but not my favorite"
-    (not yet known whether it's the drum sounds or the pattern: a quick listen test with another synth kit is worth
-    doing, it's much smaller work). The idea: the room supplies the drum sounds and the walking pace sets a tempo, the
+    (SETTLED: it was the pattern, which was very same-y, DadCraft confirmed Oct 19; fixed by the pattern engine's
+    calming and the per-hit variation, see DESIGN-NOTES "pattern engine" and "Found-sound kit"). The idea: the room supplies the drum sounds and the walking pace sets a tempo, the
     RjDj premise itself. Today there is no BPM or grid: drums fire on each detected step, chimes wait for the next step
     or half-step (`mu_q_*`), the glitch cloud's "free clock" is random on purpose. Pieces that exist: StepDetector's
     averaged interval (the pace), the glitch cloud's 4 s RAM buffer, the sudden-sound detector (gc meter onsets),
