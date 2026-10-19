@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Oct 16, 2026 · Dad · for 0.9.0-rc3
+Oct 19, 2026 · Dad · for 0.9.0-rc4
 
 ## What this app is
 
@@ -15,20 +15,46 @@ There are two ways to use it:
 
 ## What's new
 
+**New in rc4 (Oct 17-19):**
+
+- **Kits** (Music): choose what the music sounds like. Nine built-in kits: Classic (the sound so far), Acoustic,
+  Synth, EDM, Future bass, Low end and three Chiptune kits (NES, Game Boy, Genesis). Mix them (the melody from one
+  kit, the drums from another), blend two kits on one part, and **make your own kits**, even with your own
+  recordings (see Your kits).
+- **Sing in key** (Sound tab): your voice gently pulled onto the notes of the key, from a soft touch to robotic.
+- **Vocoder** (Sound tab): your voice "sings" through a synth, as a classic vocoder or a **talk box**, on the
+  music's chords, its melody, your own pitch or a whisper, with a choice of warm saws or old game-console sounds.
+- **Smoother distortion:** Distortion now works at four times the detail on a new install (Distortion quality:
+  Smooth), so a hard drive loses its harsh fizz. If you had the app before, yours stays on Classic: switch it to try.
+- **New glitch voice** is the default on a new install: several glitches at once, each exactly on time, and a
+  smoother stretch. Two **new kinds of glitch**: Pitch jump and Gate (each starts at 0%).
+- **Crusher style** (Bit crusher): the real thing for an 8-bit sampler, the SP-1200, the NES, the Game Boy, the
+  SNES and the Genesis.
+- **New, more exact versions** of the pitch tracker, the pitch shifter, the sudden-sound detector and the found
+  notes' ring, each one a choice you can switch on (the settings marked with \*, see The Sound tab).
+- **Pocket rustle tools:** Rustle squash and Step duck, for when cloth noise still gets through in a pocket.
+- **Unplugging headphones** is cleaner: the sound stops at once and never jumps to the phone speaker, with wired
+  and Bluetooth headphones alike.
+- **A gentler start:** a new install starts with Input gain at 1 (it was 2.5). Turn it up if things are quiet.
+- **A warning instead of silence:** if the app's own sound parts ever fail to load, the status line says so in bold.
+- **The drums of a kit play in "Your steps" mode** too, and the part menus say when a kit has no sound of its own
+  for a part (for example "Synth (Classic's drums)").
+- **Removed:** Stem packs (the kits replace them).
+
 **New in rc3 (Oct 15-16):**
 
-- **Locks on the Mix levels:** the Kick, Bass, Chimes, Walking notes, Ring, Bells and Stems levels now have a Lock box too, so a Realm can't change them.
+- **Locks on the Mix levels:** the Kick, Bass, Chimes, Walking notes, Ring, Bells and Stems (since removed) levels now have a Lock box too, so a Realm can't change them.
 - **Melody rhythm** (Music): the walking notes and the standing-still chimes can follow real rhythms (quarters, halves, 8ths, or dotted and syncopated ones), each note ringing as long as it lasts. Off at first.
 - **Melody phrases** (Music, with Melody rhythm on): the melody makes four-bar phrases: a line, the line again ending like an answer, something new, then the first line once more.
 - **Breakbeat** (Rhythm): turn it up for drums with off-beat kicks, ghost snares, now and then a chopped bar, a quick snare roll or a longer fill. At 0 the beat is as before.
 - **Standing-still chimes keep an even pace with the Rhythm on:** before, they came a little too often at fast tempos and too rarely at slow ones.
-- **Stem packs:** a pack too long to hold in memory (over 4 minutes of stereo audio) is refused at import with an explanation, instead of risking a crash.
+- **Stem packs** (since removed): a pack too long to hold in memory (over 4 minutes of stereo audio) is refused at import with an explanation, instead of risking a crash.
 
 **Oct 13-14 (rc2):**
 
 - **Call and response** (Music): sing, hum or whistle a short phrase, pause, and the app answers it with chimes, a third away, in key.
 - **Send feedback** (Setup, About): writes an email to Dad with your phone and app details and, if you like, the app's event log.
-- **Stem packs** (Music tab): your own loops, playing with the built-in sound and arranged by where you are and how you move.
+- **Stem packs** (Music tab; removed in rc4, the kits replace them): your own loops, playing with the built-in sound and arranged by where you are and how you move.
 - **Calm builds** (Music, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
 - **Scenes show their pictures and words** on the touch pad, and a few more imported scenes load completely.
 - **Reverse reverb** (Reverb section, and in the Ghost realm): sounds come back as rising swells, landing on the beat while the Rhythm plays.
@@ -108,6 +134,9 @@ An "effect" is a way of changing a sound. The sound flows through them in a chai
 
 The numbers (ms, Hz) don't matter much. Drag, listen, and decide whether you like it.
 
+A setting with a **\*** after its name uses the app's own new sound engine (new in rc4). Several of them are a
+choice between **Classic** (the sound as it was) and **New**: try both and tell me which you prefer.
+
 ### Input & output
 
 This section controls the sound going in, before any effect touches it.
@@ -120,6 +149,12 @@ This section controls the sound going in, before any effect touches it.
 - **Pocket hush:** while the phone is in a pocket, the microphone is turned down so cloth rustle doesn't swamp the sound, and rustle doesn't set off chimes. Your drums and the music play as normal. Higher hushes more. At 0 nothing changes. If you can't hear the world from your pocket, lower it. If the rustle is too loud, raise it.
 - **Handling hush:** when you tap, grip, rub or fiddle with the phone, its microphone hears that loudly. The app feels it through the phone's motion and turns the mic down while it lasts (higher hushes more; at 0 nothing changes). Whatever this is set to, those taps and scrapes never set off chimes or glitches and are never caught as found sounds. Walking with the phone in your hand doesn't count as handling, and neither do claps or knocks around you, because the phone itself doesn't move with them.
 - **Mic-down protection:** extra help only when the phone is in your pocket with the microphone end (the bottom edge) going in first, where it rubs against more fabric. It filters out the low thump of cloth and turns the mic down a little more. Mic end up is left alone. At 0 nothing changes.
+- **Sudden-sound detector \*:** what notices a clap, a knock or a door, and so starts glitches, catches drum
+  sounds and rings room notes. **Classic** listens for a jump in loudness. **New** listens for a change in the sound
+  itself: it catches claps even in a loud room and ignores slow swells and singing.
+- **Rustle squash \*** and **Step duck \*** (both at 0 to start, pocket only): if cloth noise still gets through
+  in a pocket, Rustle squash pulls sudden rustle down to the level of the room, and Step duck dips the mic for a
+  moment at each footfall while you walk. Leave them at 0 unless you need them.
 - **Dry level:** how much of your original, untouched sound you hear alongside the effects. Lower it to hear mostly effects. It only changes your microphone's sound: the music keeps its own levels, and the echo keeps repeating your sound even with Dry all the way down.
 
 **Gate and compressor shape** (its own folded section) fine-tunes how the noise gate and compressor react. The defaults open the gate within a few milliseconds of a sound and let it fade smoothly, so you don't need to touch these.
@@ -184,6 +219,8 @@ Makes your voice higher (chipmunk) or lower (monster).
 - **Pitch shift amount:** how far to move it. Each step is a note on a piano. Negative is lower, positive is higher.
 - **Pitch shift mix:** 0 is just you, 1 is just the shifted voice. Halfway gives you a harmony.
 - **Pitch grain size:** a technical setting that trades smoothness against delay. Leave it unless the sound is warbly.
+- **Pitch shifter \*:** **Classic** or **New**. New keeps the tone of your voice when it moves it, so a big shift
+  sounds less like a chipmunk or a robot. It also makes the Your voice harmony (Music).
 
 ### Bit crusher
 
@@ -192,6 +229,9 @@ Makes the sound crunchy and lo-fi, like an old video game or a bad phone line.
 - **Bit-crush amount:** how much you hear.
 - **Bit depth:** lower numbers are grittier and noisier.
 - **Sample-rate reduction:** lower numbers make the sound grainy and muffled, with a metallic edge.
+- **Crusher style \*:** **Classic** uses the two sliders above. The others copy real old machines, with their own
+  settings built in (the two sliders then do nothing): an 8-bit sampler, the SP-1200 drum machine, the NES, the
+  Game Boy, the SNES and the Genesis / Mega Drive. Turn the amount up and talk or clap to hear each one.
 
 ### Distortion
 
@@ -336,12 +376,27 @@ This adds a soft, drifting musical layer that reacts to the world around you, in
 - **Melody phrases (repeat and answer, needs Melody rhythm):** off at first. Switched on (with Melody rhythm on), the melody comes in four-bar phrases: bar 1 makes up a line, bar 2 repeats it but ends on the chord's home note like an answer, bar 3 goes somewhere new, and bar 4 brings the first line back. The rhythm repeats with the notes. The notes mostly move one step at a time, and the notes on beats 1 and 3 belong to the chord. Walking, it plays the walking notes; standing still, the chimes that come now and then (so you hear only some of the phrase).
 - **Melody sounds:** **Found sounds** (the default), **Synth chimes** or **Both**. With Found sounds, the chimes and walking notes play the sounds caught for the beat, tuned to each note. Until the first catch they play synth chimes.
 - **Chime character (ring to your sound):** how the found melody sounds. Toward "ring", each note is a tuned, bell-like ring set off by your sound. Toward "your sound", each note is mostly your clap, knock or snap itself played at that pitch, short and punchy. It starts in the middle.
+- **Found note ring \*:** how a found note rings. **Resonator** (the start) rings like a bell. **String** makes
+  your sound pluck a tuned string instead, clearer and more like an instrument.
 - **Room notes:** how loud the room's own notes are.
 - **Room notes sound:** **Found sounds** (the default): each sudden sound around you plays one of your caught sounds on a note of the current chord. **Ring**: the sounds around you ring the chord like a bell, in your key (a light tap gives a quick chime, talking or a passing car builds up to a long bell). **Both** plays the two.
 - **Harmony:** hum, sing or whistle a long, steady note and an answering note from the current chord joins in, never doubling yours. It holds as long as your note does and fades when you stop. Talking, noise and short sounds are ignored. Its level is in the Mix section; 0 turns it off.
 - **Harmony sound:** **Your voice** (the default): a copy of your own voice, shifted to the chord note, sings with you. Low voices get their harmony a third or more above; from middle C up (most women's and children's voices) it sings a third or more below, so it never turns chipmunk. **Organ** is a soft organ note an octave away instead. **Both** plays the two.
+- **Pitch tracker \* (what Harmony hears):** **Classic** or **New**. New hears your note more exactly and isn't
+  fooled by hiss, so the harmony and the found pad pick the right note more often.
 - **Call and response:** sing, hum or whistle a short phrase (one to six notes) and pause. A moment after you stop, the app answers it with chimes: the same rhythm and shape, a third higher (a third lower if you sang high), in key, sometimes ending on the home note. While the Rhythm plays, the answer falls on the beat. It answers each phrase once. Higher plays the answer louder; 0 turns it off. It needs Music on.
 - **Tone:** darker and rounder on the left, brighter and glassier on the right.
+- **Kit \* (the sound of the music):** what the melody, bass, pad and drums are played on. **Classic** is the
+  sound so far. **Acoustic** (plucked and bowed strings), **Synth** (warm analog-style synths), **EDM** (big
+  supersaws, a drum machine, and the music ducking at each kick), **Future bass** (wobbly chords and chopped
+  bits of your voice), **Low end** (a sliding 808 bass, a deep pad, a sparse top), and three **Chiptune** kits:
+  **NES**, **Game Boy** and **Genesis**. Your own kits join this menu too.
+- **Melody from, Bass from, Pad from, Drums from \*:** mix kits: each part can come from another kit than the
+  Kit above ("The kit" = the same as the Kit). A kit that has nothing of its own for a part says so, for example
+  "Synth (Classic's drums)": that part then plays Classic's sound.
+- **Melody layer, Bass layer, Pad layer, Drums layer \*** and their **blend:** a second kit on the same part,
+  playing along with the first. The blend says how much of each: 0 is only the first kit, 1 only the layer, and
+  the middle both. None (the start) is off.
 - **How much the music follows what it hears:** at the right end the music responds strongly to the room. At the left it plays a calmer, steadier pattern.
 
 What to expect:
@@ -366,6 +421,19 @@ One place to set how loud each part of the music and rhythm is, so you can turn 
 - **Harmony:** the answering note.
 
 The ones marked with an "x" (Kick, Bass, Chimes, Walking notes and the two room-note levels) are new. They sit inside their group's own level: Beat level still turns all the drums up or down together, Notes and chimes level all the melody notes, Pad level the pad and bass, Room notes both room-note kinds. Each starts at 1 (as before) and goes from 0 (out) to 1.5 (half as loud again).
+
+### Your kits (sounds for the music)
+
+At the end of the Music tab. A kit is a small text file (kit.txt) that says what each part sounds like, so anyone
+can make one, and it can bring its own recordings (WAV, MP3, OGG, FLAC and more) for the melody, the pad or each drum.
+
+- **Import kit:** pick a kit.txt, or a zip with the kit and its sounds. **Import kit folder:** pick a folder that
+  holds them. The kit plays at once as the Kit, and joins every Kit and "from" menu.
+- **How to make a kit:** shows the format, with an example to start from.
+- **Delete a kit:** removes one from this phone (any part that played it goes back to Classic). The file you
+  imported it from is not touched.
+- A preset carries the kits it uses, so a preset you share brings its sound with it. Recordings are not in the
+  preset: import the kit itself too if it has some.
 
 ## Movers: sliders that move on their own
 
@@ -503,6 +571,10 @@ Thank you for trying this. Anything you notice is useful, even "it felt weird." 
 - **Realms:** do they change at the right moments? Do the "What it changes" switches leave the groups you untick alone? Is the warp sound pleasant, and noticeable without being annoying?
 - **Glitch:** with Glitch cloud amount up, do sudden sounds come back in a fun way, and do they feel like they are all around you? Which glitch matrix mix did you like best? Do the echoes bouncing around (Echo scatter) feel good or dizzying?
 - **Headphones and mic:** did the app refuse to start, stop when you unplugged, or pick the wrong mic? Did it go quiet during a call and come back after, and did it dip when another app played music?
+- **Kits:** which kits do you like, and for which parts? Do any parts sound too loud or too quiet next to the
+  others? If you make a kit of your own, did the format make sense, and did your recordings play?
+- **Vocoder and Sing in key:** are your words clear? Which vocoder style and synth sound do you like best?
+- **Classic or New:** for each setting with a \*, which one did you prefer, and why?
 - **Scenes:** does each of the four built-in scenes make sound, and does it react the way its description says? Tell me which ones felt dead, too loud or confusing.
 
 The easiest way: **Setup > About and licenses > Send feedback**, which fills in your phone and app details for you. Or send feedback to DadCraft on Discord, or email it to dadcraftstudios@gmail.com. Screenshots help, and so does a short description of the steps that led to a problem.
