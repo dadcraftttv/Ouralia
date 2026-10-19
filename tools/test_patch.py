@@ -1973,6 +1973,22 @@ y_c, y_cl = kit_run(KITS["acoustic"], "mel", {}, 1), kit_run({}, "mel")
 check(0.8 < r_(y_c, y_cl) < 1.25, "kit layers: Classic as the layer, blend 1: the Classic melody (x%.2f)" % r_(y_c, y_cl))
 y_p1, y_p = kit_run(KITS["synth"], "pad", KITS["chipnes"], 0), kit_run(KITS["synth"], "pad")
 check(0.7 < r_(y_p1, y_p) < 1.4, "kit layers: the pad's layer at blend 0 leaves the first kit alone (x%.2f)" % r_(y_p1, y_p))
+# kit drums in "Your steps" (beat_follow 0, Oct 19): each step plays the kit's drums (before, a kit with drums
+# silenced the Classic step drums and its own voice heard nothing)
+def steps_drums(kit):
+    e = fresh(music_on=0, wet=0, beat_level=1, beat_follow=0)
+    if kit is not None:
+        send_kit(e, kit)
+    x = (np.random.default_rng(3).standard_normal(6 * SR) * 0.0005).astype(np.float32); ys = []
+    for i in range(0, len(x), SR // 2):
+        e.send("step", 0.5); ys.append(e.run(x[i:i + SR // 2])[:, 0])
+    return np.concatenate(ys)[2 * SR:]
+y_st_cl, y_st_edm = steps_drums({}), steps_drums(KITS["edm"])
+y_st_cl_spec, y_st_edm_spec = np.abs(np.fft.rfft(y_st_cl)), np.abs(np.fft.rfft(y_st_edm))
+st_diff = float(np.sum(np.abs(y_st_cl_spec - y_st_edm_spec)) / max(np.sum(y_st_cl_spec), 1e-12))
+check(rms(y_st_cl) > 1e-3 and 0.3 < rms(y_st_edm) / rms(y_st_cl) < 3 and st_diff > 0.3,
+      "kits: in Your steps the steps play the kit's drums (EDM %.3f, Classic %.3f, %.0f%% different)"
+      % (rms(y_st_edm), rms(y_st_cl), 100 * st_diff))
 # kits, the EDM pump: a held pad dips at every kick (the kit's drums silenced by the Mix trims, so only the pump is heard)
 def pumped(pump):
     kit = {k: list(v) for k, v in KITS["edm"].items()}

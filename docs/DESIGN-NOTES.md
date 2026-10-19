@@ -237,7 +237,10 @@ to date in the same commit when behaviour changes.
   <vel> [hat decay]` (kick: a sine diving from 4x `ktune` over 30 ms, `kdecay`, a 3 ms click, tanh `kdrive`;
   snare: `stone` and 1.83x tones over 80 ms + one-pole high-passed noise over `sdecay`; hat: noise high-passed
   twice, `hdecay` or the hit's own); it plays the pattern engine's `drum_kick` / `drum_snare` and `rh_h_v` (vel,
-  decay), scaled by mix_kick, beat_snare / 0.6, beat_hats / 0.5 (`add_kit_drums`); the Classic beat (synth + found:
+  decay), scaled by mix_kick, beat_snare / 0.6, beat_hats / 0.5 (`add_kit_drums`). In "Your steps" (beat_follow 0)
+  the old step drums feed it the same way (Oct 19): each step's kick or snare as drum_kick / drum_snare 1, the hat
+  half a step later from `h_pack` (step-strength level and decay); before, a kit with drums was silent there
+  (test_patch "kit drums in Your steps": EDM 0.000 before). The Classic beat (synth + found:
   `beat_sum00`) x `kit_drums_cl`. Supersaw: `saws` 1..7 spread across `detune` (2 = the note and +detune, as
   before), 1.41 / sqrt(n) each, every saw from a random phase (no "zap"). **Pump**: `pump` depth and `pumprel` ms
   come with the drums part (`route pump pumprel` in the patch, ignored by the voice); each drum_kick (while
@@ -297,7 +300,7 @@ to date in the same commit when behaviour changes.
   and on a change refreshes the menus and resends (a saved kit plays at once). Tests: Q (install, reuse, menus,
   edit, delete, preset round trip, check, folder one level down). Not yet: samples (stage 2: a sample engine in
   dcs_voice~), a format page (stage 3), register Low for kit pads, kit drums in "Your steps" mode (the old step
-  drums send no drum_* messages).
+  drums sent no drum_* messages, so a kit with drums played no drums at all there: fixed Oct 19, below).
   **Stage 2, samples** (Oct 18). Engine 9 `sample` in dcs_voice~ reads WAV itself (dcs_wav.h: PCM 8/16/24/32,
   float 32/64, extensible; channels averaged; kept at the file's rate, played at file rate / Pd rate x the note's
   ratio, linear between samples): `sample <path> <root>` (up to 16 a part; a note takes the nearest root),

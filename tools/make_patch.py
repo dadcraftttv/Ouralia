@@ -3652,6 +3652,12 @@ def add_kit_drums(P, x=4300, y=1700):
     P.obj("kd_hu", "unpack f f", x + 200, y + 65); P.c("kd_hp", "kd_hu"); P.c("kd_hu", "kd_h", 1, 1); P.c("kd_hu", "kd_h", 0, 0)
     P.obj("kd_hk", "pack f f", x + 200, y + 75); P.c("kd_h", "kd_hk", 1, 1); P.c("kd_h", "kd_hk", 0, 0)
     P.msg("kd_hm", f"hit 2 {BS}$1 {BS}$2", x + 200, y + 80); P.c("kd_hk", "kd_hm"); P.c("kd_hm", "kd_voice"); P.c("kd_hm", "kd_voice2")
+    # "Your steps" (beat_follow 0, Oct 19): the old one-hit-per-step drums play the kit too. Each step's kick or
+    # snare goes out as the pattern engine's would (velocity 1), and the hat half a step later with its step-strength
+    # level and decay (h_pack: the same pair as the pattern's rh_h_v)
+    P.obj("kd_st_k", "s drum_kick", x, y - 40); P.c("cnt_k1", "kd_st_k")
+    P.obj("kd_st_s", "s drum_snare", x + 100, y - 40); P.c("cnt_s1", "kd_st_s")
+    P.c("h_pack", "kd_hu")
     # the pump: depth and release from the drums part's settings
     P.obj("kd_pr", "route pump pumprel", x + 300, y + 20); P.c("kit_drums_r", "kd_pr")
     P.obj("kd_pd", "value pumpd", x + 300, y + 40); P.obj("kd_prl", "value pumprel", x + 380, y + 40)
