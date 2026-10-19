@@ -337,7 +337,19 @@ to date in the same commit when behaviour changes.
   their switches with the old sound the default (he wants them opt-in), except Glitch voice, where New became the
   default and the old voice stays as Legacy. `dcs_derustle~` (Oct 17): see Pocket rustle. Of the Oct 17 ideas list,
   built: the analog-style ladder filter (dcs_voice~ engine `analog`), a lighter pitch tracker (dcs_pitch~), a dcs
-  phaser (the effect ports). Still open: oversampled distortion/crush, more glitch kinds.
+  phaser (the effect ports), oversampled distortion (Oct 19, "Distortion quality", below). The crusher stays as
+  it is: its Classic rate reduction aliases on purpose (that is the effect) and the console styles already model
+  their filters. Still open: more glitch kinds.
+- **Distortion quality** (Oct 19, `dist_quality`, Distortion, noPreset, default Classic): Smooth = dcs_dist~
+  shapes at 4x between two 65-tap Kaiser (beta 8) windowed-sinc filters cut at the original Nyquist (polyphase up,
+  decimated on the first of each 4 fast samples), the dry part delayed the same 16 samples (mixing is comb-free:
+  below the clip the output is the input 16 samples late within 1e-5). Fizz (energy off the harmonics) on a 4.5
+  kHz tone at drive 20: hard -17 -> -39 dB, soft -20 -> -44 dB, level unchanged; in the whole patch a 3.7 kHz hard
+  clip 4.4% -> 0.38%, its 3rd harmonic kept. Wavefold makes most of its sound above hearing, so Smooth is quieter
+  there (x0.74 at drive 5 on that high tone, x0.27 at 20): the level lost was fizz. Only the shapes with a weight
+  are computed, 4-way unrolled sums: +0.043 s per 20 s of audio on the desktop (Classic +0.010; first draft +0.146).
+  Classic still matches the Pd chain sample for sample (test_fx_port). Tests: test_dcs "dcs_dist~ quality",
+  test_patch 7i.
 
 ## Tests (run these after touching patch or Java logic)
 1. Desktop libpd is needed for the Pd tests: `tools/build_libpd.sh` builds it into `tools/.libpd/libpd.so` (needs git, make, gcc).
@@ -937,7 +949,7 @@ to date in the same commit when behaviour changes.
 - **Ideas queue with details: `docs/ROADMAP.md`.** Its numbered items are built, removed or set aside by DadCraft
   (Oct 19); still open there: the small items in 11 (location input, unported scene objects, `rj_zcr~` if a scene
   needs it, a beat-offset slider if drift returns).
-- Our own objects still to build (Oct 17 list): oversampled distortion/crush, more glitch kinds.
+- Our own objects still to build (Oct 17 list): more glitch kinds.
 - Untested on the phone: wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt
   timing, the found bass pulled far down.
 - Release prep: final name + applicationId, `source_url` in strings.xml, privacy policy, Play foreground-service + microphone declarations, icon, store listing.

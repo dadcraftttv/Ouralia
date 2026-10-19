@@ -34,7 +34,7 @@ DEFAULTS = [
     ("chorus_on", 1), ("chorus_mix", 0), ("chorus_rate", 0.8), ("chorus_depth", 3),
     ("trem_on", 1), ("trem_depth", 0), ("trem_rate", 5),
     ("gate_thresh", -80), ("comp_thresh", -30), ("comp_ratio", 4), ("comp_makeup", 0),
-    ("dist_on", 1), ("dist_mix", 0), ("dist_drive", 4), ("dist_type", 0),
+    ("dist_on", 1), ("dist_mix", 0), ("dist_drive", 4), ("dist_type", 0), ("dist_quality", 0),
     ("rvs_on", 1), ("rvs_mix", 0), ("rvs_time", 400),
     ("glitch_on", 1), ("glitch_hold", 0), ("glitch_len", 120),
     ("flange_on", 1), ("flange_mix", 0), ("flange_rate", 0.3), ("flange_depth", 4), ("flange_fb", 0.5),
@@ -4219,7 +4219,7 @@ def build():
         P.sig2("dist_out", "+~", "crushed_mix", "dist_amt", 1000, 1360)
     else:   # dcs_dist~ (Oct 17): the same, sample for sample, and nothing to compute while the amount is 0
         fx(P, "dist_out", "dcs_dist~", "crushed_mix", ("dist_drive", "drive"), ("dist_type", "type"),
-           ("dist_mix", "mix"), ("dist_on", "on"), x=700, y=1000)
+           ("dist_mix", "mix"), ("dist_on", "on"), ("dist_quality", "quality"), x=700, y=1000)
 
     # --- filter: one biquad (low-pass / high-pass / band-pass) with coefficients from [expr] ---
     # Standard "audio EQ cookbook" formulas. Frequency changes glide (via [line]); the sample

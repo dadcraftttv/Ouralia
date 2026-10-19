@@ -451,6 +451,11 @@ final class Params {
             new Param("dist_type", "Distortion type", 0f, 2f, 0f, "", Param.Curve.LINEAR)
                     .choices("Soft clip", "Hard clip", "Wavefold").inSection("dist")
                     .resetWhenAbsent(),
+            // Distortion quality (Oct 19): Smooth = dcs_dist~ shapes at 4x the sample rate, so a hard drive's top
+            // harmonics are filtered out instead of folding back as fizz. Classic = as before.
+            new Param("dist_quality", "Distortion quality", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Classic", "Smooth (4x oversampled: less harsh fizz)")
+                    .inSection("dist").noRandom().noPreset().resetWhenAbsent().dcs(),
 
             // ---- Reverse echo ---- (added after the first presets: older presets switch it off)
             new Param("rvs_on", "Reverse echo enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)

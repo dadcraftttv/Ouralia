@@ -664,6 +664,36 @@ check(40 < heard < 80, f"chance 0.3 plays about a third of the notes ({heard} of
 held = db_frames(play(an + [("cutoff", 4), ("pnote", 0, 110)], 3.0)[int(0.5 * SR):], 100)
 check(held.max() - held.min() < 1, f"analog: a held note stands steady ({held.max() - held.min():.2f} dB)")
 
+# ---------------------------------------------------------------- dcs_dist~ quality (Oct 19)
+print("dcs_dist~ quality:")
+dp = patch("dist", ["adc~", "dcs_dist~", "dac~", "r d"], [(0, 0, 1, 0), (1, 0, 2, 0), (1, 0, 2, 1), (3, 0, 1, 0)])
+def distort(x, *msgs):
+    e = Engine(LIB, dp)
+    for m in (("smooth", 0), ("on", 1)) + msgs:
+        e.send_msg("d", m[0], *m[1:])
+    y = e.run(x)[:, 0]; e.close(); return y
+tt = np.arange(SR) / SR
+quiet = (0.15 * (np.sin(2 * np.pi * 440 * tt) + np.sin(2 * np.pi * 3100 * tt) + np.sin(2 * np.pi * 9000 * tt))).astype(np.float32)
+for mixv in (1, 0.5):
+    y = distort(quiet, ("type", 1), ("drive", 1), ("mix", mixv), ("quality", 1))
+    err = np.abs(y[2000:] - quiet[2000 - 16:-16]).max()
+    check(err < 2e-3, f"clean, mix {mixv}: below the clip it passes the sound 16 samples late, dry and wet in step (error {err:.1e})")
+def alias_share(y, f0):
+    S_ = np.abs(np.fft.rfft(y * np.hanning(len(y)))) ** 2; fr = np.fft.rfftfreq(len(y), 1 / SR)
+    harm = np.zeros(len(fr), bool)
+    for h in range(1, int(SR / 2 / f0) + 1):
+        harm |= np.abs(fr - h * f0) < 15
+    return S_[~harm & (fr > 30)].sum() / S_.sum()
+loud = (0.8 * np.sin(2 * np.pi * 4500 * tt)).astype(np.float32)
+# (fold makes most of its sound above hearing: on this high tone Classic's fold was a quarter fizz at drive 5 and
+# nearly all fizz at 20, so Clean is that much quieter: x0.74 and x0.27. The level lost is the fizz.)
+for typ, name, drv in ((1, "hard", 20), (0, "soft", 20), (2, "fold", 5)):
+    y0 = distort(loud, ("type", typ), ("drive", drv), ("mix", 1))[SR // 4:]
+    y1 = distort(loud, ("type", typ), ("drive", drv), ("mix", 1), ("quality", 1))[SR // 4:]
+    a0, a1 = alias_share(y0, 4500), alias_share(y1, 4500)
+    check(a1 < a0 / 30 and (0.5 if typ == 2 else 0.85) < rms(y1) / rms(y0) < 1.15,
+          f"clean, {name} at drive {drv} on 4.5 kHz: folded-back fizz {10 * np.log10(a0):.0f} -> {10 * np.log10(a1):.0f} dB of the sound, level x{rms(y1) / rms(y0):.2f}")
+
 # ---------------------------------------------------------------- dcs_loaded
 print("dcs_loaded:")
 d = patch("loaded", ["dcs_loaded", "f", "r dl_ping", "t b", "s dl_out", "r dl_bang", "t b", "dcs_loaded", "s dl_out2"],

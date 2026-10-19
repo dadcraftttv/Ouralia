@@ -548,6 +548,17 @@ check(abs(float(np.mean(yh))) < 0.01 and abs(float(np.mean(yf))) < 0.01, "distor
 e = fresh(wet=0, dry=1, dist_mix=0, dist_drive=40, dist_type=HARD)
 y = e.run(sine(440, 0.1, 1.0))[SR // 2:, 0]
 check(band_share(y, 440, 0.01) > 0.99 and tone_level(y, 440) > 0.099, "distortion amount 0 leaves the sound clean")
+# Distortion quality Smooth (Oct 19): the same square-ish hard clip, without the fizz folded back below it
+yq = dist_out(amp=0.5, freq=3700, dist_type=HARD, dist_drive=30, dist_quality=1); yc = dist_out(amp=0.5, freq=3700, dist_type=HARD, dist_drive=30)
+def fizz(y, f0=3700):                                       # the share of the sound off the tone's harmonics
+    S_ = np.abs(np.fft.rfft(y * np.hanning(len(y)))) ** 2; fr = np.fft.rfftfreq(len(y), 1 / SR)
+    harm = np.zeros(len(fr), bool)
+    for h in range(1, int(SR / 2 / f0) + 1):
+        harm |= np.abs(fr - h * f0) < 15
+    return float(S_[~harm & (fr > 30)].sum() / S_.sum())
+check(fizz(yq) < 0.2 * fizz(yc) and fizz(yc) > 0.01 and 0.25 < harmonic(yq, 3, 3700) < 0.4,
+      "distortion Smooth: hard clip on 3.7 kHz keeps its 3rd harmonic (%.2f) and loses the fizz (%.1f%% -> %.2f%% of the sound)"
+      % (harmonic(yq, 3, 3700), 100 * fizz(yc), 100 * fizz(yq)))
 e = fresh(wet=0, dry=1, dist_mix=1, dist_drive=40, dist_type=HARD, dist_on=0)
 y = e.run(sine(440, 0.1, 1.0))[SR // 2:, 0]
 check(band_share(y, 440, 0.01) > 0.99, "dist_on=0 bypasses even at amount 1")

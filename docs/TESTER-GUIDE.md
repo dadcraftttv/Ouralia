@@ -200,6 +200,9 @@ Dirty, fuzzy, overdriven sound, like a rock guitar.
 - **Distortion amount:** how much you hear.
 - **Distortion drive:** how hard the sound is pushed. Higher is more aggressive.
 - **Distortion type:** Soft clip is warm and fuzzy. Hard clip is harsher. Wavefold is a strange, buzzy, electronic sound.
+- **Distortion quality \*:** *Classic* (the default) is the sound as it has always been. *Smooth* works the
+  distortion at four times the detail, so a hard drive loses its harsh, hissy fizz and keeps the growl. Wavefold
+  comes out quieter on Smooth, because much of what it made was that fizz. Smooth uses a little more battery.
 
 ### Filter
 
