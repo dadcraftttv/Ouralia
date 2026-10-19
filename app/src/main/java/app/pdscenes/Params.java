@@ -488,6 +488,16 @@ final class Params {
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").rand(0f, 60f).resetWhenAbsent(),
             new Param("gc_pct_stretch", "Stretch share (smeared out slowly, the pitch stays)", 0f, 100f, 20f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").rand(0f, 60f).resetWhenAbsent(),
+            // More kinds (Oct 19, for DadCraft to try: each starts at 0%, kept out of the dice). The New voice plays
+            // them, and Legacy plays a ratchet as a stutter and a gate or spray as a plain replay.
+            new Param("gc_pct_ratchet", "Ratchet share (a stutter that speeds up, like a drum roll)", 0f, 100f, 0f, " %",
+                    Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent().dcs(),
+            new Param("gc_pct_pitch", "Pitch jump share (an octave up or down, or a fifth up)", 0f, 100f, 0f, " %",
+                    Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent(),
+            new Param("gc_pct_gate", "Gate share (chopped into fast on/off pulses)", 0f, 100f, 0f, " %",
+                    Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent().dcs(),
+            new Param("gc_pct_spray", "Spray share (scattered into tiny grains around you)", 0f, 100f, 0f, " %",
+                    Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent().dcs(),
             new Param("glitch_on", "Glitch/freeze enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("glitch").toggle().resetWhenAbsent(),
             new Param("glitch_hold", "Freeze (0 = live, 1 = frozen)", 0f, 1f, 0f, "",

@@ -13,6 +13,11 @@
  *       A glitch L ms long reading d0 + (1 - c1) t - c2 (t mod S) ms back at t ms into it:
  *       stutter c1 0, c2 1 (an S ms slice repeated); reverse c1 -1, c2 0; replay c1 1, c2 0.
  *       Each S-long slice fades in and out over 3 ms; the glitch over 5 ms in and 20 ms out.
+ *       Optional extras (Oct 19, more glitch kinds): slice ... <shrink> <gate> <spray>
+ *       shrink (0 or 1 = none): a ratchet, each repeat this much shorter than the last (down to 12 ms);
+ *       gate (ms, 0 = none): the glitch chopped on and off, on for the first half of each `gate` ms (2 ms edges);
+ *       spray (ms, 0 = none): instead of one slice, a cloud of 60 ms grains from within `spray` ms around d0,
+ *       a new one every 15 ms, each placed somewhere around `place`. 30 ms in, 400 ms out.
  *   stretch <L> <d0> <rate> <place>
  *       The sound from d0 ms back smeared out: it moves on at `rate` (0.1 = 10x slower) while overlapping
  *       grains play it at its own pitch. 40 ms in, 600 ms out. Each new grain starts where its waveform lines
@@ -47,7 +52,10 @@ static t_class *dcs_glitch_class;
 static float hann[HANNLEN + 1];
 
 enum { V_OFF, V_WAITING, V_PLAYING };
-enum { K_SLICE, K_STRETCH };
+enum { K_SLICE, K_STRETCH, K_SPRAY };
+#define NSPRAY 4                  /* spray: grains at once */
+#define SPRAY_GRAIN_MS 60.0
+#define RATCHET_MIN_MS 12.0
 
 typedef struct _gvoice
 {
@@ -60,6 +68,10 @@ typedef struct _gvoice
     float itd[ITDLEN];
     float fade, fadestep;         /* stolen: falling to 0 */
     double gph[NGRAIN], gd[NGRAIN];   /* stretch grains: phase (< 0 = not started yet), ms back */
+    double shrink, gate, spray;       /* ratchet, gate, spray (slice extras) */
+    float sgl[NSPRAY], sgr[NSPRAY];   /* spray grains: each its own place */
+    double place;
+    unsigned int seed;
     int glast;                        /* the grain started last (-1 = none yet) */
     unsigned long order;
 } t_gvoice;
@@ -176,6 +188,12 @@ static void dcs_glitch_place(t_dcs_glitch *x, t_gvoice *v, t_float place, int it
     }
 }
 
+static double dcs_glitch_rand(t_gvoice *v)   /* 0..1 */
+{
+    v->seed = v->seed * 1664525u + 1013904223u;
+    return (v->seed >> 8) / 16777216.0;
+}
+
 static void dcs_glitch_slice(t_dcs_glitch *x, t_symbol *s, int argc, t_atom *argv)
 {
     t_gvoice *v;
@@ -188,6 +206,20 @@ static void dcs_glitch_slice(t_dcs_glitch *x, t_symbol *s, int argc, t_atom *arg
     v->c = atom_getfloat(argv + 3);
     v->S = atom_getfloat(argv + 4);
     if (v->S < 1) v->S = 1;
+    v->shrink = argc > 6 ? clampd(atom_getfloat(argv + 6), 0, 1) : 0;
+    v->gate = argc > 7 ? atom_getfloat(argv + 7) : 0;
+    if (v->gate > 0 && v->gate < 8) v->gate = 8;
+    v->spray = argc > 8 ? atom_getfloat(argv + 8) : 0;
+    v->place = clampd(atom_getfloat(argv + 5), -1, 1);
+    v->seed = (unsigned int)(x->x_count * 2654435761u + 12345u);
+    if (v->spray > 0)
+    {
+        int g;
+        v->kind = K_SPRAY;
+        for (g = 0; g < NSPRAY; g++) v->gph[g] = -(double)g / NSPRAY;   /* one after another, 15 ms apart */
+        v->gl = v->gr = 1;
+        return;
+    }
     dcs_glitch_place(x, v, atom_getfloat(argv + 5), 1);
 }
 
@@ -274,6 +306,11 @@ static t_int *dcs_glitch_perform(t_int *w)
                 d = clampd(v->d0 + v->a * t - v->c * f, 1, maxback);
                 win = clampd(f / 3, 0, 1) * clampd((v->S - f) / 3, 0, 1);
                 env = clampd(t / 5, 0, 1) * clampd((v->L - 5 - t) / 20, 0, 1);
+                if (v->gate > 0)
+                {
+                    double ph = fmod(t, v->gate), half = v->gate / 2;
+                    env *= clampd(ph / 2, 0, 1) * clampd((half - ph) / 2, 0, 1);
+                }
                 s = dcs_glitch_read(buf, mask, w0 + i, d * spms) * (t_sample)(win * env) * v->fade;
                 v->itd[v->itdw] = s;
                 outl[i] += v->gl * v->itd[(v->itdw - v->itdl) & (ITDLEN - 1)];
@@ -281,9 +318,54 @@ static t_int *dcs_glitch_perform(t_int *w)
                 v->itdw = (v->itdw + 1) & (ITDLEN - 1);
                 v->t = t + msps;
                 v->f = f + msps;
-                if (v->f >= v->S) v->f -= v->S;
+                if (v->f >= v->S)
+                {
+                    v->f -= v->S;
+                    if (v->shrink > 0 && v->shrink < 1)     /* a ratchet: the next repeat shorter */
+                    {
+                        v->S *= v->shrink;
+                        if (v->S < RATCHET_MIN_MS) v->S = RATCHET_MIN_MS;
+                        if (v->f >= v->S) v->f = 0;
+                    }
+                }
                 if (v->fadestep > 0 && (v->fade -= v->fadestep) <= 0) { v->state = V_OFF; break; }
                 if (v->t >= v->L + ITD_MS) { v->state = V_OFF; break; }
+            }
+        }
+        else if (v->kind == K_SPRAY)
+        {
+            double ginc = msps / SPRAY_GRAIN_MS;
+            for (i = i0; i < n; i++)
+            {
+                double t = v->t, env;
+                t_sample sl = 0, sr = 0;
+                for (g = 0; g < NSPRAY; g++)
+                {
+                    double ph = v->gph[g];
+                    if (ph >= 0)
+                    {
+                        t_sample s = dcs_glitch_read(buf, mask, w0 + i, v->gd[g] * spms) * hannat(ph);
+                        sl += v->sgl[g] * s; sr += v->sgr[g] * s;
+                    }
+                    ph += ginc;
+                    if (ph >= 1 || (ph >= 0 && v->gph[g] < 0))
+                    {
+                        /* a new grain: from somewhere within the window (playing on at normal speed), its own place */
+                        double back = v->d0 + t + (dcs_glitch_rand(v) - 0.5) * v->spray;
+                        double p = clampd(v->place + (dcs_glitch_rand(v) - 0.5) * 2.0, -1, 1);
+                        if (ph >= 1) ph -= 1;
+                        v->gd[g] = clampd(back, 5, maxback);
+                        v->sgl[g] = (float)(p > 0 ? 1 - p : 1);
+                        v->sgr[g] = (float)(p < 0 ? 1 + p : 1);
+                    }
+                    v->gph[g] = ph;
+                }
+                env = clampd(t / 30, 0, 1) * clampd((v->L - t) / 400, 0, 1) * (2.0 / NSPRAY) * v->fade;
+                outl[i] += (t_sample)env * sl;
+                outr[i] += (t_sample)env * sr;
+                v->t = t + msps;
+                if (v->fadestep > 0 && (v->fade -= v->fadestep) <= 0) { v->state = V_OFF; break; }
+                if (v->t >= v->L) { v->state = V_OFF; break; }
             }
         }
         else

@@ -2279,7 +2279,8 @@ check(sq_fast < 0.6 * sq_def and sq_slow > 1.6 * sq_def and lg_fast < lg_def and
       % (sq_fast, sq_def, sq_slow, lg_fast, lg_def, lg_slow))
 
 # glitch cloud: a sudden sound comes back mangled; each kind does what it says
-GC_KINDS = ("gc_pct_stutter", "gc_pct_reverse", "gc_pct_shuffle", "gc_pct_stretch")
+GC_KINDS = ("gc_pct_stutter", "gc_pct_reverse", "gc_pct_shuffle", "gc_pct_stretch",
+            "gc_pct_ratchet", "gc_pct_pitch", "gc_pct_gate", "gc_pct_spray")
 def gc_run(x, kind=None, steps=None, **over):
     """The glitch cloud alone (dry, echo and music off), with only `kind` switched on. Returns the left+right output
     and the kinds that fired. steps: seconds between footsteps, sent from the start."""
@@ -2388,6 +2389,27 @@ y, m = gc_run(burst_in(steady, at=3.1), "gc_pct_stutter", steps=0.5, gc_voice=1)
 _, start = glitch_part(y, at=3.1, thr=0.05)
 check(start is not None and 0.15 <= start <= 0.18,
       "glitch voice New: while walking it lands on the half-step (%.3f s after the sound)" % (start or -1))
+# more glitch kinds (Oct 19): each from the brain, through the New voice; Legacy plays them as its plainer kin
+def stereo_run(kind, voice=1):
+    base = dict(dry=0, wet=0, gc_amount=1, gc_level=1, reverb_mix=0, gc_voice=voice, space_shift=0)
+    base.update({k: 100 * (k == kind) for k in GC_KINDS})
+    e = fresh(**base); e.listen("gc_mode"); y = e.run(burst_in(steady))
+    return y, [int(v) for v in e.heard["gc_mode"]]
+for kind, mode in (("gc_pct_ratchet", 4), ("gc_pct_pitch", 5), ("gc_pct_gate", 6), ("gc_pct_spray", 7)):
+    gap = 0.15 if mode == 6 else 0.05                                  # (a gate's off-halves are up to 70 ms)
+    y, m = stereo_run(kind); g, _ = glitch_part(y[:, 0] + y[:, 1], gap=gap)
+    yl, ml = stereo_run(kind, 0); gl, _ = glitch_part(yl[:, 0] + yl[:, 1], gap=gap)
+    check(m[:1] == [mode] and len(g) > 0.1 * SR and np.isfinite(y).all() and np.abs(y).max() < 1.5 and len(gl) > 0.05 * SR,
+          "glitch kind %s: the brain picks it (%s) and the New voice plays it (%.2f s, peak %.2f); Legacy plays it too (%.2f s)"
+          % (kind[7:], m[:1], len(g) / SR, np.abs(y).max(), len(gl) / SR))
+    if mode == 5:
+        S_ = np.abs(np.fft.rfft(g * np.hanning(len(g)))); fr = np.fft.rfftfreq(len(g), 1 / SR)
+        pk = fr[np.argmax(S_ * (fr > 300))]
+        check(min(abs(pk - f) for f in (2000, 500, 1500)) < 25, "glitch kind pitch: the 1 kHz sound comes back at %.0f Hz (2000, 500 or 1500)" % pk)
+    if mode == 7:
+        part = y[int(3.1 * SR):int(3.6 * SR)]
+        corr = float(np.corrcoef(part[:, 0], part[:, 1])[0, 1])
+        check(corr < 0.97, "glitch kind spray: its grains spread between the ears (L/R alike %.2f)" % corr)
 def two_stretches(voice):
     """A 1 kHz sound, then a 600 Hz one 0.8 s later, both stretched: is the first still heard after the second?"""
     t5 = np.arange(int(0.3 * SR)) / SR

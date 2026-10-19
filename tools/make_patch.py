@@ -43,7 +43,7 @@ DEFAULTS = [
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_ratchet", 0), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("gc_pct_spray", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
@@ -327,6 +327,8 @@ CLOCK_FRESH_MS = 2000        # no step for this long (plus a beat): the next ste
 CLIP_IN = 0.99                # diagnostics: the mic as it arrives counts as overloaded from here (some phones stop just short of 1)
 CLIP_WINDOW = 512             # ...counted in stretches of this many samples (~12 ms)
 GATE_HYST_DB = 4            # the gate opens at its threshold and only closes this far below it (no flutter)
+GC_KINDS = ("gc_pct_stutter", "gc_pct_reverse", "gc_pct_shuffle", "gc_pct_stretch",   # the glitch matrix, by mode
+            "gc_pct_ratchet", "gc_pct_pitch", "gc_pct_gate", "gc_pct_spray")      # (Oct 19: from 0%, to try)
 GC_BUF_MS = 4000
 GC_ONSET_DB = 10           # a sudden sound: the 5 ms level jumps this far above its recent average...
 GC_MIN_DB = 55             # ...and is at least this loud (-45 dBFS), so a quiet room's flicker doesn't count
@@ -3191,14 +3193,15 @@ def add_glitch_cloud(P):
     # ---- what kind of glitch: the glitch matrix (DadCraft): each kind's share in %, together at most 100; the share
     # left over is the chance that nothing happens. Past 100 (a preset, the dice) they count as proportions.
     # (tape stop and a turntable scratch were tried and dropped, DadCraft, Oct 10)
+    # (Oct 19, more kinds for DadCraft to try, each from 0%: 4 ratchet, 5 pitch jump, 6 gate, 7 spray)
     P.obj("gc_mode_rnd", "random 1000", x, y + 640)
-    w = "($f2+$f3+$f4+$f5)"
-    c = ["$f2", "$f2+$f3", "$f2+$f3+$f4", "$f2+$f3+$f4+$f5"]
+    w = "(" + "+".join(f"$f{k + 2}" for k in range(len(GC_KINDS))) + ")"
+    c = ["+".join(f"$f{j + 2}" for j in range(k + 1)) for k in range(len(GC_KINDS))]
     pick = "-1"
-    for k in range(3, -1, -1):
+    for k in range(len(GC_KINDS) - 1, -1, -1):
         pick = f"if($f1*max({w},100)/1000<{c[k]},{k},{pick})"
     ex("gc_mode", pick, x, y + 670)
-    for k, name in enumerate(("gc_pct_stutter", "gc_pct_reverse", "gc_pct_shuffle", "gc_pct_stretch")):
+    for k, name in enumerate(GC_KINDS):
         P.obj(f"gc_en{k}", f"r {name}", x + 200 + 80 * k, y + 640)
         P.c(f"gc_en{k}", "gc_mode", 0, k + 1)
     P.c("gc_fire", "gc_mode_rnd", 0, 0); P.c("gc_mode_rnd", "gc_mode")
@@ -3214,13 +3217,23 @@ def add_glitch_cloud(P):
     P.obj("gc_st_rd", "f", x + 620, y + 700)
     ex("gc_st2", "$f1*$f2", x + 620, y + 730)
     P.c("gc_stepms_v", "gc_st_rd", 0, 1); P.c("gc_st_rd", "gc_st2"); P.c("gc_walk1", "gc_st2", 0, 1); P.c("gc_walk0", "gc_st2", 0, 1)
-    # $f1 mode (0 stutter, 1 reverse, 2 shuffle), $f2 ms since the onset (-1 free), $f3..$f5, $f7 randoms 0..999,
-    # $f6 step ms (0 = standing). Out: L, d0, c1, c2, S, place, wait.
+    # $f1 mode (0 stutter, 1 reverse, 2 shuffle, 4 ratchet, 5 pitch jump, 6 gate, 7 spray), $f2 ms since the onset
+    # (-1 free), $f3..$f5, $f7 randoms 0..999, $f6 step ms (0 = standing).
+    # Out: L, d0, c1, c2, S, place, shrink, gate, spray, wait (dcs_glitch~'s slice; Legacy reads the first 6).
     S = "if($f6>0,min(max($f6/4,60),250),60+40*int($f4/250))"
-    L = f"if($f1==0,({S})*(4+int($f5/250)),if($f1==1,300+0.4*$f3,150+0.35*$f3))"
-    d0 = f"if($f1==1,10,if($f1==2||$f2<0,250+3*$f4,$f2+{GC_PREROLL_MS}))"     # from just before the sound began
-    outs = [L, d0, "if($f1==1,-1,if($f1==0,0,1))", "$f1==0", f"if($f1==0,{S},10000000)",
+    Sr = f"min(2*({S}),300)"                                             # ratchet: the first repeat, then 0.7x each
+    S5 = f"min(1.5*({S}),250)"                                           # pitch jump: the slice, read faster or slower
+    r5 = "if($f5<400,2,if($f5<700,0.5,1.5))"                             # an octave up, an octave down, a fifth up
+    G = "if($f6>0,max($f6/2,40),50+30*int($f4/333))"                     # gate: on and off each half of this
+    W = "(150+0.25*$f4)"                                                  # spray: the window the grains come from
+    L = (f"if($f1==0,({S})*(4+int($f5/250)),if($f1==1,300+0.4*$f3,if($f1==4,3.3*({Sr}),if($f1==5,({S5})*(3+int($f3/333)),"
+         f"if($f1==6,400+0.4*$f3,if($f1==7,600+0.6*$f3,150+0.35*$f3))))))")
+    base = f"if($f1==2||$f2<0,250+3*$f4,$f2+{GC_PREROLL_MS})"            # from just before the sound began
+    d0 = f"if($f1==1,10,if($f1==7,max(({base})-{W}/2,20),{base}))"      # (spray: the cloud from the sound on)
+    outs = [L, d0, "if($f1==1,-1,if($f1==0||$f1==4||$f1==5,0,1))", f"if($f1==0||$f1==4,1,if($f1==5,{r5},0))",
+            f"if($f1==0,{S},if($f1==4,{Sr},if($f1==5,{S5},10000000)))",
             "if($f7<500,-(0.45+0.55*$f7/500),0.45+0.55*($f7-500)/500)",
+            "if($f1==4,0.7,0)", f"if($f1==6,{G},0)", f"if($f1==7,{W},0)",
             f"if($f1==1&&$f2>=0,max(({L})-$f2,0),0)"]                      # reverse: wait until it has all been heard
     ex("gc_par", " ; ".join(outs).replace(" ; ", " " + BS + "; "), x, y + 770)
     P.obj("gc_kind", "sel 3", x, y + 740)                                # 3 = stretch: its own voice
@@ -3247,13 +3260,13 @@ def add_glitch_cloud(P):
     P.c("gc_fire", "gc_rn3", 3, 0); P.c("gc_rn3", "gc_par", 0, 2)
     P.c("gc_fire", "gc_timer", 2, 1); P.c("gc_el2", "gc_par", 0, 1)
     P.c("gc_fire", "gc_st_rd", 1, 0); P.c("gc_st2", "gc_par", 0, 5)
-    P.obj("gc_pack", "pack f f f f f f f", x, y + 810)
-    for k in range(6, 0, -1):
+    P.obj("gc_pack", "pack " + " ".join(["f"] * len(outs)), x, y + 810)
+    for k in range(len(outs) - 1, 0, -1):
         P.c("gc_par", "gc_pack", k, k)
     P.c("gc_par", "gc_pack", 0, 0)
     # a reverse waits (the last number) until the sound has been heard; then the voice plays it. One voice: a glitch
     # arriving while another plays fades that one out over 4 ms before jumping, so there is no click.
-    P.obj("gc_wait", "list split 6", x + 100, y + 825)
+    P.obj("gc_wait", f"list split {len(outs) - 1}", x + 100, y + 825)
     P.obj("gc_wait_del", "del", x + 200, y + 840)
     P.obj("gc_wait_l", "list", x + 100, y + 855)
     P.c("gc_pack", "gc_wait"); P.c("gc_wait", "gc_wait_del", 1, 0); P.c("gc_wait", "gc_wait_l", 0, 1)
@@ -3282,7 +3295,8 @@ def add_glitch_cloud(P):
     P.msg("gc_vc_fade", "0 4", x + 100, y + 890)
     P.obj("gc_vc_l", "list", x, y + 910)
     P.obj("gc_vc_del", "del 5", x + 100, y + 910)
-    P.c("gc_vc_cls", "gc_vc_t"); P.c("gc_vc_t", "gc_vc_fade", 1, 0); P.c("gc_vc_t", "gc_vc_del", 1, 0)
+    P.obj("gc_vc_6", "list split 6", x, y + 860)                          # (Legacy: the first 6, no extras)
+    P.c("gc_vc_cls", "gc_vc_6"); P.c("gc_vc_6", "gc_vc_t"); P.c("gc_vc_t", "gc_vc_fade", 1, 0); P.c("gc_vc_t", "gc_vc_del", 1, 0)
     P.c("gc_vc_t", "gc_vc_l", 0, 1); P.c("gc_vc_del", "gc_vc_l")
     voice_switch("gcv", "gc_vc_l", 100, x + 300, y + 900)
     P.obj("gc_dbg_mode", "s gc_mode", x + 200, y + 700); P.c("gc_mode_ok", "gc_dbg_mode", 1, 0)

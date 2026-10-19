@@ -77,7 +77,8 @@ As of Oct 19:
 - Sing in key (dcs_shift~ snap), Vocoder (dcs_vocoder~) and Talk box (LPC) are off by default; approved Oct 19.
   Chip carriers for the vocoder built Oct 19 (`voc_wave` "Vocoder synth sound", default Saws): waiting on his ears.
   **Distortion quality** Smooth built Oct 19 (`dist_quality`, 4x oversampled dcs_dist~, default Classic): waiting
-  on his ears.
+  on his ears. **More glitch kinds** built Oct 19 (Ratchet, Pitch jump, Gate, Spray: glitch matrix, each from 0%):
+  he wants to hear each, then choose which to keep.
 - **User kits stage 2 (samples)** built Oct 18: engine `sample` (WAV read by dcs_voice~, other formats decoded at
   import), kit.txt `sample <file> <note>` / `kick <file>`...: waiting on DadCraft's phone check. Stage 3 done: `docs/KIT-FORMAT.md` (the format page
   for sound designers: keep it in step with Kits.java and dcs_voice~).

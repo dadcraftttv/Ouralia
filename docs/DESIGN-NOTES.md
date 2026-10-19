@@ -339,7 +339,20 @@ to date in the same commit when behaviour changes.
   built: the analog-style ladder filter (dcs_voice~ engine `analog`), a lighter pitch tracker (dcs_pitch~), a dcs
   phaser (the effect ports), oversampled distortion (Oct 19, "Distortion quality", below). The crusher stays as
   it is: its Classic rate reduction aliases on purpose (that is the effect) and the console styles already model
-  their filters. Still open: more glitch kinds.
+  their filters. More glitch kinds: built Oct 19 (below).
+- **More glitch kinds** (Oct 19, DadCraft wanted to hear each before choosing; `gc_pct_ratchet`, `gc_pct_pitch`,
+  `gc_pct_gate`, `gc_pct_spray`, glitch matrix, default 0%, noRandom, in presets): modes 4-7 of the brain
+  (`GC_KINDS` in make_patch.py = the matrix by mode). dcs_glitch~'s `slice` takes three optional extras (shrink,
+  gate, spray); Legacy reads the first six (`gc_vc_6`), so there a ratchet is a plain stutter and a gate or spray
+  a plain replay. **Ratchet**: a stutter from min(2S, 300) ms, each repeat 0.7x the last (down to 12 ms), L =
+  3.3x the first. **Pitch jump**: a stutter (S5 = min(1.5S, 250)) read at 2x, 0.5x or 1.5x (40/30/30%: octave up,
+  down, fifth up), also on Legacy (its c2 multiplier); a read that runs ahead of the sound is clamped to the live
+  input. **Gate**: a forward replay (400-800 ms) on for the first half of each G ms (walking: half a step, at
+  least 40; standing 50-110), 2 ms edges. **Spray**: 4 grains of 60 ms at once, a new one every 15 ms, each from
+  somewhere in a 150-400 ms window starting at the sound (playing at its own speed), each placed at random around
+  the glitch's place (+-1); 30 ms in, 400 ms out, 600-1200 ms. Tests: test_dcs "dcs_glitch~ new kinds" (ratchet
+  gaps 100, 70, 49, 34, 24 ms; gate 52% on; octave 883 Hz from 440; spray L/R 0.80), test_patch "more glitch
+  kinds" (each picked, played by New and Legacy; pitch 1 kHz -> 500 Hz; spray L/R 0.70).
 - **Distortion quality** (Oct 19, `dist_quality`, Distortion, noPreset, default Classic): Smooth = dcs_dist~
   shapes at 4x between two 65-tap Kaiser (beta 8) windowed-sinc filters cut at the original Nyquist (polyphase up,
   decimated on the first of each 4 fast samples), the dry part delayed the same 16 samples (mixing is comb-free:
@@ -949,7 +962,7 @@ to date in the same commit when behaviour changes.
 - **Ideas queue with details: `docs/ROADMAP.md`.** Its numbered items are built, removed or set aside by DadCraft
   (Oct 19); still open there: the small items in 11 (location input, unported scene objects, `rj_zcr~` if a scene
   needs it, a beat-offset slider if drift returns).
-- Our own objects still to build (Oct 17 list): more glitch kinds.
+- The Oct 17 list of our own objects is done (more glitch kinds Oct 19: waiting on DadCraft's ears).
 - Untested on the phone: wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt
   timing, the found bass pulled far down.
 - Release prep: final name + applicationId, `source_url` in strings.xml, privacy policy, Play foreground-service + microphone declarations, icon, store listing.

@@ -664,6 +664,35 @@ check(40 < heard < 80, f"chance 0.3 plays about a third of the notes ({heard} of
 held = db_frames(play(an + [("cutoff", 4), ("pnote", 0, 110)], 3.0)[int(0.5 * SR):], 100)
 check(held.max() - held.min() < 1, f"analog: a held note stands steady ({held.max() - held.min():.2f} dB)")
 
+# ---------------------------------------------------------------- dcs_glitch~ new kinds (Oct 19)
+print("dcs_glitch~ new kinds:")
+gk = patch("gkinds", ["adc~", "dcs_glitch~ 4000 4", "dac~", "r g"], [(0, 0, 1, 0), (1, 0, 2, 0), (1, 1, 2, 1), (3, 0, 1, 0)])
+def glitched(x, at, *slice_args):
+    """x into the voice; at `at` s a slice message; returns left, right after it"""
+    e = Engine(LIB, gk); i = int(at * SR) // 64 * 64
+    e.run(x[:i]); e.send_msg("g", "slice", *slice_args); y = e.run(x[i:]); e.close()
+    return y[:, 0], y[:, 1]
+imp = np.zeros(2 * SR, np.float32); imp[int(0.1 * SR)] = 1.0          # one click, 0.1 s in
+yl, _ = glitched(imp, 0.5, 900, 405, 0, 1, 100, 0, 0.7)               # (the click 5 ms into each repeat)
+clicks = np.nonzero(np.abs(yl) > 0.3)[0]
+clicks = clicks[np.insert(np.diff(clicks) > 20, 0, True)] / SR * 1000
+gaps = np.diff(clicks)
+check(len(gaps) >= 4 and all(0.6 < gaps[k + 1] / gaps[k] < 0.8 for k in range(3)),
+      f"ratchet: each repeat 0.7x the one before ({', '.join(f'{g:.0f}' for g in gaps[:5])} ms)")
+sine5 = (0.3 * np.sin(2 * np.pi * 440 * np.arange(2 * SR) / SR)).astype(np.float32)
+yl, _ = glitched(sine5, 1.0, 400, 300, 1, 0, 1e7, 0, 0, 40)
+env = np.array([rms(yl[k:k + 240]) for k in range(int(0.05 * SR), int(0.3 * SR), 240)])   # 5 ms windows
+check(env.max() > 0.15 and env.min() < 0.01 and 0.35 < np.mean(env > 0.1) < 0.65,
+      f"gate: the replay chopped on and off every 20 ms ({100 * np.mean(env > 0.1):.0f}% on)")
+yl, _ = glitched(sine5, 1.0, 600, 300, 0, 2, 120, 0)
+w = yl[int(0.05 * SR):int(0.5 * SR)]
+check(abs(peak_hz(w, 700, 1000) - 880) < 8, f"pitch jump: a stutter read twice as fast plays an octave up ({peak_hz(w, 700, 1000):.1f} Hz from 440)")
+yl, yr = glitched(sine5, 1.0, 800, 300, 0, 0, 1e7, 0, 0, 0, 200)
+mid, tail = slice(int(0.1 * SR), int(0.6 * SR)), slice(int(0.85 * SR), SR)
+corr = float(np.corrcoef(yl[mid], yr[mid])[0, 1])
+check(rms(yl[mid]) > 0.03 and rms(yl[tail]) < 1e-4 and abs(peak_hz(yl[mid], 400, 480) - 440) < 15 and corr < 0.95,   # (60 ms grains in random phase: a peak +-15 Hz wide)
+      f"spray: a grain cloud at the sound's own pitch ({peak_hz(yl[mid], 400, 480):.1f} Hz), spread between the ears (L/R alike {corr:.2f}), level {rms(yl[mid]):.3f}, gone after L ({rms(yl[tail]):.1e})")
+
 # ---------------------------------------------------------------- dcs_dist~ quality (Oct 19)
 print("dcs_dist~ quality:")
 dp = patch("dist", ["adc~", "dcs_dist~", "dac~", "r d"], [(0, 0, 1, 0), (1, 0, 2, 0), (1, 0, 2, 1), (3, 0, 1, 0)])
