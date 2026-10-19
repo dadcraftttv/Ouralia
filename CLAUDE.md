@@ -17,14 +17,14 @@ behaviour changes, or tell DadCraft it needs one).
   app/build/outputs/apk/debug/app-debug.apk`. Crashes: `adb logcat`. Event log: `adb shell run-as app.pdscenes cat files/events.log`.
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
 - New sound ideas go in behind a switch (old sound the default) so he can compare, until he says otherwise.
+  A setting that uses our C objects gets `.dcs()` in Params.java (shown with " *").
 - Commit small, descriptive commits. Do not push or publish anything unless asked.
 - **Save tokens** (DadCraft asked): run the quick test tier while working, the full tier once before a push; print
   only failures and summaries; read files in parts (grep first); don't re-read what's already in context.
 
 ## Hard rules
-- **The final name and applicationId must not contain "RjDj".** Chosen name: **Ouralia** (Oct 17; no USPTO or
-  EUIPO results for it, DadCraft checked; Oura the ring maker has fought similar marks). Not renamed yet: when it is, a new
-  applicationId (e.g. com.dadcraftstudios.ouralia) is a new app for testers (they export presets first).
+- **The final name and applicationId must not contain "RjDj".** Chosen name: **Ouralia** (not renamed yet: a new
+  applicationId is a new app for testers; DESIGN-NOTES "The name").
 - **Output never goes to the phone speaker** (headphones only; see "Output never goes" in DESIGN-NOTES).
 - **The mic never touches disk.** No recording audio to files.
 - Nothing resets settings except the Reset everything button. Existing installs keep stored values when defaults change.
@@ -49,7 +49,6 @@ behaviour changes, or tell DadCraft it needs one).
   Tests/desktop libpd: `tools/build_libpd.sh`, same libpd commit. Pd 0.56 breaks StreetBeatz: move all pins together.
 - Fork rules: keep fork changes small, offer general fixes upstream; new objects go in `dcs/`, never change a
   standard Pd object.
-- rc3 (0.9.0-rc3, versionCode 11) is with testers. rc4 will carry our pd-core, the unplug fix, input gain 1.
 
 ## Tests
 Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd via `tools/build_libpd.sh`; numpy in
@@ -60,37 +59,18 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   `quick glitch`, `quick pocket`), plus the Java tests. `tools/run_tests.sh list` shows the section titles.
 - Android build: `./gradlew assembleDebug`. Real-device check is DadCraft's.
 
-## Current state (update this when it changes)
-As of Oct 19:
-- **Approved by ear (DadCraft, Oct 19)**, all still behind their switches with the old sound the default until he says
-  to change the defaults (Oct 19: he wants them to stay opt-in, except Glitch voice: New is the default now, the old
-  one kept as Legacy): the kits (Acoustic, Synth, EDM, Future bass, Low end, 3 Chiptune), Glitch voice New, Found
-  note ring String, Pitch tracker / Pitch shifter / Sudden-sound detector New, Sing in key, Vocoder, Talk box. Rustle
-  squash + Step duck: kept though he hasn't needed them (the New detector does the job alone). Crusher style (Oct
-  18: "don't sound like the consoles", kept; Chip voice is the answer). Settings that use our C objects show " *"
-  after their name. Each kit's sound is one line per part in `app/src/main/assets/kits/<name>.txt`.
-- **Desktop: "<Part> from" reported not working** (Oct 19, DadCraft away from his mic, untested by ear): headless with
-  the desktop's own classes the patch takes Melody/Bass from correctly (values kemel/kebass). Not yet known what he
-  chose. Acoustic and Synth have no drums line, so "Drums from" either of them plays Classic's drums.
-- **Effect ports done** (DadCraft, Oct 17: dcs versions of every effect, for CPU): all 13 match the old Pd chains
-  (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
-- Sing in key (dcs_shift~ snap), Vocoder (dcs_vocoder~) and Talk box (LPC) are off by default; approved Oct 19.
-  Chip carriers for the vocoder built Oct 19 (`voc_wave` "Vocoder synth sound", default Saws): waiting on his ears.
-  **Distortion quality** Smooth (`dist_quality`, 4x oversampled dcs_dist~) is the default since Oct 19 (his call).
-  **Glitch kinds** Pitch jump and Gate kept (Oct 19, glitch matrix, each from 0%); Ratchet and Spray in the back
-  pocket (`GC_POCKET` in make_patch.py: no setting, code kept).
-- **User kits stage 2 (samples)** built Oct 18: engine `sample` (WAV read by dcs_voice~, other formats decoded at
-  import), kit.txt `sample <file> <note>` / `kick <file>`...: waiting on DadCraft's phone check. Stage 3 done: `docs/KIT-FORMAT.md` (the format page
-  for sound designers: keep it in step with Kits.java and dcs_voice~).
-- **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
-  reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
-- **Kit layers** built Oct 19 (DadCraft: blend two kits on one part; "<Part> layer" + "<Part> blend", Music tab):
-  waiting on his phone check.
-- **Kit plan done** (ROADMAP 19): stages 1-3 built, the stems player removed Oct 18 (DadCraft). Register Low for kit pads and kit drums in "Your
-  steps" done Oct 19.
-- **Release:** rc3 is with testers; rc4 not built yet (our pd-core, the unplug fix, input gain 1, and whatever of
-  the above DadCraft approves). Rename to Ouralia (no USPTO/EUIPO hits) waits for release prep.
-- Check `git status` / `git log origin/main..HEAD` for unpushed commits: push only when DadCraft asks.
+## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
+- **Release:** rc3 (0.9.0-rc3, versionCode 11) is with testers. rc4 is next; what it carries is the tester guide's
+  "New in rc4" list (trim it if rc4 ships with less).
+- **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
+  and Distortion quality (Smooth). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
+  (`GC_POCKET` in make_patch.py).
+- **Waiting on DadCraft:** his ears for the vocoder's chip carriers (`voc_wave`); phone checks of user kits (with
+  samples, and MP3/OGG/FLAC import), kit layers, kit drums in "Your steps", wired + Bluetooth together, the Pocket
+  Realm; his desktop "<Part> from" report (likely a kit with no part of its own, now labelled "(Classic's drums)").
+- **GitHub:** DadCraft asked Support to purge the old commits that held his name. When they answer, check that
+  `gh api repos/dadcraftttv/PdScenes/commits/c193786cad2b75e94f01912ec5b3c7b4a1dd26e0` no longer finds it.
+- Push only when DadCraft asks (`git log origin/main..HEAD` shows what is unpushed).
 
 ## Pd gotchas
 - In message boxes write commas as space + `\,`. `[t b b f]` fires right to left; a `[t]` outlet feeding two objects
@@ -99,3 +79,9 @@ As of Oct 19:
 - No `;` inside comments in Params.java (the test regex stops at `;`).
 - Pd seeds every [random] from one counter: adding objects reshuffles random sequences in later tests.
 - Desktop libpd queues messages: call `PdBase.pollPdMessageQueue()`.
+
+## Test gotchas
+- When a default changes, pin the old value where a test compares against the old sound (test_patch `fresh()`
+  base, test_fx_port `REST`).
+- A new check can pass while measuring nothing: make it fail once to see its numbers.
+- libpd prints to stdout ("realloc called..."): a subprocess test hands its result back in a file.

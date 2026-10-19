@@ -963,6 +963,41 @@ to date in the same commit when behaviour changes.
   Device names match without PipeWire's ".N" suffix (`DesktopEngine.base`), and menus store the plain name.
 - No walking stand-in on the desktop (DadCraft, Oct 19: the Rhythm's BPM setting is enough there).
 
+## Status log (moved out of CLAUDE.md on Oct 19)
+CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood on Oct 19:
+- **Approved by ear (DadCraft, Oct 19)**, all still behind their switches with the old sound the default until he says
+  to change the defaults (Oct 19: he wants them to stay opt-in, except Glitch voice: New is the default now, the old
+  one kept as Legacy): the kits (Acoustic, Synth, EDM, Future bass, Low end, 3 Chiptune), Glitch voice New, Found
+  note ring String, Pitch tracker / Pitch shifter / Sudden-sound detector New, Sing in key, Vocoder, Talk box. Rustle
+  squash + Step duck: kept though he hasn't needed them (the New detector does the job alone). Crusher style (Oct
+  18: "don't sound like the consoles", kept; Chip voice is the answer). Settings that use our C objects show " *"
+  after their name. Each kit's sound is one line per part in `app/src/main/assets/kits/<name>.txt`.
+- **Desktop: "<Part> from" reported not working** (Oct 19, DadCraft away from his mic, untested by ear): headless with
+  the desktop's own classes the patch takes Melody/Bass from correctly (values kemel/kebass). Not yet known what he
+  chose. Acoustic and Synth have no drums line, so "Drums from" either of them plays Classic's drums.
+- **Effect ports done** (DadCraft, Oct 17: dcs versions of every effect, for CPU): all 13 match the old Pd chains
+  (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
+- Sing in key (dcs_shift~ snap), Vocoder (dcs_vocoder~) and Talk box (LPC) are off by default; approved Oct 19.
+  Chip carriers for the vocoder built Oct 19 (`voc_wave` "Vocoder synth sound", default Saws): waiting on his ears.
+  **Distortion quality** Smooth (`dist_quality`, 4x oversampled dcs_dist~) is the default since Oct 19 (his call).
+  **Glitch kinds** Pitch jump and Gate kept (Oct 19, glitch matrix, each from 0%); Ratchet and Spray in the back
+  pocket (`GC_POCKET` in make_patch.py: no setting, code kept).
+- **User kits stage 2 (samples)** built Oct 18: engine `sample` (WAV read by dcs_voice~, other formats decoded at
+  import), kit.txt `sample <file> <note>` / `kick <file>`...: waiting on DadCraft's phone check. Stage 3 done: `docs/KIT-FORMAT.md` (the format page
+  for sound designers: keep it in step with Kits.java and dcs_voice~).
+- **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
+  reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
+- **Kit layers** built Oct 19 (DadCraft: blend two kits on one part; "<Part> layer" + "<Part> blend", Music tab):
+  waiting on his phone check.
+- **Kit plan done** (ROADMAP 19): stages 1-3 built, the stems player removed Oct 18 (DadCraft). Register Low for kit pads and kit drums in "Your
+  steps" done Oct 19.
+- **Release:** rc3 is with testers; rc4 not built yet (our pd-core, the unplug fix, input gain 1, and whatever of
+  the above DadCraft approves). Rename to Ouralia (no USPTO/EUIPO hits) waits for release prep.
+- Check `git status` / `git log origin/main..HEAD` for unpushed commits: push only when DadCraft asks.
+- **The name** (Oct 17): **Ouralia**, chosen by DadCraft; no USPTO or EUIPO results for it (he checked), though Oura
+  the ring maker has fought similar marks. The final name and applicationId must not contain "RjDj". Renaming gives a
+  new applicationId (e.g. com.dadcraftstudios.ouralia), which testers get as a new app (they export presets first).
+
 ## Open / next
 - **Ideas queue with details: `docs/ROADMAP.md`.** Its numbered items are built, removed or set aside by DadCraft
   (Oct 19); still open there: the small items in 11 (location input, unported scene objects, `rj_zcr~` if a scene
