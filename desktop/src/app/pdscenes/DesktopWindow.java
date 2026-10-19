@@ -70,6 +70,7 @@ final class DesktopWindow {
     private final JFrame frame = new JFrame("PdScenes");
     private JTabbedPane tabs;
     private final JLabel status = new JLabel("Starting...");
+    private final JButton startStop = new JButton("Start");
     private final JLabel now = new JLabel(" ");
     private final JProgressBar meterIn = meter(), meterOut = meter();
     private final JTextArea log = new JTextArea(8, 40);
@@ -222,6 +223,8 @@ final class DesktopWindow {
     /** The engine runs: fill in what depends on it and keep the screen in step. */
     void started() {
         SwingUtilities.invokeLater(() -> {
+            startStop.setText(DesktopApp.engine.running() ? "Stop" : "Start");
+            startStop.setEnabled(true);
             refreshDevices();
             new Timer((int) REFRESH_MS, e -> refresh()).start();
             new Timer(50, e -> meters()).start();
@@ -255,6 +258,14 @@ final class DesktopWindow {
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setBorder(BorderFactory.createEmptyBorder(8, 10, 6, 10));
         status.setFont(status.getFont().deriveFont(Font.BOLD));
+        startStop.setFont(startStop.getFont().deriveFont(Font.BOLD, startStop.getFont().getSize2D() * 1.3f));
+        startStop.addActionListener(e -> {   // (Oct 19, DadCraft: a Start/Stop like the phone's; opens stopped)
+            boolean run = !DesktopApp.engine.running();
+            DesktopApp.setRunning(run);
+            startStop.setText(run ? "Stop" : "Start");
+        });
+        startStop.setEnabled(false);   // (until the engine is up)
+        top.add(left(startStop));
         top.add(left(status));
         top.add(left(now));
         JPanel meters = new JPanel(new GridBagLayout());

@@ -15,6 +15,11 @@ room's loudness and the time of day.
 From the menu (`desktop/launch.sh`) one copy runs at a time (a second start says so), and its messages go to
 `~/.local/state/pdscenes/desktop.log` (the run before in `desktop.log.1`).
 
+The window opens stopped, like the phone: press **Start** to play (**Stop** lets go of the mic, the game sound and
+your headphones; the "PdScenes" output stays, so OBS keeps its source). "Your default output" is the system's, except
+when PipeWire has made the PdScenes output itself the default (it does when your chosen output comes back under a new
+name, e.g. after a USB interface reconnects): then it's the output you chose in your sound settings.
+
 The first start connects no mic: pick yours in **Setup > Listening and playing** (the mic itself, not an effects
 chain's output such as EasyEffects': a mic that arrives already limited sounded overdriven through the patch).
 Everything you set is kept in `~/.config/pdscenes`; saved presets are in `~/.local/share/pdscenes/presets`, in the

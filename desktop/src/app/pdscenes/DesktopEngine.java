@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The desktop version's sound engine: the built-in patch in libpd, connected through PipeWire's JACK layer. The
@@ -59,6 +61,8 @@ final class DesktopEngine {
     private volatile float peakIn, peakOut;
     private volatile int xruns;
     private volatile boolean closing;
+    private volatile boolean paused;      // stopped (the Start/Stop button): silent, nothing heard or played to
+    private Setup wanted = new Setup();   // what apply() was last asked for (connected again on Start)
     private final List<Route> routes = new ArrayList<>();
     private volatile int rate, frames;
 
@@ -189,8 +193,32 @@ final class DesktopEngine {
 
     // ---- what is connected (can change while running) ----
 
-    /** Connects the mic, the game sound and the headphones as asked; what is no longer wanted is disconnected. */
+    /** Start/Stop (Oct 19, DadCraft: like the phone's). Stopped: Pd isn't run, the output is silent, and the mic, game
+     *  sound and headphones are let go (the PdScenes output stays, so OBS keeps its source). */
+    void setRunning(boolean run) {
+        paused = !run;
+        apply(wanted);
+    }
+
+    /** Before start(): open stopped (the window's Start button starts it). */
+    void openStopped() {
+        paused = true;
+    }
+
+    boolean running() {
+        return !paused;
+    }
+
+    /** Connects the mic, the game sound and the headphones as asked (while running); what is no longer wanted is
+     *  disconnected. */
     void apply(Setup s) {
+        wanted = s;
+        Setup none = new Setup();
+        none.mic = "none";
+        connect(paused ? none : s);
+    }
+
+    private void connect(Setup s) {
         micLevel = s.micLevel;
         gameLevel = s.gameLevel;
         List<Route> wanted = new ArrayList<>();
@@ -235,6 +263,8 @@ final class DesktopEngine {
     }
 
     void setLevels(float mic, float game) {
+        wanted.micLevel = mic;
+        wanted.gameLevel = game;
         micLevel = mic;
         gameLevel = game;
     }
@@ -370,6 +400,13 @@ final class DesktopEngine {
         FloatBuffer gl = gameL.getFloatBuffer(), gr = gameR.getFloatBuffer();
         FloatBuffer ol = outL.getFloatBuffer(), or = outR.getFloatBuffer();
         float mk = micLevel * 0.5f, gk = gameLevel * 0.5f, pin = peakIn, pout = peakOut;
+        if (paused) {
+            for (int i = 0; i < n; i++) {
+                ol.put(i, 0f);
+                or.put(i, 0f);
+            }
+            return true;
+        }
         for (int i = 0; i < n; i++) {
             float v = (ml.get(i) + mr.get(i)) * mk + (gl.get(i) + gr.get(i)) * gk;
             in[i] = v;
@@ -548,10 +585,23 @@ final class DesktopEngine {
         return null;
     }
 
+    /** The system's default device. When the default output is our own sink (Oct 19, DadCraft's laptop: the chosen
+     *  output came back from a dropout as "...analog-stereo.3", so PipeWire couldn't find the name it had saved and
+     *  fell back to the newest sink, ours), the output the user chose (PipeWire's configured default) instead. */
     static String defaultOf(String kind) {
         try {
             List<String> out = run("pactl", kind.equals("sources") ? "get-default-source" : "get-default-sink");
-            return out.isEmpty() ? null : out.get(0).trim();
+            String name = out.isEmpty() ? null : out.get(0).trim();
+            if (SINK.equals(name) && kind.equals("sinks")) {
+                for (String line : run("pw-metadata", "0", "default.configured.audio.sink")) {
+                    Matcher m = Pattern.compile("\"name\"\\s*:\\s*\"([^\"]+)\"").matcher(line);
+                    if (m.find() && !m.group(1).equals(SINK)) {
+                        return m.group(1);   // (find() matches it with or without the ".N")
+                    }
+                }
+                return null;
+            }
+            return name;
         } catch (IOException | InterruptedException e) {
             return null;
         }

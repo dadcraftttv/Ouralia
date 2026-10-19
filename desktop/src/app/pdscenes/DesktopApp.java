@@ -126,6 +126,9 @@ final class DesktopApp {
         for (String s : new String[]{"mic_level", "chime_note", "heard_deg", "heard_off", "tempo"}) {
             PdBase.subscribe(s);
         }
+        if (win != null) {
+            engine.openStopped();   // (like the phone: nothing is heard or played until Start)
+        }
         try {
             engine.start(patch, setup());
         } catch (IOException e) {
@@ -156,9 +159,12 @@ final class DesktopApp {
         }));
         clock.scheduleAtFixedRate(DesktopApp::tick, TICK_MS, TICK_MS, TimeUnit.MILLISECONDS);
         clock.scheduleAtFixedRate(() -> ParamStore.save(context), 5, 5, TimeUnit.SECONDS);
-        say.accept(String.format(Locale.US, "Running at %d Hz, %d samples a cycle. Mic: %s. Playing to \"PdScenes\"%s.",
-                engine.sampleRate(), engine.framesPerCycle(), orWords(engine.connected("mic"), "none"),
-                engine.connected("headphones") != null ? " and your headphones" : ""));
+        if (engine.running()) {
+            sayRunning();
+        } else {
+            say.accept(String.format(Locale.US, "Ready (%d Hz, %d samples a cycle). Press Start to play.",
+                    engine.sampleRate(), engine.framesPerCycle()));
+        }
         if (win != null) {
             win.started();
             if (pickMic) {
@@ -174,6 +180,22 @@ final class DesktopApp {
         if (seconds >= 0) {
             Thread.sleep((long) (seconds * 1000));
             System.exit(0);
+        }
+    }
+
+    private static void sayRunning() {
+        say.accept(String.format(Locale.US, "Running at %d Hz, %d samples a cycle. Mic: %s. Playing to \"PdScenes\"%s.",
+                engine.sampleRate(), engine.framesPerCycle(), orWords(engine.connected("mic"), "none"),
+                engine.connected("headphones") != null ? " and your headphones" : ""));
+    }
+
+    /** The window's Start/Stop button. */
+    static void setRunning(boolean run) {
+        engine.setRunning(run);
+        if (run) {
+            sayRunning();
+        } else {
+            say.accept("Stopped. Nothing is heard or played until you press Start.");
         }
     }
 
