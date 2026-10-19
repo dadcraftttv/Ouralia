@@ -163,8 +163,13 @@ While it's on, your voice comes through a tiny bit later (30 ms).
 Makes your voice "sing" through a synth: the classic robot-choir sound. Your words, someone else's notes.
 
 - **Vocoder amount:** 0 is off. 1 is only the vocoder.
+- **Vocoder style:** *Bands* is the classic vocoder. *Talk box* is the tube-in-the-mouth sound (Daft Punk, Roger
+  Troutman): your mouth shapes the synth, so vowels come through round and smooth. Open your mouth wide and say
+  "wah" and "yeah".
 - **Vocoder sings on:** *The music's chords* (your voice speaks the chords the music is playing; with the music off,
-  the key's main chord), *Your own pitch* (a synth follows the notes you sing), or *Whisper* (a breathy, noisy voice).
+  the key's main chord), *Your own pitch* (a synth follows the notes you sing), *Whisper* (a breathy, noisy voice),
+  or *The music's melody* (a lead line, like a keyboard player playing the talk box; it holds each note until the
+  next).
 - **Vocoder octave:** moves the synth notes up or down.
 - **Vocoder synth in key:** for Your own pitch: 1 keeps the synth on the notes of the key, 0 follows you exactly.
 - **Vocoder hiss:** keeps "s", "t" and "f" sounds clear. Turn it down for a smoother, less wordy sound.

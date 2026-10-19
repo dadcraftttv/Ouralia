@@ -110,6 +110,16 @@ to date in the same commit when behaviour changes.
   clear. No delay. At amount 0 the voice passes untouched and nothing is computed; on again, the bands start afresh.
   Level about the input's (x1.0 on a vowel). DadCraft (Oct 18) chose console music (the Chiptune kits) over a console
   voice; chip carriers for the vocoder can come later. Tests: test_dcs.py, test_patch.py 7n.
+  **Talk box** (Oct 19, `voc_style` 1; Bands stay the default): DadCraft asked for "a voxbox", the tube-in-the-mouth
+  sound played from a keyboard (Daft Punk, Midnight Generations). Linear prediction instead of bands: every 6 ms the
+  last 24 ms of the voice (pre-emphasised 0.97, Hann window, 60 Hz lag window) gives a 24-pole filter (Levinson-
+  Durbin, reflection coefficients clamped to +-0.995) and the voice's residual level. The carrier is flattened
+  (the same pre-emphasis), levelled (30 ms power follower), run through the filter as a lattice (the coefficients
+  glide sample by sample over each hop, which keeps it stable), then de-emphasised. Gain 0.72 makes it about the
+  voice's level. Measured: a vowel's resonance at 500, 1200 and 2400 Hz comes out at 532, 1116 and 2409 Hz. It costs
+  0.7% of a desktop core (the bands cost 2.0%). New carrier 3 for both styles, **the music's melody**: each chime
+  note's pitch goes out as `voc_ctl mnote`, held until the next with a ~15 ms slide (before any, the chord's root
+  an octave up).
 - **Sing in key** (Oct 18, `tune_amount`, `tune_glide`; section "Sing in key", before the ring modulator in the
   chain). dcs_shift~ got a snap mode: `key`, `scale <steps>`, `snap 0..1`, `glide ms`, `run`. Each 10 ms hop the
   tracked pitch picks the nearest note of the scale (it keeps its note until another is nearer by 0.2 semitone: no

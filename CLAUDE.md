@@ -71,7 +71,8 @@ As of Oct 17:
 - **Sing in key** built Oct 18 (section "Sing in key", dcs_shift~ snap mode; off by default): waiting on DadCraft's
   ears. **Chiptune kits** built Oct 18 (NES, Game Boy, Genesis; dcs_voice~ engine `chip`): waiting on his ears.
   **Vocoder** built Oct 18 (section "Vocoder", dcs_vocoder~: chords / your pitch / whisper; off by default): waiting
-  on his ears. Later: chip carriers for the vocoder (low priority).
+  on his ears. **Talk box** built Oct 19 (Vocoder style Talk box, LPC; carrier The music's melody): waiting on his
+  ears. Later: chip carriers for the vocoder (low priority).
 - **User kits stage 2 (samples)** built Oct 18: engine `sample` (WAV read by dcs_voice~, other formats decoded at
   import), kit.txt `sample <file> <note>` / `kick <file>`...: waiting on DadCraft's phone check. Stage 3 done: `docs/KIT-FORMAT.md` (the format page
   for sound designers: keep it in step with Kits.java and dcs_voice~).

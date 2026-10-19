@@ -334,6 +334,23 @@ y = vocode(v, ("mix", 0))
 check(np.array_equal(y, v), "mix 0: the voice passes through untouched")
 y = vocode(v, ("carrier", 0), ("key", 2), ("scale", 0, 2, 4, 5, 7, 9, 11))[SR // 2:]; S_, fr = spec(y)
 check(near(S_, fr, 146.83) > 3 * near(S_, fr, 130.81), "no chord sent yet: it plays the key's own triad (D major)")
+y = vocode(v, ("carrier", 3), ("mnote", 392))[SR // 2:]
+check(abs(peak_hz(y, 370, 415) - 392) < 1.5, f"melody: the synth plays the melody's note ({peak_hz(y, 370, 415):.1f} Hz for 392)")
+# the talk box: the mouth's shape (the vowel's resonance) filters the synth
+y = vocode(v, ("style", 1), ("carrier", 0), *[("cnote", k, f) for k, f in enumerate(chord)])[SR // 2:]
+S_, fr = spec(y)
+check(min(near(S_, fr, f) for f in chord) > 5 * near(S_, fr, 150) and 0.4 < rms(y) / rms(v[SR // 2:]) < 2.5,
+      f"talk box: the voice speaks on the chord's notes (level x{rms(y) / rms(v[SR // 2:]):.2f})")
+def env_peak(y):
+    S_, fr = spec(y); k = np.ones(int(150 / (fr[1] - fr[0]))); sm = np.convolve(S_, k / len(k), "same")
+    band = (fr > 250) & (fr < 4000); return fr[band][np.argmax(sm[band])]
+for f in (500, 1200, 2400):
+    y = vocode(vowel(f0=150, secs=2.0, formant=f), ("style", 1), ("carrier", 0), *[("cnote", k, c) for k, c in enumerate(chord)])[SR // 2:]
+    check(abs(env_peak(y) - f) < 0.15 * f, f"talk box: a vowel's resonance at {f} Hz comes out at {env_peak(y):.0f} Hz")
+y = vocode(np.zeros(SR, np.float32), ("style", 1), ("carrier", 0))
+check(np.abs(y).max() < 1e-3, f"talk box: silence in, silence out (peak {np.abs(y).max():.1e})")
+y = vocode(v, ("style", 1), ("carrier", 3), ("mnote", 392))[SR // 2:]
+check(abs(peak_hz(y, 370, 415) - 392) < 1.5 and np.isfinite(y).all(), f"talk box on the melody ({peak_hz(y, 370, 415):.1f} Hz for 392)")
 
 # ---------------------------------------------------------------- dcs_onset~
 print("dcs_onset~:")

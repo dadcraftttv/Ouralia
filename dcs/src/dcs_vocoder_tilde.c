@@ -3,11 +3,16 @@
  *
  * Carriers: 0 chords = saws on the music's chord (the `cnote`s the patch sends; before any, the key's own triad from
  * `key` and `scale`), 1 your pitch = saws following the voice's pitch (YIN, dcs_yin.h), moved onto the scale by `snap`,
- * 2 whisper = noise. Each carrier band is first levelled (divided by its own envelope), so a carrier's tilt or gaps
+ * 2 whisper = noise, 3 melody = saws on the music's melody (each `mnote` held until the next, with a short slide;
+ * before any, the chord's root).
+ *
+ * `style 1` is a talk box instead of the bands: the mouth's shape (its formants, found by linear prediction from the
+ * voice, 24 poles, every 6 ms) filters the carrier as a tube in the mouth would, so vowels come through smooth and
+ * whole rather than in bands. Each carrier band is first levelled (divided by its own envelope), so a carrier's tilt or gaps
  * don't colour the words; a little noise under the saws keeps every band alive. `sib` adds the voice's own hiss
  * above 5 kHz back in, so s, t and f stay clear.
  *
- *   inlet:   signal (the voice); carrier <0|1|2>, cnote <slot 0..3> <Hz>, key <0..11>, scale <steps...>,
+ *   inlet:   signal (the voice); carrier <0..3>, cnote <slot 0..3> <Hz>, mnote <Hz>, style <0|1>, key <0..11>, scale <steps...>,
  *            snap <0..1>, sib <0..1>, octave <n> (the carrier n octaves off), mix <0..1>, on <0|1>, smooth <ms>
  *   outlet:  the voice, mixed with the vocoded voice by `mix` (no delay). At mix 0 the input passes through as is
  *            and nothing is computed; turning on again starts the bands afresh.
@@ -24,6 +29,11 @@
 #define NCHORD 4
 #define HOP_MS 10.
 #define OUT_GAIN 8.5f
+#define TB_P 24                 /* the talk box: poles */
+#define TB_WIN_MS 24.
+#define TB_WINMAX 2048          /* (a power of two: the voice's ring) */
+#define TB_PRE 0.97f            /* pre-emphasis before the analysis (de-emphasis after) */
+#define TB_GAIN 0.72f        /* (its level matches the voice's) */
 
 static t_class *dcs_vocoder_class;
 
@@ -45,6 +55,12 @@ typedef struct {
     unsigned int seed;
     t_dcs_yin yin;
     int hopcount;
+    int style;
+    double mtarget, mhz, mph[2];
+    float tring[TB_WINMAX], hann[TB_WINMAX], lagw[TB_P + 1], wsum2;   /* the talk box */
+    int tpos, twin, thop, tcount;
+    float kc[TB_P + 1], dk[TB_P + 1], bst[TB_P + 1], g, dg;
+    float vpre, cpre, cpow, cpk, deem;
 } t_dcs_vocoder;
 
 static float voc_noise(t_dcs_vocoder *x)
@@ -82,6 +98,18 @@ static void voc_design(t_dcs_vocoder *x)
     x->catt = (float)(1 - exp(-1000. / (10 * sr))); x->crel = (float)(1 - exp(-1000. / (60 * sr)));
     x->hpk = (float)exp(-2 * M_PI * 5000. / sr);
     x->bandg = (float)(1. / sqrt((double)NB));
+    x->twin = (int)(TB_WIN_MS * sr / 1000);
+    if (x->twin > TB_WINMAX) x->twin = TB_WINMAX;
+    x->thop = x->twin / 4;
+    x->wsum2 = 0;
+    for (int i = 0; i < x->twin; i++)
+    {
+        x->hann[i] = (float)(0.5 - 0.5 * cos(2 * M_PI * (i + 0.5) / x->twin));
+        x->wsum2 += x->hann[i] * x->hann[i];
+    }
+    for (int i = 0; i <= TB_P; i++)                     /* (a 60 Hz lag window: no needle-sharp formants) */
+        x->lagw[i] = (float)exp(-0.5 * pow(2 * M_PI * 60. * i / sr, 2));
+    x->cpk = (float)(1 - exp(-1000. / (30 * sr)));
 }
 
 static void voc_reset(t_dcs_vocoder *x)
@@ -91,6 +119,69 @@ static void voc_reset(t_dcs_vocoder *x)
     x->hpx = x->hpy = x->hp2x = x->hp2y = 0;
     if (x->sr > 0) dcs_yin_init(&x->yin, x->sr);
     x->hopcount = 0;
+    memset(x->tring, 0, sizeof(x->tring)); memset(x->kc, 0, sizeof(x->kc)); memset(x->dk, 0, sizeof(x->dk));
+    memset(x->bst, 0, sizeof(x->bst));
+    x->tpos = x->tcount = 0;
+    x->g = x->dg = x->vpre = x->cpre = x->deem = 0;
+    x->cpow = 1e-4f;
+}
+
+/* the talk box's analysis, every hop: the last window of the (pre-emphasised) voice -> its all-pole filter as
+ * reflection coefficients (Levinson-Durbin) and its gain; the filter glides to them over the next hop */
+static void tb_analyse(t_dcs_vocoder *x)
+{
+    double r[TB_P + 1], a[TB_P + 1], tmp[TB_P + 1], k[TB_P + 1], e;
+    float fr[TB_WINMAX];
+    int n = x->twin, p = TB_P;
+    for (int i = 0; i < n; i++) fr[i] = x->tring[(x->tpos - n + i) & (TB_WINMAX - 1)] * x->hann[i];
+    for (int l = 0; l <= p; l++)
+    {
+        double sum = 0;
+        for (int i = l; i < n; i++) sum += fr[i] * fr[i - l];
+        r[l] = sum * x->lagw[l];
+    }
+    r[0] = r[0] * 1.0001 + 1e-12;
+    e = r[0];
+    a[0] = 1;
+    for (int i = 1; i <= p; i++) a[i] = 0;
+    for (int i = 1; i <= p; i++)
+    {
+        double acc = r[i];
+        for (int j = 1; j < i; j++) acc += a[j] * r[i - j];
+        k[i] = -acc / e;
+        if (k[i] > 0.995) k[i] = 0.995; else if (k[i] < -0.995) k[i] = -0.995;
+        for (int j = 1; j < i; j++) tmp[j] = a[j] + k[i] * a[i - j];
+        for (int j = 1; j < i; j++) a[j] = tmp[j];
+        a[i] = k[i];
+        e *= 1 - k[i] * k[i];
+    }
+    for (int i = 1; i <= p; i++) x->dk[i] = (float)((k[i] - x->kc[i]) / x->thop);
+    x->dg = (float)((sqrt(e / x->wsum2) - x->g) / x->thop);
+}
+
+/* one sample of the talk box: the carrier, flattened and levelled, through the mouth's filter (a lattice: stable
+ * while the coefficients glide) */
+static inline float tb_tick(t_dcs_vocoder *x, float v, float car)
+{
+    float ex = car - TB_PRE * x->cpre, f, y;
+    x->cpre = car;
+    x->tring[x->tpos & (TB_WINMAX - 1)] = v - TB_PRE * x->vpre;
+    x->vpre = v;
+    x->tpos++;
+    if (++x->tcount >= x->thop) { x->tcount = 0; tb_analyse(x); }
+    x->cpow += (ex * ex - x->cpow) * x->cpk;
+    for (int i = 1; i <= TB_P; i++) x->kc[i] += x->dk[i];
+    x->g += x->dg;
+    f = ex / sqrtf(x->cpow + 1e-9f) * x->g;
+    for (int i = TB_P; i >= 1; i--)
+    {
+        f -= x->kc[i] * x->bst[i - 1];
+        x->bst[i] = x->bst[i - 1] + x->kc[i] * f;
+    }
+    x->bst[0] = f;
+    y = f + TB_PRE * x->deem;
+    x->deem = y;
+    return y * TB_GAIN;
 }
 
 /* the key's own triad an octave below middle C, for the chord carrier before the music sends a chord */
@@ -168,6 +259,14 @@ static t_int *dcs_vocoder_perform(t_int *w)
         }
         else if (x->carrier == 2)
             car = voc_noise(x);
+        else if (x->carrier == 3)
+        {
+            if (x->mhz <= 0) x->mhz = x->mtarget > 0 ? x->mtarget : 2 * x->chord[0];
+            x->mhz += ((x->mtarget > 0 ? x->mtarget : 2 * x->chord[0]) - x->mhz) * 0.0015;   /* (~15 ms slide) */
+            car = (float)(0.5 * (voc_saw(&x->mph[0], x->mhz * oct * 0.997 / sr)
+                                 + voc_saw(&x->mph[1], x->mhz * oct * 1.003 / sr)));
+            car += 0.03f * voc_noise(x);
+        }
         else
         {
             for (int k = 0; k < NCHORD; k++)
@@ -175,16 +274,21 @@ static t_int *dcs_vocoder_perform(t_int *w)
                     car += (float)(0.25 * (voc_saw(&x->ph[k][0], cdt[k][0]) + voc_saw(&x->ph[k][1], cdt[k][1])));
             car += 0.03f * voc_noise(x);
         }
-        for (int b = 0; b < NB; b++)
+        if (x->style == 1)
+            o = tb_tick(x, v, car);
+        else
         {
-            float mb = bp_tick(&x->bp[b], &x->ms[b][1], bp_tick(&x->bp[b], &x->ms[b][0], v));
-            float cb = bp_tick(&x->bp[b], &x->cs[b][1], bp_tick(&x->bp[b], &x->cs[b][0], car));
-            float am = fabsf(mb), ac = fabsf(cb);
-            x->menv[b] += (am - x->menv[b]) * (am > x->menv[b] ? x->att : x->rel);
-            x->cenv[b] += (ac - x->cenv[b]) * (ac > x->cenv[b] ? x->catt : x->crel);
-            o += cb * x->menv[b] / (x->cenv[b] + 1e-4f);
+            for (int b = 0; b < NB; b++)
+            {
+                float mb = bp_tick(&x->bp[b], &x->ms[b][1], bp_tick(&x->bp[b], &x->ms[b][0], v));
+                float cb = bp_tick(&x->bp[b], &x->cs[b][1], bp_tick(&x->bp[b], &x->cs[b][0], car));
+                float am = fabsf(mb), ac = fabsf(cb);
+                x->menv[b] += (am - x->menv[b]) * (am > x->menv[b] ? x->att : x->rel);
+                x->cenv[b] += (ac - x->cenv[b]) * (ac > x->cenv[b] ? x->catt : x->crel);
+                o += cb * x->menv[b] / (x->cenv[b] + 1e-4f);
+            }
+            o *= x->bandg * OUT_GAIN;
         }
-        o *= x->bandg * OUT_GAIN;
         {                                                       /* the hiss above 5 kHz, twice high-passed */
             float h1 = x->hpk * x->hpy + (v - x->hpx) * 0.5f * (1 + x->hpk), h2;
             x->hpx = v; x->hpy = h1;
@@ -195,6 +299,9 @@ static t_int *dcs_vocoder_perform(t_int *w)
         float e = mix[i] * on[i];
         out[i] = v + (o - v) * e;
     }
+    for (int i = 0; i <= TB_P; i++)
+        if (PD_BIGORSMALL(x->bst[i])) x->bst[i] = 0;
+    if (PD_BIGORSMALL(x->deem)) x->deem = 0;
     for (int b = 0; b < NB; b++)
         for (int j = 0; j < 2; j++)
         {
@@ -222,7 +329,9 @@ static void dcs_vocoder_dsp(t_dcs_vocoder *x, t_signal **sp)
     dsp_add(dcs_vocoder_perform, 4, x, sp[0]->s_vec, sp[1]->s_vec, (t_int)sp[0]->s_n);
 }
 
-static void dcs_vocoder_carrier(t_dcs_vocoder *x, t_floatarg f) { x->carrier = (int)f >= 0 && (int)f <= 2 ? (int)f : 0; }
+static void dcs_vocoder_carrier(t_dcs_vocoder *x, t_floatarg f) { x->carrier = (int)f >= 0 && (int)f <= 3 ? (int)f : 0; }
+static void dcs_vocoder_mnote(t_dcs_vocoder *x, t_floatarg hz) { if (hz > 20) x->mtarget = hz; }
+static void dcs_vocoder_style(t_dcs_vocoder *x, t_floatarg f) { x->style = f != 0; }
 static void dcs_vocoder_cnote(t_dcs_vocoder *x, t_floatarg slot, t_floatarg hz)
 {
     int k = (int)slot;
@@ -272,6 +381,8 @@ void dcs_vocoder_tilde_setup(void)
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_dsp, gensym("dsp"), A_CANT, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_carrier, gensym("carrier"), A_FLOAT, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_cnote, gensym("cnote"), A_FLOAT, A_FLOAT, 0);
+    class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_mnote, gensym("mnote"), A_FLOAT, 0);
+    class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_style, gensym("style"), A_FLOAT, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_key, gensym("key"), A_FLOAT, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_scale, gensym("scale"), A_GIMME, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_snap, gensym("snap"), A_FLOAT, 0);

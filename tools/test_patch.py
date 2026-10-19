@@ -768,6 +768,22 @@ y = vocoded(music_key=0, voc_carrier=1)
 check(peak_near(y, 146.83, 1) > 3 * peak_near(y, 150, 1), "vocoder, your own pitch: 150 Hz sung, D played (in key)")
 y = vocoded(voc_mix=0)
 check(abs(rms(y) / rms(buzz()[SR:]) - 1) < 0.02, "vocoder at 0: the voice as it was")
+y = vocoded(music_key=0, voc_style=1)
+check(min(peak_near(y, f) for f in (130.81, 164.81, 196.0)) > 3 * peak_near(y, 150) and 0.3 < rms(y) / rms(buzz()[SR:]) < 3,
+      "talk box, music off: the mouth shapes the key's triad (level x%.2f)" % (rms(y) / rms(buzz()[SR:])))
+def heard_note(y):
+    """The MIDI note (48..84) whose first three harmonics are loudest in y."""
+    S_ = np.abs(np.fft.rfft(y * np.hanning(len(y)))); fr = np.fft.rfftfreq(len(y), 1 / SR)
+    at = lambda f: S_[(fr > f * 0.99) & (fr < f * 1.01)].max()
+    return max(range(48, 85), key=lambda m: sum(at(440 * 2 ** ((m - 69) / 12) * h) for h in (1, 2, 3)))
+e = fresh(wet=0, dry=1, voc_mix=1, voc_style=1, voc_carrier=3, music_key=0, music_on=1, music_arp=1, melody_src=0,
+          music_res=0, music_react=0, music_pad=0, mix_chimes=0, mix_walk=0)
+v_ = buzz(); e.run(v_[:SR]); before = heard_note(e.run(v_[SR:2 * SR])[SR // 2:, 0])
+notes = []
+for deg in (9, 11, 8):
+    e.send_list("motif", deg, 0.5); notes.append(heard_note(e.run(v_[SR:2 * SR])[SR // 2:, 0]))
+check(before % 12 in (0, 2, 4, 5, 7, 9, 11) and len(set(notes)) > 1 and all(n % 12 in (0, 2, 4, 5, 7, 9, 11) for n in notes),
+      f"talk box on the melody: the chord's root (MIDI {before}) until the melody plays, then its notes {notes} (C major)")
 
 # ---- 9. walking beat: footsteps play drums ----
 def beat_run(steps, secs=2.0, **over):

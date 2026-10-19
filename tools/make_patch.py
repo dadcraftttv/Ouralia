@@ -25,7 +25,7 @@ DEFAULTS = [
     ("wet", 0), ("ring_on", 1), ("ring_freq", 80), ("ring_mix", 0), ("smooth", 30),
     ("pitch_on", 1), ("pitch_semi", 0), ("pitch_mix", 0), ("pitch_window", 60),
     ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000), ("crush_style", 0), ("tune_amount", 0), ("tune_glide", 40),
-    ("voc_on", 1), ("voc_mix", 0), ("voc_carrier", 0), ("voc_sib", 0.5), ("voc_octave", 0), ("voc_snap", 1),
+    ("voc_on", 1), ("voc_mix", 0), ("voc_style", 0), ("voc_carrier", 0), ("voc_sib", 0.5), ("voc_octave", 0), ("voc_snap", 1),
     ("space_on", 1), ("space_pan", 0), ("space_shift", 0),
     ("filter_on", 1), ("filter_mix", 0), ("filter_type", 0), ("filter_freq", 1500), ("filter_q", 1),
     ("reverb_on", 1), ("reverb_mix", 0), ("reverb_size", 0.5), ("reverb_tone", 6000),
@@ -2173,6 +2173,7 @@ def add_music(P):
             P.c(f"mu_v{k}_kv", f"mu_v{k}_kp", o, o)
         P.msg(f"mu_v{k}_km", f"note {BS}$4 {BS}$1 {BS}$3 {BS}$2", vx + 120, cy + 38)
         P.c(f"mu_v{k}_kp", f"mu_v{k}_km"); P.c(f"mu_v{k}_km", "mu_kv_mel")
+        P.msg(f"mu_v{k}_vmn", f"{BS}; voc_ctl mnote {BS}$1", vx + 200, cy + 38); P.c(f"mu_v{k}_kv", f"mu_v{k}_vmn", 3, 0)  # (the vocoder's melody)
         P.c(f"mu_v{k}_pk", f"mu_v{k}_env_msg"); P.c(f"mu_v{k}_env_msg", f"mu_v{k}_env")
         P.sig2(f"mu_v{k}_out", "*~", f"mu_v{k}_s", f"mu_v{k}_env", vx + 60, cy + 240)
         voices.append(f"mu_v{k}_out")
@@ -3969,8 +3970,10 @@ def build():
 
     # --- vocoder (Oct 18): dcs_vocoder~ lays the voice's words onto a carrier: the music's chords (the pad's notes,
     # sent as cnote from the music; before any, the key's triad), a synth on your own pitch (snapped to the key by
-    # voc_snap), or noise. No delay; passes the voice through untouched at amount 0.
+    # voc_snap), noise, or the melody (each chime's note, sent as mnote). Style 1 (Oct 19) is a talk box: the mouth's
+    # shape filters the synth instead of the bands. No delay; passes the voice through untouched at amount 0.
     fx(P, "voc_out", "dcs_vocoder~", "mic_tuned", ("voc_mix", "mix"), ("voc_on", "on"), ("voc_carrier", "carrier"),
+       ("voc_style", "style"),
        ("voc_sib", "sib"), ("voc_octave", "octave"), ("voc_snap", "snap"), x=120, y=560)
     P.obj("voc_ctl", "r voc_ctl", 600, 520); P.c("voc_ctl", "voc_out")
     P.obj("voc_r_key", "r music_key", 680, 520)

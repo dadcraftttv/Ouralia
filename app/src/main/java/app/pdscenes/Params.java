@@ -310,8 +310,12 @@ final class Params {
                     .inSection("voc").toggle().resetWhenAbsent(),
             new Param("voc_mix", "Vocoder amount (0 = off)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
-            new Param("voc_carrier", "Vocoder sings on", 0f, 2f, 0f, "", Param.Curve.LINEAR)
-                    .choices("The music's chords", "Your own pitch (a synth)", "Whisper (noise)")
+            new Param("voc_style", "Vocoder style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Bands (vocoder)", "Talk box (your mouth shapes the synth)")
+                    .inSection("voc").noRandom().resetWhenAbsent().dcs(),
+            new Param("voc_carrier", "Vocoder sings on", 0f, 3f, 0f, "", Param.Curve.LINEAR)
+                    .choices("The music's chords", "Your own pitch (a synth)", "Whisper (noise)",
+                            "The music's melody (a keyboard lead)")
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
             new Param("voc_octave", "Vocoder octave", -2f, 2f, 0f, "", Param.Curve.LINEAR)
                     .inSection("voc").noRandom().decimals(0).resetWhenAbsent().dcs(),
