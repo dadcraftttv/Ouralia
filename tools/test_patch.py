@@ -44,7 +44,7 @@ def fresh(**over):
                 chorus_on=1, chorus_mix=0, chorus_rate=0.8, chorus_depth=3,
                 trem_on=1, trem_depth=0, trem_rate=5,
                 gate_thresh=-80, comp_thresh=0, comp_ratio=4, comp_makeup=0,
-                dist_on=1, dist_mix=0, dist_drive=4, dist_type=0,
+                dist_on=1, dist_mix=0, dist_drive=4, dist_type=0, dist_quality=0,   # (Classic: Smooth is tested on its own)
                 rvs_on=1, rvs_mix=0, rvs_time=400,
                 glitch_on=1, glitch_hold=0, glitch_len=120,
                 flange_on=1, flange_mix=0, flange_rate=0.3, flange_depth=4, flange_fb=0.5,
@@ -2280,7 +2280,7 @@ check(sq_fast < 0.6 * sq_def and sq_slow > 1.6 * sq_def and lg_fast < lg_def and
 
 # glitch cloud: a sudden sound comes back mangled; each kind does what it says
 GC_KINDS = ("gc_pct_stutter", "gc_pct_reverse", "gc_pct_shuffle", "gc_pct_stretch",
-            "gc_pct_ratchet", "gc_pct_pitch", "gc_pct_gate", "gc_pct_spray")
+            "gc_pct_pitch", "gc_pct_gate")                        # (Ratchet and Spray: in the back pocket, Oct 19)
 def gc_run(x, kind=None, steps=None, **over):
     """The glitch cloud alone (dry, echo and music off), with only `kind` switched on. Returns the left+right output
     and the kinds that fired. steps: seconds between footsteps, sent from the start."""
@@ -2389,13 +2389,14 @@ y, m = gc_run(burst_in(steady, at=3.1), "gc_pct_stutter", steps=0.5, gc_voice=1)
 _, start = glitch_part(y, at=3.1, thr=0.05)
 check(start is not None and 0.15 <= start <= 0.18,
       "glitch voice New: while walking it lands on the half-step (%.3f s after the sound)" % (start or -1))
-# more glitch kinds (Oct 19): each from the brain, through the New voice; Legacy plays them as its plainer kin
+# more glitch kinds (Oct 19): each from the brain, through the New voice; Legacy plays them as its plainer kin.
+# (Ratchet and Spray are in the back pocket: no setting, their voice tests are in test_dcs)
 def stereo_run(kind, voice=1):
     base = dict(dry=0, wet=0, gc_amount=1, gc_level=1, reverb_mix=0, gc_voice=voice, space_shift=0)
     base.update({k: 100 * (k == kind) for k in GC_KINDS})
     e = fresh(**base); e.listen("gc_mode"); y = e.run(burst_in(steady))
     return y, [int(v) for v in e.heard["gc_mode"]]
-for kind, mode in (("gc_pct_ratchet", 4), ("gc_pct_pitch", 5), ("gc_pct_gate", 6), ("gc_pct_spray", 7)):
+for kind, mode in (("gc_pct_pitch", 5), ("gc_pct_gate", 6)):
     gap = 0.15 if mode == 6 else 0.05                                  # (a gate's off-halves are up to 70 ms)
     y, m = stereo_run(kind); g, _ = glitch_part(y[:, 0] + y[:, 1], gap=gap)
     yl, ml = stereo_run(kind, 0); gl, _ = glitch_part(yl[:, 0] + yl[:, 1], gap=gap)

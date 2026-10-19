@@ -452,8 +452,9 @@ final class Params {
                     .choices("Soft clip", "Hard clip", "Wavefold").inSection("dist")
                     .resetWhenAbsent(),
             // Distortion quality (Oct 19): Smooth = dcs_dist~ shapes at 4x the sample rate, so a hard drive's top
-            // harmonics are filtered out instead of folding back as fizz. Classic = as before.
-            new Param("dist_quality", "Distortion quality", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            // harmonics are filtered out instead of folding back as fizz. Classic = as before. Smooth is the default
+            // (DadCraft, Oct 19), and installs that already stored Classic keep it.
+            new Param("dist_quality", "Distortion quality", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Classic", "Smooth (4x oversampled: less harsh fizz)")
                     .inSection("dist").noRandom().noPreset().resetWhenAbsent().dcs(),
 
@@ -488,15 +489,12 @@ final class Params {
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").rand(0f, 60f).resetWhenAbsent(),
             new Param("gc_pct_stretch", "Stretch share (smeared out slowly, the pitch stays)", 0f, 100f, 20f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").rand(0f, 60f).resetWhenAbsent(),
-            // More kinds (Oct 19, for DadCraft to try: each starts at 0%, kept out of the dice). The New voice plays
-            // them, and Legacy plays a ratchet as a stutter and a gate or spray as a plain replay.
-            new Param("gc_pct_ratchet", "Ratchet share (a stutter that speeds up, like a drum roll)", 0f, 100f, 0f, " %",
-                    Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent().dcs(),
+            // More kinds (Oct 19, each from 0%, kept out of the dice). DadCraft kept Pitch jump and Gate. Ratchet and
+            // Spray are in the back pocket (GC_POCKET in make_patch.py): no setting, the patch still knows them.
+            // Legacy plays a gate as a plain replay.
             new Param("gc_pct_pitch", "Pitch jump share (an octave up or down, or a fifth up)", 0f, 100f, 0f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent(),
             new Param("gc_pct_gate", "Gate share (chopped into fast on/off pulses)", 0f, 100f, 0f, " %",
-                    Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent().dcs(),
-            new Param("gc_pct_spray", "Spray share (scattered into tiny grains around you)", 0f, 100f, 0f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent().dcs(),
             new Param("glitch_on", "Glitch/freeze enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("glitch").toggle().resetWhenAbsent(),

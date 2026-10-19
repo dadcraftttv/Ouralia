@@ -200,9 +200,10 @@ Dirty, fuzzy, overdriven sound, like a rock guitar.
 - **Distortion amount:** how much you hear.
 - **Distortion drive:** how hard the sound is pushed. Higher is more aggressive.
 - **Distortion type:** Soft clip is warm and fuzzy. Hard clip is harsher. Wavefold is a strange, buzzy, electronic sound.
-- **Distortion quality \*:** *Classic* (the default) is the sound as it has always been. *Smooth* works the
-  distortion at four times the detail, so a hard drive loses its harsh, hissy fizz and keeps the growl. Wavefold
-  comes out quieter on Smooth, because much of what it made was that fizz. Smooth uses a little more battery.
+- **Distortion quality \*:** *Smooth* (the default on a new install) works the distortion at four times the
+  detail, so a hard drive loses its harsh, hissy fizz and keeps the growl. *Classic* is the sound as it used to be.
+  Wavefold comes out quieter on Smooth, because much of what it made was that fizz. Smooth uses a little more
+  battery. If you had the app before, it keeps whatever you had (Classic): switch it here.
 
 ### Filter
 
@@ -255,11 +256,10 @@ Two kinds of glitch live here: the glitch cloud, which throws bits of what just 
 - **Glitch cloud amount:** how often a glitch gets its chance. 0 (the default) switches the glitch cloud off.
 - **Glitch cloud level:** how loud the glitches are.
 - **The glitch matrix:** four sliders share out the chances between the kinds of glitch. **Stutter** repeats a slice of the sound (a quarter step long while you walk), **Reverse** plays it backwards, **Shuffle** brings back an older moment out of order, and **Stretch** smears it out slowly while the pitch stays the same. Together they can't go past 100%: a slider stops at whatever the others leave free. Whatever you leave unassigned is silence, so Reverse 10% and Shuffle 10% means 80% of the chances pass with nothing happening. The bold **Glitch budget** line under the sliders shows how much is used and how much is left to silence. They start at Stutter 35, Reverse 25, Shuffle 20, Stretch 20.
-- **Four more kinds \*** (new, each starting at 0%: to try one, turn another share down to make room): **Ratchet**
-  is a stutter that speeds up, like a drum roll. **Pitch jump** brings the slice back an octave up, an octave down
-  or a fifth up. **Gate** chops it into fast on/off pulses (in time with your steps while you walk). **Spray**
-  scatters it into a cloud of tiny grains all around you. They sound their best with Glitch voice New; with Legacy,
-  a ratchet plays as a plain stutter and a gate or spray as a plain replay.
+- **Two more kinds \*** (new, each starting at 0%: to try one, turn another share down to make room): **Pitch
+  jump** brings the slice back an octave up, an octave down or a fifth up. **Gate** chops it into fast on/off
+  pulses (in time with your steps while you walk). Gate sounds its best with Glitch voice New; with Legacy it
+  plays as a plain replay.
 - **Glitch voice \*:** what plays the glitches. **New** (the default) plays several at once, each starting exactly on time, and its Stretch holds a steady sound smoothly. **Legacy** is the original voice, one glitch at a time, kept as a fallback. If you had chosen Legacy before, your choice stays.
 
 * **Freeze:** 0 is live sound. At 1, the last moment is looped and held.

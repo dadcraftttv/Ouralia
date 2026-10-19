@@ -34,7 +34,7 @@ DEFAULTS = [
     ("chorus_on", 1), ("chorus_mix", 0), ("chorus_rate", 0.8), ("chorus_depth", 3),
     ("trem_on", 1), ("trem_depth", 0), ("trem_rate", 5),
     ("gate_thresh", -80), ("comp_thresh", -30), ("comp_ratio", 4), ("comp_makeup", 0),
-    ("dist_on", 1), ("dist_mix", 0), ("dist_drive", 4), ("dist_type", 0), ("dist_quality", 0),
+    ("dist_on", 1), ("dist_mix", 0), ("dist_drive", 4), ("dist_type", 0), ("dist_quality", 1),
     ("rvs_on", 1), ("rvs_mix", 0), ("rvs_time", 400),
     ("glitch_on", 1), ("glitch_hold", 0), ("glitch_len", 120),
     ("flange_on", 1), ("flange_mix", 0), ("flange_rate", 0.3), ("flange_depth", 4), ("flange_fb", 0.5),
@@ -43,7 +43,7 @@ DEFAULTS = [
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_ratchet", 0), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("gc_pct_spray", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
@@ -329,6 +329,9 @@ CLIP_WINDOW = 512             # ...counted in stretches of this many samples (~1
 GATE_HYST_DB = 4            # the gate opens at its threshold and only closes this far below it (no flutter)
 GC_KINDS = ("gc_pct_stutter", "gc_pct_reverse", "gc_pct_shuffle", "gc_pct_stretch",   # the glitch matrix, by mode
             "gc_pct_ratchet", "gc_pct_pitch", "gc_pct_gate", "gc_pct_spray")      # (Oct 19: from 0%, to try)
+# Kept in the back pocket (DadCraft, Oct 19: he kept Pitch jump and Gate): no setting, so their share stays 0, but
+# the brain and dcs_glitch~ still know them. To bring one back: take it out of here and give it a Param again.
+GC_POCKET = ("gc_pct_ratchet", "gc_pct_spray")
 GC_BUF_MS = 4000
 GC_ONSET_DB = 10           # a sudden sound: the 5 ms level jumps this far above its recent average...
 GC_MIN_DB = 55             # ...and is at least this loud (-45 dBFS), so a quiet room's flicker doesn't count
@@ -3202,8 +3205,9 @@ def add_glitch_cloud(P):
         pick = f"if($f1*max({w},100)/1000<{c[k]},{k},{pick})"
     ex("gc_mode", pick, x, y + 670)
     for k, name in enumerate(GC_KINDS):
-        P.obj(f"gc_en{k}", f"r {name}", x + 200 + 80 * k, y + 640)
-        P.c(f"gc_en{k}", "gc_mode", 0, k + 1)
+        if name not in GC_POCKET:                                          # (a pocketed kind's inlet stays 0)
+            P.obj(f"gc_en{k}", f"r {name}", x + 200 + 80 * k, y + 640)
+            P.c(f"gc_en{k}", "gc_mode", 0, k + 1)
     P.c("gc_fire", "gc_mode_rnd", 0, 0); P.c("gc_mode_rnd", "gc_mode")
     P.obj("gc_try_s", "s gc_try", x + 100, y + 655); P.c("gc_mode_rnd", "gc_try_s")   # every chance, for the tests
     P.obj("gc_mode_ok", "moses 0", x, y + 700)

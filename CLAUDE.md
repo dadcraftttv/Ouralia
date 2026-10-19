@@ -76,9 +76,9 @@ As of Oct 19:
   (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
 - Sing in key (dcs_shift~ snap), Vocoder (dcs_vocoder~) and Talk box (LPC) are off by default; approved Oct 19.
   Chip carriers for the vocoder built Oct 19 (`voc_wave` "Vocoder synth sound", default Saws): waiting on his ears.
-  **Distortion quality** Smooth built Oct 19 (`dist_quality`, 4x oversampled dcs_dist~, default Classic): waiting
-  on his ears. **More glitch kinds** built Oct 19 (Ratchet, Pitch jump, Gate, Spray: glitch matrix, each from 0%):
-  he wants to hear each, then choose which to keep.
+  **Distortion quality** Smooth (`dist_quality`, 4x oversampled dcs_dist~) is the default since Oct 19 (his call).
+  **Glitch kinds** Pitch jump and Gate kept (Oct 19, glitch matrix, each from 0%); Ratchet and Spray in the back
+  pocket (`GC_POCKET` in make_patch.py: no setting, code kept).
 - **User kits stage 2 (samples)** built Oct 18: engine `sample` (WAV read by dcs_voice~, other formats decoded at
   import), kit.txt `sample <file> <note>` / `kick <file>`...: waiting on DadCraft's phone check. Stage 3 done: `docs/KIT-FORMAT.md` (the format page
   for sound designers: keep it in step with Kits.java and dcs_voice~).

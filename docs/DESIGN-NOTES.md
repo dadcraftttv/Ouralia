@@ -340,7 +340,10 @@ to date in the same commit when behaviour changes.
   phaser (the effect ports), oversampled distortion (Oct 19, "Distortion quality", below). The crusher stays as
   it is: its Classic rate reduction aliases on purpose (that is the effect) and the console styles already model
   their filters. More glitch kinds: built Oct 19 (below).
-- **More glitch kinds** (Oct 19, DadCraft wanted to hear each before choosing; `gc_pct_ratchet`, `gc_pct_pitch`,
+- **More glitch kinds** (Oct 19, DadCraft wanted to hear each before choosing. He kept **Pitch jump** and **Gate**;
+  **Ratchet** and **Spray** went into the back pocket: `GC_POCKET` in make_patch.py, no Param, their matrix inlet
+  stays 0, the brain's formulas and dcs_glitch~'s shrink/spray stay, so bringing one back is a Param plus taking it
+  out of GC_POCKET; `gc_pct_ratchet`, `gc_pct_pitch`,
   `gc_pct_gate`, `gc_pct_spray`, glitch matrix, default 0%, noRandom, in presets): modes 4-7 of the brain
   (`GC_KINDS` in make_patch.py = the matrix by mode). dcs_glitch~'s `slice` takes three optional extras (shrink,
   gate, spray); Legacy reads the first six (`gc_vc_6`), so there a ratchet is a plain stutter and a gate or spray
@@ -353,7 +356,9 @@ to date in the same commit when behaviour changes.
   the glitch's place (+-1); 30 ms in, 400 ms out, 600-1200 ms. Tests: test_dcs "dcs_glitch~ new kinds" (ratchet
   gaps 100, 70, 49, 34, 24 ms; gate 52% on; octave 883 Hz from 440; spray L/R 0.80), test_patch "more glitch
   kinds" (each picked, played by New and Legacy; pitch 1 kHz -> 500 Hz; spray L/R 0.70).
-- **Distortion quality** (Oct 19, `dist_quality`, Distortion, noPreset, default Classic): Smooth = dcs_dist~
+- **Distortion quality** (Oct 19, `dist_quality`, Distortion, noPreset; **default Smooth** since Oct 19, DadCraft,
+  stored values kept, so existing installs stay on Classic until switched; the tests pin Classic for the older
+  distortion checks and test_fx_port): Smooth = dcs_dist~
   shapes at 4x between two 65-tap Kaiser (beta 8) windowed-sinc filters cut at the original Nyquist (polyphase up,
   decimated on the first of each 4 fast samples), the dry part delayed the same 16 samples (mixing is comb-free:
   below the clip the output is the input 16 samples late within 1e-5). Fizz (energy off the harmonics) on a 4.5
@@ -962,7 +967,8 @@ to date in the same commit when behaviour changes.
 - **Ideas queue with details: `docs/ROADMAP.md`.** Its numbered items are built, removed or set aside by DadCraft
   (Oct 19); still open there: the small items in 11 (location input, unported scene objects, `rj_zcr~` if a scene
   needs it, a beat-offset slider if drift returns).
-- The Oct 17 list of our own objects is done (more glitch kinds Oct 19: waiting on DadCraft's ears).
+- The Oct 17 list of our own objects is done (Oct 19: Pitch jump and Gate kept, Ratchet and Spray pocketed, Smooth
+  distortion the default).
 - Untested on the phone: wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt
   timing, the found bass pulled far down.
 - Release prep: final name + applicationId, `source_url` in strings.xml, privacy policy, Play foreground-service + microphone declarations, icon, store listing.

@@ -21,7 +21,7 @@ def check(ok, what):
     fails += 0 if ok else 1
 
 REST = dict(gain=1, dry=1, smooth=30, echo_on=1, wet=0, ring_on=1, ring_mix=0, ring_freq=80, pitch_on=1, pitch_mix=0,
-            crush_on=1, crush_mix=0, dist_on=1, dist_mix=0, filter_on=1, filter_mix=0, chorus_on=1, chorus_mix=0,
+            crush_on=1, crush_mix=0, dist_on=1, dist_mix=0, dist_quality=0, filter_on=1, filter_mix=0, chorus_on=1, chorus_mix=0,
             flange_on=1, flange_mix=0, phaser_on=1, phaser_mix=0, trem_on=1, trem_depth=0, trem_rate=5, rvs_on=1,
             rvs_mix=0, glitch_on=1, glitch_hold=0, reverb_on=1, reverb_mix=0, space_on=1, space_shift=0, space_pan=0,
             music_on=0, beat_level=0, gc_amount=0, gate_thresh=-80, comp_thresh=0,
