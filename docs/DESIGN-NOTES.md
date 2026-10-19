@@ -299,8 +299,13 @@ to date in the same commit when behaviour changes.
   nothing. **Desktop bench**: each second the app compares `Kits.signature()` (folders, kit.txt times and sizes)
   and on a change refreshes the menus and resends (a saved kit plays at once). Tests: Q (install, reuse, menus,
   edit, delete, preset round trip, check, folder one level down). Not yet: samples (stage 2: a sample engine in
-  dcs_voice~), a format page (stage 3), register Low for kit pads, kit drums in "Your steps" mode (the old step
-  drums sent no drum_* messages, so a kit with drums played no drums at all there: fixed Oct 19, below).
+  dcs_voice~), a format page (stage 3), register Low for kit pads (done Oct 19: Low already muted a kit's pad
+  with Classic's and the kit's bass part plays the bass voice there, but the kit pad's voices kept running unheard
+  and doubled the patch's cost, 0.29 -> 0.58 s per 20 s; now groups `kpad` / `kbass` (switch~) run a kit's pad
+  voices only at Mid/Both and its bass voices only at Low/Both, and only with a kit or layer on the part:
+  `krun_<part>` -> `k<part>_run`; test_patch "a kit's pad and bass voices run only while heard"), kit drums in
+  "Your steps" mode (the old step drums sent no drum_* messages, so a kit with drums played no drums at all
+  there: fixed Oct 19, below).
   **Stage 2, samples** (Oct 18). Engine 9 `sample` in dcs_voice~ reads WAV itself (dcs_wav.h: PCM 8/16/24/32,
   float 32/64, extensible; channels averaged; kept at the file's rate, played at file rate / Pd rate x the note's
   ratio, linear between samples): `sample <path> <root>` (up to 16 a part; a note takes the nearest root),

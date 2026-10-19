@@ -77,7 +77,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl", "kpad_run", "kbass_run"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -1989,6 +1989,25 @@ st_diff = float(np.sum(np.abs(y_st_cl_spec - y_st_edm_spec)) / max(np.sum(y_st_c
 check(rms(y_st_cl) > 1e-3 and 0.3 < rms(y_st_edm) / rms(y_st_cl) < 3 and st_diff > 0.3,
       "kits: in Your steps the steps play the kit's drums (EDM %.3f, Classic %.3f, %.0f%% different)"
       % (rms(y_st_edm), rms(y_st_cl), 100 * st_diff))
+# a kit's pad and bass voices run only while heard (Oct 19): at Pad register Low a kit pad cost the whole patch about
+# double while silent (0.29 -> 0.58 s per 20 s); now no more than Classic's, and at Mid the pad still plays
+def reg_cost(reg, kit, part="pad"):
+    import time
+    e = fresh(music_on=1, music_pad=1, music_arp=0, music_res=0, wet=0, music_pad_reg=reg, pad_src=0, bass_src=0)
+    if kit is not None:
+        send_kit(e, {part: kit[part]})
+    x = (np.random.default_rng(3).standard_normal(12 * SR) * 0.0005).astype(np.float32)
+    e.run(x[:4 * SR]); t0 = time.process_time(); y = e.run(x[4 * SR:]); return time.process_time() - t0, rms(y[:, 0])
+rc = [(reg_cost(0, None)[0], reg_cost(0, KITS["synth"])[0], reg_cost(1, None)[0], reg_cost(1, KITS["synth"])[0]) for _ in range(3)]
+c_low_cl, c_low_kit, c_mid_cl, c_mid_kit = (min(r[k] for r in rc) for k in range(4))
+_, lvl_mid_kit = reg_cost(1, KITS["synth"])
+check(c_low_kit < 1.15 * c_low_cl and lvl_mid_kit > 1e-3,
+      "kits: at Pad register Low a kit's pad doesn't run (%.2f s, Classic %.2f s; at Mid %.2f s, Classic %.2f s)"
+      % (c_low_kit, c_low_cl, c_mid_kit, c_mid_cl))
+rb = [(reg_cost(1, KITS["synth"], "bass")[0], reg_cost(0, KITS["synth"], "bass")[0]) for _ in range(3)]
+c_mid_bass, c_low_bass = (min(r[k] for r in rb) for k in range(2))
+check(c_mid_bass < 1.15 * c_mid_cl and reg_cost(0, KITS["synth"], "bass")[1] > 1e-3,
+      "kits: at Pad register Mid a kit's bass doesn't run (%.2f s, Classic %.2f s; at Low %.2f s)" % (c_mid_bass, c_mid_cl, c_low_bass))
 # kits, the EDM pump: a held pad dips at every kick (the kit's drums silenced by the Mix trims, so only the pump is heard)
 def pumped(pump):
     kit = {k: list(v) for k, v in KITS["edm"].items()}

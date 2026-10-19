@@ -81,8 +81,8 @@ As of Oct 17:
   reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
 - **Kit layers** built Oct 19 (DadCraft: blend two kits on one part; "<Part> layer" + "<Part> blend", Music tab):
   waiting on his phone check.
-- **Kit plan done** (ROADMAP 19): stages 1-3 built, the stems player removed Oct 18 (DadCraft). Smaller open items: register Low for kit pads, kit drums
-  in "Your steps" mode.
+- **Kit plan done** (ROADMAP 19): stages 1-3 built, the stems player removed Oct 18 (DadCraft). Register Low for kit pads and kit drums in "Your
+  steps" done Oct 19.
 - **Release:** rc3 is with testers; rc4 not built yet (our pd-core, the unplug fix, input gain 1, and whatever of
   the above DadCraft approves). Rename to Ouralia (no USPTO/EUIPO hits) waits for release prep.
 - Check `git status` / `git log origin/main..HEAD` for unpushed commits: push only when DadCraft asks.

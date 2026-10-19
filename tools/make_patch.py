@@ -3591,6 +3591,8 @@ def add_kits(P, x=3000, y=1700):
     while Classic's share is 0 (value kmelcl), as before."""
     def ex(name, text, xx, yy):
         return P.obj(name, "expr " + text.replace(",", BS + ",").replace("$", BS + "$").replace(" ; ", " " + BS + "; "), xx, yy)
+    P.obj("krun_reg_r", "r music_pad_reg", x, y - 40); P.obj("krun_reg_v", "value kreg", x + 100, y - 30)
+    P.obj("krun_reg_t", "t b f", x, y - 30); P.c("krun_reg_r", "krun_reg_t"); P.c("krun_reg_t", "krun_reg_v", 1, 0)
     for part, voice in (("mel", "mu_kv_mel"), ("bass", "ba_kv"), ("pad", "mu_kv_pad"), ("drums", "kd_voice")):
         xx = x + 300 * ("mel", "bass", "pad", "drums").index(part)
         for side, recv, v in (("", f"kit_{part}", voice), ("2", f"kit2_{part}", voice + "2")):
@@ -3632,6 +3634,13 @@ def add_kits(P, x=3000, y=1700):
         P.sig2(f"{mx}kit_{part}_a", "*~", voice, f"kit_{part}_ga", xx, y + 340)
         P.sig2(f"{mx}kit_{part}_b2", "*~", voice + "2", f"kit_{part}_gb", xx + 60, y + 340)
         P.sig2(f"{mx}kit_{part}_mix", "+~", f"{mx}kit_{part}_a", f"{mx}kit_{part}_b2", xx, y + 360)
+        if part in ("pad", "bass"):   # (Oct 19) the kit voices run only while heard: a kit (or layer) on the part,
+            # and the register lets the part through (Pad register: 0 Low = the bass only, 1 Mid = the pad only)
+            off = {"pad": 0, "bass": 1}[part]
+            ex(f"krun_{part}", f"(kreg!={off})*((ke{part}>0)||(kl{part}>0)*(ke2{part}>0))+$f1*0", xx + 200, y + 280)
+            P.c(f"kitg_{part}_b", f"krun_{part}"); P.c("krun_reg_t", f"krun_{part}")
+            P.obj(f"krun_{part}_c", "change -1", xx + 200, y + 290); P.c(f"krun_{part}", f"krun_{part}_c")
+            P.obj(f"krun_{part}_s", f"s k{part}_run", xx + 200, y + 300); P.c(f"krun_{part}_c", f"krun_{part}_s")
 
 
 def add_kit_drums(P, x=4300, y=1700):
@@ -4821,6 +4830,10 @@ def build():
     add_switch(P, "harmsign", ("music_on", "harm_run", "harm_tracker"), 100, block="64 1 0.5")
     P.group("harm", r"^mu_hm")                                          # Harmony's tracker and voices: off at 0
     add_switch(P, "harm", ("music_on", "harm_run"), 2500)            # (its notes fade over 1.8 s)
+    P.group("kpad", r"^mu_kv_pad2?$")                                    # a kit's pad voices: only while heard
+    add_switch(P, "kpad", ("music_on", "kpad_run"), 3000)               # (a kit pad's release: up to 2.5 s)
+    P.group("kbass", r"^ba_kv2?$")                                        # a kit's bass voices: the same
+    add_switch(P, "kbass", ("music_on", "kbass_run"), 3000)
     P.group("music", r"^(mu_|ba_)")
     add_switch(P, "music", ("music_on",), 3000)                       # chimes fade over up to 2.6 s
     P.group("gloop", r"^gl_(rec_in|rec|ix|rd|env|s0|out)$")                    # the glitch loop's audio
