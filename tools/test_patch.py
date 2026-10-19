@@ -1950,7 +1950,9 @@ for name, part in [(n, p) for n in KITS for p in ("mel", "bass", "pad", "drums")
     in_key = lambda f: min(min(abs(pc(f) - d), 12 - abs(pc(f) - d)) for d in SCALE_IV[0]) < 0.45
     # (Classic = engine 0: no kit voice, the part's own sound. Two runs in one process never match sample for sample:
     #  Pd's random choices go on from run to run, so "unchanged" is checked by level here, and exactly in test_dcs/Q)
-    check(0.75 < rms(y_classic) / rms(y_none) < 1.33 and 0.5 < rms(y_ac) / rms(y_none) < 2 and rms(y_none - y_ac) > 0.3 * rms(y_none)
+    # (the kit and Classic runs can land on different chords: the bowed pad measured x1.0 to x2.02 from chord to
+    #  chord, Oct 19, hence 2.5. A level mistake shows as x5 or more)
+    check(0.75 < rms(y_classic) / rms(y_none) < 1.33 and 0.5 < rms(y_ac) / rms(y_none) < 2.5 and rms(y_none - y_ac) > 0.3 * rms(y_none)
           and f_ac and (part == "drums" or all(in_key(f) for f in f_ac)),
           "kits, %s %s: Classic unchanged; it plays in key, differently, about as loud (rms %.4f vs %.4f, peaks %s vs %s)"
           % (name, part, rms(y_ac), rms(y_none), [round(f) for f in f_ac[:3]], [round(f) for f in f_none]))
