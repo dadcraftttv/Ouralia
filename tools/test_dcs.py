@@ -351,6 +351,8 @@ y = vocode(np.zeros(SR, np.float32), ("style", 1), ("carrier", 0))
 check(np.abs(y).max() < 1e-3, f"talk box: silence in, silence out (peak {np.abs(y).max():.1e})")
 y = vocode(v, ("style", 1), ("carrier", 3), ("mnote", 392))[SR // 2:]
 check(abs(peak_hz(y, 370, 415) - 392) < 1.5 and np.isfinite(y).all(), f"talk box on the melody ({peak_hz(y, 370, 415):.1f} Hz for 392)")
+y1 = vocode(v, ("style", 1), ("carrier", 3), ("mnote", 220), ("octave", 1.82))[SR // 2:]
+check(abs(peak_hz(y1, 700, 950) - 880) < 10, f"octave: whole octaves only (1.82 plays 2 octaves up: {peak_hz(y1, 700, 950):.1f} Hz for 880, not 776)")
 # chip carriers (Oct 19, `wave`): one pulse per note. A noise "voice" leaves the carrier's own harmonics: the 50%
 # square has no even ones, the 25% pulse no 4th, the saws all of them
 hiss = (np.random.default_rng(5).standard_normal(2 * SR) * 0.1).astype(np.float32)

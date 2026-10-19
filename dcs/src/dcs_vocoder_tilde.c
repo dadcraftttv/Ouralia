@@ -376,7 +376,8 @@ static void dcs_vocoder_scale(t_dcs_vocoder *x, t_symbol *s, int argc, t_atom *a
 }
 static void dcs_vocoder_snap(t_dcs_vocoder *x, t_floatarg f) { x->snap = f < 0 ? 0 : (f > 1 ? 1 : f); }
 static void dcs_vocoder_sib(t_dcs_vocoder *x, t_floatarg f) { x->sib = f < 0 ? 0 : (f > 1 ? 1 : f); }
-static void dcs_vocoder_octave(t_dcs_vocoder *x, t_floatarg f) { x->octave = f < -2 ? -2 : (f > 2 ? 2 : f); }
+/* whole octaves only (Oct 19): the app's slider shows whole numbers but can store 1.82, which put the synth off key */
+static void dcs_vocoder_octave(t_dcs_vocoder *x, t_floatarg f) { x->octave = f < -2 ? -2 : (f > 2 ? 2 : roundf(f)); }
 static void dcs_vocoder_mix(t_dcs_vocoder *x, t_floatarg f) { dcs_line_set(&x->mix, f, x->smooth); }
 static void dcs_vocoder_on(t_dcs_vocoder *x, t_floatarg f) { dcs_line_set(&x->on, f, x->smooth); }
 static void dcs_vocoder_smooth(t_dcs_vocoder *x, t_floatarg f) { x->smooth = f; }
