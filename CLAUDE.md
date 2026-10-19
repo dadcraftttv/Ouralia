@@ -59,7 +59,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - Android build: `./gradlew assembleDebug`. Real-device check is DadCraft's.
 
 ## Current state (update this when it changes)
-As of Oct 17:
+As of Oct 19:
 - **Approved by ear (DadCraft, Oct 19)**, all still behind their switches with the old sound the default until he says
   to change the defaults (Oct 19: he wants them to stay opt-in, except Glitch voice: New is the default now, the old
   one kept as Legacy): the kits (Acoustic, Synth, EDM, Future bass, Low end, 3 Chiptune), Glitch voice New, Found

@@ -67,7 +67,10 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
     scene objects, (BUILT: Setup's Diagnostics, the mic and headphones in use, mic level and overloads) on-screen
     route/clipping diagnostics, beat-offset slider if drift returns, (BUILT 2026-10-13) music independent of the Dry
     level, `rj_zcr~` port if a scene needs it,
-    check other rjlib abstractions for the same `[list split]` output-order problem fixed in `s_fplaytable`.
+    (DONE 2026-10-19: none has it; the problem was `set` reaching `tabplay~` after the play message, and
+    s_fplaytable is the only `tabplay~` in scene_lib and the bundled scenes; s_playtable's `set` goes to tabread4~, which
+    doesn't stop; the rest use `[list split]` as list tools) check other rjlib abstractions for the same
+    `[list split]` output-order problem fixed in `s_fplaytable`.
 
 12. **Music ideas from DadCraft's Oct 8 test notes** (after the bass pad, built 2026-10-08 as "Pad register"):
     - (BUILT 2026-10-09) Lock chimes to the walking pulse: while walking, onset chimes wait for the next step or half-step.
