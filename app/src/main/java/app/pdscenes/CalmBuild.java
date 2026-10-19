@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Calm builds (roadmap item 8, DadCraft Oct 14; "Calm builds" switch in Music, off by default, the user's own, not in
+ * Calm builds (roadmap item 7, DadCraft Oct 14; "Calm builds" switch in Music, off by default, the user's own, not in
  * presets): standing still in a calm room for a while, the music slowly grows a layer at a time, holds, eases back,
  * then rests. Walking or a lively, loud room fades it away within seconds. Like Intensity it never changes a stored
  * value: {@link #apply} lifts what is sent to Pd (only what is already on), and the patch hears {@code calm_chimes}
