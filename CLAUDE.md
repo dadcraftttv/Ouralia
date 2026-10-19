@@ -65,7 +65,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   and Distortion quality (Smooth). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
-- **Waiting on DadCraft:** his ears for the vocoder's chip carriers (`voc_wave`); phone checks of user kits (with
+- **Waiting on DadCraft:** phone checks of user kits (with
   samples, and MP3/OGG/FLAC import), kit layers, kit drums in "Your steps", wired + Bluetooth together, the Pocket
   Realm; his desktop "<Part> from" report (likely a kit with no part of its own, now labelled "(Classic's drums)").
 - **GitHub:** DadCraft asked Support to purge the old commits that held his name. When they answer, check that

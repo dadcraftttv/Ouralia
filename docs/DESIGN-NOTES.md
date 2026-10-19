@@ -122,6 +122,7 @@ to date in the same commit when behaviour changes.
   of the two saws' pitches, no detune (the consoles had none): 1 = 25% (NES lead), 2 = 12.5%, 3 = 50% square (Game
   Boy). Saws stay bit-identical. Measured through the talk box with a noise voice (the carrier's own harmonics):
   square 3rd over 2nd +54 dB (saws -3), 25% pulse 4th 40-42 dB under its neighbours; level x1.03 of the saws.
+  Approved by ear (DadCraft, Oct 19: "sound fine"); Saws stays the default.
   **Whole octaves** (Oct 19): `octave` is rounded in dcs_vocoder~. The app's slider (decimals 0) shows whole
   numbers but stores where the finger stopped: DadCraft's phone had 1.82, which put the synth 2 semitones off the key.
   **Talk box** (Oct 19, `voc_style` 1; Bands stay the default): DadCraft asked for "a voxbox", the tube-in-the-mouth
@@ -978,7 +979,7 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
 - **Effect ports done** (DadCraft, Oct 17: dcs versions of every effect, for CPU): all 13 match the old Pd chains
   (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
 - Sing in key (dcs_shift~ snap), Vocoder (dcs_vocoder~) and Talk box (LPC) are off by default; approved Oct 19.
-  Chip carriers for the vocoder built Oct 19 (`voc_wave` "Vocoder synth sound", default Saws): waiting on his ears.
+  Chip carriers for the vocoder built Oct 19 (`voc_wave` "Vocoder synth sound", default Saws): approved by ear later on Oct 19.
   **Distortion quality** Smooth (`dist_quality`, 4x oversampled dcs_dist~) is the default since Oct 19 (his call).
   **Glitch kinds** Pitch jump and Gate kept (Oct 19, glitch matrix, each from 0%); Ratchet and Spray in the back
   pocket (`GC_POCKET` in make_patch.py: no setting, code kept).
