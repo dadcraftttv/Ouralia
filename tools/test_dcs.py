@@ -351,6 +351,18 @@ y = vocode(np.zeros(SR, np.float32), ("style", 1), ("carrier", 0))
 check(np.abs(y).max() < 1e-3, f"talk box: silence in, silence out (peak {np.abs(y).max():.1e})")
 y = vocode(v, ("style", 1), ("carrier", 3), ("mnote", 392))[SR // 2:]
 check(abs(peak_hz(y, 370, 415) - 392) < 1.5 and np.isfinite(y).all(), f"talk box on the melody ({peak_hz(y, 370, 415):.1f} Hz for 392)")
+# chip carriers (Oct 19, `wave`): one pulse per note. A noise "voice" leaves the carrier's own harmonics: the 50%
+# square has no even ones, the 25% pulse no 4th, the saws all of them
+hiss = (np.random.default_rng(5).standard_normal(2 * SR) * 0.1).astype(np.float32)
+def harmonics(wave):
+    y = vocode(hiss, ("style", 1), ("carrier", 3), ("mnote", 220), ("wave", wave))[SR // 2:]; S_, fr = spec(y)
+    return [near(S_, fr, 220 * h) for h in range(1, 6)], y
+(hs, ys), (hq, yq), (hp, yp) = harmonics(0), harmonics(3), harmonics(1)
+db = lambda a, b: 20 * np.log10(a / max(b, 1e-12))
+check(db(hs[2], hs[1]) < 6 and db(hq[2], hq[1]) > 20 and db(hp[2], hp[3]) > 15 and db(hp[4], hp[3]) > 15
+      and np.isfinite(yq).all() and 0.3 < rms(yq) / rms(ys) < 3,
+      f"chip carriers: square: 3rd over 2nd {db(hq[2], hq[1]):.0f} dB (saws {db(hs[2], hs[1]):.0f}), 25% pulse: no 4th "
+      f"({db(hp[2], hp[3]):.0f} / {db(hp[4], hp[3]):.0f} dB), level x{rms(yq) / rms(ys):.2f}")
 
 # ---------------------------------------------------------------- dcs_onset~
 print("dcs_onset~:")

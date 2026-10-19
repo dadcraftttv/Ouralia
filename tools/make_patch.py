@@ -25,7 +25,7 @@ DEFAULTS = [
     ("wet", 0), ("ring_on", 1), ("ring_freq", 80), ("ring_mix", 0), ("smooth", 30),
     ("pitch_on", 1), ("pitch_semi", 0), ("pitch_mix", 0), ("pitch_window", 60),
     ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000), ("crush_style", 0), ("tune_amount", 0), ("tune_glide", 40),
-    ("voc_on", 1), ("voc_mix", 0), ("voc_style", 0), ("voc_carrier", 0), ("voc_sib", 0.5), ("voc_octave", 0), ("voc_snap", 1),
+    ("voc_on", 1), ("voc_mix", 0), ("voc_style", 0), ("voc_carrier", 0), ("voc_wave", 0), ("voc_sib", 0.5), ("voc_octave", 0), ("voc_snap", 1),
     ("kitl_mel", 0), ("kitl_bass", 0), ("kitl_pad", 0), ("kitl_drums", 0),
     ("kitb_mel", 0.5), ("kitb_bass", 0.5), ("kitb_pad", 0.5), ("kitb_drums", 0.5),
     ("space_on", 1), ("space_pan", 0), ("space_shift", 0),
@@ -4023,7 +4023,7 @@ def build():
     # sent as cnote from the music; before any, the key's triad), a synth on your own pitch (snapped to the key by
     # voc_snap), noise, or the melody (each chime's note, sent as mnote). Style 1 (Oct 19) is a talk box: the mouth's
     # shape filters the synth instead of the bands. No delay; passes the voice through untouched at amount 0.
-    fx(P, "voc_out", "dcs_vocoder~", "mic_tuned", ("voc_mix", "mix"), ("voc_on", "on"), ("voc_carrier", "carrier"),
+    fx(P, "voc_out", "dcs_vocoder~", "mic_tuned", ("voc_mix", "mix"), ("voc_on", "on"), ("voc_carrier", "carrier"), ("voc_wave", "wave"),
        ("voc_style", "style"),
        ("voc_sib", "sib"), ("voc_octave", "octave"), ("voc_snap", "snap"), x=120, y=560)
     P.obj("voc_ctl", "r voc_ctl", 600, 520); P.c("voc_ctl", "voc_out")

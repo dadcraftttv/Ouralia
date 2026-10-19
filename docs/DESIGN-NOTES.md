@@ -117,6 +117,11 @@ to date in the same commit when behaviour changes.
   clear. No delay. At amount 0 the voice passes untouched and nothing is computed; on again, the bands start afresh.
   Level about the input's (x1.0 on a vowel). DadCraft (Oct 18) chose console music (the Chiptune kits) over a console
   voice; chip carriers for the vocoder can come later. Tests: test_dcs.py, test_patch.py 7n.
+  **Chip carriers** (Oct 19, `voc_wave`, "Vocoder synth sound", default Saws; both styles, every carrier but
+  Whisper): one band-limited pulse per note (two of the polyBLEP saws, the second `duty` later, mean 0) at the mean
+  of the two saws' pitches, no detune (the consoles had none): 1 = 25% (NES lead), 2 = 12.5%, 3 = 50% square (Game
+  Boy). Saws stay bit-identical. Measured through the talk box with a noise voice (the carrier's own harmonics):
+  square 3rd over 2nd +54 dB (saws -3), 25% pulse 4th 40-42 dB under its neighbours; level x1.03 of the saws.
   **Talk box** (Oct 19, `voc_style` 1; Bands stay the default): DadCraft asked for "a voxbox", the tube-in-the-mouth
   sound played from a keyboard (Daft Punk, Midnight Generations). Linear prediction instead of bands: every 6 ms the
   last 24 ms of the voice (pre-emphasised 0.97, Hann window, 60 Hz lag window) gives a 24-pole filter (Levinson-

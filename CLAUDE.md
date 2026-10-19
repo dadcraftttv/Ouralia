@@ -73,7 +73,7 @@ As of Oct 17:
 - **Effect ports done** (DadCraft, Oct 17: dcs versions of every effect, for CPU): all 13 match the old Pd chains
   (`tools/test_fx_port.py`, DESIGN-NOTES "Effect ports"); at rest -10%, DadCraft-like settings -14%, phaser -63%.
 - Sing in key (dcs_shift~ snap), Vocoder (dcs_vocoder~) and Talk box (LPC) are off by default; approved Oct 19.
-  Later: chip carriers for the vocoder (low priority).
+  Chip carriers for the vocoder built Oct 19 (`voc_wave` "Vocoder synth sound", default Saws): waiting on his ears.
 - **User kits stage 2 (samples)** built Oct 18: engine `sample` (WAV read by dcs_voice~, other formats decoded at
   import), kit.txt `sample <file> <note>` / `kick <file>`...: waiting on DadCraft's phone check. Stage 3 done: `docs/KIT-FORMAT.md` (the format page
   for sound designers: keep it in step with Kits.java and dcs_voice~).

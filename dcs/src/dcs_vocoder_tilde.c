@@ -12,7 +12,7 @@
  * don't colour the words; a little noise under the saws keeps every band alive. `sib` adds the voice's own hiss
  * above 5 kHz back in, so s, t and f stay clear.
  *
- *   inlet:   signal (the voice); carrier <0..3>, cnote <slot 0..3> <Hz>, mnote <Hz>, style <0|1>, key <0..11>, scale <steps...>,
+ *   inlet:   signal (the voice); carrier <0..3>, wave <0..3> (0 saws, 1-3 chip pulses 25/12.5/50%), cnote <slot 0..3> <Hz>, mnote <Hz>, style <0|1>, key <0..11>, scale <steps...>,
  *            snap <0..1>, sib <0..1>, octave <n> (the carrier n octaves off), mix <0..1>, on <0|1>, smooth <ms>
  *   outlet:  the voice, mixed with the vocoded voice by `mix` (no delay). At mix 0 the input passes through as is
  *            and nothing is computed; turning on again starts the bands afresh.
@@ -55,7 +55,7 @@ typedef struct {
     unsigned int seed;
     t_dcs_yin yin;
     int hopcount;
-    int style;
+    int style, wave;   /* wave: 0 saws (two, detuned), 1-3 chip pulses (one per note: 25%, 12.5%, 50%) */
     double mtarget, mhz, mph[2];
     float tring[TB_WINMAX], hann[TB_WINMAX], lagw[TB_P + 1], wsum2;   /* the talk box */
     int tpos, twin, thop, tcount;
@@ -83,6 +83,27 @@ static inline double voc_saw(double *ph, double dt)
     else if (t > 1 - dt) { double q = (t - 1) / dt; blep = q * q + q + q + 1; }
     *ph = t + dt - floor(t + dt);
     return 2 * t - 1 - blep;
+}
+
+/* a band-limited pulse of width `duty`: two of the saws above, the second `duty` later (no DC: its mean is 0) */
+static inline double voc_pulse(double *ph, double dt, double duty)
+{
+    double t2 = *ph + duty;
+    t2 -= floor(t2);
+    double b = 0;
+    if (t2 < dt) { double q = t2 / dt; b = q + q - q * q - 1; }
+    else if (t2 > 1 - dt) { double q = (t2 - 1) / dt; b = q * q + q + q + 1; }
+    return voc_saw(ph, dt) - (2 * t2 - 1 - b);
+}
+
+static const double voc_duty[4] = {0, 0.25, 0.125, 0.5};
+
+/* one note of the carrier: two detuned saws (dt for each), or one chip pulse at their mean */
+static inline double voc_note(t_dcs_vocoder *x, double *ph, double dt0, double dt1)
+{
+    if (x->wave > 0)
+        return 0.5 * voc_pulse(&ph[0], 0.5 * (dt0 + dt1), voc_duty[x->wave]);
+    return 0.5 * (voc_saw(&ph[0], dt0) + voc_saw(&ph[1], dt1));
 }
 
 static void voc_design(t_dcs_vocoder *x)
@@ -254,7 +275,7 @@ static t_int *dcs_vocoder_perform(t_int *w)
             if (x->vhz <= 0) x->vhz = x->vtarget = 220;
             x->vhz += (x->vtarget - x->vhz) * 0.002;              /* (~10 ms glide) */
             vdt[0] = x->vhz * oct * 0.997 / sr; vdt[1] = x->vhz * oct * 1.003 / sr;
-            car = (float)(0.5 * (voc_saw(&x->vph[0], vdt[0]) + voc_saw(&x->vph[1], vdt[1])));
+            car = (float)voc_note(x, x->vph, vdt[0], vdt[1]);
             car += 0.03f * voc_noise(x);
         }
         else if (x->carrier == 2)
@@ -263,15 +284,14 @@ static t_int *dcs_vocoder_perform(t_int *w)
         {
             if (x->mhz <= 0) x->mhz = x->mtarget > 0 ? x->mtarget : 2 * x->chord[0];
             x->mhz += ((x->mtarget > 0 ? x->mtarget : 2 * x->chord[0]) - x->mhz) * 0.0015;   /* (~15 ms slide) */
-            car = (float)(0.5 * (voc_saw(&x->mph[0], x->mhz * oct * 0.997 / sr)
-                                 + voc_saw(&x->mph[1], x->mhz * oct * 1.003 / sr)));
+            car = (float)voc_note(x, x->mph, x->mhz * oct * 0.997 / sr, x->mhz * oct * 1.003 / sr);
             car += 0.03f * voc_noise(x);
         }
         else
         {
             for (int k = 0; k < NCHORD; k++)
                 if (cdt[k][0] > 0)
-                    car += (float)(0.25 * (voc_saw(&x->ph[k][0], cdt[k][0]) + voc_saw(&x->ph[k][1], cdt[k][1])));
+                    car += (float)(0.5 * voc_note(x, x->ph[k], cdt[k][0], cdt[k][1]));
             car += 0.03f * voc_noise(x);
         }
         if (x->style == 1)
@@ -332,6 +352,7 @@ static void dcs_vocoder_dsp(t_dcs_vocoder *x, t_signal **sp)
 static void dcs_vocoder_carrier(t_dcs_vocoder *x, t_floatarg f) { x->carrier = (int)f >= 0 && (int)f <= 3 ? (int)f : 0; }
 static void dcs_vocoder_mnote(t_dcs_vocoder *x, t_floatarg hz) { if (hz > 20) x->mtarget = hz; }
 static void dcs_vocoder_style(t_dcs_vocoder *x, t_floatarg f) { x->style = f != 0; }
+static void dcs_vocoder_wave(t_dcs_vocoder *x, t_floatarg f) { x->wave = (int)f >= 0 && (int)f <= 3 ? (int)f : 0; }
 static void dcs_vocoder_cnote(t_dcs_vocoder *x, t_floatarg slot, t_floatarg hz)
 {
     int k = (int)slot;
@@ -380,6 +401,7 @@ void dcs_vocoder_tilde_setup(void)
     CLASS_MAINSIGNALIN(dcs_vocoder_class, t_dcs_vocoder, x_f);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_dsp, gensym("dsp"), A_CANT, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_carrier, gensym("carrier"), A_FLOAT, 0);
+    class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_wave, gensym("wave"), A_FLOAT, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_cnote, gensym("cnote"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_mnote, gensym("mnote"), A_FLOAT, 0);
     class_addmethod(dcs_vocoder_class, (t_method)dcs_vocoder_style, gensym("style"), A_FLOAT, 0);

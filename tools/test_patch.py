@@ -768,6 +768,10 @@ y = vocoded(music_key=0, voc_carrier=1)
 check(peak_near(y, 146.83, 1) > 3 * peak_near(y, 150, 1), "vocoder, your own pitch: 150 Hz sung, D played (in key)")
 y = vocoded(voc_mix=0)
 check(abs(rms(y) / rms(buzz()[SR:]) - 1) < 0.02, "vocoder at 0: the voice as it was")
+y0, y3 = vocoded(music_key=0, voc_style=1), vocoded(music_key=0, voc_style=1, voc_wave=3)   # (Oct 19: chip carriers)
+ev = lambda y: peak_near(y, 2 * 130.81) / peak_near(y, 3 * 130.81)   # the chord root's 2nd harmonic over its 3rd
+check(ev(y3) < 0.3 * ev(y0) and 0.3 < rms(y3) / rms(y0) < 3,
+      "vocoder synth sound Chip square: the talk box's C loses its even harmonics (2nd/3rd %.2f, saws %.2f)" % (ev(y3), ev(y0)))
 y = vocoded(music_key=0, voc_style=1)
 check(min(peak_near(y, f) for f in (130.81, 164.81, 196.0)) > 3 * peak_near(y, 150) and 0.3 < rms(y) / rms(buzz()[SR:]) < 3,
       "talk box, music off: the mouth shapes the key's triad (level x%.2f)" % (rms(y) / rms(buzz()[SR:])))

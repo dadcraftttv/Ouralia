@@ -335,6 +335,11 @@ final class Params {
                     .choices("The music's chords", "Your own pitch (a synth)", "Whisper (noise)",
                             "The music's melody (a keyboard lead)")
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
+            // Chip carriers (Oct 19): the console pulse waves instead of two detuned saws, one per note
+            new Param("voc_wave", "Vocoder synth sound", 0f, 3f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Saws (warm, detuned)", "Chip pulse 25% (NES lead)", "Chip pulse 12.5% (thin, nasal)",
+                            "Chip square 50% (hollow, Game Boy)")
+                    .inSection("voc").noRandom().resetWhenAbsent().dcs(),
             new Param("voc_octave", "Vocoder octave", -2f, 2f, 0f, "", Param.Curve.LINEAR)
                     .inSection("voc").noRandom().decimals(0).resetWhenAbsent().dcs(),
             new Param("voc_snap", "Vocoder synth in key (Your own pitch)", 0f, 1f, 1f, "", Param.Curve.LINEAR)

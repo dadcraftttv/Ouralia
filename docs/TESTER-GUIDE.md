@@ -170,6 +170,9 @@ Makes your voice "sing" through a synth: the classic robot-choir sound. Your wor
   the key's main chord), *Your own pitch* (a synth follows the notes you sing), *Whisper* (a breathy, noisy voice),
   or *The music's melody* (a lead line, like a keyboard player playing the talk box; it holds each note until the
   next).
+- **Vocoder synth sound \*:** what the synth is made of. *Saws* (the default) is the warm, slightly detuned
+  vocoder sound. The three *Chip* choices are the old game consoles' pulse waves: *25%* is the NES lead, *12.5%*
+  thinner and more nasal, *50% square* hollow, like the Game Boy. Try them with the Chiptune kits. Whisper ignores it.
 - **Vocoder octave:** moves the synth notes up or down.
 - **Vocoder synth in key:** for Your own pitch: 1 keeps the synth on the notes of the key, 0 follows you exactly.
 - **Vocoder hiss:** keeps "s", "t" and "f" sounds clear. Turn it down for a smoother, less wordy sound.
