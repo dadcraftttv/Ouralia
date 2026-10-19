@@ -63,8 +63,10 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
    decode once with MediaExtractor/MediaCodec into WAV in the app's cache, stream with `readsf~` (from disk, not RAM).
    Needs a size budget for the APK/AAB and a layering/fade rule set.
 10. **Skipped: weather and GPS contexts** ("Sunny" world). The app has no internet permission by design.
-11. **Other small items:** location (`#loc`) scene input, unported scene objects, on-screen route/clipping diagnostics,
-    beat-offset slider if drift returns, music independent of the Dry level, `rj_zcr~` port if a scene needs it,
+11. **Other small items:** location (`#loc`) scene input (no location permission, so rj_loc stays quiet), unported
+    scene objects, (BUILT: Setup's Diagnostics, the mic and headphones in use, mic level and overloads) on-screen
+    route/clipping diagnostics, beat-offset slider if drift returns, (BUILT 2026-10-13) music independent of the Dry
+    level, `rj_zcr~` port if a scene needs it,
     check other rjlib abstractions for the same `[list split]` output-order problem fixed in `s_fplaytable`.
 
 12. **Music ideas from DadCraft's Oct 8 test notes** (after the bass pad, built 2026-10-08 as "Pad register"):
