@@ -163,6 +163,7 @@ final class DesktopApp {
                 return null;
             }
         };
+        Kits.refreshChoices();   // (the part menus say which kits lack a part: they need the kits' text)
         freshStart();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ParamStore.save(context);

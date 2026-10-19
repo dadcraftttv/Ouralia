@@ -217,6 +217,10 @@ public class MainActivity extends Activity {
         setTheme(UiSettings.themeResource(theme));   // must be set before any view is created
         super.onCreate(savedInstanceState);
         ParamStore.loadOnce(this);
+        if (Kits.source == null) {                       // (the part menus say which kits lack a part)
+            Kits.source = AudioService.builtInKits(this);
+            Kits.refreshChoices();
+        }
         Kits.decoder = AudioFiles::decode;               // (a kit's MP3, OGG, FLAC... recordings, at import)
         SceneLibrary.installBuiltIns(this, SceneSettings.scenesDir(this));
         audioManager = getSystemService(AudioManager.class);

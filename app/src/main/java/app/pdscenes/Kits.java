@@ -445,12 +445,36 @@ final class Kits {
         return from;
     }
 
+    /** One part's "from" menu (Oct 19): a kit with nothing for this part plays Classic's sound there, and says so
+     *  ("Synth (Classic's drums)"; DadCraft tried parts on the desktop and heard no change). */
+    static String[] fromChoices(String part) {
+        String[] names = fromChoices();
+        String word = PART_WORDS[Math.max(0, Arrays.asList(PARTS).indexOf(part))];
+        for (int i = 2; i < names.length; i++) {   // (0 = the Kit, 1 = Classic itself)
+            String text = text(i - 1);
+            if (text != null && parse(text).parts.get(part) == null) {
+                names[i] += " (Classic's " + word + ")";
+            }
+        }
+        return names;
+    }
+
+    /** One part's layer menu, labelled the same way. */
+    static String[] layerChoices(String part) {
+        String[] from = fromChoices(part);
+        from[0] = "None";
+        return from;
+    }
+
+    private static final String[] PART_WORDS = {"melody", "bass", "pad", "drums"};
+
     /** Puts the user kits in the menus of the Kit Params (after an import or a delete, and at start). */
     static void refreshChoices() {
         for (String id : PARAMS) {
             Param p = Params.byId(id);
             if (p != null) {
-                p.choices = ID.equals(id) ? kitChoices(p.choices) : id.startsWith("kitl_") ? layerChoices() : fromChoices();
+                String part = id.substring(id.indexOf('_') + 1);
+                p.choices = ID.equals(id) ? kitChoices(p.choices) : id.startsWith("kitl_") ? layerChoices(part) : fromChoices(part);
             }
         }
     }

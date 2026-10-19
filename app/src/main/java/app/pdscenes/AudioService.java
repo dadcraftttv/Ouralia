@@ -464,6 +464,18 @@ public class AudioService extends Service {
         return dcsMissing;
     }
 
+    /** The built-in kits, from the app's assets (also read at launch, for the part menus' labels). */
+    static Kits.Source builtInKits(Context context) {
+        android.content.res.AssetManager assets = context.getApplicationContext().getAssets();
+        return name -> {
+            try (InputStream kitIn = assets.open("kits/" + name + ".txt")) {
+                return new String(kitIn.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                return null;
+            }
+        };
+    }
+
     public static String getLastError() {
         return lastError;
     }
@@ -800,13 +812,7 @@ public class AudioService extends Service {
                     scene != null ? scene.name : SCENE_FILE), e);
         }
 
-        Kits.source = name -> {                          // the built-in kits, from the app's assets
-            try (InputStream kitIn = getAssets().open("kits/" + name + ".txt")) {
-                return new String(kitIn.readAllBytes(), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                return null;
-            }
-        };
+        Kits.source = builtInKits(this);
         ParamStore.sendAllToPd();
         sceneRunning = scene != null;
         if (scene != null) {

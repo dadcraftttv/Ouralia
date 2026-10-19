@@ -214,7 +214,10 @@ to date in the same commit when behaviour changes.
   sample (random choices carry on). **Mix and match** (Oct 17): "Melody from" / "Bass from" / "Pad from"
   (`kitp_<part>`, Music, noPd, in presets; 0 = the Kit, else BUILT_IN[n - 1]); `Kits.send(kit, from, force, out)`
   sends only parts whose kit changed (a resent part's held notes would start over), all of them from
-  `ParamStore.sendAllToPd`. **Kit settings are not resetWhenAbsent**: a Realm's preset (no kit in it) would have
+  `ParamStore.sendAllToPd`. Each part's menu (and layer menu) marks a kit with nothing for that part, which plays
+  Classic's sound there: "Synth (Classic's drums)" (Oct 19, `Kits.fromChoices(part)`; DadCraft tried parts on the
+  desktop and heard no change). The labels need the kits' text, so the phone reads the built-in kits at launch
+  (`AudioService.builtInKits`) and the desktop refreshes the menus once its kit folder is known. **Kit settings are not resetWhenAbsent**: a Realm's preset (no kit in it) would have
   reset the Kit to Classic whenever a Realm took over the Music ingredient; now a preset that doesn't mention them
   leaves them. **Layers** (Oct 19, DadCraft: "running both the NES pad and synthwave pad simultaneously and being
   able to control how much of each is present"): "<Part> layer" (`kitl_<part>`: 0 = None, else BUILT_IN[n - 1],

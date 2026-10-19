@@ -69,6 +69,11 @@ public class Q {
         check(Kits.layerChoices()[0].equals("None") && Kits.layerChoices().length == Kits.fromChoices().length
                 && Params.byId("kitl_pad").choices.length == Kits.layerChoices().length,
                 "the layer menus: None, then every kit");
+        String[] drumsFrom = Kits.fromChoices("drums"), melFrom = Kits.fromChoices("mel");
+        check(drumsFrom[3].equals("Synth (Classic's drums)") && drumsFrom[2].equals("Acoustic (Classic's drums)")
+                        && drumsFrom[4].equals("EDM") && drumsFrom[1].equals("Classic") && melFrom[3].equals("Synth")
+                        && Kits.layerChoices("drums")[3].equals(drumsFrom[3]) && Kits.layerChoices("drums")[0].equals("None"),
+                "a part's menus say when a kit has nothing for it (Synth's drums are Classic's): " + drumsFrom[3]);
         check(Params.byId(Kits.ID).inPreset && !Params.byId(Kits.ID).resetWhenAbsent && !Params.byId("kitp_pad").resetWhenAbsent,
                 "kit settings are in presets, and a preset or Realm that doesn't mention them leaves them alone");
         Kits.Kit odd = Kits.parse("title: X\nmel: engine pluck, wobble 3, bright high, bright 0.2\nnoise: engine bowed\n");
