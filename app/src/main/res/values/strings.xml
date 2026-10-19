@@ -73,6 +73,7 @@
     <string name="diag_clip_out_help">The mix is too hot. If it sounds harsh, lower Input gain or some effect levels.</string>
     <string name="diag_handling">Handling noises skipped in the last minute: %1$d (taps and grips on the phone aren\'t caught as found sounds)</string>
     <string name="diag_note">Counts cover the last minute. A single loud clap may count once; only repeated overloads matter.</string>
+    <string name="status_objects_missing">The app\'s own sound objects didn\'t load, so nothing will play. Try reinstalling the app. If that doesn\'t help, use Send feedback (Setup, About) with the event log ticked.</string>
     <string name="status_mic_overload">Mic overloading: the sound is too loud or too close to the mic.</string>
     <string name="reset_all">Reset everything to defaults</string>
     <string name="reset_title">Reset everything?</string>

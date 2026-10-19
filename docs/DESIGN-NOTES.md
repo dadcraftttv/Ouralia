@@ -60,8 +60,13 @@ to date in the same commit when behaviour changes.
   native lib folder. Desktop/tests: `make -C dcs` -> `dcs/build/dcs.pd_linux`; pdtest adds dcs/build to the search
   path; the desktop app opens libpdnative.so RTLD_GLOBAL via JNA first (Java loads it privately: the library then
   finds no Pd symbols) and run.sh passes `-Dpdscenes.dcs`. After changing dcs/src: `make -C dcs`,
-  `tools/build_dcs_android.sh`, `tools/test_dcs.py`. If libdcs is missing, its objects fail to create and the
-  prototype voices are silent; the rest of the patch still works.
+  `tools/build_dcs_android.sh`, `tools/test_dcs.py`. If libdcs is missing, its objects fail to create, and since
+  the effect ports (Oct 17) sit in every sound's path **nothing plays**, not even the dry room (measured Oct 19: the
+  brain still runs and fires glitches into a dead chain, so a Legacy fallback for one part would be useless).
+  Instead the app says so (Oct 19, DadCraft: "the warning is fine"): `[dcs_loaded]` (dcs.c; sends 1 on the patch's
+  loadbang and on a bang) -> `[s dcs_ok]` in the built-in patch. The phone (AudioService `dcsCheck`, 1 s after
+  Start, built-in patch only) shows status_objects_missing in bold on the status line and logs it; the desktop
+  (DesktopApp, 1 s after each patch open, its libpd queues the message) puts DCS_MISSING in the window's messages.
 - `dcs_string~` (Found note ring = String, `fm_ring`, Music, noPreset, default Resonator): Karplus-Strong with a
   one-pole loss filter from two decay times (bottom = decay, top = decay x 10^(2b-2.5)), pole capped at 0.9 and
   backed off by bisection so the loop's DC gain stays < 1 without cutting the note short; tuning includes both

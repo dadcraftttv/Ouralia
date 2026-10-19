@@ -4833,6 +4833,9 @@ def build():
     add_onset_switch(P)
     add_kits(P)
     add_kit_drums(P)
+    # Our own objects loaded (Oct 19): the app warns when `dcs_ok` doesn't come at Start (without them, nothing
+    # plays: the effects are dcs objects in every sound's path). Where the library is missing this box can't be made.
+    P.obj("dcs_loaded", "dcs_loaded", 4300, 2100); P.obj("dcs_ok", "s dcs_ok", 4300, 2120); P.c("dcs_loaded", "dcs_ok")
 
     # --- defaults on load (desktop Pd / standalone) ---
     P.obj("loadbang", "loadbang", 20, 780)

@@ -92,6 +92,18 @@ public class AudioService extends Service {
     private static volatile float tempoBpm;
     /** The found-sound kit: how many kicks, snares and hats have been caught (the patch keeps the latest 5 of each). */
     private static final String FS_CAUGHT = "fs_caught";
+    /** Our own Pd objects loaded (Oct 19): the built-in patch's [dcs_loaded] sends this as it opens. Without them
+     *  nothing plays (the effects are dcs objects in every sound's path), so the screen says so. */
+    private static final String DCS_OK = "dcs_ok";
+    private volatile boolean dcsOk;
+    private static volatile boolean dcsMissing;
+    private final Runnable dcsCheck = () -> {
+        if (running && !dcsOk) {
+            dcsMissing = true;
+            logEvent("Our own Pd objects (dcs) didn't load: nothing will play");
+            notifyStateChanged();
+        }
+    };
     private static final int[] kitCaught = new int[3];
     /** The last judged slice's levels (dBFS: all, lows, highs), logged with its catch. */
     private static final String FS_LEVELS = "fs_levels";
@@ -447,6 +459,11 @@ public class AudioService extends Service {
         return running;
     }
 
+    /** The built-in patch started without our own Pd objects (nothing plays). */
+    public static boolean objectsMissing() {
+        return dcsMissing;
+    }
+
     public static String getLastError() {
         return lastError;
     }
@@ -556,6 +573,10 @@ public class AudioService extends Service {
 
             @Override
             public void receiveFloat(String source, float x) {
+                if (DCS_OK.equals(source)) {
+                    dcsOk = true;
+                    return;
+                }
                 if (FS_CAUGHT.equals(source)) {
                     int role = Math.round(x);
                     if (role >= 0 && role < 3) {
@@ -671,6 +692,7 @@ public class AudioService extends Service {
         PdBase.subscribe(SCENE_GFX);
         PdBase.subscribe(HEARD_DEG);
         PdBase.subscribe(HEARD_OFF);
+        PdBase.subscribe(DCS_OK);
         callResponse.reset();
         SceneGraphics.SCENE.clear();   // a new patch starts with nothing on screen
         PdBase.subscribe(CLIP_IN);
@@ -769,6 +791,8 @@ public class AudioService extends Service {
         // ignored by the Oboe backend; Oboe picks the device's low-latency burst size.
         PdAudio.initAudio(sampleRate, 1, 2, 8, true);
         try {
+            dcsOk = false;
+            dcsMissing = false;
             patchHandle = PdBase.openPatch(patchFile);
         } catch (IOException e) {
             PdAudio.release();   // stopEngine() won't, since nothing is running yet
@@ -828,6 +852,9 @@ public class AudioService extends Service {
         notifyStateChanged();
         Log.i(TAG, "Audio started, asked for " + sampleRate + " Hz, got " + actualRate + " Hz");
         logEvent(scene == null ? "Audio started (built-in effects)" : "Audio started (scene)");
+        if (scene == null) {   // (scenes don't use our objects)
+            handler.postDelayed(dcsCheck, 1000);
+        }
     }
 
     /** The rate Pd really runs at; 0 if the library can't say (PdBase.audioRuntimeInfo is newer than rc6). */
@@ -919,6 +946,8 @@ public class AudioService extends Service {
         getSystemService(AudioManager.class).unregisterAudioPlaybackCallback(playbackWatcher);
         pausedForCall = false;
         handler.removeCallbacks(moverTick);
+        handler.removeCallbacks(dcsCheck);
+        dcsMissing = false;
         Modulation.reset();
         StepDetector.setListener(null);
         StepDetector.setLandingListener(null);

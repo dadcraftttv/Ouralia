@@ -2120,10 +2120,13 @@ public class MainActivity extends Activity {
     private void updateStatus() {
         boolean on = AudioService.isRunning();
         String error = AudioService.getLastError();
+        boolean missing = on && AudioService.objectsMissing();
         boolean overload = on && !AudioService.isPausedForCall() && AudioService.clips().warning(ClipWatch.IN);
-        status.setTypeface(overload ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        status.setTypeface(overload || missing ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
         if (error != null && !on) {
             status.setText(error);
+        } else if (missing) {
+            status.setText(R.string.status_objects_missing);
         } else if (overload) {
             status.setText(R.string.status_mic_overload);
         } else {

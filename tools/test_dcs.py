@@ -497,7 +497,8 @@ an = [("engine", 4), ("fenv", 0), ("reso", 0), ("attack", 5), ("detune", 0)]   #
 y = play(an + [("cutoff", 4), ("pnote", 0, 220)], 1.5); w = y[int(0.3 * SR):]
 dark = play(an + [("cutoff", 1.5), ("pnote", 0, 220)], 1.5)[int(0.3 * SR):]
 bright = play(an + [("cutoff", 16), ("pnote", 0, 220)], 1.5)[int(0.3 * SR):]
-check(abs(peak_hz(w, 200, 240) / 220 - 1) < 0.003 and cent(dark) < 0.7 * cent(w) < 0.7 * cent(bright) and 0.05 < np.abs(w).max() < 1,
+# (0.75: each voice's random start comes from its memory address, which moves from run to run: dark/middle measured 0.51-0.72 over 11 runs)
+check(abs(peak_hz(w, 200, 240) / 220 - 1) < 0.003 and cent(dark) < 0.75 * cent(w) < 0.75 * cent(bright) and 0.05 < np.abs(w).max() < 1,
       f"analog: in tune, the cutoff darkens and brightens it (brightness {cent(dark):.0f} / {cent(w):.0f} / {cent(bright):.0f} Hz)")
 res = play([("engine", 4), ("fenv", 0), ("attack", 5), ("sub", 0), ("cutoff", 6), ("reso", 0.9), ("pnote", 0, 110)], 1.5)[int(0.3 * SR):]
 flat = play([("engine", 4), ("fenv", 0), ("attack", 5), ("sub", 0), ("cutoff", 6), ("reso", 0), ("pnote", 0, 110)], 1.5)[int(0.3 * SR):]
@@ -648,6 +649,15 @@ e.close()
 check(40 < heard < 80, f"chance 0.3 plays about a third of the notes ({heard} of 200)")
 held = db_frames(play(an + [("cutoff", 4), ("pnote", 0, 110)], 3.0)[int(0.5 * SR):], 100)
 check(held.max() - held.min() < 1, f"analog: a held note stands steady ({held.max() - held.min():.2f} dB)")
+
+# ---------------------------------------------------------------- dcs_loaded
+print("dcs_loaded:")
+d = patch("loaded", ["dcs_loaded", "f", "r dl_ping", "t b", "s dl_out", "r dl_bang", "t b", "dcs_loaded", "s dl_out2"],
+          [(0, 0, 1, 1), (2, 0, 3, 0), (3, 0, 1, 0), (1, 0, 4, 0), (5, 0, 6, 0), (6, 0, 7, 0), (7, 0, 8, 0)])
+e = Engine(LIB, d); e.listen("dl_out", "dl_out2")
+e.send("dl_ping", 0); e.send("dl_bang", 0); e.run(np.zeros(64, dtype=np.float32))
+check(e.heard["dl_out"] == [1.0], f"sends 1 as its patch loads ({e.heard['dl_out']})")
+check(e.heard["dl_out2"] == [1.0], f"and on a bang ({e.heard['dl_out2']})")
 
 print("ALL PASSED" if not fails else f"{len(fails)} FAILED")
 sys.exit(1 if fails else 0)

@@ -65,6 +65,12 @@ final class DesktopApp {
     private static int minuteOfDay = Worlds.minuteOfDayNow();
     private static long lastTick = System.nanoTime(), lastClock, lastKitCheck;
     private static String kitSignature;
+    /** Our own Pd objects loaded (Oct 19): the patch's [dcs_loaded] sends dcs_ok as it opens. Without them nothing
+     *  plays (the effects are dcs objects in every sound's path), so the window says so instead of staying silent. */
+    private static volatile boolean dcsOk;
+    private static volatile long dcsCheckAt;
+    static final String DCS_MISSING = "Our own Pd objects (dcs) didn't load, so nothing will play. Run make -C dcs and "
+            + "start again. If that doesn't help, send DadCraft the log.";
     private static Consumer<String> say = System.out::println;
 
     private DesktopApp() { }
@@ -128,14 +134,16 @@ final class DesktopApp {
         }
         engine = new DesktopEngine(m -> say.accept(m));
         PdBase.setReceiver(new Receiver());
-        for (String s : new String[]{"mic_level", "chime_note", "heard_deg", "heard_off", "tempo"}) {
+        for (String s : new String[]{"mic_level", "chime_note", "heard_deg", "heard_off", "tempo", "dcs_ok"}) {
             PdBase.subscribe(s);
         }
         if (win != null) {
             engine.openStopped();   // (like the phone: nothing is heard or played until Start)
         }
         try {
+            dcsOk = false;
             engine.start(patch, setup());
+            dcsCheckAt = System.nanoTime() + 1_000_000_000L;
         } catch (IOException e) {
             if (win != null) {
                 win.fatal(e.getMessage());
@@ -210,7 +218,9 @@ final class DesktopApp {
     static void setRunning(boolean run) {
         if (run && started) {   // like the phone: each Start begins afresh (the first one has a patch just opened)
             try {
+                dcsOk = false;
                 engine.reopenPatch();
+                dcsCheckAt = System.nanoTime() + 1_000_000_000L;
             } catch (IOException e) {
                 say.accept(e.getMessage());
                 return;
@@ -280,6 +290,12 @@ final class DesktopApp {
             lastTick = now;
             double nowS = now / 1e9;
             PdBase.pollPdMessageQueue();   // (this libpd queues the patch's messages: mic level, chimes, tempo)
+            if (dcsCheckAt != 0 && now - dcsCheckAt > 0) {   // (a second after the patch opened)
+                dcsCheckAt = 0;
+                if (!dcsOk) {
+                    say.accept(DCS_MISSING);
+                }
+            }
             ParamStore.morphTick(dt);
             Modulation.tick(dt, PdBase::sendFloat);
             String world = Worlds.currentWorld();
@@ -346,6 +362,7 @@ final class DesktopApp {
                 case "chime_note": motif.onNote(Math.round(x), t); break;
                 case "heard_deg": callResponse.onNote(Math.round(x), t); break;
                 case "tempo": tempoBpm = x; break;
+                case "dcs_ok": dcsOk = true; break;
                 default: break;
             }
         }
