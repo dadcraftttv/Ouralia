@@ -462,10 +462,11 @@ final class Params {
                     Param.Curve.LINEAR).inSection("glitch").rand(0f, 0.6f).resetWhenAbsent(),
             new Param("gc_level", "Glitch cloud level", 0f, 1f, 0.7f, "", Param.Curve.LINEAR)
                     .inSection("glitch").rand(0.4f, 1f).resetWhenAbsent(),
-            // Glitch voice (prototype, Oct 16): New = our own C object (dcs_glitch~): several glitches at once, each
-            // starting on its exact sample, and a smoother stretch. Same kinds, shares and timing as Classic.
-            new Param("gc_voice", "Glitch voice", 0f, 1f, 0f, "", Param.Curve.LINEAR)
-                    .choices("Classic", "New (several at once, smoother stretch)")
+            // Glitch voice (Oct 16): New = our own C object (dcs_glitch~): several glitches at once, each starting on
+            // its exact sample, and a smoother stretch. Same kinds, shares and timing as Legacy (the Pd voices). The
+            // default since Oct 19 (DadCraft: New the standard, the old one kept as a fallback, renamed Legacy).
+            new Param("gc_voice", "Glitch voice", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+                    .choices("Legacy (the Pd voices, one at a time)", "New (several at once, smoother stretch)")
                     .inSection("glitch").noPreset().resetWhenAbsent().dcs(),
             // The glitch matrix: how each glitch is shared out. Together at most 100%, and what is left over is the chance
             // that nothing happens (DadCraft's idea). Amount says how often a glitch gets its chance.

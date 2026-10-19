@@ -44,7 +44,7 @@ DEFAULTS = [
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
     ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0),
-    ("gc_voice", 0), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
+    ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
 # Scales as semitone steps above the key note. The patch snaps every note it plays to these.
@@ -3258,13 +3258,13 @@ def add_glitch_cloud(P):
     P.obj("gc_wait_l", "list", x + 100, y + 855)
     P.c("gc_pack", "gc_wait"); P.c("gc_wait", "gc_wait_del", 1, 0); P.c("gc_wait", "gc_wait_l", 0, 1)
     P.c("gc_wait_del", "gc_wait_l")
-    # Glitch voice (`gc_voice`): Classic = the voices below, one at a time; New = dcs_glitch~ (our own C object:
+    # Glitch voice (`gc_voice`): Legacy (0) = the voices below, one at a time; New (1, the default) = dcs_glitch~ (our own C object:
     # several at once, each starting on its exact sample, and a stretch whose grains line up with each other)
     P.obj("gc_vc_vr", "r gc_voice", x + 300, y + 780)
     ex("gc_vc_ex", "$f1==0 ; $f1>=1".replace(" ; ", " " + BS + "; "), x + 300, y + 800)
     P.c("gc_vc_vr", "gc_vc_ex")
-    for nm, init, src, sel in (("gc_vc_cls", 1, "gc_wait_l", 0), ("gc_vc_new", 0, "gc_wait_l", 1),
-                               ("gc_vc_scls", 1, "gc_spack", 0), ("gc_vc_snew", 0, "gc_spack", 1)):
+    for nm, init, src, sel in (("gc_vc_cls", 0, "gc_wait_l", 0), ("gc_vc_new", 1, "gc_wait_l", 1),
+                               ("gc_vc_scls", 0, "gc_spack", 0), ("gc_vc_snew", 1, "gc_spack", 1)):
         P.obj(nm, f"spigot {init}", x + 400 + 60 * len(nm), y + 830)
         P.c(src, nm); P.c("gc_vc_ex", nm, sel, 1)
     P.obj("gc_vc_pre", "list prepend slice", x + 500, y + 860); P.obj("gc_vc_trim", "list trim", x + 500, y + 880)

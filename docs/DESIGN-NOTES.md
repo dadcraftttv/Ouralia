@@ -70,7 +70,9 @@ to date in the same commit when behaviour changes.
   a clap alone has nothing at a low note and rang only the 2nd/3rd harmonics (thin); with the pluck the fundamental
   leads ~10x. `FM_STR_GAIN` 40, brightness `FM_STR_BRIGHT` 0.3 + `FM_STR_CHAR_BRIGHT` 0.4 x chime_char, ring =
   cdec x (1 - 0.7 cc). Measured with a clap: same notes as the resonator, tonal 0.71 (resonator 0.39), ~+3 dB.
-- `dcs_glitch~` (Glitch voice = New, `gc_voice`, Glitch section, noPreset, default Classic): takes the brain's
+- `dcs_glitch~` (Glitch voice = New, `gc_voice`, Glitch section, noPreset; **the default since Oct 19**, DadCraft:
+  "if the newer one outperforms the old one" it should take over, the old one kept as a fallback, renamed Legacy;
+  stored values stay, so existing installs keep their choice): takes the brain's
   lists unchanged (`slice L d0 c1 c2 S place` from gc_wait_l, `stretch L d0 rate place` from gc_spack; spigots
   `gc_vc_*` pick the voice), 4 voices (+ 4 slots for stolen ones fading 4 ms), own 4 s buffer, sample-exact starts
   (vline~'s block timing, the fraction carried), ITD as before. Stretch: 4 Hann grains of 100 ms, each new grain

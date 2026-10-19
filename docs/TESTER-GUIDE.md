@@ -249,6 +249,7 @@ Two kinds of glitch live here: the glitch cloud, which throws bits of what just 
 - **Glitch cloud amount:** how often a glitch gets its chance. 0 (the default) switches the glitch cloud off.
 - **Glitch cloud level:** how loud the glitches are.
 - **The glitch matrix:** four sliders share out the chances between the kinds of glitch. **Stutter** repeats a slice of the sound (a quarter step long while you walk), **Reverse** plays it backwards, **Shuffle** brings back an older moment out of order, and **Stretch** smears it out slowly while the pitch stays the same. Together they can't go past 100%: a slider stops at whatever the others leave free. Whatever you leave unassigned is silence, so Reverse 10% and Shuffle 10% means 80% of the chances pass with nothing happening. The bold **Glitch budget** line under the sliders shows how much is used and how much is left to silence. They start at Stutter 35, Reverse 25, Shuffle 20, Stretch 20.
+- **Glitch voice \*:** what plays the glitches. **New** (the default) plays several at once, each starting exactly on time, and its Stretch holds a steady sound smoothly. **Legacy** is the original voice, one glitch at a time, kept as a fallback. If you had chosen Legacy before, your choice stays.
 
 * **Freeze:** 0 is live sound. At 1, the last moment is looped and held.
 * **Freeze loop length:** how long the looped piece is. Shorter is more robotic.
