@@ -145,9 +145,7 @@ final class DesktopApp {
             System.exit(2);
         }
         PdBase.computeAudio(true);
-        Modulation.reset();
-        motif.reset();
-        Worlds.reset();
+        started = engine.running();
         File kits = new File(new File(patch).getAbsoluteFile().getParentFile().getParentFile(), "kits");   // (assets/kits)
         Kits.source = name -> {
             try {
@@ -157,7 +155,7 @@ final class DesktopApp {
                 return null;
             }
         };
-        ParamStore.sendAllToPd();
+        freshStart();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ParamStore.save(context);
             engine.stop();
@@ -188,6 +186,20 @@ final class DesktopApp {
         }
     }
 
+    private static boolean started;   // played since the window opened (a later Start reopens the patch)
+
+    /** What a newly opened patch starts with: the app's memories cleared, every setting and kit sent. */
+    private static void freshStart() {
+        Modulation.reset();
+        motif.reset();
+        callResponse.reset();
+        Worlds.reset();
+        CalmBuild.reset();
+        calmChimesSent = 0f;
+        worldShown = null;
+        ParamStore.sendAllToPd();
+    }
+
     private static void sayRunning() {
         say.accept(String.format(Locale.US, "Running at %d Hz, %d samples a cycle. Mic: %s. Playing to \"PdScenes\"%s.",
                 engine.sampleRate(), engine.framesPerCycle(), orWords(engine.connected("mic"), "none"),
@@ -196,6 +208,16 @@ final class DesktopApp {
 
     /** The window's Start/Stop button. */
     static void setRunning(boolean run) {
+        if (run && started) {   // like the phone: each Start begins afresh (the first one has a patch just opened)
+            try {
+                engine.reopenPatch();
+            } catch (IOException e) {
+                say.accept(e.getMessage());
+                return;
+            }
+            freshStart();
+        }
+        started |= run;
         engine.setRunning(run);
         if (run) {
             sayRunning();

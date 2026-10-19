@@ -63,6 +63,9 @@ final class DesktopEngine {
     private volatile boolean closing;
     private volatile boolean paused;      // stopped (the Start/Stop button): silent, nothing heard or played to
     private Setup wanted = new Setup();   // what apply() was last asked for (connected again on Start)
+    private String patchPath;
+    private int patchHandle;
+    private final java.util.concurrent.locks.ReentrantLock pdLock = new java.util.concurrent.locks.ReentrantLock();
     private final List<Route> routes = new ArrayList<>();
     private volatile int rate, frames;
 
@@ -112,7 +115,9 @@ final class DesktopEngine {
             PdBase.openAudio(1, 2, rate);
             String dcs = System.getProperty("pdscenes.dcs");    // our own objects (run.sh: dcs/build)
             if (dcs != null) PdBase.addToSearchPath(dcs);
-            if (PdBase.openPatch(patch) == 0) {
+            patchPath = patch;
+            patchHandle = PdBase.openPatch(patch);
+            if (patchHandle == 0) {
                 throw new IOException("Couldn't open the patch " + patch);
             }
             micL = client.registerPort("mic_L", JackPortType.AUDIO, JackPortFlags.JackPortIsInput);
@@ -198,6 +203,21 @@ final class DesktopEngine {
     void setRunning(boolean run) {
         paused = !run;
         apply(wanted);
+    }
+
+    /** Closes the patch and opens it again, as new (Oct 19, DadCraft: Start on the phone starts afresh, with no caught
+     *  slices or samples, no echo tails; the desktop's Stop only paused). Call while stopped. */
+    void reopenPatch() throws IOException {
+        pdLock.lock();
+        try {
+            PdBase.closePatch(patchHandle);
+            patchHandle = PdBase.openPatch(patchPath);
+            if (patchHandle == 0) {
+                throw new IOException("Couldn't open the patch " + patchPath);
+            }
+        } finally {
+            pdLock.unlock();
+        }
     }
 
     /** Before start(): open stopped (the window's Start button starts it). */
@@ -412,8 +432,12 @@ final class DesktopEngine {
             in[i] = v;
             pin = Math.max(pin, Math.abs(v));
         }
-        if (n % block == 0 && n <= in.length) {
-            PdBase.process(n / block, in, out);
+        if (n % block == 0 && n <= in.length && pdLock.tryLock()) {   // (not while the patch is being reopened)
+            try {
+                PdBase.process(n / block, in, out);
+            } finally {
+                pdLock.unlock();
+            }
         } else {
             Arrays.fill(out, 0f);   // (PipeWire always uses whole Pd blocks; just in case)
         }

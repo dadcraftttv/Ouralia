@@ -16,7 +16,8 @@ From the menu (`desktop/launch.sh`) one copy runs at a time (a second start says
 `~/.local/state/pdscenes/desktop.log` (the run before in `desktop.log.1`).
 
 The window opens stopped, like the phone: press **Start** to play (**Stop** lets go of the mic, the game sound and
-your headphones; the "PdScenes" output stays, so OBS keeps its source). "Your default output" is the system's, except
+your headphones; the "PdScenes" output stays, so OBS keeps its source). Each Start begins afresh, as on the phone:
+the caught sounds, echoes and the music's memory start empty. "Your default output" is the system's, except
 when PipeWire has made the PdScenes output itself the default (it does when your chosen output comes back under a new
 name, e.g. after a USB interface reconnects): then it's the output you chose in your sound settings.
 
