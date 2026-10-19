@@ -312,8 +312,6 @@ final class DesktopApp {
 
     /** What the patch reports: the mic's loudness, chimes played, sung notes heard, the tempo. */
     private static final class Receiver implements PdReceiver {
-        private final StringBuilder line = new StringBuilder();
-
         @Override public void receiveFloat(String source, float x) {
             double t = System.nanoTime() / 1e9;
             switch (source) {
@@ -331,14 +329,10 @@ final class DesktopApp {
             }
         }
 
-        @Override public void print(String s) {
-            line.append(s);
-            if (s.endsWith("\n")) {
-                String l = line.toString().trim();
-                line.setLength(0);
-                if (!l.contains("version") && !l.startsWith("pd 0.")) {
-                    System.err.println("Pd: " + l);
-                }
+        @Override public void print(String s) {   // (this libpd hands over whole lines, mostly without "\n")
+            String l = s.trim();
+            if (!l.isEmpty() && !l.contains("version") && !l.startsWith("pd 0.") && !l.startsWith("verbose(")) {
+                System.err.println("Pd: " + l);
             }
         }
 
