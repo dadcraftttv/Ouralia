@@ -81,7 +81,7 @@ As of Oct 17:
 - **Kit layers** built Oct 19 (DadCraft: blend two kits on one part; "<Part> layer" + "<Part> blend", Music tab):
   waiting on his phone check.
 - **Kit plan done** (ROADMAP 19): stages 1-3 built, the stems player removed Oct 18 (DadCraft). Smaller open items: register Low for kit pads, kit drums
-  in "Your steps" mode, the desktop app shows no Pd console prints.
+  in "Your steps" mode.
 - **Release:** rc3 is with testers; rc4 not built yet (our pd-core, the unplug fix, input gain 1, and whatever of
   the above DadCraft approves). Rename to Ouralia (no USPTO/EUIPO hits) waits for release prep.
 - Check `git status` / `git log origin/main..HEAD` for unpushed commits: push only when DadCraft asks.
@@ -92,4 +92,4 @@ As of Oct 17:
 - A `[declare]` object does nothing while a file loads: the `#X declare` line after `#N canvas` does.
 - No `;` inside comments in Params.java (the test regex stops at `;`).
 - Pd seeds every [random] from one counter: adding objects reshuffles random sequences in later tests.
-- Desktop libpd queues messages: call `PdBase.pollPdMessageQueue()`. The desktop app shows no Pd console prints (to fix).
+- Desktop libpd queues messages: call `PdBase.pollPdMessageQueue()`.
