@@ -2,7 +2,9 @@
 
 Open-source (GPLv3-or-later, bundles RjDj's rjlib) Android app: RjDj-style reactive music on libpd / Pure Data, plus a
 Linux desktop "stream mode" (`desktop/`). Free on Google Play eventually.
-Owner: DadCraft, community name "dadcraft". Testers call him "Dad" or "DadCraft" (never his real name in tester-facing text).
+Owner: **DadCraft** (GitHub dadcraftttv; testers also say "Dad"). **Always call him DadCraft**: in files, code comments,
+commit messages, tests and replies. Never write his real name anywhere (the GitHub repo is public; his name was
+erased from all of its history on Oct 19).
 Test device: Moto G Stylus 2025, Android 16, no root. Build machine: Linux Mint, 12 cores.
 
 **Full design notes and history: `docs/DESIGN-NOTES.md`** (every feature: how it works, numbers measured, why, what
