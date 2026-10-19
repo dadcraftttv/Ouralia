@@ -58,6 +58,17 @@ public class Q {
         Kits.send(1, new int[]{0, 0, 0}, false, (r, s, v) -> sent.add(r + " " + s + " " + v));
         check(!sent.isEmpty() && sent.stream().allMatch(m -> m.startsWith("kit_pad")) && sent.contains("kit_pad engine 2.0"),
                 "switching only the pad back to the kit sends only the pad (melody and bass keep their notes)");
+        sent.clear();
+        Kits.send(1, new int[4], new int[]{0, 0, 7, 0}, false, (r, s, v) -> sent.add(r + " " + s + " " + v));
+        check(!sent.isEmpty() && sent.stream().allMatch(m -> m.startsWith("kit2_pad ")) && sent.contains("kit2_pad engine 8.0"),
+                "a pad layer (Chiptune: NES) goes to kit2_pad alone: the first kit's parts keep their notes");
+        sent.clear();
+        Kits.send(1, new int[4], new int[4], false, (r, s, v) -> sent.add(r + " " + s + " " + v));
+        check(sent.contains("kit2_pad engine 0.0") && sent.stream().allMatch(m -> m.startsWith("kit2_pad ")),
+                "the layer back to None: kit2_pad goes silent (engine 0)");
+        check(Kits.layerChoices()[0].equals("None") && Kits.layerChoices().length == Kits.fromChoices().length
+                && Params.byId("kitl_pad").choices.length == Kits.layerChoices().length,
+                "the layer menus: None, then every kit");
         check(Params.byId(Kits.ID).inPreset && !Params.byId(Kits.ID).resetWhenAbsent && !Params.byId("kitp_pad").resetWhenAbsent,
                 "kit settings are in presets, and a preset or Realm that doesn't mention them leaves them alone");
         Kits.Kit odd = Kits.parse("title: X\nmel: engine pluck, wobble 3, bright high, bright 0.2\nnoise: engine bowed\n");

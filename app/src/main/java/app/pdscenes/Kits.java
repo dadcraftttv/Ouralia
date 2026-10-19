@@ -46,7 +46,8 @@ final class Kits {
     static final int MAX_USER = 99;
     static final String FILE = "kit.txt";
     /** The Params holding a kit's menu index: the Kit, then each part's "from" (whose index is one more). */
-    static final String[] PARAMS = {ID, "kitp_mel", "kitp_bass", "kitp_pad", "kitp_drums"};
+    static final String[] PARAMS = {ID, "kitp_mel", "kitp_bass", "kitp_pad", "kitp_drums",
+            "kitl_mel", "kitl_bass", "kitl_pad", "kitl_drums"};
     static final String[] ENGINES = {"classic", "pluck", "bowed", "modal", "analog", "drums", "chop", "sub", "chip", "sample"};
     static final String[] MODAL = {"", "bell", "marimba", "bowl"};
     static final String[] CHIPS = {"", "nes", "gameboy", "genesis"};
@@ -116,7 +117,7 @@ final class Kits {
     /** The settings each part last got (null = none yet, "" = its own sound): a part whose sound didn't change isn't
      *  sent again (its held notes would start over). Settings, not the kit's index: a part edited on the desktop bench
      *  is sent again (and only that part), and deleting a kit (which renumbers the ones after it) resends nothing. */
-    private static final String[] sentPart = new String[4];
+    private static final String[] sentPart = new String[8];   // (the parts, then their layers)
 
     private Kits() {
     }
@@ -262,21 +263,29 @@ final class Kits {
     }
 
     /** Sends the sound of every part whose kit changed (all of them when `force`, e.g. the patch just opened).
-     *  `from` = each part's "from" choice (Params kitp_<part>), in PARTS order. */
-    static synchronized void send(int kit, int[] from, boolean force, Out out) {
-        for (int k = 0; k < PARTS.length; k++) {
-            int index = kitFor(kit, k < from.length ? from[k] : 0);
-            String text = text(index);
+     *  `from` = each part's "from" choice (Params kitp_<part>), in PARTS order. No layers. */
+    static void send(int kit, int[] from, boolean force, Out out) {
+        send(kit, from, new int[PARTS.length], force, out);
+    }
+
+    /** The same, with each part's layer (Params kitl_<part>: 0 = none, else BUILT_IN[n - 1]), sent to kit2_<part>
+     *  (Oct 19: two kits blended on one part). A part with no layer gets the voice's defaults there: silent. */
+    static synchronized void send(int kit, int[] from, int[] layer, boolean force, Out out) {
+        for (int j = 0; j < 2 * PARTS.length; j++) {
+            int k = j % PARTS.length;
+            int l = j < PARTS.length ? 0 : (k < layer.length ? layer[k] : 0);
+            int index = j < PARTS.length ? kitFor(kit, k < from.length ? from[k] : 0) : l - 1;
+            String text = index < 0 ? null : text(index);
             Kit parsed = text == null ? null : parse(text);
             if (parsed != null) {
                 parsed.dir = dir(index);
             }
             String key = parsed == null ? "" : describe(parsed.parts.get(PARTS[k])) + (parsed.dir == null ? "" : parsed.dir);
-            if (!force && key.equals(sentPart[k])) {
+            if (!force && key.equals(sentPart[j])) {
                 continue;
             }
-            sentPart[k] = key;
-            sendPart(PARTS[k], parsed, out);
+            sentPart[j] = key;
+            sendPart((j < PARTS.length ? "kit_" : "kit2_") + PARTS[k], PARTS[k], parsed, out);
         }
     }
 
@@ -316,9 +325,8 @@ final class Kits {
         return n >= 0 && n < user.size() ? user.get(n).text : null;
     }
 
-    private static void sendPart(String part, Kit kit, Out out) {
+    private static void sendPart(String recv, String part, Kit kit, Out out) {
         {
-            String recv = "kit_" + part;
             for (String[] d : DEFAULTS) {
                 out.send(recv, d[0], Float.parseFloat(d[1]));
             }
@@ -430,12 +438,19 @@ final class Kits {
         return names.toArray(new String[0]);
     }
 
+    /** A part's layer menu: none, the built-in kits, the user kits. */
+    static String[] layerChoices() {
+        String[] from = fromChoices();
+        from[0] = "None";
+        return from;
+    }
+
     /** Puts the user kits in the menus of the Kit Params (after an import or a delete, and at start). */
     static void refreshChoices() {
         for (String id : PARAMS) {
             Param p = Params.byId(id);
             if (p != null) {
-                p.choices = ID.equals(id) ? kitChoices(p.choices) : fromChoices();
+                p.choices = ID.equals(id) ? kitChoices(p.choices) : id.startsWith("kitl_") ? layerChoices() : fromChoices();
             }
         }
     }
@@ -561,7 +576,7 @@ final class Kits {
                 throw new IOException("Cannot move the kit into " + old);
             }
             deleteTree(aside);
-            sentPart[0] = sentPart[1] = sentPart[2] = sentPart[3] = null;   // (played again, now with them)
+            Arrays.fill(sentPart, null);   // (played again, now with them)
             return same;
         }
         File dir = newFolder(parse(text).title);

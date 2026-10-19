@@ -219,6 +219,24 @@ final class Params {
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
             new Param("kitp_drums", "Drums from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
+            // Layers (Oct 19): a second kit on a part, blended with the first (DadCraft: the NES pad and the Synth pad
+            // together, "being able to control how much of each is present"). None = as before.
+            new Param("kitl_mel", "Melody layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
+                    Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
+            new Param("kitb_mel", "Melody blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+                    .inSection("music").noRandom().dcs(),
+            new Param("kitl_bass", "Bass layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
+                    Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
+            new Param("kitb_bass", "Bass blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+                    .inSection("music").noRandom().dcs(),
+            new Param("kitl_pad", "Pad layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
+                    Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
+            new Param("kitb_pad", "Pad blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+                    .inSection("music").noRandom().dcs(),
+            new Param("kitl_drums", "Drums layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
+                    Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
+            new Param("kitb_drums", "Drums blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+                    .inSection("music").noRandom().dcs(),
             // Melody rhythm (Oct 15): the walking notes and the standing-still chimes follow one-bar rhythm patterns
             // (whole to 8th notes, or dotted and syncopated ones), each note ringing as long as it lasts. Off = as before.
             new Param("mel_rhythm", "Melody rhythm", 0f, 3f, 0f, "", Param.Curve.LINEAR)

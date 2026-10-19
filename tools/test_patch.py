@@ -77,7 +77,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "drum_kick", "drum_snare", "voc_ctl"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -1899,20 +1899,20 @@ KITS["samples"] = {"mel": [("attack", 2), ("sample", (_tone, 60)), ("engine", 9)
                    "bass": [("attack", 2), ("loop", 1), ("loopstart", 300), ("sample", (_pad, 60)), ("engine", 9)],
                    "pad": [("attack", 300), ("loop", 1), ("loopstart", 300), ("sample", (_pad, 60)), ("engine", 9)],
                    "drums": [("kick", (_kick,)), ("snare", (_snare,)), ("hat", (_hat,)), ("engine", 9)]}
-def send_kit(e, kit):
+def send_kit(e, kit, to="kit_"):
     for part in ("mel", "bass", "pad", "drums"):
-        e.send_msg("kit_" + part, "engine", 0)
+        e.send_msg(to + part, "engine", 0)
         for k, v in KIT_DEFAULTS:
-            e.send_msg("kit_" + part, k, v)
-        e.send_msg("kit_" + part, "sgain", (6.7, 6, 0.26, 6)[("mel", "bass", "pad", "drums").index(part)])   # (as Kits.SAMPLE_GAIN)
+            e.send_msg(to + part, k, v)
+        e.send_msg(to + part, "sgain", (6.7, 6, 0.26, 6)[("mel", "bass", "pad", "drums").index(part)])   # (as Kits.SAMPLE_GAIN)
         for k, v in kit.get(part, ()):
             if k in ("kick", "snare", "hat", "ohat"):
-                e.send_msg("kit_" + part, "dsample", ("kick", "snare", "hat", "ohat").index(k), *v)
+                e.send_msg(to + part, "dsample", ("kick", "snare", "hat", "ohat").index(k), *v)
             elif isinstance(v, tuple):
-                e.send_msg("kit_" + part, k, *v)
+                e.send_msg(to + part, k, *v)
             else:
-                e.send_msg("kit_" + part, k, v)
-def kit_run(kit, part):
+                e.send_msg(to + part, k, v)
+def kit_run(kit, part, layer=None, blend=0.5):
     """Music with only `part` audible (melody: motif notes; bass: Pad register Low; pad: Mid), the kit sent or not."""
     if part == "drums":                                                     # the beat alone, synth drums for Classic
         e = fresh(music_on=0, wet=0, beat_level=1, beat_follow=1, beat_when=1, rhythm_src=0)
@@ -1922,9 +1922,13 @@ def kit_run(kit, part):
         return e.run(x[:5 * SR])[:, 0][2 * SR:]
     over = dict(music_on=1, music_arp=1 if part == "mel" else 0, music_res=0, wet=0, music_react=0, melody_src=0, pad_src=0, bass_src=0,
                 music_pad=1 if part != "mel" else 0, music_pad_reg={"mel": 2, "bass": 0, "pad": 1}[part])
+    if layer is not None:                  # (Oct 19: a second kit on the part, blended)
+        over.update({"kitl_" + part: 1, "kitb_" + part: blend})
     e = fresh(**over)
     if kit is not None:                    # (every note: a kit's sparseness (chance) is tested in test_dcs)
         send_kit(e, {p: [kv for kv in v if kv[0] not in ("chance", "hchance")] for p, v in kit.items()})
+    if layer is not None:
+        send_kit(e, {p: [kv for kv in v if kv[0] not in ("chance", "hchance")] for p, v in layer.items()}, "kit2_")
     x = (np.random.default_rng(3).standard_normal(6 * SR) * 0.0005).astype(np.float32)
     e.run(x[:SR])
     if part == "mel":
@@ -1956,6 +1960,19 @@ for name, part in [(n, p) for n in KITS for p in ("mel", "bass", "pad", "drums")
           and f_ac and (part == "drums" or all(in_key(f) for f in f_ac)),
           "kits, %s %s: Classic unchanged; it plays in key, differently, about as loud (rms %.4f vs %.4f, peaks %s vs %s)"
           % (name, part, rms(y_ac), rms(y_none), [round(f) for f in f_ac[:3]], [round(f) for f in f_none]))
+# kit layers (Oct 19): a second kit on a part, blended (the melody: its motif notes are the same from run to run)
+r_ = lambda a, b: rms(a) / rms(b)
+y_a, y_b = kit_run(KITS["acoustic"], "mel"), kit_run(KITS["chipnes"], "mel")
+y_0, y_1 = kit_run(KITS["acoustic"], "mel", KITS["chipnes"], 0), kit_run(KITS["acoustic"], "mel", KITS["chipnes"], 1)
+y_h = kit_run(KITS["acoustic"], "mel", KITS["chipnes"], 0.5)
+check(0.8 < r_(y_0, y_a) < 1.25 and 0.8 < r_(y_1, y_b) < 1.25,
+      "kit layers: blend 0 is the first kit alone (x%.2f), blend 1 the layer alone (x%.2f)" % (r_(y_0, y_a), r_(y_1, y_b)))
+check(rms(y_h - y_0) > 0.3 * rms(y_0) and rms(y_h - y_1) > 0.3 * rms(y_1) and 0.6 < r_(y_h, (y_a + y_b) / 2) < 1.6,
+      "kit layers: half way, both kits play (level x%.2f of the two)" % r_(y_h, (y_a + y_b) / 2))
+y_c, y_cl = kit_run(KITS["acoustic"], "mel", {}, 1), kit_run({}, "mel")
+check(0.8 < r_(y_c, y_cl) < 1.25, "kit layers: Classic as the layer, blend 1: the Classic melody (x%.2f)" % r_(y_c, y_cl))
+y_p1, y_p = kit_run(KITS["synth"], "pad", KITS["chipnes"], 0), kit_run(KITS["synth"], "pad")
+check(0.7 < r_(y_p1, y_p) < 1.4, "kit layers: the pad's layer at blend 0 leaves the first kit alone (x%.2f)" % r_(y_p1, y_p))
 # kits, the EDM pump: a held pad dips at every kick (the kit's drums silenced by the Mix trims, so only the pump is heard)
 def pumped(pump):
     kit = {k: list(v) for k, v in KITS["edm"].items()}

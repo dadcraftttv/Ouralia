@@ -57,7 +57,7 @@ final class ParamStore {
         }
         float v = p.clamp(value);
         values.put(id, v);
-        if ((Kits.ID.equals(id) || id.startsWith("kitp_")) && AudioService.isRunning()) {
+        if ((Kits.ID.equals(id) || id.startsWith("kitp_") || id.startsWith("kitl_")) && AudioService.isRunning()) {
             sendKit(false);
         }
         if (p.sendToPd && AudioService.isRunning()) {
@@ -256,11 +256,12 @@ final class ParamStore {
     /** Each part's kit (the Kit, or the part's own "from" choice), as messages to its kit voice (Kits); only the
      *  parts that changed unless `all`. */
     static void sendKit(boolean all) {
-        int[] from = new int[Kits.PARTS.length];
+        int[] from = new int[Kits.PARTS.length], layer = new int[Kits.PARTS.length];
         for (int k = 0; k < from.length; k++) {
             from[k] = Math.round(get("kitp_" + Kits.PARTS[k]));
+            layer[k] = Math.round(get("kitl_" + Kits.PARTS[k]));
         }
-        Kits.send(Math.round(get(Kits.ID)), from, all, new Kits.Out() {
+        Kits.send(Math.round(get(Kits.ID)), from, layer, all, new Kits.Out() {
             @Override
             public void send(String receiver, String selector, float value) {
                 PdBase.sendMessage(receiver, selector, value);

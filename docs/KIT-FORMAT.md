@@ -149,6 +149,9 @@ drums: engine sample, kick kick.wav, snare snare.wav, hat hat.wav, ohat open hat
   folder) a folder. `kit.txt` can be at the top of the zip or one folder down. The kit plays straight away, and the
   report lists anything it couldn't use.
 - **Mix and match:** each part can come from a different kit (Music tab → Melody from, Bass from, and so on).
+- **Layers:** each part can also play a second kit at the same time (Music tab → Melody layer, Pad layer, and so on),
+  with a blend slider between the two. A kit that's quiet on its own may need a higher `level` to hold its own in a
+  blend. The sidechain pump comes from the first kit's `drums` line.
 - **Presets:** a preset saved with your kit carries the kit's text, so a friend who loads it hears your kit. Recordings
   don't travel inside presets. Until your friend imports the kit's zip, the parts that use recordings play Classic.
   Once they import it, those parts fill in.

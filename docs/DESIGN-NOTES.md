@@ -204,7 +204,18 @@ to date in the same commit when behaviour changes.
   sends only parts whose kit changed (a resent part's held notes would start over), all of them from
   `ParamStore.sendAllToPd`. **Kit settings are not resetWhenAbsent**: a Realm's preset (no kit in it) would have
   reset the Kit to Classic whenever a Realm took over the Music ingredient; now a preset that doesn't mention them
-  leaves them. **Synth kit** (Oct 17, step 1 of "one by one"): `dcs_voice~` engine 4 analog = two PolyBLEP saws
+  leaves them. **Layers** (Oct 19, DadCraft: "running both the NES pad and synthwave pad simultaneously and being
+  able to control how much of each is present"): "<Part> layer" (`kitl_<part>`: 0 = None, else BUILT_IN[n - 1],
+  same numbering as "from", in Kits.PARAMS so presets carry a user kit used as a layer) and "<Part> blend"
+  (`kitb_<part>`, 0 = the first kit, 1 = the layer, default 0.5). Both go to Pd; Kits sends the layer's kit to a
+  second dcs_voice~ per part (`kit2_<part>`; no layer = the voice's defaults, engine 0). add_kits works out three
+  shares from the two engines, the layer switch and the blend, equal power (cos/sin): Classic's (a side on Classic
+  gives its share to the Classic sound, at most 1), the first kit's and the layer's, each gliding 50 ms. Every note
+  goes to both voices (a voice on engine 0 ignores it); the Classic melody's notes stop while its share is 0
+  (`kmelcl`, as `kmel==0` did). The kit voices' sum for melody, bass and pad must be built inside the music
+  subpatch (names `mu_...`): built outside, music -> top -> music is a DSP loop and the whole patch goes silent. The
+  drums' pump comes from the first kit only. No layer = exactly as before (tests: test_patch "a sample kit", Q).
+  **Synth kit** (Oct 17, step 1 of "one by one"): `dcs_voice~` engine 4 analog = two PolyBLEP saws
   `detune` cents apart + a PolyBLEP sub square (`sub`) into a 4-pole TPT ladder (zero-delay feedback solved,
   tanh on the input, k = 3.9 x `reso`), cutoff = note x `cutoff` x (1 + `fenv` x env), the env falling over the
   note (or `decay` for held notes), cutoff per block. Measured: in tune; brightness 218 / 341 / 819 Hz at cutoff

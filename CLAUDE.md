@@ -78,6 +78,8 @@ As of Oct 17:
   for sound designers: keep it in step with Kits.java and dcs_voice~).
 - **User kits** stage 1 built (text kit.txt: import, Kit menus, delete, presets carry the kit text, desktop bench
   reloads on save; Music tab "Your kits"). Waiting on DadCraft's phone check.
+- **Kit layers** built Oct 19 (DadCraft: blend two kits on one part; "<Part> layer" + "<Part> blend", Music tab):
+  waiting on his phone check.
 - **Kit plan done** (ROADMAP 19): stages 1-3 built, the stems player removed Oct 18 (DadCraft). Smaller open items: register Low for kit pads, kit drums
   in "Your steps" mode, the desktop app shows no Pd console prints.
 - **Release:** rc3 is with testers; rc4 not built yet (our pd-core, the unplug fix, input gain 1, and whatever of
