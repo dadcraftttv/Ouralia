@@ -254,6 +254,7 @@ final class DesktopWindow {
 
     private void build() {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setIconImages(AppIcon.windowImages());
         JPanel top = new JPanel();
         top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
         top.setBorder(BorderFactory.createEmptyBorder(8, 10, 6, 10));

@@ -952,6 +952,16 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - **XY pad** (Oct 19): on a card; `ScenePad.drawXyPad` (only with no scene: a scene's pad keeps its look) draws a
   quarter grid, the point it holds (`Modulation.padPoint`, what the Pad X / Pad Y movers follow) as an accent dot
   with a halo and guide lines, "PAD X" / "PAD Y" in the corners, and an accent ring under a held finger.
+- **The app icon** (Oct 20, DadCraft picked "A3" on the canvas's "App icon" page after six ideas, four dial +
+  headphones mashups and a rebalance: "the dial because it's central in the app ... the headphones, because ... i like
+  music"; A's cups "add extra weight to the bottom ... look off-center"): the dial's ring open at the bottom, its ends
+  thickened into earcups (teal left, violet right), the lit arc teal to violet ending at the white knob, Start in the
+  middle, on the dark background #0d0b13. `tools/make_icon.py` writes the adaptive icon (foreground, monochrome layer
+  for themed icons, background colour; minSdk 28 so no PNG mipmaps) and `docs/icon/ouralia-icon.svg`;
+  `desktop/.../AppIcon.java` draws the same in Java2D (window icons; `java AppIcon.java <png> <size>` wrote
+  `docs/icon/ouralia-icon-512.png` for the store). The desktop menu entry uses the SVG. Android 12+ splash: the icon
+  on the same dark (values-v31 `windowSplashScreenBackground`). Launchers with icon packs may keep the old icon until
+  they refresh.
 - Kit headings (Oct 20, DadCraft: the kit and layer menus "almost kind of run together"): the Music card has small
   accent headings with a line above (`addSubheading`): Kit, Mix and match, Layers, How it plays (from Melody rhythm on).
   Each layer and its blend share an outlined panel (`addLayerPanel`); the blend is at 40% while the layer is None
