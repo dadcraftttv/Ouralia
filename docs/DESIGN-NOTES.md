@@ -950,6 +950,9 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - **Sound tab top** (Oct 20): Presets is one wide button (the list sheet) with Save, Export and Import as 48 dp icon
   buttons (+, up, down); Randomize, Nudge and Undo are outlined chips with icons (Undo greys out with nothing to
   undo). The Scenes card likewise: Choose scene as one wide button, Import zip / Import folder as chips.
+- **Headphone warning** (Oct 20, DadCraft: "does not match the mockup"): a small red "No headphones" chip (crossed-out
+  headphones icon) on the title row instead of a full-width banner; tapping it shows the full warning, which is
+  also its screen-reader text. Hidden while headphones are connected, as before.
 - **Touch feedback** (Oct 20): a soft tick (KEYBOARD_TAP) when a button-row option, a sheet row or a Key note is
   picked; the Intensity dial ticks (CLOCK_TICK) every 5 steps while dragged. Android's own haptics: they follow the
   phone's touch-vibration setting.

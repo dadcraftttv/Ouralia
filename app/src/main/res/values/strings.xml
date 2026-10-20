@@ -29,6 +29,7 @@
     <string name="status_call">Paused during the phone call. It plays again when the call ends.</string>
     <string name="mic_permission_required">Microphone permission is required.</string>
     <string name="no_headphones_warning">No headphones detected. Using the speaker will cause feedback. Plug in or connect headphones first.</string>
+    <string name="no_headphones_chip">No headphones</string>
 
     <!-- Sections and appearance -->
     <string name="section_open">▾ %s</string>

@@ -277,27 +277,40 @@ public class MainActivity extends Activity {
             });
         }
 
+        // the top row: the name, and while no headphones are connected a small red chip saying so (tap it for why)
+        LinearLayout top = new LinearLayout(this);
+        top.setOrientation(LinearLayout.HORIZONTAL);
+        top.setGravity(Gravity.CENTER_VERTICAL);
+        top.setPadding(dp(4), dp(4), 0, dp(12));
         TextView title = new TextView(this);
         title.setText(R.string.app_name);
         title.setTextSize(Look.TEXT_TITLE + 3);
         title.setTypeface(look.heading());
         title.setLetterSpacing(0.06f);
         title.setTextColor(look.p.text);
-        title.setPadding(dp(4), dp(4), 0, dp(10));
-        root.addView(title);
-
-        // the headphone warning: a soft red banner rather than loose red text
+        top.addView(title, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         warning = new TextView(this);
-        warning.setTextSize(Look.TEXT_HINT);
+        warning.setText(R.string.no_headphones_chip);
+        warning.setTextSize(12);
         warning.setTypeface(look.textStrong());
         warning.setTextColor(look.p.err);
-        warning.setBackground(look.round(look.p.errBg, Look.RADIUS_TILE));
-        warning.setPadding(dp(14), dp(10), dp(14), dp(10));
-        warning.setText(R.string.no_headphones_warning);
-        LinearLayout.LayoutParams warnParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        warnParams.setMargins(0, 0, 0, dp(Look.CARD_GAP));
-        root.addView(warning, warnParams);
+        warning.setGravity(Gravity.CENTER_VERTICAL);
+        warning.setBackground(look.pressable(look.round(look.p.errBg, 10), look.p.err, 10));
+        warning.setPadding(dp(10), 0, dp(12), 0);
+        warning.setMinHeight(dp(34));
+        android.graphics.drawable.Drawable phonesOff = getDrawable(R.drawable.ic_headphones_off).mutate();
+        phonesOff.setTint(look.p.err);
+        warning.setCompoundDrawablesRelativeWithIntrinsicBounds(phonesOff, null, null, null);
+        warning.setCompoundDrawablePadding(dp(6));
+        warning.setContentDescription(getString(R.string.no_headphones_warning));
+        warning.setOnClickListener(v -> new LookDialog()
+                .setTitle(R.string.no_headphones_chip)
+                .setMessage(R.string.no_headphones_warning)
+                .setPositiveButton(R.string.close, null)
+                .show());
+        top.addView(warning, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        root.addView(top);
 
         // the five tab pages, one shown at a time (the strip that switches them sits on the bottom card)
         for (int t = 0; t < TAB_NAMES.length; t++) {
