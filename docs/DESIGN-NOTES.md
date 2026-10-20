@@ -936,6 +936,12 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   Closing it: back, a tap on the dimmed screen or the grab bar, or a drag down (`SheetLayout`: from anywhere a
   control isn't using the touch; past a quarter of its height or a flick closes, less springs back). DadCraft found
   the grab bar didn't drag (Oct 19), so this was added.
+- **Every other pick-one setting** (Oct 19, `addChoiceRow`): two choices with short names up to 18 letters, or three
+  up to 12, are side-by-side buttons (the short name is the words before " (", the chosen one's bracketed
+  explanation shows under them: e.g. Pad register, Pad sounds, the Classic/New switches, Distortion type); longer
+  lists are a tile opening a list sheet (kits, Crusher style, Melody rhythm, the movers' Movement). Long lists
+  scroll in the sheet (up to 72% of the screen); a drag down closes it only once the list is at its top. The
+  Realms menus and Setup's device pickers are still Spinners (their own code).
 
 ## Desktop stream mode (`desktop/`, Oct 16)
 - DadCraft wants the app on Linux as background music for his stream (no sensors, Set tempo, Realms by room level).

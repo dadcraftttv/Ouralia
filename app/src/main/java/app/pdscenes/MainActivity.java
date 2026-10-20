@@ -152,7 +152,9 @@ public class MainActivity extends Activity {
         final Switch switchView;  // toggle rows only
         final Spinner spinner;    // pick-one rows only
         String[] choicesShown;    // the spinner's names (the Kit menus change when user kits come and go)
-        TextView tile;            // pick-one rows shown as a tile that opens a sheet (Key, Scale): its value
+        TextView tile;            // pick-one rows shown as a tile that opens a sheet: its value
+        TextView[] segment;       // pick-one rows shown as side-by-side buttons
+        TextView segmentHint;     // ...and the chosen one's explanation under them
 
         Row(Param param, TextView label, SeekBar slider, Switch switchView, Spinner spinner) {
             this.param = param;
@@ -518,7 +520,7 @@ public class MainActivity extends Activity {
     // One bottom sheet, slid up over a dimmed screen, for whatever needs it: the player, the Key and Scale pickers.
     private View sheetScrim;
     private LinearLayout sheetBox;
-    private android.widget.FrameLayout sheetBody;
+    private ScrollView sheetBody;   // scrolls when the content is taller than most of the screen (the kit lists)
     private LinearLayout playerContent;
     private boolean sheetOpen;
     private Object backClosesSheet;   // an OnBackInvokedCallback on Android 13+ (kept as Object for older ones)
@@ -616,7 +618,14 @@ public class MainActivity extends Activity {
         handle.setContentDescription(getString(R.string.close));
         handle.setOnClickListener(v -> closeSheet());
         sheetBox.addView(handle, new LinearLayout.LayoutParams(dp(72), dp(32)));
-        sheetBody = new android.widget.FrameLayout(this);
+        sheetBody = new ScrollView(this) {
+            @Override
+            protected void onMeasure(int widthSpec, int heightSpec) {
+                int most = Math.round(getResources().getDisplayMetrics().heightPixels * 0.72f);
+                super.onMeasure(widthSpec, MeasureSpec.makeMeasureSpec(most, MeasureSpec.AT_MOST));
+            }
+        };
+        sheetBody.setOverScrollMode(View.OVER_SCROLL_NEVER);
         sheetBox.addView(sheetBody, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
 
@@ -686,7 +695,8 @@ public class MainActivity extends Activity {
                 begin(e);
             } else if (e.getActionMasked() == android.view.MotionEvent.ACTION_MOVE) {
                 float dy = e.getRawY() - downY, dx = e.getRawX() - downX;
-                return dy > slop && dy > Math.abs(dx);   // clearly downwards: the sheet takes the drag
+                // clearly downwards, and a long list already at its top: the sheet takes the drag (else the list scrolls)
+                return dy > slop && dy > Math.abs(dx) && !sheetBody.canScrollVertically(-1);
             }
             return false;
         }
@@ -762,6 +772,7 @@ public class MainActivity extends Activity {
             }
             sheetBody.addView(content);
         }
+        sheetBody.scrollTo(0, 0);
         if (sheetOpen) {
             return;
         }
@@ -1692,8 +1703,8 @@ public class MainActivity extends Activity {
         pair.setOrientation(LinearLayout.HORIZONTAL);
         pair.setPadding(0, dp(14), 0, dp(2));
         Param key = Params.byId("music_key"), scale = Params.byId("music_scale");
-        pair.addView(pickTile(key, this::showKeySheet), tileParams(0, dp(4)));
-        pair.addView(pickTile(scale, this::showScaleSheet), tileParams(dp(4), 0));
+        pair.addView(pickTile(key, this::showKeySheet, false), tileParams(0, dp(4)));
+        pair.addView(pickTile(scale, this::showScaleSheet, false), tileParams(dp(4), 0));
         body.addView(pair);
     }
 
@@ -1704,12 +1715,12 @@ public class MainActivity extends Activity {
     }
 
     /** A tile: the setting's name small, its value large, a chevron; tapping it runs {@code open}. */
-    private View pickTile(Param p, Runnable open) {
+    private View pickTile(Param p, Runnable open, boolean compact) {
         LinearLayout tile = new LinearLayout(this);
         tile.setOrientation(LinearLayout.VERTICAL);
         tile.setGravity(Gravity.CENTER_VERTICAL);
         tile.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
-        tile.setMinimumHeight(dp(64));
+        tile.setMinimumHeight(dp(compact ? 52 : 64));
         tile.setPadding(dp(16), dp(8), dp(40), dp(8));
         TextView name = new TextView(this);
         name.setText(p.shown());
@@ -1718,10 +1729,10 @@ public class MainActivity extends Activity {
         tile.addView(name);
         TextView value = new TextView(this);
         value.setTypeface(look.heading());
-        value.setTextSize(17);
+        value.setTextSize(compact ? 15 : 17);
         value.setTextColor(look.p.text);
         value.setMaxLines(1);   // a long name ("Minor pentatonic") shrinks to fit rather than being cut
-        value.setAutoSizeTextTypeUniformWithConfiguration(12, 17, 1, TypedValue.COMPLEX_UNIT_SP);
+        value.setAutoSizeTextTypeUniformWithConfiguration(12, compact ? 15 : 17, 1, TypedValue.COMPLEX_UNIT_SP);
         value.setText(p.choices[choiceIndex(p, ParamStore.get(p.id))]);
         tile.addView(value);
         tile.setOnClickListener(v -> open.run());
@@ -1742,10 +1753,12 @@ public class MainActivity extends Activity {
         t.setTextSize(20);
         t.setTextColor(look.p.text);
         head.addView(t);
-        TextView h = new TextView(this);
-        h.setText(hint);
-        look.hint(h);
-        head.addView(h);
+        if (hint != null) {
+            TextView h = new TextView(this);
+            h.setText(hint);
+            look.hint(h);
+            head.addView(h);
+        }
         return head;
     }
 
@@ -1786,18 +1799,31 @@ public class MainActivity extends Activity {
     private void showScaleSheet() {
         Param p = Params.byId("music_scale");
         Param key = Params.byId("music_key");
-        int chosen = choiceIndex(p, ParamStore.get(p.id));
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         content.addView(sheetHeading(p.shown(),
                 getString(R.string.scale_sheet_hint, key.choices[choiceIndex(key, ParamStore.get(key.id))])));
+        addChoiceList(content, p, (i, on) -> new ScaleDots(i < Params.SCALE_STEPS.length ? Params.SCALE_STEPS[i] : new int[0],
+                on ? look.p.onContainer : look.p.primary, look.p.line));
+        openSheet(content);
+    }
+
+    /** Something drawn at the end of a choice's row (the Scale sheet's dots). */
+    private interface RowExtra {
+        View make(int index, boolean chosen);
+    }
+
+    /** One row per choice: a tick on the chosen one (highlighted), the full name (wrapping), {@code extra} at the end. */
+    private void addChoiceList(LinearLayout content, Param p, RowExtra extra) {
+        int chosen = choiceIndex(p, ParamStore.get(p.id));
         for (int i = 0; i < p.choices.length; i++) {
             boolean on = i == chosen;
             int fg = on ? look.p.onContainer : look.p.text;
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(dp(12), 0, dp(12), 0);
+            row.setMinimumHeight(dp(52));
+            row.setPadding(dp(12), dp(8), dp(12), dp(8));
             row.setBackground(on ? look.round(look.p.container, 14) : look.pressable(null, look.p.text, 14));
             row.setSelected(on);
             ImageView tick = new ImageView(this);
@@ -1811,13 +1837,14 @@ public class MainActivity extends Activity {
             name.setTextColor(fg);
             name.setPadding(dp(10), 0, dp(8), 0);
             row.addView(name, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-            row.addView(new ScaleDots(i < Params.SCALE_STEPS.length ? Params.SCALE_STEPS[i] : new int[0],
-                    on ? look.p.onContainer : look.p.primary, look.p.line), new LinearLayout.LayoutParams(dp(128), dp(12)));
+            if (extra != null) {
+                row.addView(extra.make(i, on), new LinearLayout.LayoutParams(dp(128), dp(12)));
+            }
             final int pick = i;
             row.setOnClickListener(v -> pickChoice(p, pick));
-            content.addView(row, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(52)));
+            content.addView(row, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         }
-        openSheet(content);
     }
 
     /** Twelve dots, one per semitone above the key: filled where the scale has a note. Decoration only. */
@@ -1854,8 +1881,49 @@ public class MainActivity extends Activity {
         closeSheet();
     }
 
-    /** A label with a dropdown, for settings that pick one of a few named options. */
+    /**
+     * A pick-one setting: two or three short choices as side-by-side buttons (one tap, the chosen one's explanation
+     * underneath), longer lists as a tile that opens a list sheet.
+     */
     private void addChoiceRow(LinearLayout parent, Param p, boolean compact) {
+        if (segmentable(p)) {
+            addSegmentRow(parent, p, compact);
+            return;
+        }
+        View tile = pickTile(p, () -> showChoiceSheet(p), compact);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(0, dp(compact ? 6 : 12), 0, 0);
+        parent.addView(tile, lp);
+    }
+
+    /** A choice's short name: the words before its explanation in brackets ("New (how the sound changes)" -> "New"). */
+    static String shortName(String choice) {
+        int i = choice.indexOf(" (");
+        return i > 0 ? choice.substring(0, i) : choice;
+    }
+
+    /** The explanation in brackets, or "". */
+    static String detail(String choice) {
+        int i = choice.indexOf(" (");
+        return i > 0 && choice.endsWith(")") ? choice.substring(i + 2, choice.length() - 1) : "";
+    }
+
+    /** Two choices with short names up to 18 letters, or three up to 12, fit side by side. */
+    private static boolean segmentable(Param p) {
+        int n = p.choices.length;
+        if (n < 2 || n > 3) {
+            return false;
+        }
+        for (String c : p.choices) {
+            if (shortName(c).length() > (n == 2 ? 18 : 12)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void addSegmentRow(LinearLayout parent, Param p, boolean compact) {
         TextView label = new TextView(this);
         label.setText(p.shown());
         if (compact) {
@@ -1863,33 +1931,73 @@ public class MainActivity extends Activity {
         } else {
             look.label(label);
         }
-        label.setPadding(dp(4), dp(compact ? 4 : 14), 0, dp(6));
+        label.setPadding(dp(4), dp(compact ? 6 : 14), 0, dp(8));
         parent.addView(label);
-
-        Spinner spinner = new Spinner(this);
-        spinner.setAdapter(choiceAdapter(p.choices));
-        // the choice sits on a rounded tile, its menu on the sheet colour
-        spinner.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
-        spinner.setPopupBackgroundDrawable(look.round(look.p.sheet, Look.RADIUS_TILE));
-        spinner.setMinimumHeight(dp(compact ? 44 : 52));
-        spinner.setPadding(dp(14), 0, dp(44), 0);
-        // Select the stored choice BEFORE listening: a Spinner reports its first entry as "selected" when it is first
-        // laid out, and a folded row isn't refreshed, so that once saved C major over the user's key and scale.
-        spinner.setSelection(choiceIndex(p, ParamStore.get(p.id)), false);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View v, int position, long id) {
-                if (position != Math.round(ParamStore.get(p.id))) {   // ignore refreshRows()
-                    ParamStore.set(p.id, position);
+        LinearLayout bar = new LinearLayout(this);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setBackground(look.outline(look.p.line, 20));
+        bar.setClipToOutline(true);
+        bar.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
+        android.graphics.drawable.GradientDrawable divider = new android.graphics.drawable.GradientDrawable();
+        divider.setColor(look.p.line);
+        divider.setSize(dp(1), 1);
+        bar.setDividerDrawable(divider);
+        Row row = new Row(p, null, null, null, null);
+        row.segment = new TextView[p.choices.length];
+        for (int i = 0; i < p.choices.length; i++) {
+            TextView b = new TextView(this);
+            b.setText(shortName(p.choices[i]));
+            b.setGravity(Gravity.CENTER);
+            b.setTextSize(14);
+            b.setMaxLines(1);
+            b.setAutoSizeTextTypeUniformWithConfiguration(11, 14, 1, TypedValue.COMPLEX_UNIT_SP);
+            b.setPadding(dp(6), 0, dp(6), 0);
+            String full = p.choices[i];
+            b.setContentDescription(p.label + ": " + full);
+            final int pick = i;
+            b.setOnClickListener(v -> {
+                if (pick != choiceIndex(p, ParamStore.get(p.id))) {
+                    ParamStore.set(p.id, pick);
                     updateMoverUi();
+                    refreshRows();
                 }
-            }
+            });
+            bar.addView(b, new LinearLayout.LayoutParams(0, dp(compact ? 40 : 44), 1f));
+            row.segment[i] = b;
+        }
+        parent.addView(bar, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        row.segmentHint = new TextView(this);
+        look.hint(row.segmentHint);
+        row.segmentHint.setPadding(dp(4), dp(6), 0, 0);
+        parent.addView(row.segmentHint);
+        rows.add(row);
+        showSegment(row, choiceIndex(p, ParamStore.get(p.id)));
+    }
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) { }
-        });
-        parent.addView(spinner);
-        rows.add(new Row(p, label, null, null, spinner));
+    /** The chosen button filled, a tick before its name; its explanation (if it has one) underneath. */
+    private void showSegment(Row r, int chosen) {
+        for (int i = 0; i < r.segment.length; i++) {
+            boolean on = i == chosen;
+            TextView b = r.segment[i];
+            b.setSelected(on);
+            b.setTypeface(on ? look.textStrong() : look.text());
+            b.setTextColor(on ? look.p.onContainer : look.p.text);
+            b.setBackground(on ? new android.graphics.drawable.ColorDrawable(look.p.container)
+                    : look.pressable(null, look.p.text, 0));
+        }
+        String d = detail(r.param.choices[chosen]);
+        r.segmentHint.setText(d);
+        r.segmentHint.setVisibility(d.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    /** A list sheet for a pick-one setting: its choices, the chosen one ticked; one tap picks and closes. */
+    private void showChoiceSheet(Param p) {
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.addView(sheetHeading(p.shown(), null));
+        addChoiceList(content, p, null);
+        openSheet(content);
     }
 
     private ArrayAdapter<String> choiceAdapter(String[] names) {
@@ -1985,7 +2093,7 @@ public class MainActivity extends Activity {
     private void refreshRows() {
         for (Row r : rows) {
             View shown = r.slider != null ? r.slider : r.switchView != null ? r.switchView
-                    : r.spinner != null ? r.spinner : r.tile;
+                    : r.spinner != null ? r.spinner : r.tile != null ? r.tile : r.segment[0];
             if (shown != null && !shown.isShown()) {
                 continue;   // folded away: refreshed when its section opens (saves work while worlds fade)
             }
@@ -1993,7 +2101,13 @@ public class MainActivity extends Activity {
             if (r.switchView != null) {
                 r.switchView.setChecked(v >= 0.5f);
             } else if (r.tile != null) {
+                if (r.choicesShown != r.param.choices) {   // (a user kit came or went)
+                    r.choicesShown = r.param.choices;
+                    updateKitStatus();
+                }
                 r.tile.setText(r.param.choices[choiceIndex(r.param, v)]);
+            } else if (r.segment != null) {
+                showSegment(r, choiceIndex(r.param, v));
             } else if (r.spinner != null) {
                 if (r.choicesShown != r.param.choices) {   // (a user kit came or went)
                     r.choicesShown = r.param.choices;
