@@ -25,6 +25,18 @@ public class V {
     Look.Palette grey=Look.palette(Look.DARK,200,0f);
     int r=(grey.s1>>16)&0xFF,g=(grey.s1>>8)&0xFF,b=grey.s1&0xFF;
     check(r==g&&g==b,"colourfulness 0 gives plain greys");
+    // the Scale sheet's dots: the same notes the patch plays (make_patch.py SCALES)
+    try {
+      String py=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(System.getProperty("repo","."),"tools","make_patch.py")));
+      String block=py.substring(py.indexOf("SCALES = ["),py.indexOf("]",py.indexOf("SCALES = [")+10));
+      java.util.regex.Matcher m=java.util.regex.Pattern.compile("\\(([0-9, ]+)\\)").matcher(block);
+      java.util.List<String> fromPy=new java.util.ArrayList<>();
+      while(m.find()) fromPy.add(m.group(1).replace(" ",""));
+      java.util.List<String> fromJava=new java.util.ArrayList<>();
+      for(int[] st:Params.SCALE_STEPS){ StringBuilder sb=new StringBuilder(); for(int x:st){ if(sb.length()>0)sb.append(','); sb.append(x);} fromJava.add(sb.toString()); }
+      check(fromPy.equals(fromJava)&&fromJava.size()==Params.byId("music_scale").choices.length,
+        "the Scale sheet's dots match the patch's "+fromPy.size()+" scales and the Scale menu");
+    } catch(java.io.IOException e){ check(false,"read make_patch.py: "+e); }
     if(fails==0) System.out.println("ALL PASSED");
   }
 }

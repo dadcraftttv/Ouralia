@@ -14,6 +14,18 @@ import java.util.Map;
  * right section) and a matching [r name] in the Pd patch.
  */
 final class Params {
+    /** Each Scale's notes as semitone steps above the key, as the patch plays them (make_patch.py SCALES, test V). */
+    static final int[][] SCALE_STEPS = {
+            {0, 2, 4, 5, 7, 9, 11},   // Major
+            {0, 2, 3, 5, 7, 8, 10},   // Minor
+            {0, 2, 4, 7, 9},          // Major pentatonic
+            {0, 3, 5, 7, 10},         // Minor pentatonic
+            {0, 2, 3, 5, 7, 9, 10},   // Dorian
+            {0, 2, 4, 5, 7, 9, 10},   // Mixolydian
+            {0, 2, 4, 6, 7, 9, 11},   // Lydian
+            {0, 2, 4, 6, 8, 10},      // Whole tone
+    };
+
 
     /** A collapsible group on the screen. Order here is display order. */
     static final class Section {

@@ -152,6 +152,7 @@ public class MainActivity extends Activity {
         final Switch switchView;  // toggle rows only
         final Spinner spinner;    // pick-one rows only
         String[] choicesShown;    // the spinner's names (the Kit menus change when user kits come and go)
+        TextView tile;            // pick-one rows shown as a tile that opens a sheet (Key, Scale): its value
 
         Row(Param param, TextView label, SeekBar slider, Switch switchView, Spinner spinner) {
             this.param = param;
@@ -254,9 +255,9 @@ public class MainActivity extends Activity {
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
                 android.view.Gravity.BOTTOM);
         screen.addView(bar, barParams);
-        screen.addView(playerScrim, new android.widget.FrameLayout.LayoutParams(
+        screen.addView(sheetScrim, new android.widget.FrameLayout.LayoutParams(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
-        screen.addView(playerSheet, new android.widget.FrameLayout.LayoutParams(
+        screen.addView(sheetBox, new android.widget.FrameLayout.LayoutParams(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
                 android.view.Gravity.BOTTOM));
         bar.addOnLayoutChangeListener((v, l, t, r, b2, ol, ot, or, ob) -> {
@@ -514,10 +515,13 @@ public class MainActivity extends Activity {
     private DialView miniDial, playerDial;
     private ImageButton miniStart, miniSave;
     private TextView miniStatus, miniSub;
-    private View playerScrim;
-    private LinearLayout playerSheet;
-    private boolean playerOpen;
-    private Object backClosesPlayer;   // an OnBackInvokedCallback on Android 13+ (kept as Object for older ones)
+    // One bottom sheet, slid up over a dimmed screen, for whatever needs it: the player, the Key and Scale pickers.
+    private View sheetScrim;
+    private LinearLayout sheetBox;
+    private android.widget.FrameLayout sheetBody;
+    private LinearLayout playerContent;
+    private boolean sheetOpen;
+    private Object backClosesSheet;   // an OnBackInvokedCallback on Android 13+ (kept as Object for older ones)
 
     /** The docked player: the small dial with Start inside, the status line, and Save sound. */
     private View buildPlayer() {
@@ -581,36 +585,45 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * The player sheet, slid up from the bottom over a dimmed screen: the big Intensity dial (drag around the
-     * ring) with Start/Stop in its middle, the full status, the realm line, Hold realm and Save sound.
+     * The bottom sheet (its content swapped in by {@link #openSheet}) and the player's content: the big Intensity
+     * dial (drag around the ring) with Start/Stop in its middle, the full status, the realm line, Hold realm and Save
+     * sound.
      */
     private void buildPlayerSheet() {
-        playerScrim = new View(this);
-        playerScrim.setBackgroundColor(Look.alpha(0xFF000000, look.p.light ? 0.35f : 0.6f));
-        playerScrim.setAlpha(0f);
-        playerScrim.setVisibility(View.GONE);
-        playerScrim.setOnClickListener(v -> closePlayer());
-        playerScrim.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        sheetScrim = new View(this);
+        sheetScrim.setBackgroundColor(Look.alpha(0xFF000000, look.p.light ? 0.35f : 0.6f));
+        sheetScrim.setAlpha(0f);
+        sheetScrim.setVisibility(View.GONE);
+        sheetScrim.setOnClickListener(v -> closeSheet());
+        sheetScrim.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
-        playerSheet = new LinearLayout(this);
-        playerSheet.setOrientation(LinearLayout.VERTICAL);
-        playerSheet.setGravity(Gravity.CENTER_HORIZONTAL);
+        sheetBox = new LinearLayout(this);
+        sheetBox.setOrientation(LinearLayout.VERTICAL);
+        sheetBox.setGravity(Gravity.CENTER_HORIZONTAL);
         android.graphics.drawable.GradientDrawable sheetBg = new android.graphics.drawable.GradientDrawable();
         sheetBg.setColor(look.p.sheet);
         float r = dp(28);
         sheetBg.setCornerRadii(new float[] {r, r, r, r, 0, 0, 0, 0});
-        playerSheet.setBackground(sheetBg);
-        playerSheet.setPadding(dp(20), 0, dp(20), dp(24));
-        playerSheet.setClickable(true);   // taps on the sheet stay on it
-        playerSheet.setVisibility(View.GONE);
+        sheetBox.setBackground(sheetBg);
+        sheetBox.setPadding(dp(16), 0, dp(16), dp(24));
+        sheetBox.setClickable(true);   // taps on the sheet stay on it
+        sheetBox.setVisibility(View.GONE);
 
         android.widget.FrameLayout handle = new android.widget.FrameLayout(this);
         View grip = new View(this);
         grip.setBackground(look.round(look.p.line, 2));
         handle.addView(grip, new android.widget.FrameLayout.LayoutParams(dp(36), dp(4), Gravity.CENTER));
         handle.setContentDescription(getString(R.string.close));
-        handle.setOnClickListener(v -> closePlayer());
-        playerSheet.addView(handle, new LinearLayout.LayoutParams(dp(72), dp(32)));
+        handle.setOnClickListener(v -> closeSheet());
+        sheetBox.addView(handle, new LinearLayout.LayoutParams(dp(72), dp(32)));
+        sheetBody = new android.widget.FrameLayout(this);
+        sheetBox.addView(sheetBody, new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+
+        playerContent = new LinearLayout(this);
+        playerContent.setOrientation(LinearLayout.VERTICAL);
+        playerContent.setGravity(Gravity.CENTER_HORIZONTAL);
+        playerContent.setPadding(dp(4), 0, dp(4), 0);
 
         android.widget.FrameLayout dialBox = new android.widget.FrameLayout(this);
         playerDial = new DialView(this, look, true, getString(R.string.intensity_caption));
@@ -630,20 +643,20 @@ public class MainActivity extends Activity {
         startStop.setCompoundDrawablePadding(dp(2));
         startStop.setOnClickListener(v -> onStartStop());
         dialBox.addView(startStop, new android.widget.FrameLayout.LayoutParams(dp(104), dp(104), Gravity.CENTER));
-        playerSheet.addView(dialBox, new LinearLayout.LayoutParams(dp(248), dp(248)));
+        playerContent.addView(dialBox, new LinearLayout.LayoutParams(dp(248), dp(248)));
 
         status = new TextView(this);
         look.hint(status);
         status.setGravity(Gravity.CENTER);
         status.setPadding(0, dp(6), 0, 0);
-        playerSheet.addView(status);
+        playerContent.addView(status);
         nowLine = new TextView(this);
         look.label(nowLine);
         nowLine.setTextSize(Look.TEXT_HINT + 1);
         nowLine.setGravity(Gravity.CENTER);
         nowLine.setPadding(0, dp(4), 0, 0);
-        playerSheet.addView(nowLine);
-        LinearLayout row = newButtonRow(playerSheet);
+        playerContent.addView(nowLine);
+        LinearLayout row = newButtonRow(playerContent);
         row.setPadding(0, dp(12), 0, 0);
         holdButton = addButton(row, R.string.hold_world, () -> {
             Worlds.setHeld(!Worlds.isHeld());
@@ -653,47 +666,61 @@ public class MainActivity extends Activity {
     }
 
     private void openPlayer() {
-        if (playerOpen) {
+        openSheet(playerContent);
+    }
+
+    /** Slides the sheet up (300 ms, over a dimming screen) holding {@code content}; if it is up, swaps the content. */
+    private void openSheet(View content) {
+        if (content.getParent() != sheetBody) {
+            sheetBody.removeAllViews();
+            if (content.getParent() != null) {
+                ((android.view.ViewGroup) content.getParent()).removeView(content);
+            }
+            sheetBody.addView(content);
+        }
+        if (sheetOpen) {
             return;
         }
-        playerOpen = true;
-        playerScrim.setVisibility(View.VISIBLE);
-        playerScrim.animate().alpha(1f).setDuration(250).start();
-        playerSheet.setVisibility(View.VISIBLE);
-        playerSheet.setTranslationY(dp(800));   // out of sight until it has measured itself
-        playerSheet.post(() -> {
-            playerSheet.setTranslationY(playerSheet.getHeight());
-            playerSheet.animate().translationY(0).setDuration(300)
+        sheetOpen = true;
+        sheetBox.animate().cancel();
+        sheetScrim.animate().cancel();
+        sheetScrim.setVisibility(View.VISIBLE);
+        sheetScrim.animate().alpha(1f).setDuration(250).start();
+        sheetBox.setVisibility(View.VISIBLE);
+        sheetBox.setTranslationY(dp(900));   // out of sight until it has measured itself
+        sheetBox.post(() -> {
+            sheetBox.setTranslationY(sheetBox.getHeight());
+            sheetBox.animate().translationY(0).setDuration(300)
                     .setInterpolator(new android.view.animation.DecelerateInterpolator(2f)).start();
         });
         if (Build.VERSION.SDK_INT >= 33) {
-            android.window.OnBackInvokedCallback back = this::closePlayer;
+            android.window.OnBackInvokedCallback back = this::closeSheet;
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, back);
-            backClosesPlayer = back;
+            backClosesSheet = back;
         }
     }
 
-    private void closePlayer() {
-        if (!playerOpen) {
+    private void closeSheet() {
+        if (!sheetOpen) {
             return;
         }
-        playerOpen = false;
-        playerScrim.animate().alpha(0f).setDuration(200).withEndAction(() -> playerScrim.setVisibility(View.GONE)).start();
-        playerSheet.animate().translationY(playerSheet.getHeight()).setDuration(220)
+        sheetOpen = false;
+        sheetScrim.animate().alpha(0f).setDuration(200).withEndAction(() -> sheetScrim.setVisibility(View.GONE)).start();
+        sheetBox.animate().translationY(sheetBox.getHeight()).setDuration(220)
                 .setInterpolator(new android.view.animation.AccelerateInterpolator(1.5f))
-                .withEndAction(() -> playerSheet.setVisibility(View.GONE)).start();
-        if (Build.VERSION.SDK_INT >= 33 && backClosesPlayer != null) {
-            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backClosesPlayer);
-            backClosesPlayer = null;
+                .withEndAction(() -> sheetBox.setVisibility(View.GONE)).start();
+        if (Build.VERSION.SDK_INT >= 33 && backClosesSheet != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backClosesSheet);
+            backClosesSheet = null;
         }
     }
 
     @Override
     @SuppressWarnings("deprecation")
-    public void onBackPressed() {   // Android 12 and older (13+ uses the callback registered in openPlayer)
-        if (playerOpen) {
-            closePlayer();
+    public void onBackPressed() {   // Android 12 and older (13+ uses the callback registered in openSheet)
+        if (sheetOpen) {
+            closeSheet();
         } else {
             super.onBackPressed();
         }
@@ -981,6 +1008,12 @@ public class MainActivity extends Activity {
         }
         for (Param p : Params.ALL) {
             if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch) {
+                if (p.id.equals("music_key")) {   // Key and Scale: two tiles side by side, each opening a sheet
+                    addKeyScaleTiles(body);
+                    continue;
+                } else if (p.id.equals("music_scale")) {
+                    continue;
+                }
                 addRow(body, p);
                 if (Params.byId(Params.moverId(p.id, "mv")) != null) {
                     addMoverRows(body, section.id, p);
@@ -1569,6 +1602,174 @@ public class MainActivity extends Activity {
         });
     }
 
+    /** Key and Scale as two big tiles (easier to see and hit than a menu); each opens its picker sheet. */
+    private void addKeyScaleTiles(LinearLayout body) {
+        LinearLayout pair = new LinearLayout(this);
+        pair.setOrientation(LinearLayout.HORIZONTAL);
+        pair.setPadding(0, dp(14), 0, dp(2));
+        Param key = Params.byId("music_key"), scale = Params.byId("music_scale");
+        pair.addView(pickTile(key, this::showKeySheet), tileParams(0, dp(4)));
+        pair.addView(pickTile(scale, this::showScaleSheet), tileParams(dp(4), 0));
+        body.addView(pair);
+    }
+
+    private static LinearLayout.LayoutParams tileParams(int left, int right) {
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+        lp.setMargins(left, 0, right, 0);
+        return lp;
+    }
+
+    /** A tile: the setting's name small, its value large, a chevron; tapping it runs {@code open}. */
+    private View pickTile(Param p, Runnable open) {
+        LinearLayout tile = new LinearLayout(this);
+        tile.setOrientation(LinearLayout.VERTICAL);
+        tile.setGravity(Gravity.CENTER_VERTICAL);
+        tile.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
+        tile.setMinimumHeight(dp(64));
+        tile.setPadding(dp(16), dp(8), dp(40), dp(8));
+        TextView name = new TextView(this);
+        name.setText(p.shown());
+        look.hint(name);
+        name.setTextSize(12);
+        tile.addView(name);
+        TextView value = new TextView(this);
+        value.setTypeface(look.heading());
+        value.setTextSize(17);
+        value.setTextColor(look.p.text);
+        value.setMaxLines(1);   // a long name ("Minor pentatonic") shrinks to fit rather than being cut
+        value.setAutoSizeTextTypeUniformWithConfiguration(12, 17, 1, TypedValue.COMPLEX_UNIT_SP);
+        value.setText(p.choices[choiceIndex(p, ParamStore.get(p.id))]);
+        tile.addView(value);
+        tile.setOnClickListener(v -> open.run());
+        Row row = new Row(p, null, null, null, null);
+        row.tile = value;
+        rows.add(row);
+        return tile;
+    }
+
+    /** A sheet's title and the line under it. */
+    private View sheetHeading(String title, String hint) {
+        LinearLayout head = new LinearLayout(this);
+        head.setOrientation(LinearLayout.VERTICAL);
+        head.setPadding(dp(8), dp(4), dp(8), dp(14));
+        TextView t = new TextView(this);
+        t.setText(title);
+        t.setTypeface(look.heading());
+        t.setTextSize(20);
+        t.setTextColor(look.p.text);
+        head.addView(t);
+        TextView h = new TextView(this);
+        h.setText(hint);
+        look.hint(h);
+        head.addView(h);
+        return head;
+    }
+
+    /** The Key picker: the twelve notes as big buttons, four to a row; one tap picks and closes. */
+    private void showKeySheet() {
+        Param p = Params.byId("music_key");
+        int chosen = choiceIndex(p, ParamStore.get(p.id));
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.addView(sheetHeading(p.shown(), getString(R.string.key_sheet_hint)));
+        for (int r = 0; r < 3; r++) {
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            for (int c = 0; c < 4; c++) {
+                int i = r * 4 + c;
+                boolean on = i == chosen;
+                TextView b = new TextView(this);
+                b.setText(p.choices[i]);
+                b.setGravity(Gravity.CENTER);
+                b.setTypeface(look.heading());
+                b.setTextSize(18);
+                b.setTextColor(on ? look.p.onPrimary : p.choices[i].length() > 1 ? look.p.muted : look.p.text);
+                int bg = on ? look.p.primary : look.p.s2;
+                b.setBackground(look.pressable(look.round(bg, Look.RADIUS_TILE), on ? look.p.onPrimary : look.p.text, Look.RADIUS_TILE));
+                b.setSelected(on);
+                b.setOnClickListener(v -> pickChoice(p, i));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(60), 1f);
+                lp.setMargins(dp(4), dp(4), dp(4), dp(4));
+                row.addView(b, lp);
+            }
+            content.addView(row);
+        }
+        look.fonts(content);
+        openSheet(content);
+    }
+
+    /** The Scale picker: one row per scale with its notes as dots (filled = in the scale), the chosen one ticked. */
+    private void showScaleSheet() {
+        Param p = Params.byId("music_scale");
+        Param key = Params.byId("music_key");
+        int chosen = choiceIndex(p, ParamStore.get(p.id));
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.addView(sheetHeading(p.shown(),
+                getString(R.string.scale_sheet_hint, key.choices[choiceIndex(key, ParamStore.get(key.id))])));
+        for (int i = 0; i < p.choices.length; i++) {
+            boolean on = i == chosen;
+            int fg = on ? look.p.onContainer : look.p.text;
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(12), 0, dp(12), 0);
+            row.setBackground(on ? look.round(look.p.container, 14) : look.pressable(null, look.p.text, 14));
+            row.setSelected(on);
+            ImageView tick = new ImageView(this);
+            tick.setImageResource(R.drawable.ic_check);
+            tick.setImageTintList(android.content.res.ColorStateList.valueOf(fg));
+            tick.setVisibility(on ? View.VISIBLE : View.INVISIBLE);
+            row.addView(tick, new LinearLayout.LayoutParams(dp(20), dp(20)));
+            TextView name = new TextView(this);
+            name.setText(p.choices[i]);
+            look.label(name);
+            name.setTextColor(fg);
+            name.setPadding(dp(10), 0, dp(8), 0);
+            row.addView(name, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            row.addView(new ScaleDots(i < Params.SCALE_STEPS.length ? Params.SCALE_STEPS[i] : new int[0],
+                    on ? look.p.onContainer : look.p.primary, look.p.line), new LinearLayout.LayoutParams(dp(128), dp(12)));
+            final int pick = i;
+            row.setOnClickListener(v -> pickChoice(p, pick));
+            content.addView(row, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(52)));
+        }
+        openSheet(content);
+    }
+
+    /** Twelve dots, one per semitone above the key: filled where the scale has a note. Decoration only. */
+    private final class ScaleDots extends View {
+        private final boolean[] in = new boolean[12];
+        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final int onColor, offColor;
+
+        ScaleDots(int[] steps, int onColor, int offColor) {
+            super(MainActivity.this);
+            for (int s : steps) {
+                in[s % 12] = true;
+            }
+            this.onColor = onColor;
+            this.offColor = offColor;
+            setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            float step = getWidth() / 12f, r = Math.min(step * 0.32f, getHeight() / 2f), y = getHeight() / 2f;
+            for (int i = 0; i < 12; i++) {
+                paint.setColor(in[i] ? onColor : offColor);
+                canvas.drawCircle(step * (i + 0.5f), y, r, paint);
+            }
+        }
+    }
+
+    /** A pick made in a sheet: stored, every row follows, the sheet closes. */
+    private void pickChoice(Param p, int i) {
+        ParamStore.set(p.id, i);
+        updateMoverUi();
+        refreshRows();
+        closeSheet();
+    }
+
     /** A label with a dropdown, for settings that pick one of a few named options. */
     private void addChoiceRow(LinearLayout parent, Param p, boolean compact) {
         TextView label = new TextView(this);
@@ -1699,13 +1900,16 @@ public class MainActivity extends Activity {
 
     private void refreshRows() {
         for (Row r : rows) {
-            View shown = r.slider != null ? r.slider : r.switchView != null ? r.switchView : r.spinner;
+            View shown = r.slider != null ? r.slider : r.switchView != null ? r.switchView
+                    : r.spinner != null ? r.spinner : r.tile;
             if (shown != null && !shown.isShown()) {
                 continue;   // folded away: refreshed when its section opens (saves work while worlds fade)
             }
             float v = ParamStore.get(r.param.id);
             if (r.switchView != null) {
                 r.switchView.setChecked(v >= 0.5f);
+            } else if (r.tile != null) {
+                r.tile.setText(r.param.choices[choiceIndex(r.param, v)]);
             } else if (r.spinner != null) {
                 if (r.choicesShown != r.param.choices) {   // (a user kit came or went)
                     r.choicesShown = r.param.choices;

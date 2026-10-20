@@ -20,5 +20,5 @@ for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V}"; do for x in $t; do
   [ "$x" = X ] && extra="$extra $H/test/M.java"
   out=$(mktemp -d)
   javac -d "$out" -proc:none -cp "$H/stubs:$H/stubs2" $CORE $extra "$H/test/$x.java" 2>&1 | grep -v "^Note:" || true
-  echo "== $x"; java -cp "$out:$H/stubs:$H/stubs2" app.pdscenes.$x
+  echo "== $x"; java -Drepo="$H/../.." -cp "$out:$H/stubs:$H/stubs2" app.pdscenes.$x
 done; done

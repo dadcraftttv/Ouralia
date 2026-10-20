@@ -928,7 +928,11 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   card and its AMOLED accent glow. Motion only while something slides: nothing animates at rest.
 - The accent is Ouralia violet for now (it was the wallpaper's on Android 12+). Next: Appearance (theme Phone/
   Light/Dark/AMOLED; accent swatches, From wallpaper, Your own colour with a ring and Colorfulness; not in presets),
-  Key/Scale as tiles opening sheets, the XY pad, the Realms and Scenes tabs.
+  the XY pad, the Realms and Scenes tabs.
+- **Key and Scale** (Oct 19; DadCraft found the mockup's 12-key strip easy to mis-tap): two tiles side by side in
+  Music, each opening a sheet: Key = the 12 notes as big buttons (4 x 3), Scale = one row per scale with 12 dots
+  (filled = the scale's notes above the key; `Params.SCALE_STEPS`, which test V checks against make_patch.py
+  SCALES). One tap picks and closes. The sheet is one shared bottom sheet (`openSheet`), also used by the player.
 
 ## Desktop stream mode (`desktop/`, Oct 16)
 - DadCraft wants the app on Linux as background music for his stream (no sensors, Set tempo, Realms by room level).
