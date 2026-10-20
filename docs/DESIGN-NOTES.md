@@ -944,7 +944,10 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - Kit headings (Oct 20, DadCraft: the kit and layer menus "almost kind of run together"): the Music card has small
   accent headings with a line above (`addSubheading`): Kit, Mix and match, Layers, How it plays (from Melody rhythm on).
   Each layer and its blend share an outlined panel (`addLayerPanel`); the blend is at 40% while the layer is None
-  (`updateLayerBlends`, from refreshRows). Phone only (the desktop's Music tab is unchanged).
+  (`updateLayerBlends`, from refreshRows). Phone only (the desktop's Music tab is unchanged). Same headings in Mix
+  (Drums, Pad and bass, Melody, Answers: ring, bells, Harmony), Glitch (cloud, kinds, Freeze) and Input & output
+  (Microphone, Pocket and handling, Output): `SUBHEADINGS` (param id -> heading, hint) in MainActivity; no line above
+  a card's first heading. The XY pad is a foldable section (`xy_pad`, open by default; DadCraft: hide it if unused).
 - Player line and Realm names (Oct 20, DadCraft): the docked player's line said Built-in effects while a Realm played; it
   now says "Flux Realm · Intensity 50" (`mini_realm`, "(held)" when held; refreshed by the Worlds listener). Realm is
   a proper noun on screen: Hold Realm. Auto Realms renamed **Realm Hopper** and the cue **Warp sound** (DadCraft's names,

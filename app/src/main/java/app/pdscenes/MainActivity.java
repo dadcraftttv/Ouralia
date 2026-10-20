@@ -434,14 +434,10 @@ public class MainActivity extends Activity {
             ParamStore.undo();
             refreshRows();
         });
-        xyPadSlot = new LinearLayout(this);
-        xyPadSlot.setOrientation(LinearLayout.VERTICAL);
-        look.card(xyPadSlot);   // the XY pad and its hint on a card, like the sections
-        xyPadSlot.setPadding(dp(12), dp(4), dp(12), dp(14));
-        LinearLayout.LayoutParams xyParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        xyParams.setMargins(0, dp(6), 0, dp(Look.CARD_GAP));
-        sound.addView(xyPadSlot, xyParams);
+        // the XY pad and its hint on a card that folds like the sections (DadCraft: hide it if you don't use it)
+        View gap = new View(this);
+        sound.addView(gap, new LinearLayout.LayoutParams(0, dp(6)));
+        xyPadSlot = addSection(sound, "xy_pad", getString(R.string.xy_pad_title), true);
 
         // ---- Realms ----
         Worlds.load(this);
@@ -1287,20 +1283,15 @@ public class MainActivity extends Activity {
                 } else if (p.id.equals("music_scale")) {
                     continue;
                 }
-                if (p.id.equals(Kits.ID)) {   // the kit settings as three labelled groups (DadCraft: they ran together)
-                    addSubheading(body, R.string.kits_heading, 0);
-                } else if (p.id.equals("kitp_mel")) {
-                    addSubheading(body, R.string.kits_mix_heading, R.string.kits_mix_hint);
-                } else if (p.id.startsWith("kitl_")) {
-                    if (p.id.equals("kitl_mel")) {
-                        addSubheading(body, R.string.kits_layers_heading, R.string.kits_layers_hint);
-                    }
+                int[] heading = SUBHEADINGS.get(p.id);
+                if (heading != null) {
+                    addSubheading(body, heading[0], heading[1]);
+                }
+                if (p.id.startsWith("kitl_")) {
                     addLayerPanel(body, p, Params.byId("kitb_" + p.id.substring(5)));
                     continue;
                 } else if (p.id.startsWith("kitb_")) {
                     continue;   // (inside its layer's panel)
-                } else if (p.id.equals("mel_rhythm")) {
-                    addSubheading(body, R.string.music_more_heading, 0);
                 }
                 addRow(body, p);
                 if (Params.byId(Params.moverId(p.id, "mv")) != null) {
@@ -1319,13 +1310,41 @@ public class MainActivity extends Activity {
         updateBudgetLines();
     }
 
-    /** A small accent heading inside a card, with a line above it and an optional hint under it. */
+    /**
+     * The groups inside a long card (DadCraft, Oct 20: the kit menus "almost kind of run together"): a heading, and
+     * a hint or 0, before the setting that starts each group.
+     */
+    private static final Map<String, int[]> SUBHEADINGS = new HashMap<>();
+    static {
+        SUBHEADINGS.put("gain", new int[]{R.string.sub_mic, 0});
+        SUBHEADINGS.put("pocket_hush", new int[]{R.string.sub_pocket, R.string.sub_pocket_hint});
+        SUBHEADINGS.put("dry", new int[]{R.string.sub_output, 0});
+        SUBHEADINGS.put("music_drift", new int[]{R.string.sub_notes, 0});
+        SUBHEADINGS.put(Kits.ID, new int[]{R.string.kits_heading, 0});
+        SUBHEADINGS.put("kitp_mel", new int[]{R.string.kits_mix_heading, R.string.kits_mix_hint});
+        SUBHEADINGS.put("kitl_mel", new int[]{R.string.kits_layers_heading, R.string.kits_layers_hint});
+        SUBHEADINGS.put("mel_rhythm", new int[]{R.string.music_more_heading, 0});
+        SUBHEADINGS.put("mix_kick", new int[]{R.string.sub_drums, 0});
+        SUBHEADINGS.put("music_pad", new int[]{R.string.sub_pad_bass, 0});
+        SUBHEADINGS.put("mix_chimes", new int[]{R.string.sub_melody, 0});
+        SUBHEADINGS.put("mix_ring", new int[]{R.string.sub_answers, R.string.sub_answers_hint});
+        SUBHEADINGS.put("gc_amount", new int[]{R.string.sub_cloud, 0});
+        SUBHEADINGS.put("gc_pct_stutter", new int[]{R.string.sub_kinds, R.string.sub_kinds_hint});
+        SUBHEADINGS.put("glitch_hold", new int[]{R.string.sub_freeze, 0});
+    }
+
+    /** A small accent heading inside a card, with an optional hint under it and a line above it (not at the top). */
     private void addSubheading(LinearLayout parent, int title, int hint) {
-        View rule = new View(this);
-        rule.setBackgroundColor(look.p.line);
-        LinearLayout.LayoutParams ruleParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1));
-        ruleParams.setMargins(0, dp(24), 0, dp(14));
-        parent.addView(rule, ruleParams);
+        if (parent.getChildCount() > 0) {
+            View rule = new View(this);
+            rule.setBackgroundColor(look.p.line);
+            LinearLayout.LayoutParams ruleParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, dp(1));
+            ruleParams.setMargins(0, dp(24), 0, dp(14));
+            parent.addView(rule, ruleParams);
+        } else {
+            parent.addView(new View(this), new LinearLayout.LayoutParams(0, dp(8)));
+        }
         TextView head = new TextView(this);
         head.setText(getString(title).toUpperCase(java.util.Locale.ROOT));
         head.setTypeface(look.textStrong());
