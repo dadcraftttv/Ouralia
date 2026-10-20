@@ -933,6 +933,9 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   Music, each opening a sheet: Key = the 12 notes as big buttons (4 x 3), Scale = one row per scale with 12 dots
   (filled = the scale's notes above the key; `Params.SCALE_STEPS`, which test V checks against make_patch.py
   SCALES). One tap picks and closes. The sheet is one shared bottom sheet (`openSheet`), also used by the player.
+  Closing it: back, a tap on the dimmed screen or the grab bar, or a drag down (`SheetLayout`: from anywhere a
+  control isn't using the touch; past a quarter of its height or a flick closes, less springs back). DadCraft found
+  the grab bar didn't drag (Oct 19), so this was added.
 
 ## Desktop stream mode (`desktop/`, Oct 16)
 - DadCraft wants the app on Linux as background music for his stream (no sensors, Set tempo, Realms by room level).

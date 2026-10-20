@@ -597,7 +597,7 @@ public class MainActivity extends Activity {
         sheetScrim.setOnClickListener(v -> closeSheet());
         sheetScrim.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
 
-        sheetBox = new LinearLayout(this);
+        sheetBox = new SheetLayout();
         sheetBox.setOrientation(LinearLayout.VERTICAL);
         sheetBox.setGravity(Gravity.CENTER_HORIZONTAL);
         android.graphics.drawable.GradientDrawable sheetBg = new android.graphics.drawable.GradientDrawable();
@@ -663,6 +663,90 @@ public class MainActivity extends Activity {
             updateNowLine();
         });
         snapButton = addButton(row, R.string.snapshot, this::saveSnapshot);
+    }
+
+    /**
+     * The sheet's frame: drag it down (from the grab bar or anywhere a control isn't using the touch) and it follows
+     * the finger; let go past a quarter of its height, or flick it, and it closes, otherwise it springs back. A tap on
+     * a button inside still works (a drag only takes over once the finger has clearly moved down), and the dial keeps
+     * its own drags.
+     */
+    private final class SheetLayout extends LinearLayout {
+        private final int slop = android.view.ViewConfiguration.get(MainActivity.this).getScaledTouchSlop();
+        private float downX, downY;
+        private android.view.VelocityTracker velocity;
+
+        SheetLayout() {
+            super(MainActivity.this);
+        }
+
+        @Override
+        public boolean onInterceptTouchEvent(android.view.MotionEvent e) {
+            if (e.getActionMasked() == android.view.MotionEvent.ACTION_DOWN) {
+                begin(e);
+            } else if (e.getActionMasked() == android.view.MotionEvent.ACTION_MOVE) {
+                float dy = e.getRawY() - downY, dx = e.getRawX() - downX;
+                return dy > slop && dy > Math.abs(dx);   // clearly downwards: the sheet takes the drag
+            }
+            return false;
+        }
+
+        @Override
+        public boolean onTouchEvent(android.view.MotionEvent e) {
+            switch (e.getActionMasked()) {
+                case android.view.MotionEvent.ACTION_DOWN:
+                    begin(e);
+                    return true;
+                case android.view.MotionEvent.ACTION_MOVE: {
+                    track(e);
+                    float dy = Math.max(0, e.getRawY() - downY);
+                    setTranslationY(dy);
+                    sheetScrim.setAlpha(1f - Math.min(1f, dy / Math.max(1, getHeight())));
+                    return true;
+                }
+                case android.view.MotionEvent.ACTION_UP:
+                case android.view.MotionEvent.ACTION_CANCEL: {
+                    track(e);
+                    float vy = 0;
+                    if (velocity != null) {
+                        velocity.computeCurrentVelocity(1000);
+                        vy = velocity.getYVelocity();
+                        velocity.recycle();
+                        velocity = null;
+                    }
+                    if (getTranslationY() > getHeight() * 0.25f || vy > dp(1000)) {
+                        closeSheet();
+                    } else {   // not far enough: back up
+                        animate().translationY(0).setDuration(200)
+                                .setInterpolator(new android.view.animation.DecelerateInterpolator(2f)).start();
+                        sheetScrim.animate().alpha(1f).setDuration(200).start();
+                    }
+                    return true;
+                }
+                default:
+                    return true;
+            }
+        }
+
+        private void begin(android.view.MotionEvent e) {
+            downX = e.getRawX();
+            downY = e.getRawY();
+            if (velocity != null) {
+                velocity.recycle();
+            }
+            velocity = android.view.VelocityTracker.obtain();
+            track(e);
+        }
+
+        /** Velocity from screen positions (the sheet itself moves under the finger). */
+        private void track(android.view.MotionEvent e) {
+            if (velocity != null) {
+                android.view.MotionEvent screen = android.view.MotionEvent.obtain(e);
+                screen.setLocation(e.getRawX(), e.getRawY());
+                velocity.addMovement(screen);
+                screen.recycle();
+            }
+        }
     }
 
     private void openPlayer() {
