@@ -1090,7 +1090,10 @@ public class MainActivity extends Activity {
         row.addView(b, lp);
     }
 
-    /** A small outlined chip with an icon and a word (Randomize, Nudge, Undo); it greys out when disabled. */
+    /**
+     * An outlined chip with an icon and a word (Randomize, Nudge, Undo); the chips of a row share its width equally
+     * (DadCraft: no open pocket on the right). It greys out when disabled.
+     */
     private Button chip(LinearLayout row, int icon, int text, Runnable action) {
         Button b = new Button(this);
         b.setText(text);
@@ -1105,16 +1108,24 @@ public class MainActivity extends Activity {
         b.setMinimumWidth(0);
         b.setMinHeight(dp(40));
         b.setMinimumHeight(dp(40));
-        b.setPadding(dp(14), 0, dp(14), 0);
+        b.setPadding(dp(10), 0, dp(10), 0);
+        b.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        // the icon and the word centred together (a Button centres only the word, leaving the icon at the edge)
+        b.addOnLayoutChangeListener((v, l, t, r, bt, ol, ot, or, ob) -> {
+            int content = dp(16) + dp(6) + Math.round(b.getPaint().measureText(b.getText().toString()));
+            int side = Math.max(dp(6), (b.getWidth() - content) / 2);
+            if (b.getPaddingLeft() != side) {
+                b.setPadding(side, 0, side, 0);
+            }
+        });
         android.graphics.drawable.Drawable d = getDrawable(icon).mutate();
         d.setBounds(0, 0, dp(16), dp(16));
         d.setTintList(b.getTextColors());
         b.setCompoundDrawablesRelative(d, null, null, null);
         b.setCompoundDrawablePadding(dp(6));
         b.setOnClickListener(v -> action.run());
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, dp(40));
-        lp.setMargins(dp(3), dp(4), dp(5), dp(4));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(40), 1f);   // the row's chips share it equally
+        lp.setMargins(dp(3), dp(4), dp(3), dp(4));
         row.addView(b, lp);
         return b;
     }
