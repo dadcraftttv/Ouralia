@@ -926,9 +926,13 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   Intensity; screen readers get it as a slider in steps of 5), Start/Stop in its middle, the full status, the realm
   line, Hold realm and Save sound. Back, the grab bar or the dimmed screen close it. Replaced the floating bottom
   card and its AMOLED accent glow. Motion only while something slides: nothing animates at rest.
-- The accent is Ouralia violet for now (it was the wallpaper's on Android 12+). Next: Appearance (theme Phone/
-  Light/Dark/AMOLED; accent swatches, From wallpaper, Your own colour with a ring and Colorfulness; not in presets),
-  the XY pad, the Realms and Scenes tabs.
+- **Appearance** (Oct 19): Theme Phone/Light/Dark/AMOLED (`UiSettings.THEME_PHONE` = 3 resolves to Light or Dark by
+  the phone's night mode; the activity is rebuilt when that changes). Accent (`UiSettings.accent`, default "violet",
+  not in presets): `Look.ACCENTS` (violet, blue, teal, green, amber, coral, pink, graphite), "wall" (Android 12+:
+  `system_accent1_500`'s hue and colourfulness), "custom" (hue + colourfulness, set in the colour ring sheet whose
+  middle previews the Start button in this theme). A change calls `recreate()`; the sound keeps playing. Existing
+  installs show violet (before the redesign the accent was the wallpaper's on Android 12+).
+- Next: the XY pad, the Realms and Scenes tabs.
 - **Key and Scale** (Oct 19; DadCraft found the mockup's 12-key strip easy to mis-tap): two tiles side by side in
   Music, each opening a sheet: Key = the 12 notes as big buttons (4 x 3), Scale = one row per scale with 12 dots
   (filled = the scale's notes above the key; `Params.SCALE_STEPS`, which test V checks against make_patch.py

@@ -30,7 +30,8 @@ final class Styler {
     Styler(Context context, int theme) {
         this.context = context;
         this.density = context.getResources().getDisplayMetrics().density;
-        p = Look.palette(theme, Look.DEFAULT_HUE, Look.DEFAULT_CHROMA);
+        float[] accent = accentOf(context);
+        p = Look.palette(theme, accent[0], accent[1]);
         TypedArray a = context.getTheme().obtainStyledAttributes(
                 new int[] {android.R.attr.textColorPrimary, android.R.attr.textColorSecondary});
         themeText = a.getColor(0, 0);
@@ -42,6 +43,30 @@ final class Styler {
             interSemi = font("Inter.ttf", 600);
             mono = font("JetBrainsMono.ttf", 700);
         }
+    }
+
+    /** The chosen accent's hue and colourfulness (UiSettings): a ready-made one, the wallpaper's, or your own. */
+    static float[] accentOf(Context context) {
+        return accentForId(context, UiSettings.accent(context));
+    }
+
+    /** The hue and colourfulness of the accent {@code id} ("custom": your own colour, "wall": the wallpaper's). */
+    static float[] accentForId(Context context, String id) {
+        if (id.equals("custom")) {
+            return UiSettings.customAccent(context);
+        }
+        if (id.equals("wall")) {
+            if (android.os.Build.VERSION.SDK_INT >= 31) {
+                return Look.hueChroma(context.getColor(android.R.color.system_accent1_500));
+            }
+            id = "violet";   // (the wallpaper colours came with Android 12)
+        }
+        for (int i = 0; i < Look.ACCENT_IDS.length; i++) {
+            if (Look.ACCENT_IDS[i].equals(id)) {
+                return Look.ACCENTS[i].clone();
+            }
+        }
+        return new float[] {Look.DEFAULT_HUE, Look.DEFAULT_CHROMA};
     }
 
     private Typeface font(String file, int weight) {

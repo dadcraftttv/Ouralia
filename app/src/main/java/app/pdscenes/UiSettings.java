@@ -10,6 +10,8 @@ final class UiSettings {
     static final int THEME_LIGHT = 0;
     static final int THEME_DARK = 1;
     static final int THEME_AMOLED = 2;
+    /** Follows the phone's own light/dark setting (Light or Dark). */
+    static final int THEME_PHONE = 3;
 
     private static final String PREFS = "pdscenes_ui";
     private static final String KEY_THEME = "theme";
@@ -27,6 +29,37 @@ final class UiSettings {
 
     static void setTheme(Context context, int theme) {
         prefs(context).edit().putInt(KEY_THEME, theme).apply();
+    }
+
+    /** The theme to draw in now: Phone resolves to Light or Dark by the phone's setting. */
+    static int effectiveTheme(Context context) {
+        int t = theme(context);
+        if (t != THEME_PHONE) {
+            return t;
+        }
+        int night = context.getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        return night == android.content.res.Configuration.UI_MODE_NIGHT_YES ? THEME_DARK : THEME_LIGHT;
+    }
+
+    private static final String KEY_ACCENT = "accent", KEY_HUE = "accent_hue", KEY_CHROMA = "accent_chroma";
+
+    /** The accent: one of Look.ACCENT_IDS, "wall" (the wallpaper's) or "custom". Not part of presets. */
+    static String accent(Context context) {
+        return prefs(context).getString(KEY_ACCENT, "violet");
+    }
+
+    static void setAccent(Context context, String id) {
+        prefs(context).edit().putString(KEY_ACCENT, id).apply();
+    }
+
+    /** Your own colour: hue (degrees) and colourfulness (0..1). */
+    static float[] customAccent(Context context) {
+        SharedPreferences p = prefs(context);
+        return new float[] {p.getFloat(KEY_HUE, 290f), p.getFloat(KEY_CHROMA, 0.85f)};
+    }
+
+    static void setCustomAccent(Context context, float hue, float chroma) {
+        prefs(context).edit().putFloat(KEY_HUE, hue).putFloat(KEY_CHROMA, chroma).putString(KEY_ACCENT, "custom").apply();
     }
 
     static int themeResource(int theme) {

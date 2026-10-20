@@ -108,9 +108,30 @@
     <string name="dev_bluetooth_call">Bluetooth headset mic (call quality)</string>
     <string name="dev_bluetooth_le">Bluetooth LE Audio headset mic</string>
     <string name="dev_hearing_aid">Hearing aid</string>
-    <string name="theme_light">Material Light</string>
-    <string name="theme_dark">Material Dark</string>
-    <string name="theme_amoled">AMOLED Black</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_phone">Phone</string>
+    <string name="theme_label">Theme</string>
+    <string name="theme_hint_phone">Follows your phone: light when it is light, dark when it is dark.</string>
+    <string name="theme_hint_amoled">True black: the screen\'s pixels switch off, which saves battery.</string>
+    <string name="accent_label">Accent color</string>
+    <string name="accent_hint">Any color works: the app sets how light or dark it is for each theme, so text stays easy to read.</string>
+    <string-array name="accent_names">
+        <item>Ouralia violet</item>
+        <item>Blue</item>
+        <item>Teal</item>
+        <item>Green</item>
+        <item>Amber</item>
+        <item>Coral</item>
+        <item>Pink</item>
+        <item>Graphite</item>
+    </string-array>
+    <string name="accent_wall">From wallpaper</string>
+    <string name="accent_custom">Your own color</string>
+    <string name="accent_custom_hint">Slide around the ring. The middle shows your Start button in it.</string>
+    <string name="accent_colorfulness">Colorfulness</string>
+    <string name="accent_use">Use this color</string>
 
     <!-- Buttons and labels -->
     <string name="lock">Lock</string>

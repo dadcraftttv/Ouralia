@@ -20,6 +20,19 @@ final class Look {
     static final float DEFAULT_HUE = 252.7f;
     static final float DEFAULT_CHROMA = 1f;
 
+    /**
+     * The ready-made accents (Setup, Appearance): id (stored), hue, colourfulness. Their names are in strings.xml
+     * (accent_names, same order). "wall" (the wallpaper's, Android 12+) and "custom" (Your own colour) are the others.
+     */
+    static final String[] ACCENT_IDS = {"violet", "blue", "teal", "green", "amber", "coral", "pink", "graphite"};
+    static final float[][] ACCENTS = {
+            {DEFAULT_HUE, 1f}, {215f, 1f}, {172f, 0.9f}, {130f, 0.75f}, {40f, 1f}, {12f, 1f}, {330f, 1f}, {240f, 0.08f}};
+
+    /** How an accent looks on its swatch (and the custom colour ring's knob): mid lightness, before any theme. */
+    static int swatch(float hue, float chroma) {
+        return hsl(hue, 80 * Math.max(0f, Math.min(1f, chroma)), 55);
+    }
+
     /** The least contrast any text colour gets against what it sits on. */
     static final double MIN_TEXT_CONTRAST = 4.5;
 

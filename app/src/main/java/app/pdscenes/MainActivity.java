@@ -222,7 +222,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        int theme = UiSettings.theme(this);
+        int theme = UiSettings.effectiveTheme(this);   // (Phone: Light or Dark, as the phone is set)
         setTheme(UiSettings.themeResource(theme));   // must be set before any view is created
         super.onCreate(savedInstanceState);
         look = new Styler(this, theme);
@@ -1501,7 +1501,7 @@ public class MainActivity extends Activity {
 
     private void showWalkthrough() {
         UiSettings.setWalkthroughSeen(this);
-        walkthrough = new Walkthrough(this, UiSettings.themeResource(UiSettings.theme(this)), new Walkthrough.Host() {
+        walkthrough = new Walkthrough(this, UiSettings.themeResource(UiSettings.effectiveTheme(this)), new Walkthrough.Host() {
             @Override
             public boolean headphonesConnected() {
                 return MainActivity.this.headphonesConnected();
@@ -1587,27 +1587,271 @@ public class MainActivity extends Activity {
                 .show();
     }
 
+    /**
+     * Appearance: the theme (Phone, Light, Dark, AMOLED) and the accent colour (ready-made swatches, the wallpaper's on
+     * Android 12+, or your own from a colour ring). A change rebuilds the screen in the new look; the sound keeps
+     * playing. Neither is part of presets.
+     */
     private void addAppearanceSection(LinearLayout parent) {
-        LinearLayout body = addSection(
-                parent, "appearance", getString(R.string.section_appearance), false);
-        int[] labels = {R.string.theme_light, R.string.theme_dark, R.string.theme_amoled};
-        int current = UiSettings.theme(this);
-        RadioGroup group = new RadioGroup(this);
-        for (int i = 0; i < labels.length; i++) {
-            int theme = i;   // THEME_LIGHT, THEME_DARK, THEME_AMOLED are 0, 1, 2
-            RadioButton choice = new RadioButton(this);
-            choice.setId(View.generateViewId());
-            choice.setText(labels[i]);
-            choice.setChecked(theme == current);
-            choice.setOnClickListener(v -> {
-                if (theme != UiSettings.theme(this)) {
-                    UiSettings.setTheme(this, theme);
-                    recreate();   // rebuilds the screen in the new theme; audio keeps running
-                }
-            });
-            group.addView(choice);
+        LinearLayout body = addSection(parent, "appearance", getString(R.string.section_appearance), false);
+        int[] themes = {UiSettings.THEME_PHONE, UiSettings.THEME_LIGHT, UiSettings.THEME_DARK, UiSettings.THEME_AMOLED};
+        String[] names = {getString(R.string.theme_phone), getString(R.string.theme_light),
+                getString(R.string.theme_dark), getString(R.string.theme_amoled)};
+        int current = UiSettings.theme(this), chosen = 0;
+        for (int i = 0; i < themes.length; i++) {
+            if (themes[i] == current) {
+                chosen = i;
+            }
         }
-        body.addView(group);
+        TextView themeLabel = new TextView(this);
+        themeLabel.setText(R.string.theme_label);
+        look.label(themeLabel);
+        themeLabel.setPadding(dp(4), dp(8), 0, dp(8));
+        body.addView(themeLabel);
+        body.addView(segmentBar(names, chosen, i -> {
+            if (themes[i] != UiSettings.theme(this)) {
+                UiSettings.setTheme(this, themes[i]);
+                recreate();   // rebuilds the screen in the new theme; audio keeps running
+            }
+        }));
+        if (current == UiSettings.THEME_PHONE || current == UiSettings.THEME_AMOLED) {
+            TextView hint = new TextView(this);
+            hint.setText(current == UiSettings.THEME_PHONE ? R.string.theme_hint_phone : R.string.theme_hint_amoled);
+            look.hint(hint);
+            hint.setPadding(dp(4), dp(6), 0, 0);
+            body.addView(hint);
+        }
+
+        // the accent: a grid of round swatches, five to a row
+        String accent = UiSettings.accent(this);
+        String[] accentNames = getResources().getStringArray(R.array.accent_names);
+        List<String> ids = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= 31) {
+            ids.add("wall");
+            labels.add(getString(R.string.accent_wall));
+        }
+        for (int i = 0; i < Look.ACCENT_IDS.length; i++) {
+            ids.add(Look.ACCENT_IDS[i]);
+            labels.add(accentNames[i]);
+        }
+        ids.add("custom");
+        labels.add(getString(R.string.accent_custom));
+        String shownName = labels.get(Math.max(0, ids.indexOf(accent)));
+
+        LinearLayout head = new LinearLayout(this);
+        head.setOrientation(LinearLayout.HORIZONTAL);
+        head.setPadding(dp(4), dp(18), dp(4), dp(10));
+        TextView accentLabel = new TextView(this);
+        accentLabel.setText(R.string.accent_label);
+        look.label(accentLabel);
+        head.addView(accentLabel, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        TextView accentName = new TextView(this);
+        accentName.setText(shownName);
+        look.label(accentName);
+        accentName.setTextColor(look.p.primaryText);
+        head.addView(accentName);
+        body.addView(head);
+
+        LinearLayout row = null;
+        for (int i = 0; i < ids.size(); i++) {
+            if (i % 5 == 0) {
+                row = new LinearLayout(this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                body.addView(row);
+            }
+            String id = ids.get(i);
+            row.addView(swatch(id, labels.get(i), id.equals(accent)), new LinearLayout.LayoutParams(0, dp(56), 1f));
+        }
+        for (int i = ids.size() % 5; i > 0 && i < 5; i++) {   // keep the last row's swatches in their columns
+            row.addView(new android.widget.Space(this), new LinearLayout.LayoutParams(0, dp(56), 1f));
+        }
+        TextView hint = new TextView(this);
+        hint.setText(R.string.accent_hint);
+        look.hint(hint);
+        hint.setPadding(dp(4), dp(8), 0, dp(4));
+        body.addView(hint);
+    }
+
+    /** One accent swatch: a 44 dp circle (ringed when chosen); tapping it switches to it, or opens the colour ring. */
+    private View swatch(String id, String name, boolean chosen) {
+        android.widget.FrameLayout box = new android.widget.FrameLayout(this);
+        View dot = new View(this);
+        android.graphics.drawable.GradientDrawable fill = new android.graphics.drawable.GradientDrawable();
+        fill.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        boolean rainbow = id.equals("custom") && !chosen;
+        if (rainbow) {
+            fill.setGradientType(android.graphics.drawable.GradientDrawable.SWEEP_GRADIENT);
+            fill.setColors(new int[] {0xFFE84B4B, 0xFFE8C94B, 0xFF5BD06A, 0xFF4BC6E8, 0xFF6A6BF0, 0xFFD25BD9, 0xFFE84B4B});
+        } else {
+            float[] hc = id.equals("custom") ? UiSettings.customAccent(this)
+                    : id.equals("wall") ? Styler.accentForId(this, "wall") : Styler.accentForId(this, id);
+            fill.setColor(Look.swatch(hc[0], hc[1]));
+        }
+        if (chosen) {
+            fill.setStroke(dp(3), look.p.s1);   // a gap, then the ring drawn by the box behind
+        }
+        dot.setBackground(fill);
+        if (chosen) {
+            android.graphics.drawable.GradientDrawable ring = new android.graphics.drawable.GradientDrawable();
+            ring.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+            ring.setColor(look.p.text);
+            View halo = new View(this);
+            halo.setBackground(ring);
+            box.addView(halo, new android.widget.FrameLayout.LayoutParams(dp(50), dp(50), Gravity.CENTER));
+        }
+        box.addView(dot, new android.widget.FrameLayout.LayoutParams(dp(chosen ? 46 : 44), dp(chosen ? 46 : 44), Gravity.CENTER));
+        int mark = chosen ? R.drawable.ic_check : id.equals("custom") ? R.drawable.ic_plus : id.equals("wall") ? R.drawable.ic_image : 0;
+        if (mark != 0) {
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(mark);
+            icon.setImageTintList(android.content.res.ColorStateList.valueOf(0xFFFFFFFF));
+            icon.setElevation(dp(1));
+            box.addView(icon, new android.widget.FrameLayout.LayoutParams(dp(20), dp(20), Gravity.CENTER));
+        }
+        box.setContentDescription(name);
+        box.setSelected(chosen);
+        box.setOnClickListener(v -> {
+            if (id.equals("custom")) {
+                showColorSheet();
+            } else if (!chosen) {
+                UiSettings.setAccent(this, id);
+                recreate();
+            }
+        });
+        return box;
+    }
+
+    /**
+     * Your own colour: drag around the ring for the colour, Colorfulness from grey to full; the middle of the ring
+     * is the Start button as it would look in this theme. Use this colour rebuilds the screen in it.
+     */
+    private void showColorSheet() {
+        float[] hc = UiSettings.customAccent(this);
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.setGravity(Gravity.CENTER_HORIZONTAL);
+        content.addView(sheetHeading(getString(R.string.accent_custom), getString(R.string.accent_custom_hint)),
+                new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        HueRing ring = new HueRing(hc[0], hc[1]);
+        content.addView(ring, new LinearLayout.LayoutParams(dp(232), dp(232)));
+
+        LinearLayout head = new LinearLayout(this);
+        head.setOrientation(LinearLayout.HORIZONTAL);
+        head.setPadding(dp(8), dp(16), dp(8), 0);
+        TextView label = new TextView(this);
+        label.setText(R.string.accent_colorfulness);
+        look.label(label);
+        head.addView(label, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        TextView amount = new TextView(this);
+        amount.setTypeface(look.value());
+        amount.setTextColor(look.p.muted);
+        amount.setTextSize(Look.TEXT_VALUE);
+        head.addView(amount);
+        content.addView(head, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+        SeekBar colorful = new SeekBar(this);
+        colorful.setMax(100);
+        colorful.setProgress(Math.round(hc[1] * 100));
+        colorful.setContentDescription(getString(R.string.accent_colorfulness));
+        look.slider(colorful);
+        amount.setText(Math.round(hc[1] * 100) + "%");
+        colorful.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar b, int progress, boolean fromUser) {
+                ring.setChroma(progress / 100f);
+                amount.setText(progress + "%");
+            }
+
+            @Override public void onStartTrackingTouch(SeekBar b) { }
+            @Override public void onStopTrackingTouch(SeekBar b) { }
+        });
+        LinearLayout.LayoutParams sliderParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(44));
+        content.addView(colorful, sliderParams);
+
+        LinearLayout buttons = newButtonRow(content);
+        buttons.setPadding(0, dp(10), 0, 0);
+        Button cancel = addButton(buttons, R.string.cancel, this::closeSheet);
+        cancel.setBackground(look.pressable(look.outline(look.p.line, Look.RADIUS_PILL), look.p.text, Look.RADIUS_PILL));
+        cancel.setTextColor(look.p.text);
+        Button use = addButton(buttons, R.string.accent_use, () -> {
+            UiSettings.setCustomAccent(this, ring.hue, ring.chroma);
+            closeSheet();
+            recreate();
+        });
+        look.button(use, true);
+        ((LinearLayout.LayoutParams) use.getLayoutParams()).setMargins(dp(3), dp(4), dp(3), dp(4));
+        openSheet(content);
+    }
+
+    /**
+     * The colour ring: every hue around it, a knob at the chosen one; inside, the Start button in the colour this
+     * theme would make of it. Drag anywhere on the ring (or around the middle) to turn it.
+     */
+    private final class HueRing extends View {
+        float hue, chroma;
+        private final android.graphics.Paint band = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.graphics.Paint fill = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final android.graphics.Paint word = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        private final int theme = UiSettings.effectiveTheme(MainActivity.this);
+
+        HueRing(float hue, float chroma) {
+            super(MainActivity.this);
+            this.hue = hue;
+            this.chroma = chroma;
+            band.setStyle(android.graphics.Paint.Style.STROKE);
+            band.setStrokeWidth(dp(28));
+            word.setTypeface(look.heading());
+            word.setTextSize(dp(15));
+            word.setTextAlign(android.graphics.Paint.Align.CENTER);
+            setContentDescription(getString(R.string.accent_custom));
+        }
+
+        void setChroma(float c) {
+            chroma = c;
+            invalidate();
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int ow, int oh) {
+            int[] hues = new int[13];
+            for (int i = 0; i <= 12; i++) {
+                hues[i] = Look.swatch(i * 30f, 1f);
+            }
+            android.graphics.SweepGradient sweep = new android.graphics.SweepGradient(w / 2f, h / 2f, hues, null);
+            android.graphics.Matrix turn = new android.graphics.Matrix();
+            turn.setRotate(-90, w / 2f, h / 2f);   // hue 0 at the top, going clockwise
+            sweep.setLocalMatrix(turn);
+            band.setShader(sweep);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            float cx = getWidth() / 2f, cy = getHeight() / 2f, r = Math.min(cx, cy) - dp(15);
+            band.setAlpha(Math.round(255 * (0.35f + 0.65f * chroma)));
+            canvas.drawCircle(cx, cy, r, band);
+            double a = Math.toRadians(hue - 90);
+            float kx = cx + (float) (r * Math.cos(a)), ky = cy + (float) (r * Math.sin(a));
+            fill.setColor(0xFFFFFFFF);
+            canvas.drawCircle(kx, ky, dp(16), fill);
+            fill.setColor(Look.swatch(hue, chroma));
+            canvas.drawCircle(kx, ky, dp(12), fill);
+            Look.Palette preview = Look.palette(theme, hue, chroma);
+            fill.setColor(preview.primary);
+            canvas.drawCircle(cx, cy, dp(54), fill);
+            word.setColor(preview.onPrimary);
+            canvas.drawText(getString(R.string.start), cx, cy + dp(5), word);
+        }
+
+        @Override
+        public boolean onTouchEvent(android.view.MotionEvent e) {
+            if (e.getActionMasked() == android.view.MotionEvent.ACTION_DOWN) {
+                getParent().requestDisallowInterceptTouchEvent(true);   // the sheet mustn't slide away under it
+            }
+            float dx = e.getX() - getWidth() / 2f, dy = e.getY() - getHeight() / 2f;
+            hue = (float) ((Math.toDegrees(Math.atan2(dy, dx)) + 90 + 360) % 360);
+            invalidate();
+            return true;
+        }
     }
 
     private void addRow(LinearLayout parent, Param p) {
@@ -1975,20 +2219,54 @@ public class MainActivity extends Activity {
         showSegment(row, choiceIndex(p, ParamStore.get(p.id)));
     }
 
-    /** The chosen button filled, a tick before its name; its explanation (if it has one) underneath. */
+    /** The chosen button filled; its explanation (if it has one) underneath. */
     private void showSegment(Row r, int chosen) {
         for (int i = 0; i < r.segment.length; i++) {
-            boolean on = i == chosen;
-            TextView b = r.segment[i];
-            b.setSelected(on);
-            b.setTypeface(on ? look.textStrong() : look.text());
-            b.setTextColor(on ? look.p.onContainer : look.p.text);
-            b.setBackground(on ? new android.graphics.drawable.ColorDrawable(look.p.container)
-                    : look.pressable(null, look.p.text, 0));
+            styleSegment(r.segment[i], i == chosen);
         }
         String d = detail(r.param.choices[chosen]);
         r.segmentHint.setText(d);
         r.segmentHint.setVisibility(d.isEmpty() ? View.GONE : View.VISIBLE);
+    }
+
+    private void styleSegment(TextView b, boolean on) {
+        b.setSelected(on);
+        b.setTypeface(on ? look.textStrong() : look.text());
+        b.setTextColor(on ? look.p.onContainer : look.p.text);
+        b.setBackground(on ? new android.graphics.drawable.ColorDrawable(look.p.container)
+                : look.pressable(null, look.p.text, 0));
+    }
+
+    /** Side-by-side buttons for {@code names}, {@code chosen} filled; a tap restyles them and calls {@code pick}. */
+    private View segmentBar(String[] names, int chosen, java.util.function.IntConsumer pick) {
+        LinearLayout bar = new LinearLayout(this);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setBackground(look.outline(look.p.line, 20));
+        bar.setClipToOutline(true);
+        bar.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
+        android.graphics.drawable.GradientDrawable divider = new android.graphics.drawable.GradientDrawable();
+        divider.setColor(look.p.line);
+        divider.setSize(dp(1), 1);
+        bar.setDividerDrawable(divider);
+        TextView[] buttons = new TextView[names.length];
+        for (int i = 0; i < names.length; i++) {
+            TextView b = new TextView(this);
+            b.setText(names[i]);
+            b.setGravity(Gravity.CENTER);
+            b.setTextSize(14);
+            b.setMaxLines(1);
+            styleSegment(b, i == chosen);
+            final int index = i;
+            b.setOnClickListener(v -> {
+                for (int k = 0; k < buttons.length; k++) {
+                    styleSegment(buttons[k], k == index);
+                }
+                pick.accept(index);
+            });
+            buttons[i] = b;
+            bar.addView(b, new LinearLayout.LayoutParams(0, dp(44), 1f));
+        }
+        return bar;
     }
 
     /** A list sheet for a pick-one setting: its choices, the chosen one ticked; one tap picks and closes. */
