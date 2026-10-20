@@ -21,6 +21,8 @@ import android.view.WindowInsets;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.AdapterView;
@@ -101,7 +103,9 @@ public class MainActivity extends Activity {
     private final LinearLayout[] tabPages = new LinearLayout[TAB_NAMES.length];     // each tab's whole page
     private final LinearLayout[] tabBodies = new LinearLayout[TAB_NAMES.length];    // its controls (hidden for a scene)
     private final TextView[] tabNotices = new TextView[TAB_NAMES.length];           // "paused while a scene plays"
-    private final TextView[] tabButtons = new TextView[TAB_NAMES.length];
+    private final LinearLayout[] tabViews = new LinearLayout[TAB_NAMES.length];   // the tab bar's buttons
+    private final ImageView[] tabIcons = new ImageView[TAB_NAMES.length];
+    private final TextView[] tabLabels = new TextView[TAB_NAMES.length];
     private final int[] tabScroll = new int[TAB_NAMES.length];
     private int currentTab = -1;
     /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
@@ -244,14 +248,17 @@ public class MainActivity extends Activity {
         scroll.addView(root);
         screen.addView(scroll, new android.widget.FrameLayout.LayoutParams(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
-        // The card floats over the settings, which scroll on behind it; the end of the list stops just above it.
+        // The player and tab bar sit over the settings, which scroll on behind; the end of the list stops above them.
         View bar = buildBottomBar();
         android.widget.FrameLayout.LayoutParams barParams = new android.widget.FrameLayout.LayoutParams(
                 android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
                 android.view.Gravity.BOTTOM);
-        int m = Math.max(0, dp(10) - barGlow);   // AMOLED's glow already brings its own room
-        barParams.setMargins(m, 0, m, Math.max(0, dp(10) - barGlow));
         screen.addView(bar, barParams);
+        screen.addView(playerScrim, new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.MATCH_PARENT));
+        screen.addView(playerSheet, new android.widget.FrameLayout.LayoutParams(
+                android.widget.FrameLayout.LayoutParams.MATCH_PARENT, android.widget.FrameLayout.LayoutParams.WRAP_CONTENT,
+                android.view.Gravity.BOTTOM));
         bar.addOnLayoutChangeListener((v, l, t, r, b2, ol, ot, or, ob) -> {
             int under = v.getHeight() + barParams.bottomMargin;
             if (root.getPaddingBottom() != pad + under) {
@@ -416,23 +423,47 @@ public class MainActivity extends Activity {
         updateSceneUi();
     }
 
-    /** The tab strip: five equal tabs, the card's top row; the shown one bold, accent-coloured, on a soft pill. */
+    private static final int[] TAB_ICONS = {R.drawable.ic_tab_sound, R.drawable.ic_tab_music, R.drawable.ic_tab_realms,
+            R.drawable.ic_tab_scenes, R.drawable.ic_tab_setup};
+
+    /** The tab bar: a pill of five icons, in thumb reach; the shown tab widens into a soft pill with its name. */
     private View buildTabStrip() {
         LinearLayout strip = new LinearLayout(this);
         strip.setOrientation(LinearLayout.HORIZONTAL);
+        strip.setGravity(Gravity.CENTER_VERTICAL);
+        android.graphics.drawable.GradientDrawable bg = look.round(look.p.s1, 32);
+        bg.setStroke(dp(1), look.p.line);
+        strip.setBackground(bg);
+        strip.setPadding(dp(8), 0, dp(8), 0);
+        android.animation.LayoutTransition slide = new android.animation.LayoutTransition();
+        slide.enableTransitionType(android.animation.LayoutTransition.CHANGING);   // the pill slides as it widens
+        strip.setLayoutTransition(slide);
         for (int t = 0; t < TAB_NAMES.length; t++) {
-            TextView b = new TextView(this);
-            b.setText(TAB_NAMES[t]);
-            b.setTextSize(15);
-            b.setGravity(android.view.Gravity.CENTER);
-            b.setPadding(0, dp(8), 0, dp(8));
+            if (t > 0) {
+                strip.addView(new android.widget.Space(this), new LinearLayout.LayoutParams(0, 1, 1f));
+            }
+            LinearLayout b = new LinearLayout(this);
+            b.setOrientation(LinearLayout.HORIZONTAL);
+            b.setGravity(Gravity.CENTER);
+            ImageView icon = new ImageView(this);
+            icon.setImageResource(TAB_ICONS[t]);
+            b.addView(icon, new LinearLayout.LayoutParams(dp(22), dp(22)));
+            TextView label = new TextView(this);
+            label.setText(TAB_NAMES[t]);
+            label.setTypeface(look.textStrong());
+            label.setTextSize(14);
+            label.setTextColor(look.p.onContainer);
+            label.setPadding(dp(8), 0, 0, 0);
+            label.setSingleLine(true);
+            b.addView(label);
             final int tab = t;
             b.setOnClickListener(v -> showTab(tab));
             b.setContentDescription(getString(R.string.tab_description, getString(TAB_NAMES[t])));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-            lp.setMargins(dp(2), 0, dp(2), 0);
-            strip.addView(b, lp);
-            tabButtons[t] = b;
+            b.setMinimumWidth(dp(48));
+            strip.addView(b, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(48)));
+            tabViews[t] = b;
+            tabIcons[t] = icon;
+            tabLabels[t] = label;
         }
         return strip;
     }
@@ -445,12 +476,14 @@ public class MainActivity extends Activity {
         }
         for (int t = 0; t < TAB_NAMES.length; t++) {
             tabPages[t].setVisibility(t == tab ? View.VISIBLE : View.GONE);
-            TextView b = tabButtons[t];
+            LinearLayout b = tabViews[t];
             if (b != null) {
-                b.setTypeface(t == tab ? look.textStrong() : look.text());
-                b.setTextColor(t == tab ? look.p.onContainer : look.p.muted);
-                b.setSelected(t == tab);
-                b.setBackground(t == tab ? look.round(look.p.container, Look.RADIUS_PILL) : null);
+                boolean on = t == tab;
+                tabLabels[t].setVisibility(on ? View.VISIBLE : View.GONE);
+                tabIcons[t].setImageTintList(android.content.res.ColorStateList.valueOf(on ? look.p.onContainer : look.p.muted));
+                b.setBackground(on ? look.round(look.p.container, Look.RADIUS_PILL) : look.pressable(null, look.p.text, Look.RADIUS_PILL));
+                b.setPadding(dp(on ? 16 : 13), 0, dp(on ? 16 : 13), 0);
+                b.setSelected(on);
             }
         }
         currentTab = tab;
@@ -461,170 +494,242 @@ public class MainActivity extends Activity {
         }
     }
 
+    /**
+     * The bottom of the screen, in thumb reach while walking: the docked player (Start, what's happening, Save
+     * sound) above the tab bar. Tapping the player opens the player sheet with the Intensity dial.
+     */
     private View buildBottomBar() {
-        LinearLayout bar = new LinearLayout(this);
-        bar.setOrientation(LinearLayout.VERTICAL);
-        bar.setPadding(dp(14), dp(6), dp(14), dp(8));
-        styleBarCard(bar);
-        bar.addView(buildTabStrip());                    // the tabs: the card's top row, in thumb reach
-        View rule = new View(this);
-        rule.setBackgroundColor(0x33888888);
-        LinearLayout.LayoutParams ruleParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1));
-        ruleParams.setMargins(0, dp(4), 0, dp(6));
-        bar.addView(rule, ruleParams);
+        LinearLayout bottom = new LinearLayout(this);
+        bottom.setOrientation(LinearLayout.VERTICAL);
+        bottom.setBackgroundColor(look.p.bg);   // the settings scroll on behind it, out of sight
+        bottom.setPadding(dp(12), dp(8), dp(12), dp(12));
+        bottom.addView(buildPlayer());
+        LinearLayout.LayoutParams navParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(64));
+        navParams.setMargins(0, dp(8), 0, 0);
+        bottom.addView(buildTabStrip(), navParams);
+        buildPlayerSheet();
+        return bottom;
+    }
+
+    private DialView miniDial, playerDial;
+    private ImageButton miniStart, miniSave;
+    private TextView miniStatus, miniSub;
+    private View playerScrim;
+    private LinearLayout playerSheet;
+    private boolean playerOpen;
+    private Object backClosesPlayer;   // an OnBackInvokedCallback on Android 13+ (kept as Object for older ones)
+
+    /** The docked player: the small dial with Start inside, the status line, and Save sound. */
+    private View buildPlayer() {
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.HORIZONTAL);
+        card.setGravity(Gravity.CENTER_VERTICAL);
+        card.setBackground(look.round(look.p.dock, Look.RADIUS_CARD));
+        card.setElevation(dp(2));
+        card.setPadding(dp(8), dp(8), dp(6), dp(8));
+
+        android.widget.FrameLayout ringBox = new android.widget.FrameLayout(this);
+        miniDial = new DialView(this, look, false, "");
+        ringBox.addView(miniDial, new android.widget.FrameLayout.LayoutParams(dp(56), dp(56)));
+        miniStart = new ImageButton(this);
+        miniStart.setBackground(look.pressable(look.round(look.p.primary, 20), look.p.onPrimary, 20));
+        miniStart.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.onPrimary));
+        miniStart.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        miniStart.setPadding(dp(11), dp(11), dp(11), dp(11));
+        miniStart.setOnClickListener(v -> onStartStop());
+        ringBox.addView(miniStart, new android.widget.FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER));
+        card.addView(ringBox, new LinearLayout.LayoutParams(dp(56), dp(56)));
+
+        LinearLayout middle = new LinearLayout(this);
+        middle.setOrientation(LinearLayout.HORIZONTAL);
+        middle.setGravity(Gravity.CENTER_VERTICAL);
+        middle.setPadding(dp(10), 0, dp(6), 0);
+        middle.setBackground(look.pressable(null, look.p.text, Look.RADIUS_TILE));
+        middle.setContentDescription(getString(R.string.player_open));
+        middle.setOnClickListener(v -> openPlayer());
+        LinearLayout texts = new LinearLayout(this);
+        texts.setOrientation(LinearLayout.VERTICAL);
+        miniStatus = new TextView(this);
+        miniStatus.setTypeface(look.heading());
+        miniStatus.setTextSize(Look.TEXT_LABEL);
+        miniStatus.setTextColor(look.p.text);
+        miniStatus.setSingleLine(true);
+        miniStatus.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        texts.addView(miniStatus);
+        miniSub = new TextView(this);
+        look.hint(miniSub);
+        miniSub.setSingleLine(true);
+        miniSub.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        texts.addView(miniSub);
+        middle.addView(texts, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        ImageView up = new ImageView(this);
+        up.setImageResource(R.drawable.ic_chevron_up);
+        up.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.muted));
+        middle.addView(up, new LinearLayout.LayoutParams(dp(20), dp(20)));
+        card.addView(middle, new LinearLayout.LayoutParams(0, dp(56), 1f));
+
+        miniSave = new ImageButton(this);
+        miniSave.setImageResource(R.drawable.ic_bookmark);
+        miniSave.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.onContainer));
+        miniSave.setBackground(look.pressable(look.round(look.p.container, 22), look.p.onContainer, 22));
+        miniSave.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        miniSave.setPadding(dp(12), dp(12), dp(12), dp(12));
+        miniSave.setContentDescription(getString(R.string.snapshot));
+        miniSave.setOnClickListener(v -> saveSnapshot());
+        card.addView(miniSave, new LinearLayout.LayoutParams(dp(44), dp(44)));
+        return card;
+    }
+
+    /**
+     * The player sheet, slid up from the bottom over a dimmed screen: the big Intensity dial (drag around the
+     * ring) with Start/Stop in its middle, the full status, the realm line, Hold realm and Save sound.
+     */
+    private void buildPlayerSheet() {
+        playerScrim = new View(this);
+        playerScrim.setBackgroundColor(Look.alpha(0xFF000000, look.p.light ? 0.35f : 0.6f));
+        playerScrim.setAlpha(0f);
+        playerScrim.setVisibility(View.GONE);
+        playerScrim.setOnClickListener(v -> closePlayer());
+        playerScrim.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+
+        playerSheet = new LinearLayout(this);
+        playerSheet.setOrientation(LinearLayout.VERTICAL);
+        playerSheet.setGravity(Gravity.CENTER_HORIZONTAL);
+        android.graphics.drawable.GradientDrawable sheetBg = new android.graphics.drawable.GradientDrawable();
+        sheetBg.setColor(look.p.sheet);
+        float r = dp(28);
+        sheetBg.setCornerRadii(new float[] {r, r, r, r, 0, 0, 0, 0});
+        playerSheet.setBackground(sheetBg);
+        playerSheet.setPadding(dp(20), 0, dp(20), dp(24));
+        playerSheet.setClickable(true);   // taps on the sheet stay on it
+        playerSheet.setVisibility(View.GONE);
+
+        android.widget.FrameLayout handle = new android.widget.FrameLayout(this);
+        View grip = new View(this);
+        grip.setBackground(look.round(look.p.line, 2));
+        handle.addView(grip, new android.widget.FrameLayout.LayoutParams(dp(36), dp(4), Gravity.CENTER));
+        handle.setContentDescription(getString(R.string.close));
+        handle.setOnClickListener(v -> closePlayer());
+        playerSheet.addView(handle, new LinearLayout.LayoutParams(dp(72), dp(32)));
+
+        android.widget.FrameLayout dialBox = new android.widget.FrameLayout(this);
+        playerDial = new DialView(this, look, true, getString(R.string.intensity_caption));
+        playerDial.setContentDescription(getString(R.string.intensity_card));
+        playerDial.setListener((v, done) -> {
+            ParamStore.set(Intensity.ID, v);
+            updateIntensityRow();
+            if (done) {
+                refreshRows();   // the slider in Input & output follows
+            }
+        });
+        dialBox.addView(playerDial, new android.widget.FrameLayout.LayoutParams(dp(248), dp(248)));
+        startStop = new Button(this);
+        look.button(startStop, true);
+        startStop.setBackground(look.pressable(look.round(look.p.primary, 52), look.p.onPrimary, 52));
+        startStop.setPadding(0, dp(20), 0, dp(16));
+        startStop.setCompoundDrawablePadding(dp(2));
+        startStop.setOnClickListener(v -> onStartStop());
+        dialBox.addView(startStop, new android.widget.FrameLayout.LayoutParams(dp(104), dp(104), Gravity.CENTER));
+        playerSheet.addView(dialBox, new LinearLayout.LayoutParams(dp(248), dp(248)));
 
         status = new TextView(this);
         look.hint(status);
-        bar.addView(status);
+        status.setGravity(Gravity.CENTER);
+        status.setPadding(0, dp(6), 0, 0);
+        playerSheet.addView(status);
         nowLine = new TextView(this);
         look.label(nowLine);
         nowLine.setTextSize(Look.TEXT_HINT + 1);
-        nowLine.setPadding(0, dp(2), 0, 0);
-        bar.addView(nowLine);
-        bar.addView(buildIntensityRow());
-
-        LinearLayout row = newButtonRow(bar);
-        startStop = new Button(this);
-        look.button(startStop, true);
-        startStop.setOnClickListener(v -> onStartStop());
-        LinearLayout.LayoutParams startParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.4f);
-        startParams.setMargins(0, dp(4), dp(3), dp(4));
-        row.addView(startStop, startParams);
+        nowLine.setGravity(Gravity.CENTER);
+        nowLine.setPadding(0, dp(4), 0, 0);
+        playerSheet.addView(nowLine);
+        LinearLayout row = newButtonRow(playerSheet);
+        row.setPadding(0, dp(12), 0, 0);
         holdButton = addButton(row, R.string.hold_world, () -> {
             Worlds.setHeld(!Worlds.isHeld());
             updateNowLine();
         });
         snapButton = addButton(row, R.string.snapshot, this::saveSnapshot);
-        return bar;
     }
 
-    private LinearLayout intensityRow;
-    private TextView intensityLabel;
-    private SeekBar intensityBar;
-
-    /** Intensity in thumb reach: the same setting as the slider at the top of Input & output. */
-    private View buildIntensityRow() {
-        intensityRow = new LinearLayout(this);
-        intensityRow.setOrientation(LinearLayout.HORIZONTAL);
-        intensityRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        intensityRow.setPadding(0, dp(4), 0, 0);
-        intensityLabel = new TextView(this);
-        look.hint(intensityLabel);
-        intensityRow.addView(intensityLabel);
-        intensityBar = new SeekBar(this);
-        intensityBar.setMax(100);
-        look.slider(intensityBar);
-        intensityBar.setContentDescription(getString(R.string.intensity_card));
-        intensityBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar b, int progress, boolean fromUser) {
-                if (fromUser) {
-                    ParamStore.set(Intensity.ID, progress / 100f);
-                    updateIntensityRow();
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar b) { }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar b) {
-                refreshRows();   // the slider in Input & output follows
-            }
+    private void openPlayer() {
+        if (playerOpen) {
+            return;
+        }
+        playerOpen = true;
+        playerScrim.setVisibility(View.VISIBLE);
+        playerScrim.animate().alpha(1f).setDuration(250).start();
+        playerSheet.setVisibility(View.VISIBLE);
+        playerSheet.setTranslationY(dp(800));   // out of sight until it has measured itself
+        playerSheet.post(() -> {
+            playerSheet.setTranslationY(playerSheet.getHeight());
+            playerSheet.animate().translationY(0).setDuration(300)
+                    .setInterpolator(new android.view.animation.DecelerateInterpolator(2f)).start();
         });
-        intensityRow.addView(intensityBar, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        updateIntensityRow();
-        return intensityRow;
+        if (Build.VERSION.SDK_INT >= 33) {
+            android.window.OnBackInvokedCallback back = this::closePlayer;
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT, back);
+            backClosesPlayer = back;
+        }
     }
 
-    /** Shows Intensity's value (and the mover dot while a mover pushes it); hidden while a scene plays. */
-    private void updateIntensityRow() {
-        if (intensityRow == null) {
+    private void closePlayer() {
+        if (!playerOpen) {
             return;
         }
-        intensityRow.setVisibility(SceneSettings.current(this) == null ? View.VISIBLE : View.GONE);
-        float v = ParamStore.get(Intensity.ID);
-        if (!intensityBar.isPressed()) {
-            intensityBar.setProgress(Math.round(v * 100));
+        playerOpen = false;
+        playerScrim.animate().alpha(0f).setDuration(200).withEndAction(() -> playerScrim.setVisibility(View.GONE)).start();
+        playerSheet.animate().translationY(playerSheet.getHeight()).setDuration(220)
+                .setInterpolator(new android.view.animation.AccelerateInterpolator(1.5f))
+                .withEndAction(() -> playerSheet.setVisibility(View.GONE)).start();
+        if (Build.VERSION.SDK_INT >= 33 && backClosesPlayer != null) {
+            getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backClosesPlayer);
+            backClosesPlayer = null;
         }
-        intensityLabel.setText(getString(R.string.intensity_card_value, Math.round(v * 100))
-                + (Modulation.isMoving(Intensity.ID) ? MOVER_DOT : ""));
     }
 
-    /**
-     * The bar is a card lifted above the page: rounded like the scene pad, a slightly lighter surface and a
-     * shadow. On AMOLED black a dark shadow can't show, so the card gets a thin outline and a glow in the
-     * system accent colour (Material You, from the wallpaper, on Android 12+).
-     */
-    private void styleBarCard(View bar) {
-        int theme = UiSettings.theme(this);
-        android.graphics.drawable.GradientDrawable card = new android.graphics.drawable.GradientDrawable();
-        card.setCornerRadius(ScenePad.CORNER_DP * getResources().getDisplayMetrics().density);
-        if (theme == UiSettings.THEME_AMOLED) {
-            // Android's own shadows don't show on pure black, even tinted, so draw a soft glow ourselves.
-            barGlow = dp(14);
-            bar.setPadding(bar.getPaddingLeft() + barGlow, bar.getPaddingTop() + barGlow,
-                    bar.getPaddingRight() + barGlow, bar.getPaddingBottom() + barGlow);
-            bar.setBackground(new GlowCard(ScenePad.CORNER_DP * getResources().getDisplayMetrics().density,
-                    barGlow, accentColor()));
-            return;
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() {   // Android 12 and older (13+ uses the callback registered in openPlayer)
+        if (playerOpen) {
+            closePlayer();
         } else {
-            card.setColor(look.p.dock);   // Light: white; Dark: a step lighter than the page
-        }
-        bar.setBackground(card);
-        // A gentle lift on Light and Dark; AMOLED needs more so the accent glow shows.
-        bar.setElevation(theme == UiSettings.THEME_AMOLED ? dp(10) : dp(4));
-    }
-
-    /** Extra room around the bar for the AMOLED glow (0 in the other themes, which use a real shadow). */
-    private int barGlow;
-
-    /** A black rounded card with a soft glow in {@code color} around it; the glow takes {@code glow} px each side. */
-    private static final class GlowCard extends android.graphics.drawable.Drawable {
-        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-        private final android.graphics.RectF card = new android.graphics.RectF();
-        private final float corner;
-        private final int glow;
-        private final int color;
-
-        GlowCard(float corner, int glow, int color) {
-            this.corner = corner;
-            this.glow = glow;
-            this.color = color;
-        }
-
-        @Override
-        public void draw(Canvas canvas) {
-            android.graphics.Rect b = getBounds();
-            card.set(b.left + glow, b.top + glow, b.right - glow, b.bottom - glow);
-            paint.setColor(0xFF000000);
-            paint.setShadowLayer(glow * 0.8f, 0, glow * 0.15f, (color & 0x00FFFFFF) | 0x8C000000);
-            canvas.drawRoundRect(card, corner, corner, paint);
-        }
-
-        @Override
-        public void setAlpha(int alpha) { }
-
-        @Override
-        public void setColorFilter(android.graphics.ColorFilter filter) { }
-
-        @Override
-        @SuppressWarnings("deprecation")
-        public int getOpacity() {
-            return android.graphics.PixelFormat.TRANSLUCENT;
+            super.onBackPressed();
         }
     }
 
+    /** Start's icon and words follow whether the sound is on. */
+    private void updateStartButtons(boolean on) {
+        miniStart.setImageResource(on ? R.drawable.ic_stop : R.drawable.ic_play);
+        miniStart.setContentDescription(getString(on ? R.string.stop : R.string.start));
+        startStop.setText(on ? R.string.stop : R.string.start);
+        android.graphics.drawable.Drawable icon = getDrawable(on ? R.drawable.ic_stop : R.drawable.ic_play).mutate();
+        icon.setTint(look.p.onPrimary);
+        startStop.setCompoundDrawablesRelativeWithIntrinsicBounds(null, icon, null, null);
+    }
+
+    /** The dials follow Intensity (empty while a scene plays: a scene has no Intensity), and so does the player's line. */
+    private void updateIntensityRow() {
+        if (playerDial == null) {
+            return;
+        }
+        SceneLibrary.Scene scene = SceneSettings.current(this);
+        float v = ParamStore.get(Intensity.ID);
+        playerDial.setActive(scene == null);
+        miniDial.setActive(scene == null);
+        playerDial.setValue(v);
+        miniDial.setValue(v);
+        String sub = scene != null ? scene.name : getString(R.string.scene_built_in);
+        if (scene == null) {
+            sub += " · " + getString(R.string.intensity_card_value, Math.round(v * 100))
+                    + (Modulation.isMoving(Intensity.ID) ? MOVER_DOT : "");
+        }
+        miniSub.setText(sub);
+    }
     /** The accent: the palette's (Ouralia violet until Appearance offers a choice). */
     private int accentColor() {
         return look.p.primary;
-    }
-
-    private static int blend(int from, int to, float k) {
-        int r = Math.round(((from >> 16) & 0xFF) * (1 - k) + ((to >> 16) & 0xFF) * k);
-        int g = Math.round(((from >> 8) & 0xFF) * (1 - k) + ((to >> 8) & 0xFF) * k);
-        int b = Math.round((from & 0xFF) * (1 - k) + (to & 0xFF) * k);
-        return 0xFF000000 | (r << 16) | (g << 8) | b;
     }
 
     /** One line: the world playing now and, in a few words, why. Refreshed once a second while visible. */
@@ -634,6 +739,7 @@ public class MainActivity extends Activity {
         holdButton.setVisibility(worlds ? View.VISIBLE : View.GONE);
         holdButton.setText(Worlds.isHeld() ? R.string.holding_world : R.string.hold_world);
         snapButton.setVisibility(SceneSettings.current(this) == null ? View.VISIBLE : View.GONE);
+        miniSave.setVisibility(snapButton.getVisibility());
         if (!worlds) {
             nowLine.setVisibility(View.GONE);
             return;
@@ -2177,7 +2283,7 @@ public class MainActivity extends Activity {
     /** Reflects engine state and headphone presence on screen. */
     private void updateUi() {
         boolean on = AudioService.isRunning();
-        startStop.setText(on ? R.string.stop : R.string.start);
+        updateStartButtons(on);
         updateStatus();
         warning.setVisibility(headphonesConnected() ? View.GONE : View.VISIBLE);
         updateNowLine();
@@ -2189,7 +2295,7 @@ public class MainActivity extends Activity {
         String error = AudioService.getLastError();
         boolean missing = on && AudioService.objectsMissing();
         boolean overload = on && !AudioService.isPausedForCall() && AudioService.clips().warning(ClipWatch.IN);
-        status.setTypeface(overload || missing ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
+        status.setTypeface(overload || missing ? look.textStrong() : look.text());
         if (error != null && !on) {
             status.setText(error);
         } else if (missing) {
@@ -2202,6 +2308,9 @@ public class MainActivity extends Activity {
                     : AudioService.isPausedForCall() ? getString(R.string.status_call)
                     : hz > 0 ? getString(R.string.status_running_rate, hz) : getString(R.string.status_running));
         }
+        // the docked player shows the same, on one line: warnings in the error colour so they're seen at a glance
+        miniStatus.setText(status.getText());
+        miniStatus.setTextColor(overload || missing || (error != null && !on) ? look.p.err : look.p.text);
     }
 
     private TextView diagText;

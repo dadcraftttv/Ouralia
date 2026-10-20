@@ -450,7 +450,7 @@ to date in the same commit when behaviour changes.
   the last minute; the Now line says "handling". Untested on the phone: whether the jolt reaches Pd before the mic's
   onset (the chimes assume so).
 - **Intensity** (roadmap item 4, Oct 13; `Intensity.java`, test I): `intensity` (main section, first row, and a
-  compact slider in the bottom card; noPreset, noRandom, movable; DadCraft: the user's own control, Realms and presets
+  the dial in the player sheet since Oct 19, "The look"; noPreset, noRandom, movable; DadCraft: the user's own control, Realms and presets
   never touch it). 0.5 = as set. `Modulation.output` (the one path every value takes to Pd) applies the mover, then
   `Intensity.apply` to the params in its RULES: only what is already there is scaled (0 stays 0), down by `calm` x the
   value at 0, up by `lift` x at 1, capped at max(value, randMax). Wet/reverb/scatter/room notes 0.6/0.6, feedback
@@ -800,8 +800,8 @@ to date in the same commit when behaviour changes.
   the chain from there to `voice` is linear, so the mic sounds as before) and the echo gets the part Dry took away
   (`echo_mic_rest` = mic x (1 - dry)), so at Dry 0 it still repeats the mic. Only the real room tells us if the tuning is right — expect further tweaks from DadCraft's reports.
 - **Tabs** (step D, Oct 12): Sound (presets/shortcuts, XY pad, input, effects), Music (Rhythm, Music), Realms, Scenes,
-  Setup (audio devices, appearance, behaviour, reset, about); the strip is the bottom card's top row (selected = accent
-  pill), each tab keeps its scroll, the last tab is remembered (`UiSettings.tab`). While a scene plays, Sound/Music/
+  Setup (audio devices, appearance, behaviour, reset, about); the tab bar sits at the bottom under the docked player
+  (since Oct 19, "The look": icons, the shown tab widens into a pill with its name), each tab keeps its scroll, the last tab is remembered (`UiSettings.tab`). While a scene plays, Sound/Music/
   Realms show a notice. The pad view moves between Sound (XY pad) and Scenes. **Realms** = Auto worlds renamed on
   screen only: internal ids stay "world"; built-in presets are now "X realm" and `Worlds.renamedBuiltIn` migrates a
   stored "X world" choice on load (test W). **Ingredients** (`Worlds.GROUPS`: Rhythm, Music, Echo, Reverb, Glitch +
@@ -903,6 +903,32 @@ to date in the same commit when behaviour changes.
 - Presets store: sliders, movers, music pad/notes/tone/follow, beat, dry. A slider kept out of presets keeps its mover out too
   (`Params.withMovers`), or loading a preset or world switched it off. Not stored: gain/gate/compressor, smoothing/nudge,
   music on/key/scale, locks, worlds choices, audio device, scenes, appearance.
+
+## The look (Ouralia redesign, from Oct 19)
+DadCraft (Oct 19): "very plain"; wants "a solid, finished product": sleek, modern, clean but not bland, light on
+battery, Light/Dark/AMOLED kept, and one day an iOS app. Mockups (claude.ai canvas "Ouralia look directions", page
+"A + B mashup") chose: A's cards and controls (Material You), B's Intensity ring dial and pill tab bar, **Ouralia
+violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges each on the phone.
+- **`Look.java`** (plain Java, no Android: tests, desktop and a future iOS port share it): every theme colour from one
+  accent (hue + colourfulness); each theme sets the lightness, then `fit()` steps it until the text reads at 4.5:1
+  on what it sits on. Test V checks every text pair for every hue (3 degree steps), colourfulness 0-1 and theme.
+  Shapes and type sizes live there too (cards 24 dp, tiles 16, pills 24).
+- **Fonts** (assets/fonts, OFL, licence under About): Sora (headings, the title), Inter (text), JetBrains Mono (the
+  dial's number). Variable fonts: one file each, the weight chosen in `Styler`.
+- **`Styler.java`** puts the palette on plain Views: section cards (s1 surface, header row with a chevron),
+  Material 3 switches (52x32 track; thumb a LayerDrawable, since an InsetDrawable's padding made the Switch shrink its
+  track), tinted sliders, pick-one menus on a rounded tile with a chevron, tonal pill buttons, Reset everything as a
+  red outline. `Styler.fonts()` gives every other text Inter and the palette's colours (run on each section when it
+  first fills).
+- **The bottom** (DadCraft: in thumb reach while one-handed): the docked player (small dial, Start/Stop inside it,
+  status on one line with warnings in the error colour, scene + Intensity, Save sound) above the pill tab bar. Tap
+  the player: the player sheet slides up (300 ms) with the big dial (`DialView`: drag around the ring for
+  Intensity; screen readers get it as a slider in steps of 5), Start/Stop in its middle, the full status, the realm
+  line, Hold realm and Save sound. Back, the grab bar or the dimmed screen close it. Replaced the floating bottom
+  card and its AMOLED accent glow. Motion only while something slides: nothing animates at rest.
+- The accent is Ouralia violet for now (it was the wallpaper's on Android 12+). Next: Appearance (theme Phone/
+  Light/Dark/AMOLED; accent swatches, From wallpaper, Your own colour with a ring and Colorfulness; not in presets),
+  Key/Scale as tiles opening sheets, the XY pad, the Realms and Scenes tabs.
 
 ## Desktop stream mode (`desktop/`, Oct 16)
 - DadCraft wants the app on Linux as background music for his stream (no sensors, Set tempo, Realms by room level).
