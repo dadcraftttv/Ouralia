@@ -104,6 +104,8 @@ public class MainActivity extends Activity {
     private final TextView[] tabButtons = new TextView[TAB_NAMES.length];
     private final int[] tabScroll = new int[TAB_NAMES.length];
     private int currentTab = -1;
+    /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
+    private Styler look;
     private LinearLayout xyPadSlot;          // where the pad sits on the Sound tab (an XY pad for the movers)
     private LinearLayout scenePadSlot;       // ...and on the Scenes tab (the scene's own pad)
     /** One dropdown per automatic world, and the line saying which one is playing. */
@@ -216,6 +218,7 @@ public class MainActivity extends Activity {
         int theme = UiSettings.theme(this);
         setTheme(UiSettings.themeResource(theme));   // must be set before any view is created
         super.onCreate(savedInstanceState);
+        look = new Styler(this, theme);
         ParamStore.loadOnce(this);
         if (Kits.source == null) {                       // (the part menus say which kits lack a part)
             Kits.source = AudioService.builtInKits(this);
@@ -227,6 +230,11 @@ public class MainActivity extends Activity {
 
         // The settings scroll; the bar with Start/Stop stays at the bottom, in reach of a thumb while walking.
         android.widget.FrameLayout screen = new android.widget.FrameLayout(this);
+        screen.setBackgroundColor(look.p.bg);
+        if (Build.VERSION.SDK_INT < 35) {   // (35+ draws edge to edge: the screen's own colour shows behind the bars)
+            getWindow().setStatusBarColor(look.p.bg);
+            getWindow().setNavigationBarColor(look.p.bg);
+        }
         ScrollView scroll = new ScrollView(this);
         mainScroll = scroll;
         LinearLayout root = new LinearLayout(this);
@@ -264,15 +272,25 @@ public class MainActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText(R.string.app_name);
-        title.setTextSize(28);
-        title.setTypeface(Typeface.DEFAULT_BOLD);
+        title.setTextSize(Look.TEXT_TITLE + 3);
+        title.setTypeface(look.heading());
+        title.setLetterSpacing(0.06f);
+        title.setTextColor(look.p.text);
+        title.setPadding(dp(4), dp(4), 0, dp(10));
         root.addView(title);
 
+        // the headphone warning: a soft red banner rather than loose red text
         warning = new TextView(this);
-        warning.setTextSize(14);
-        warning.setTextColor(UiSettings.isLight(theme) ? 0xFFB00020 : 0xFFFF6E6E);
+        warning.setTextSize(Look.TEXT_HINT);
+        warning.setTypeface(look.textStrong());
+        warning.setTextColor(look.p.err);
+        warning.setBackground(look.round(look.p.errBg, Look.RADIUS_TILE));
+        warning.setPadding(dp(14), dp(10), dp(14), dp(10));
         warning.setText(R.string.no_headphones_warning);
-        root.addView(warning);
+        LinearLayout.LayoutParams warnParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        warnParams.setMargins(0, 0, 0, dp(Look.CARD_GAP));
+        root.addView(warning, warnParams);
 
         // the five tab pages, one shown at a time (the strip that switches them sits on the bottom card)
         for (int t = 0; t < TAB_NAMES.length; t++) {
@@ -387,8 +405,9 @@ public class MainActivity extends Activity {
         addDiagnosticsSection(setup);
         addAppearanceSection(setup);
         LinearLayout resetRow = newButtonRow(setup);
-        addButton(resetRow, R.string.reset_all, this::confirmResetAll);
+        look.danger(addButton(resetRow, R.string.reset_all, this::confirmResetAll));
         addAboutSection(setup);
+        look.fonts(root);
         showTab(UiSettings.tab(this));
         refreshRows();
         if (FirstRun.showWalkthrough(UiSettings.walkthroughSeen(this), installTimes()[0], installTimes()[1])) {
@@ -428,18 +447,10 @@ public class MainActivity extends Activity {
             tabPages[t].setVisibility(t == tab ? View.VISIBLE : View.GONE);
             TextView b = tabButtons[t];
             if (b != null) {
-                b.setTypeface(t == tab ? Typeface.DEFAULT_BOLD : Typeface.DEFAULT);
-                b.setTextColor(t == tab ? accentColor() : status != null ? status.getCurrentTextColor() : 0xFF888888);
-                b.setAlpha(t == tab ? 1f : 0.75f);
+                b.setTypeface(t == tab ? look.textStrong() : look.text());
+                b.setTextColor(t == tab ? look.p.onContainer : look.p.muted);
                 b.setSelected(t == tab);
-                if (t == tab) {
-                    android.graphics.drawable.GradientDrawable pill = new android.graphics.drawable.GradientDrawable();
-                    pill.setCornerRadius(dp(14));
-                    pill.setColor((accentColor() & 0x00FFFFFF) | 0x2E000000);
-                    b.setBackground(pill);
-                } else {
-                    b.setBackground(null);
-                }
+                b.setBackground(t == tab ? look.round(look.p.container, Look.RADIUS_PILL) : null);
             }
         }
         currentTab = tab;
@@ -463,20 +474,22 @@ public class MainActivity extends Activity {
         bar.addView(rule, ruleParams);
 
         status = new TextView(this);
-        status.setTextSize(14);
+        look.hint(status);
         bar.addView(status);
         nowLine = new TextView(this);
-        nowLine.setTextSize(14);
-        nowLine.setTypeface(Typeface.DEFAULT_BOLD);
+        look.label(nowLine);
+        nowLine.setTextSize(Look.TEXT_HINT + 1);
         nowLine.setPadding(0, dp(2), 0, 0);
         bar.addView(nowLine);
         bar.addView(buildIntensityRow());
 
         LinearLayout row = newButtonRow(bar);
         startStop = new Button(this);
-        startStop.setAllCaps(false);
+        look.button(startStop, true);
         startStop.setOnClickListener(v -> onStartStop());
-        row.addView(startStop, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.4f));
+        LinearLayout.LayoutParams startParams = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1.4f);
+        startParams.setMargins(0, dp(4), dp(3), dp(4));
+        row.addView(startStop, startParams);
         holdButton = addButton(row, R.string.hold_world, () -> {
             Worlds.setHeld(!Worlds.isHeld());
             updateNowLine();
@@ -496,10 +509,11 @@ public class MainActivity extends Activity {
         intensityRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
         intensityRow.setPadding(0, dp(4), 0, 0);
         intensityLabel = new TextView(this);
-        intensityLabel.setTextSize(14);
+        look.hint(intensityLabel);
         intensityRow.addView(intensityLabel);
         intensityBar = new SeekBar(this);
         intensityBar.setMax(100);
+        look.slider(intensityBar);
         intensityBar.setContentDescription(getString(R.string.intensity_card));
         intensityBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -544,8 +558,6 @@ public class MainActivity extends Activity {
      */
     private void styleBarCard(View bar) {
         int theme = UiSettings.theme(this);
-        TypedValue bg = new TypedValue();
-        getTheme().resolveAttribute(android.R.attr.colorBackground, bg, true);
         android.graphics.drawable.GradientDrawable card = new android.graphics.drawable.GradientDrawable();
         card.setCornerRadius(ScenePad.CORNER_DP * getResources().getDisplayMetrics().density);
         if (theme == UiSettings.THEME_AMOLED) {
@@ -556,10 +568,8 @@ public class MainActivity extends Activity {
             bar.setBackground(new GlowCard(ScenePad.CORNER_DP * getResources().getDisplayMetrics().density,
                     barGlow, accentColor()));
             return;
-        } else if (UiSettings.isLight(theme)) {
-            card.setColor(0xFFFFFFFF);
         } else {
-            card.setColor(blend(bg.data, 0xFFFFFFFF, 0.09f));   // dark: a step lighter than the page
+            card.setColor(look.p.dock);   // Light: white; Dark: a step lighter than the page
         }
         bar.setBackground(card);
         // A gentle lift on Light and Dark; AMOLED needs more so the accent glow shows.
@@ -605,14 +615,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** The wallpaper accent on Android 12+, otherwise the theme's accent. */
+    /** The accent: the palette's (Ouralia violet until Appearance offers a choice). */
     private int accentColor() {
-        if (Build.VERSION.SDK_INT >= 31) {
-            return getColor(android.R.color.system_accent1_300);
-        }
-        TypedValue a = new TypedValue();
-        getTheme().resolveAttribute(android.R.attr.colorAccent, a, true);
-        return a.data;
+        return look.p.primary;
     }
 
     private static int blend(int from, int to, float k) {
@@ -790,10 +795,12 @@ public class MainActivity extends Activity {
     private Button addButton(LinearLayout row, int textRes, Runnable action) {
         Button b = new Button(this);
         b.setText(textRes);
-        b.setAllCaps(false);
+        look.button(b, false);
         b.setOnClickListener(v -> action.run());
-        row.addView(b, new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.MATCH_PARENT, 1f));   // (all as tall as the tallest)
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.MATCH_PARENT, 1f);   // (all as tall as the tallest)
+        lp.setMargins(dp(3), dp(4), dp(3), dp(4));
+        row.addView(b, lp);
         return b;
     }
 
@@ -809,22 +816,30 @@ public class MainActivity extends Activity {
      */
     private LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
                                     java.util.function.Consumer<LinearLayout> fill) {
+        // Each section is a card: its header a full-width tappable row with a chevron, the rows inside.
+        LinearLayout card = new LinearLayout(this);
+        card.setOrientation(LinearLayout.VERTICAL);
+        look.card(card);
         TextView header = new TextView(this);
-        header.setTextSize(18);
-        header.setTypeface(Typeface.DEFAULT_BOLD);
-        header.setPadding(0, dp(20), 0, dp(8));
-        TypedValue ripple = new TypedValue();
-        getTheme().resolveAttribute(android.R.attr.selectableItemBackground, ripple, true);
-        header.setBackgroundResource(ripple.resourceId);
+        header.setTextSize(Look.TEXT_HEADING);
+        header.setTypeface(look.heading());
+        header.setTextColor(look.p.text);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setMinHeight(dp(56));
+        header.setPadding(dp(Look.CARD_PAD), dp(12), dp(16), dp(12));
+        header.setBackground(look.pressable(null, look.p.text, 0));
+        header.setCompoundDrawablePadding(dp(8));
 
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
+        body.setPadding(dp(Look.CARD_PAD), 0, dp(Look.CARD_PAD), dp(16));
 
         boolean[] filled = {fill == null};
         Runnable show = () -> {
             if (!filled[0]) {
                 filled[0] = true;
                 fill.accept(body);
+                look.fonts(body);
                 refreshRows();   // the new rows start with the stored values
             }
         };
@@ -843,8 +858,12 @@ public class MainActivity extends Activity {
             }
         });
 
-        parent.addView(header);
-        parent.addView(body);
+        card.addView(header);
+        card.addView(body);
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        cardParams.setMargins(0, 0, 0, dp(Look.CARD_GAP));
+        parent.addView(card, cardParams);
         return body;
     }
 
@@ -1045,7 +1064,11 @@ public class MainActivity extends Activity {
 
     private void showSectionState(TextView header, View body, String title, boolean open) {
         body.setVisibility(open ? View.VISIBLE : View.GONE);
-        header.setText(getString(open ? R.string.section_open : R.string.section_closed, title));
+        header.setText(title);
+        android.graphics.drawable.Drawable chevron = getDrawable(open ? R.drawable.ic_chevron_up : R.drawable.ic_chevron_down).mutate();
+        chevron.setTint(look.p.muted);
+        header.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, chevron, null);
+        header.setContentDescription(getString(open ? R.string.section_open : R.string.section_closed, title));
     }
 
     private void addAudioSection(LinearLayout parent) {
@@ -1289,6 +1312,7 @@ public class MainActivity extends Activity {
                 {"Pure Data (BSD)", "pure-data-LICENSE.txt"},
                 {"PdParty helper objects (BSD)", "pdparty-LICENSE.txt"},
                 {"Oboe and libpd (Apache 2.0)", "Apache-2.0.txt"},
+                {"Fonts: Sora, Inter, JetBrains Mono (OFL)", "fonts-OFL.txt"},
         };
         String[] names = new String[docs.length];
         for (int i = 0; i < docs.length; i++) {
@@ -1361,8 +1385,11 @@ public class MainActivity extends Activity {
         if (p.toggle) {
             Switch sw = new Switch(this);
             sw.setText(p.shown());
-            sw.setTextSize(16);
-            sw.setPadding(0, dp(16), 0, 0);
+            look.label(sw);
+            look.switchTint(sw);
+            sw.setSwitchPadding(dp(16));
+            sw.setMinHeight(dp(52));
+            sw.setPadding(0, dp(4), 0, dp(4));
             sw.setChecked(ParamStore.get(p.id) >= 0.5f);   // right from the start (folded rows aren't refreshed)
             sw.setOnClickListener(v -> {
                 ParamStore.set(p.id, sw.isChecked() ? 1f : 0f);
@@ -1380,10 +1407,13 @@ public class MainActivity extends Activity {
         LinearLayout head = new LinearLayout(this);
         head.setOrientation(LinearLayout.HORIZONTAL);
         head.setGravity(Gravity.CENTER_VERTICAL);
-        head.setPadding(0, dp(compact ? 4 : 16), 0, 0);
+        head.setPadding(0, dp(compact ? 4 : 14), 0, 0);
 
         TextView label = new TextView(this);
-        label.setTextSize(compact ? 14 : 16);
+        look.label(label);
+        if (compact) {
+            look.hint(label);
+        }
         head.addView(label, new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
@@ -1392,6 +1422,8 @@ public class MainActivity extends Activity {
             lock.setText(R.string.lock);
             lock.setContentDescription(getString(R.string.lock) + ": " + p.label);
             lock.setChecked(ParamStore.isLocked(p.id));
+            look.check(lock);
+            look.hint(lock);
             lock.setOnCheckedChangeListener((b, checked) -> ParamStore.setLocked(p.id, checked));
             head.addView(lock);
         }
@@ -1399,6 +1431,8 @@ public class MainActivity extends Activity {
 
         SeekBar slider = new SeekBar(this);
         slider.setMax(1000);
+        look.slider(slider);
+        slider.setMinimumHeight(dp(40));
         slider.setContentDescription(p.label);
         float v0 = ParamStore.get(p.id);                  // right from the start (folded rows aren't refreshed)
         slider.setProgress(Math.round(p.toNorm(v0) * 1000f));
@@ -1433,12 +1467,21 @@ public class MainActivity extends Activity {
     private void addChoiceRow(LinearLayout parent, Param p, boolean compact) {
         TextView label = new TextView(this);
         label.setText(p.shown());
-        label.setTextSize(compact ? 14 : 16);
-        label.setPadding(0, dp(compact ? 4 : 16), 0, 0);
+        if (compact) {
+            look.hint(label);
+        } else {
+            look.label(label);
+        }
+        label.setPadding(dp(4), dp(compact ? 4 : 14), 0, dp(6));
         parent.addView(label);
 
         Spinner spinner = new Spinner(this);
         spinner.setAdapter(choiceAdapter(p.choices));
+        // the choice sits on a rounded tile, its menu on the sheet colour
+        spinner.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
+        spinner.setPopupBackgroundDrawable(look.round(look.p.sheet, Look.RADIUS_TILE));
+        spinner.setMinimumHeight(dp(compact ? 44 : 52));
+        spinner.setPadding(dp(14), 0, dp(44), 0);
         // Select the stored choice BEFORE listening: a Spinner reports its first entry as "selected" when it is first
         // laid out, and a folded row isn't refreshed, so that once saved C major over the user's key and scale.
         spinner.setSelection(choiceIndex(p, ParamStore.get(p.id)), false);
@@ -1459,7 +1502,27 @@ public class MainActivity extends Activity {
     }
 
     private ArrayAdapter<String> choiceAdapter(String[] names) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, names);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, names) {
+            @Override
+            public View getView(int position, View convert, android.view.ViewGroup parent) {
+                return styled(super.getView(position, convert, parent), true);
+            }
+
+            @Override
+            public View getDropDownView(int position, View convert, android.view.ViewGroup parent) {
+                return styled(super.getDropDownView(position, convert, parent), false);
+            }
+
+            private View styled(View v, boolean shown) {
+                if (v instanceof TextView) {
+                    TextView t = (TextView) v;
+                    t.setTypeface(shown ? look.textStrong() : look.text());
+                    t.setTextColor(look.p.text);
+                    t.setTextSize(Look.TEXT_LABEL);
+                }
+                return v;
+            }
+        };
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         return adapter;
     }
