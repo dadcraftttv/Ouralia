@@ -149,7 +149,6 @@
     <string name="param_value">%1$s: %2$s</string>
 
     <!-- Preset dialogs and messages -->
-    <string name="presets_title">Presets (long-press a saved one to delete)</string>
     <string name="preset_saved_suffix">%s  (saved)</string>
     <string name="save_title">Save current settings as</string>
     <string name="default_preset_name">My preset</string>
@@ -250,6 +249,7 @@
     <string name="scenes_title">Scenes</string>
     <string name="scenes_none">No imported scenes yet</string>
     <string name="scenes_delete_hint">Press and hold a scene to delete it.</string>
+    <string name="presets_delete_hint">Tap one to load it. Press and hold one of yours to delete it.</string>
     <string name="delete_scene_title">Delete scene \"%s\"?</string>
     <string name="toast_scene_deleted">Scene deleted</string>
     <string name="toast_scene_importing">Importing scene…</string>

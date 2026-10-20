@@ -38,14 +38,15 @@ final class Walkthrough {
     private final Host host;
     private final android.content.Context context;
     private final TextView title, body, status;
-    private final Button action, back, next;
+    private final Button action, back, skip, next;
+    private final LinearLayout root;
     private int page;
 
     Walkthrough(android.app.Activity activity, int theme, Host host) {
         this.context = activity;
         this.host = host;
         dialog = new Dialog(activity, theme);
-        LinearLayout root = new LinearLayout(activity);
+        root = new LinearLayout(activity);
         root.setOrientation(LinearLayout.VERTICAL);
         int pad = host.dp(24);
         root.setPadding(pad, pad, pad, host.dp(16));
@@ -85,7 +86,7 @@ final class Walkthrough {
         back.setAllCaps(false);
         back.setText(R.string.walk_back);
         back.setOnClickListener(v -> show(page - 1));
-        Button skip = new Button(activity, null, android.R.attr.borderlessButtonStyle);
+        skip = new Button(activity, null, android.R.attr.borderlessButtonStyle);
         skip.setAllCaps(false);
         skip.setText(R.string.walk_skip);
         skip.setOnClickListener(v -> dialog.dismiss());
@@ -111,6 +112,27 @@ final class Walkthrough {
                 dialog.getWindow().setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             }
         });
+    }
+
+    /** The app's look (Look.java through Styler): its page colour, fonts, and accent buttons. */
+    void applyLook(Styler look) {
+        root.setBackgroundColor(look.p.bg);
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(look.p.bg));
+        }
+        title.setTypeface(look.heading());
+        title.setTextColor(look.p.text);
+        body.setTypeface(look.text());
+        body.setTextColor(look.p.text);
+        body.setLinkTextColor(look.p.primaryText);
+        status.setTypeface(look.textStrong());
+        status.setTextColor(look.p.primaryText);
+        look.button(action, false);
+        look.button(next, true);
+        for (Button b : new Button[] {back, skip}) {
+            b.setTypeface(look.textStrong());
+            b.setTextColor(look.p.primaryText);
+        }
     }
 
     void open() {

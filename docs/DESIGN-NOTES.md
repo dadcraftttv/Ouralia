@@ -939,8 +939,9 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   list sheet, "What it changes" folding open to switches); the audio Input/Output pickers are tiles with list
   sheets; the Scenes tab's scene and buttons sit on a card, the scene picker is a list sheet (press and hold to
   delete), RjDj timing is a switch. No Spinner is left in the app. A sheet opens scrolled to its chosen row.
-- Still framework dialogs (to do if DadCraft wants): Presets, Save, Reset and delete confirmations, the Realms
-  warning, the walkthrough.
+- **Dialogs** (Oct 19): every AlertDialog is built with `LookDialog` (rounded on the sheet colour, the fonts,
+  buttons in the accent; text fields via `boxed()`); Presets is a list sheet (tap loads, press and hold one of
+  yours to delete); the walkthrough takes the look through `Walkthrough.applyLook`.
 - **Key and Scale** (Oct 19; DadCraft found the mockup's 12-key strip easy to mis-tap): two tiles side by side in
   Music, each opening a sheet: Key = the 12 notes as big buttons (4 x 3), Scale = one row per scale with 12 dots
   (filled = the scale's notes above the key; `Params.SCALE_STEPS`, which test V checks against make_patch.py

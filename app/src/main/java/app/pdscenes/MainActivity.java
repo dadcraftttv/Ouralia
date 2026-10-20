@@ -1203,7 +1203,7 @@ public class MainActivity extends Activity {
             }
             // DadCraft: before Realms take over, say that they change the user's own settings (the mix too)
             auto.setChecked(false);
-            new AlertDialog.Builder(this)
+            new LookDialog()
                     .setTitle(R.string.realms_warn_title)
                     .setMessage(R.string.realms_warn_text)
                     .setPositiveButton(R.string.realms_warn_ok, (d, w) -> {
@@ -1528,7 +1528,7 @@ public class MainActivity extends Activity {
         box.setPadding(dp(20), dp(8), dp(20), 0);
         box.addView(withLog);
         box.addView(note);
-        new AlertDialog.Builder(this).setTitle(R.string.feedback_send).setView(box)
+        new LookDialog().setTitle(R.string.feedback_send).setView(box)
                 .setPositiveButton(R.string.feedback_write, (d, w) -> {
                     String version = "?";
                     try {
@@ -1626,6 +1626,7 @@ public class MainActivity extends Activity {
                 return MainActivity.this.dp(v);
             }
         });
+        walkthrough.applyLook(look);
         walkthrough.open();
     }
 
@@ -1644,7 +1645,7 @@ public class MainActivity extends Activity {
         for (int i = 0; i < docs.length; i++) {
             names[i] = docs[i][0];
         }
-        new AlertDialog.Builder(this)
+        new LookDialog()
                 .setTitle(R.string.show_licenses)
                 .setItems(names, (d, which) -> showAssetText(docs[which][0], "licenses/" + docs[which][1]))
                 .setNegativeButton(R.string.close, null)
@@ -1672,7 +1673,7 @@ public class MainActivity extends Activity {
         view.setTextIsSelectable(true);
         ScrollView scroll = new ScrollView(this);
         scroll.addView(view);
-        new AlertDialog.Builder(this)
+        new LookDialog()
                 .setTitle(title)
                 .setView(scroll)
                 .setPositiveButton(R.string.close, null)
@@ -2470,6 +2471,7 @@ public class MainActivity extends Activity {
 
     // ---- presets ----
 
+    /** The presets: built-in, then yours (marked saved); tap one to load it, press and hold one of yours to delete it. */
     private void showPresets() {
         List<String> names = new ArrayList<>();
         List<Boolean> isUser = new ArrayList<>();
@@ -2486,21 +2488,72 @@ public class MainActivity extends Activity {
             labels[i] = isUser.get(i)
                     ? getString(R.string.preset_saved_suffix, names.get(i)) : names.get(i);
         }
-
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.presets_title)
-                .setItems(labels, (d, which) -> loadPreset(names.get(which), isUser.get(which)))
-                .setNegativeButton(R.string.close, null)
-                .create();
-        dialog.show();
-        dialog.getListView().setOnItemLongClickListener((parent, view, pos, id) -> {
-            if (!isUser.get(pos)) {
-                return false;
-            }
-            confirmDelete(names.get(pos));
-            dialog.dismiss();
-            return true;
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.addView(sheetHeading(getString(R.string.presets), getString(R.string.presets_delete_hint)));
+        addListRows(content, labels, -1, null, i -> {
+            closeSheet();
+            loadPreset(names.get(i), isUser.get(i));
         });
+        for (int i = 0; i < names.size(); i++) {   // child 0 is the heading
+            if (isUser.get(i)) {
+                String name = names.get(i);
+                content.getChildAt(i + 1).setOnLongClickListener(v -> {
+                    closeSheet();
+                    confirmDelete(name);
+                    return true;
+                });
+            }
+        }
+        openSheet(content);
+    }
+
+    /** A text field for a dialog: inset like the dialog's title, its underline and cursor in the accent. */
+    private View boxed(EditText input) {
+        input.setTypeface(look.text());
+        input.setTextColor(look.p.text);
+        input.setBackgroundTintList(android.content.res.ColorStateList.valueOf(look.p.primary));
+        android.widget.FrameLayout box = new android.widget.FrameLayout(this);
+        box.setPadding(dp(24), dp(8), dp(24), 0);
+        box.addView(input);
+        return box;
+    }
+
+    /**
+     * An AlertDialog in the app's look: rounded on the sheet colour, the fonts, buttons in the accent. Every dialog
+     * (confirmations, Save, the kit and feedback ones) is built with this instead of AlertDialog.Builder.
+     */
+    private final class LookDialog extends AlertDialog.Builder {
+        LookDialog() {
+            super(MainActivity.this);
+        }
+
+        @Override
+        public AlertDialog create() {
+            AlertDialog d = super.create();
+            d.setOnShowListener(x -> {
+                if (d.getWindow() != null) {
+                    d.getWindow().setBackgroundDrawable(new android.graphics.drawable.InsetDrawable(
+                            look.round(look.p.sheet, 28), dp(16), dp(24), dp(16), dp(24)));
+                    look.fonts(d.getWindow().getDecorView());
+                }
+                int titleId = getResources().getIdentifier("alertTitle", "id", "android");
+                TextView title = titleId != 0 ? d.findViewById(titleId) : null;
+                if (title != null) {
+                    title.setTypeface(look.heading());
+                    title.setTextColor(look.p.text);
+                }
+                for (int which : new int[] {AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL}) {
+                    Button b = d.getButton(which);
+                    if (b != null) {
+                        b.setTypeface(look.textStrong());
+                        b.setTextColor(look.p.primaryText);
+                        b.setAllCaps(false);
+                    }
+                }
+            });
+            return d;
+        }
     }
 
     private void loadPreset(String name, boolean user) {
@@ -2517,7 +2570,7 @@ public class MainActivity extends Activity {
 
     /** The one place settings are ever wiped: only when the user taps Reset and confirms. */
     private void confirmResetAll() {
-        new AlertDialog.Builder(this)
+        new LookDialog()
                 .setTitle(R.string.reset_title)
                 .setMessage(R.string.reset_message)
                 .setPositiveButton(R.string.reset_confirm, (d, w) -> {
@@ -2538,7 +2591,7 @@ public class MainActivity extends Activity {
     }
 
     private void confirmDelete(String name) {
-        new AlertDialog.Builder(this)
+        new LookDialog()
                 .setTitle(getString(R.string.delete_title, name))
                 .setPositiveButton(R.string.delete, (d, w) -> {
                     PresetManager.delete(this, name);
@@ -2554,9 +2607,9 @@ public class MainActivity extends Activity {
         input.setSingleLine(true);
         input.setText(R.string.default_preset_name);
         input.selectAll();
-        new AlertDialog.Builder(this)
+        new LookDialog()
                 .setTitle(R.string.save_title)
-                .setView(input)
+                .setView(boxed(input))
                 .setPositiveButton(R.string.save, (d, w) -> {
                     try {
                         String used = PresetManager.save(
@@ -2577,9 +2630,9 @@ public class MainActivity extends Activity {
         input.setSingleLine(true);
         input.setText(R.string.default_preset_name);
         input.selectAll();
-        new AlertDialog.Builder(this)
+        new LookDialog()
                 .setTitle(R.string.export_title)
-                .setView(input)
+                .setView(boxed(input))
                 .setPositiveButton(R.string.export, (d, w) -> {
                     exportName = PresetManager.sanitize(input.getText().toString());
                     Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT)
@@ -2633,7 +2686,7 @@ public class MainActivity extends Activity {
         addButton(row, R.string.kit_import_folder, () -> startActivityForResult(
                 new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_IMPORT_KIT_FOLDER));
         LinearLayout row2 = newButtonRow(body);
-        addButton(row2, R.string.kit_howto, () -> new AlertDialog.Builder(this).setTitle(R.string.kit_howto)
+        addButton(row2, R.string.kit_howto, () -> new LookDialog().setTitle(R.string.kit_howto)
                 .setMessage(R.string.kit_howto_text).setPositiveButton(R.string.close, null).show());
         addButton(row2, R.string.kit_delete, this::deleteKit);
         updateKitStatus();
@@ -2661,8 +2714,8 @@ public class MainActivity extends Activity {
         for (int i = 0; i < items.length; i++) {
             items[i] = kits.get(i).title;
         }
-        new AlertDialog.Builder(this).setTitle(R.string.kit_delete).setItems(items, (d, which) ->
-                new AlertDialog.Builder(this).setMessage(getString(R.string.kit_delete_confirm, items[which]))
+        new LookDialog().setTitle(R.string.kit_delete).setItems(items, (d, which) ->
+                new LookDialog().setMessage(getString(R.string.kit_delete_confirm, items[which]))
                         .setPositiveButton(R.string.kit_delete, (d2, w2) -> {
                             int index = Kits.BUILT_IN.length + which;
                             Kits.delete(index);
@@ -2726,12 +2779,12 @@ public class MainActivity extends Activity {
                     if (!problems.isEmpty()) {
                         msg += "\n\n" + getString(R.string.kit_warnings) + "\n\u2022 " + String.join("\n\u2022 ", problems);
                     }
-                    new AlertDialog.Builder(this).setTitle(R.string.kit_import_done).setMessage(msg)
+                    new LookDialog().setTitle(R.string.kit_import_done).setMessage(msg)
                             .setPositiveButton(R.string.close, null).show();
                 });
             } catch (IOException | RuntimeException e) {
                 String why = e.getMessage();
-                runOnUiThread(() -> new AlertDialog.Builder(this).setTitle(R.string.kit_import_failed)
+                runOnUiThread(() -> new LookDialog().setTitle(R.string.kit_import_failed)
                         .setMessage(why).setPositiveButton(R.string.close, null).show());
             } finally {
                 if (staging != null) {
@@ -2898,7 +2951,7 @@ public class MainActivity extends Activity {
     }
 
     private void confirmDeleteScene(SceneLibrary.Scene scene) {
-        new AlertDialog.Builder(this)
+        new LookDialog()
                 .setTitle(getString(R.string.delete_scene_title, scene.name))
                 .setPositiveButton(R.string.delete, (d, w) -> {
                     boolean wasSelected = scene.dirName.equals(SceneSettings.selected(this));
