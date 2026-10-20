@@ -200,6 +200,15 @@ public class W {
     Worlds.setUses("flux","reverb",true); for(int i=0;i<200;i++) Worlds.tick(0.033,(i%5<2?-6f:-16f),false,12*60);
     check(Math.abs(ParamStore.get("reverb_mix")-PresetManager.builtIn("Flux realm").get("reverb_mix"))<1e-3,"turning the ingredient back on while the Realm plays fades it in");
     Worlds.reset();
+    // the user's kit and part choices are never a Realm's (every built-in Realm preset holds Classic for them)
+    Worlds.reset(); Worlds.setEnabled(true);
+    ParamStore.set("kit",2f); ParamStore.set("kitp_bass",7f); ParamStore.set("kitl_pad",3f); ParamStore.set("kitb_pad",0.8f);
+    check(PresetManager.builtIn("Flux realm").get("kit")==0f,"Flux realm's preset holds Classic for the kit");
+    for(int i=0;i<600;i++) Worlds.tick(0.033,(i%5<2?-6f:-16f),false,12*60);
+    check("flux".equals(Worlds.currentWorld())&&ParamStore.get("kit")==2f&&ParamStore.get("kitp_bass")==7f&&ParamStore.get("kitl_pad")==3f&&ParamStore.get("kitb_pad")==0.8f,"a Realm leaves the kit, parts, layers and blends alone (kit "+ParamStore.get("kit")+", bass from "+ParamStore.get("kitp_bass")+")");
+    Worlds.reset();
+    check(ParamStore.get("kit")==2f&&ParamStore.get("kitp_bass")==7f,"and a stop leaves them too");
+    ParamStore.set("kit",0f); ParamStore.set("kitp_bass",0f); ParamStore.set("kitl_pad",0f); ParamStore.set("kitb_pad",0.5f);
     // stop restores home
     Worlds.reset();
     check(Worlds.currentWorld()==null,"reset leaves no world");

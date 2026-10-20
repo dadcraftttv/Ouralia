@@ -222,7 +222,10 @@ to date in the same commit when behaviour changes.
   desktop and heard no change). The labels need the kits' text, so the phone reads the built-in kits at launch
   (`AudioService.builtInKits`) and the desktop refreshes the menus once its kit folder is known. **Kit settings are not resetWhenAbsent**: a Realm's preset (no kit in it) would have
   reset the Kit to Classic whenever a Realm took over the Music ingredient; now a preset that doesn't mention them
-  leaves them. **Layers** (Oct 19, DadCraft: "running both the NES pad and synthwave pad simultaneously and being
+  leaves them. That never helped Realms: every built-in preset starts from `defaults()`, so each Realm held Classic
+  for the kit and every part and switched them back (DadCraft, Oct 20: "the kit or user selected kit parts should not
+  change"). Now a Realm never sets a `kit*` setting (Kit, from, layer, blend; `Worlds.realmChanges`, test W); its
+  music levels and the Mix still change. Loading a preset by hand still sets them. **Layers** (Oct 19, DadCraft: "running both the NES pad and synthwave pad simultaneously and being
   able to control how much of each is present"): "<Part> layer" (`kitl_<part>`: 0 = None, else BUILT_IN[n - 1],
   same numbering as "from", in Kits.PARAMS so presets carry a user kit used as a layer) and "<Part> blend"
   (`kitb_<part>`, 0 = the first kit, 1 = the layer, default 0.5). Both go to Pd; Kits sends the layer's kit to a

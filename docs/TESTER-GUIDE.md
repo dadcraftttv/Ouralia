@@ -481,7 +481,7 @@ Tip: a gentle Smooth wave or Random drift on a few sliders makes the sound feel 
 
 ## The Realms tab
 
-Switch on **Auto realms** and the app listens to the room and to how you are moving, then changes the sound for you. Because a Realm sets your sliders from its own preset (effects, music, rhythm and the Mix), the app asks first; your own settings come back when the Realm ends or you switch Auto realms off. To keep part of your sound, switch that part off under the Realm's "What it changes". (Realms were called Auto worlds before; they work the same.) They only work with the built-in effects, not with scenes.
+Switch on **Auto realms** and the app listens to the room and to how you are moving, then changes the sound for you. Because a Realm sets your sliders from its own preset (effects, music, rhythm and the Mix), the app asks first; your own settings come back when the Realm ends or you switch Auto realms off. To keep part of your sound, switch that part off under the Realm's "What it changes". Your kit choices are always yours: a Realm never changes the Kit, a part's "from", its layer or its blend (it can still change the music's levels and the Mix). (Realms were called Auto worlds before; they work the same.) They only work with the built-in effects, not with scenes.
 
 | Realm | When it plays | What it sounds like |
 | --- | --- | --- |

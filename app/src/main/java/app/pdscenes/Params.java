@@ -211,7 +211,7 @@ final class Params {
                     .inSection("music").noPreset().resetWhenAbsent(),
             // Kit (Oct 17): what each part of the music sounds like (Kits.java, assets/kits). Classic = as always.
             // Saved in presets, so a shared preset sounds the same. Not reset when a preset or Realm says nothing
-            // about it (a Realm would otherwise switch the kit back to Classic).
+            // about it. A Realm never changes any kit setting (Worlds.realmChanges).
             // User kits come after the built-in ones (Kits.refreshChoices puts them in the menus).
             new Param("kit", "Kit (the sound of the music)", 0f, Kits.BUILT_IN.length - 1f + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic", "Acoustic (plucked and bowed strings)", "Synth (saws through a resonant filter)",

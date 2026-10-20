@@ -207,6 +207,9 @@ final class Worlds {
     }
 
     private static boolean realmChanges(String worldId, Param p) {
+        if (p.id.startsWith(Kits.ID)) {
+            return false;   // the kit, each part's "from", layer and blend stay the user's (DadCraft, Oct 20)
+        }
         String g = groupOf(p);
         return g == null || uses(worldId, g);
     }
