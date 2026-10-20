@@ -529,7 +529,9 @@ to date in the same commit when behaviour changes.
   note's octave. The "Hearing:" harmony count only counts while Harmony > 0. Tests set music_answer 0 unless testing it.
 - **Send feedback** (Setup, About; Oct 14): a mailto email to dadcraftstudios@gmail.com, subject with the version,
   body with a prompt, phone/Android/app version, what's playing, and (box ticked by default, explained) the last 200
-  event-log lines in the body (no attachment, no FileProvider). 0.9.0-rc2 = versionCode 10, 0.9.0-rc3 (Oct 16) = 11 (posted to testers; built on the snapshot pd-core). For rc4: our own
+  event-log lines in the body (no attachment, no FileProvider). 0.9.0-rc2 = versionCode 10, 0.9.0-rc3 (Oct 16) = 11 (posted to testers; built on the snapshot pd-core). 0.9.0-rc4 (Oct 20) = 12
+  (`./gradlew assembleRelease`, signed with the debug key so it installs over earlier builds; DadCraft sends the APK;
+  shipped with user kits, kit layers and the Pocket Realm untested on his phone, by his choice: testers try them). For rc4: our own
   pd-core and the unplug fix (b4d0473, 2fd2344).
 - **Rustle detector: REMOVED** (Oct 14, DadCraft: "take it out completely... hold on to it in our backpocket"). The full
   version (`add_rustle`, `rustle_guard`, tests, Now line/Diagnostics) is in commit ea57dde. Why: on DadCraft's phone a

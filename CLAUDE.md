@@ -60,8 +60,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - Android build: `./gradlew assembleDebug`. Real-device check is DadCraft's.
 
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
-- **Release:** rc3 (0.9.0-rc3, versionCode 11) is with testers. rc4 is next; what it carries is the tester guide's
-  "New in rc4" list (trim it if rc4 ships with less).
+- **Release:** rc4 (0.9.0-rc4, versionCode 12) built Oct 20 (release APK, debug key like rc3) and handed to
+  DadCraft to send; it carries the tester guide's "New in rc4" list. rc5 next: bump versionCode/versionName.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   and Distortion quality (Smooth). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).

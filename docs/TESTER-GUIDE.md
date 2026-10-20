@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Oct 19, 2026 · Dad · for 0.9.0-rc4
+Oct 20, 2026 · Dad · for 0.9.0-rc4
 
 ## What this app is
 
@@ -39,7 +39,7 @@ There are two ways to use it:
 - **A warning instead of silence:** if the app's own sound parts ever fail to load, the status line says so in bold.
 - **The drums of a kit play in "Your steps" mode** too, and the part menus say when a kit has no sound of its own
   for a part (for example "Synth (Classic's drums)").
-- **A new look** (in progress): rounded cards, bigger switches, the Ouralia violet color and new fonts. Start sits in the player at the bottom, above the tab icons; tap the player for the Intensity dial. Key, Scale and the other choices open as sheets from the bottom (drag one down to close it), and short choices are side-by-side buttons. Pick your own accent color in Setup, Appearance.
+- **A whole new look:** rounded cards, bigger switches, new fonts and a violet accent (or your own color: Setup, Appearance). **Start** sits in the player at the bottom of the screen, above the tab icons; tap the player for the **Intensity dial**. Key, Scale, the kits and other lists open as sheets from the bottom (drag one down to close it); short choices are side-by-side buttons. Each effect's card has its on/off switch and its **Movers** button on its header. A slider shows its value on the right, with a padlock for Lock. Picks give a light tap of vibration (if your phone's touch vibration is on). See The main screen.
 - **Removed:** Stem packs (the kits replace them).
 
 **New in rc3 (Oct 15-16):**
@@ -102,7 +102,7 @@ You need an Android phone or tablet with **Android 9 or newer**, and headphones 
 
 1. **Put on headphones first.** If the sound comes out of the phone speaker, the microphone hears it and it screeches back (feedback). The app only plays into headphones or earbuds, never the phone speaker, so it will not start until some are connected. If you unplug them while it runs, it stops by itself. Wired or Bluetooth both work; wired is better (see Audio devices below).
 2. Install the APK. If you already have an earlier copy, just install over it; your saved presets and settings stay. Only if Android refuses with "App not installed" do you need to uninstall the old copy first (see "Starting fresh with Reset" for what that erases). Android may ask you to allow installs from the app you opened it from, and Play Protect may show an "unknown developer" warning. Choose **More details > Install anyway**.
-3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone (you can see them again under Setup, About). Then press **Start**, in the card at the bottom of the screen.
+3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone (you can see them again under Setup, About). Then press **Start**, the round button in the player at the bottom of the screen.
 4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on the Music tab, Auto realms on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
 5. Press **Stop** when finished.
 
@@ -110,14 +110,22 @@ Start with the volume low. Some settings can get loud.
 
 ## The main screen
 
-The screen has five tabs. The **card at the bottom** stays in place on every tab, in reach of your thumb when you walk:
+The screen has five tabs. Two things stay at the bottom on every tab, in reach of your thumb when you walk:
 
-- **The tab row** across the top of the card: **Sound**, **Music**, **Realms**, **Scenes** and **Setup**. The tab you are on is highlighted. Each tab keeps its own place when you scroll, and the app opens on the tab you used last.
-- **The status line** says what is happening, including the audio rate your phone is using. Under it a **Now:** line shows the Realm playing and why (see The Realms tab), and while the Rhythm plays, the tempo ("walking 112 BPM") and the found-sound kit ("kit K2 S1 H3 · 24 caught": how many kicks, snares and hats it holds, and how many sounds it has caught in all).
-- **Intensity**: one slider for how much is going on. In the middle (50) everything plays exactly as you set it. Slide left for calmer: fewer glitches and chimes, less echo and reverb, quieter and simpler drums, lighter effects. Slide right for busier: more of all of those and busier drum patterns. It only turns up what is already on (an effect you set to 0 stays off), it never changes your sliders, and presets and Realms leave it alone. The same slider sits at the top of Input & output, where you can also give it a mover (for example Shake = higher). It is hidden while a scene plays.
-- **Start / Stop**, **Save sound** (keeps the sound you are hearing as a preset in one tap) and **Hold realm** (appears when Auto realms is on).
+- **The tab bar:** icons for **Sound**, **Music**, **Realms**, **Scenes** and **Setup**. The tab you are on widens and shows its name. Each tab keeps its own place when you scroll, and the app opens on the tab you used last.
+- **The player**, just above it: the round **Start / Stop** button inside a small ring that shows Intensity, a line saying what is happening (warnings show in red), and **Save sound** (the bookmark button: keeps the sound you are hearing as a preset in one tap). **Tap the middle of the player** to open it full size. Close it by dragging it down, tapping outside it, or Back.
 
-Inside a tab, settings are grouped in sections. Tap a section's heading to open or fold it; the app remembers which ones you opened. While a scene is playing, the Sound, Music and Realms tabs say so instead of showing controls that would do nothing.
+The full player shows:
+
+- **The Intensity dial:** slide your finger around the ring. You feel a light tick every 5 steps.
+- **The status line**, including the audio rate your phone is using. Under it a **Now:** line shows the Realm playing and why (see The Realms tab), and while the Rhythm plays, the tempo ("walking 112 BPM") and the found-sound kit ("kit K2 S1 H3 · 24 caught": how many kicks, snares and hats it holds, and how many sounds it has caught in all).
+- **Save sound** and **Hold realm** (appears when Auto realms is on).
+
+What **Intensity** does: one dial for how much is going on. In the middle (50) everything plays exactly as you set it. Slide left for calmer: fewer glitches and chimes, less echo and reverb, quieter and simpler drums, lighter effects. Slide right for busier: more of all of those and busier drum patterns. It only turns up what is already on (an effect you set to 0 stays off), it never changes your sliders, and presets and Realms leave it alone. The same setting is a slider at the top of Input & output, where you can also give it a mover (for example Shake = higher). While a scene plays the ring stays empty: scenes have no Intensity.
+
+At the top of the screen a small red **No headphones** chip shows while none are connected (tap it for why).
+
+Inside a tab, settings are grouped in cards. Tap a card's heading to open or fold it; the app remembers which ones you opened. An effect's card has its **on/off switch** on its heading, so you can switch it without opening it, and a **Movers** button (see Movers). A slider shows its value on the right and a **padlock** (Lock, see Presets). A setting that picks one of a few choices shows them as side-by-side buttons, with the chosen one's explanation under them; a longer list (the kits, for example) is a box that opens a list from the bottom of the screen. While a scene is playing, the Sound, Music and Realms tabs say so instead of showing controls that would do nothing.
 
 | Tab | What is on it |
 | --- | --- |
@@ -142,7 +150,7 @@ choice between **Classic** (the sound as it was) and **New**: try both and tell 
 
 This section controls the sound going in, before any effect touches it.
 
-- **Intensity:** the same control as in the bottom card (see The main screen).
+- **Intensity:** the same setting as the player's dial (see The main screen).
 
 - **Input gain:** the microphone's volume. Turn it up if everything is too quiet, down if it's harsh or distorts.
 - **Noise gate threshold:** silences very quiet sounds, like background hiss, so only louder sounds come through. At the far left it is off.
@@ -438,11 +446,11 @@ can make one, and it can bring its own recordings (WAV, MP3, OGG, FLAC and more)
 
 ## Movers: sliders that move on their own
 
-A mover is a hands-free way to change a slider. Instead of dragging it yourself, a mover pushes it up and down around the spot where you left it. Under every slider is a **Movement** menu. It is set to Off until you choose something.
+A mover is a hands-free way to change a slider. Instead of dragging it yourself, a mover pushes it up and down around the spot where you left it. Each slider can have a **Movement**. It is set to Off until you choose something.
 
 **To use one:**
 
-1. In the section's header area, turn on **Movers (automatic movement) for this section**. Each section has one of these switches. While it is off, that section's mover menus are grayed out and do nothing.
+1. On the card's heading, tap **Movers off** so it says **Movers on**. Each card with sliders has one. While it is off, the card's Movement choices are hidden and nothing moves.
 2. Under the slider you want to move, pick a **Movement**.
 3. Two more settings appear: **Speed** (how fast it moves or reacts) and **Depth** (how far it moves). Depth 0 means no movement.
 
@@ -489,7 +497,7 @@ There is also an **Unstable** Realm, switched off unless you pick a preset for i
 
 Being in a pocket doesn't stop the other Realms. In your pocket, walking still gives Kinetic, a loud and lively place still gives Flux, a quiet one Tranquil, and late night Ghost. Pocket only plays when none of them fits. Whatever Realm is playing, the pocket's own protection rides on top: Pocket hush and Mic-down protection (under Input & output).
 
-The **Now:** line in the card names the Realm and why it was chosen, for example "Now: Kinetic · walking · ordinary room (-45 dB)": night, walking, a pocket, and how the room sounds (quiet, ordinary, loud but steady, or loud and lively). Tap **Hold realm** to keep the current Realm, for example through doorways and shops where light and noise keep changing. Tap **Let go** to release it. Stopping the sound also lets go.
+The **Now:** line in the full player names the Realm and why it was chosen, for example "Now: Kinetic · walking · ordinary room (-45 dB)": night, walking, a pocket, and how the room sounds (quiet, ordinary, loud but steady, or loud and lively). Tap **Hold realm** to keep the current Realm, for example through doorways and shops where light and noise keep changing. Tap **Let go** to release it. Stopping the sound also lets go.
 
 **Choosing what each Realm plays.** Each Realm has a menu where you pick which preset it plays (the built-in ones are called "Tranquil realm", "Kinetic realm" and so on, and any preset you saved can be used), or turn that Realm off. Sliders you've **locked** are never changed by a Realm.
 
@@ -514,12 +522,12 @@ They are older and simpler than the built-in effects, but they are the real thin
 
 A preset is a saved collection of slider settings, like a saved radio station. The buttons are at the top of the Sound tab.
 
-- **Presets** opens a list of built-in presets (for example "Wobbly pitch") and the ones you saved. Tap one to load it. Long-press one you saved to delete it. Built-in ones can't be deleted.
-- **Save** stores your current settings under a name you choose. Save sound, in the card at the bottom, does the same in one tap and names it after the time (like "Thu 10-31"). You can find it in Presets afterwards, or pick it for a Realm.
+- **Presets** opens a list of built-in presets (for example "Wobbly pitch") and the ones you saved. Tap one to load it. Press and hold one you saved to delete it. Built-in ones can't be deleted.
+- **Save** (the **+** button next to Presets) stores your current settings under a name you choose. Save sound, the bookmark button in the player, does the same in one tap and names it after the time (like "Thu 10-31"). You can find it in Presets afterwards, or pick it for a Realm.
 - **Randomize** moves every slider to a random value within a safe range. While the sound is playing it glides there over about 6 seconds, so you hear the change happen. A slider you touch during the glide stays where you put it. It's good for finding new sounds by accident. **Undo** takes you back.
 - **Nudge** moves every slider only a little, so you drift to a nearby sound instead of jumping. How far it moves is set by Nudge strength in Behavior.
-- **Lock** (on a slider) protects it from Randomize, Nudge and the Realms, so you can keep the sounds you like and shuffle the rest. Loading a preset still sets it. Every slider a Realm can change has one, the Mix levels included.
-- **Export** asks you to name the preset, then saves it as a small file. Send that file to someone, or keep it as a backup. **Import** loads a file like that. The preset appears in your list under the name it was given. If you already have one with that name, the imported one gets a number added instead of replacing yours.
+- **Lock** (the padlock next to a slider's value) protects it from Randomize, Nudge and the Realms, so you can keep the sounds you like and shuffle the rest. Loading a preset still sets it. Every slider a Realm can change has one, the Mix levels included.
+- **Export** (the arrow up button) asks you to name the preset, then saves it as a small file. Send that file to someone, or keep it as a backup. **Import** (the arrow down button) loads a file like that. The preset appears in your list under the name it was given. If you already have one with that name, the imported one gets a number added instead of replacing yours.
 
 The app also remembers your last settings when you close it.
 
@@ -553,7 +561,7 @@ Thank you for trying this. Anything you notice is useful, even "it felt weird." 
 - **Sound problems:** crackling, dropouts, silence, a squeal, or delay between making a sound and hearing it. Say which effects were on. Crackling or stuttering with many things switched on can mean your phone is working too hard; tell me which ones.
 - **Does it keep running** when you lock the screen or switch to another app?
 - **Battery and heat:** does your phone get warm, or does the battery drain fast?
-- **Anything confusing** on screen, such as a label or button you didn't understand. Is the card at the bottom easy to reach while walking, are the tabs easy to tap, and does the Now: line make sense? Is everything on the tab you expected?
+- **Anything confusing** on screen, such as a label or button you didn't understand. Are the player and the tab bar easy to reach while walking, are the sheets easy to close, and does the Now: line make sense? Is everything on the tab you expected?
 - **Crashes or freezes:** what you were doing just before.
 - **Call and response:** does the answer come at a natural moment after you stop singing, and does it sound like your phrase?
 - **Movers:** do the tilt, shake, spin, compass, light, pocket and stairs movements feel right? Does a sensor seem to be missing on your phone?
