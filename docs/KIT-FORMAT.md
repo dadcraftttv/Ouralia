@@ -1,4 +1,6 @@
-# Making kits for Ouralia
+# Making kits for Ouralia: the full reference
+
+New to kits? Start with [MAKING-KITS.md](MAKING-KITS.md), a step-by-step guide. This page lists every setting.
 
 A **kit** decides what the music sounds like. The app writes the music by itself: it picks the chords, melodies, bass
 lines and drum patterns from what it hears around you. A kit says which instrument plays each part. You can make a kit

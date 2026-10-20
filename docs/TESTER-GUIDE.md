@@ -451,7 +451,7 @@ can make one, and it can bring its own recordings (WAV, MP3, OGG, FLAC and more)
 
 - **Import kit:** pick a kit.txt, or a zip with the kit and its sounds. **Import kit folder:** pick a folder that
   holds them. The kit plays at once as the Kit, and joins every Kit and "from" menu.
-- **How to make a kit:** shows the format, with an example to start from.
+- **How to make a kit:** a short explanation with examples. The full step-by-step guide is [MAKING-KITS.md](MAKING-KITS.md) (including how to use your own recordings, even sounds with no musical note, like a door squeak).
 - **Delete a kit:** removes one from this phone (any part that played it goes back to Classic). The file you
   imported it from is not touched.
 - A preset carries the kits it uses, so a preset you share brings its sound with it. Recordings are not in the
