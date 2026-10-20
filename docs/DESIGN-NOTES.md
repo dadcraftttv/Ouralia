@@ -944,7 +944,9 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   on the name); a slider shows its value on the right in the accent mono font (`valueText` is the value only), Lock
   is a padlock toggle; tapping a switch row's words flips it. Each effect card's header carries its **Movers pill**
   (Movers on/off) and its **on/off switch** (`onSwitch`: the section's "... enabled" toggle), so both work folded;
-  they no longer appear inside the card. Sections without them (Sing in key, Mix...) keep a plain header.
+  they no longer appear inside the card. Sections without them (Sing in key, Mix...) keep a plain header. Card
+  titles split the same way ("Mix" / "the level of each part"). A slider's Movement controls show only while its
+  card's Movers are on (they were greyed copies under every slider: clutter).
 - **Sound tab top** (Oct 20): Presets is one wide button (the list sheet) with Save, Export and Import as 48 dp icon
   buttons (+, up, down); Randomize, Nudge and Undo are outlined chips with icons (Undo greys out with nothing to
   undo). The Scenes card likewise: Choose scene as one wide button, Import zip / Import folder as chips.

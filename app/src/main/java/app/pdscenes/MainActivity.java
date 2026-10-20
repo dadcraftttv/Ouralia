@@ -1161,11 +1161,21 @@ public class MainActivity extends Activity {
         headRow.setMinimumHeight(dp(56));
         headRow.setPadding(dp(Look.CARD_PAD), dp(6), dp(14), dp(6));
         headRow.setBackground(look.pressable(null, look.p.text, 0));
+        LinearLayout titles = new LinearLayout(this);   // the title, and its bracketed explanation under it
+        titles.setOrientation(LinearLayout.VERTICAL);
         TextView header = new TextView(this);
         header.setTextSize(Look.TEXT_HEADING);
         header.setTypeface(look.heading());
         header.setTextColor(look.p.text);
-        headRow.addView(header, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        titles.addView(header);
+        String subtitle = splitLabel(title)[1];
+        if (!subtitle.isEmpty()) {
+            TextView sub = new TextView(this);
+            sub.setText(subtitle);
+            look.hint(sub);
+            titles.addView(sub);
+        }
+        headRow.addView(titles, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         for (View extra : extras) {
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -1511,12 +1521,12 @@ public class MainActivity extends Activity {
 
     private void showSectionState(TextView header, View body, String title, boolean open) {
         body.setVisibility(open ? View.VISIBLE : View.GONE);
-        header.setText(title);
+        header.setText(splitLabel(title)[0]);
         ImageView chevron = sectionChevrons.get(header);
         if (chevron != null) {
             chevron.setImageResource(open ? R.drawable.ic_chevron_up : R.drawable.ic_chevron_down);
         }
-        ((View) header.getParent()).setContentDescription(
+        ((View) header.getParent().getParent()).setContentDescription(
                 getString(open ? R.string.section_open : R.string.section_closed, title));
     }
 
@@ -2430,14 +2440,8 @@ public class MainActivity extends Activity {
     }
 
     private void addSegmentRow(LinearLayout parent, Param p, boolean compact) {
-        TextView label = new TextView(this);
-        label.setText(p.shown());
-        if (compact) {
-            look.hint(label);
-        } else {
-            look.label(label);
-        }
-        label.setPadding(dp(4), dp(compact ? 6 : 14), 0, dp(8));
+        View label = nameAndHint(p, compact);
+        label.setPadding(0, dp(compact ? 6 : 14), 0, dp(8));   // (in line with the slider names)
         parent.addView(label);
         LinearLayout bar = new LinearLayout(this);
         bar.setOrientation(LinearLayout.HORIZONTAL);
@@ -2475,7 +2479,7 @@ public class MainActivity extends Activity {
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         row.segmentHint = new TextView(this);
         look.hint(row.segmentHint);
-        row.segmentHint.setPadding(dp(4), dp(6), 0, 0);
+        row.segmentHint.setPadding(0, dp(6), 0, 0);
         parent.addView(row.segmentHint);
         rows.add(row);
         showSegment(row, choiceIndex(p, ParamStore.get(p.id)));
@@ -2561,14 +2565,15 @@ public class MainActivity extends Activity {
         moverUis.add(new MoverUi(sectionId, slider.id, box, details));
     }
 
-    /** Greys out mover controls whose section has its movers off; hides speed and depth while a mover is Off. */
+    /** Hides mover controls whose section has its Movers off; hides speed and depth while a mover is Off. */
     private void updateMoverUi() {
         for (MoverUi m : moverUis) {
             boolean on = ParamStore.get(Params.moversSwitchId(m.sectionId)) >= 0.5f;
             boolean moving = Math.round(ParamStore.get(Params.moverId(m.paramId, "mv"))) != 0;
             m.details.setVisibility(moving ? View.VISIBLE : View.GONE);
+            // shown only while the card's Movers are on (greyed copies under every slider were clutter)
+            m.box.setVisibility(on ? View.VISIBLE : View.GONE);
             setTreeEnabled(m.box, on);
-            m.box.setAlpha(on ? 1f : 0.4f);
         }
     }
 
