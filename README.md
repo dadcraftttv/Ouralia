@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/icon/ouralia-icon.svg" width="128" height="128" alt="The app icon: the dial as a pair of headphones"></p>
+
 # PdScenes (stage 1)
 
 Mic -> Pure Data (libpd) -> headphones, low latency (libpd's Oboe backend), in a foreground
