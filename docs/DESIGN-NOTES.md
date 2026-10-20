@@ -952,7 +952,10 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - **Every other pick-one setting** (Oct 19, `addChoiceRow`): two choices with short names up to 18 letters, or three
   up to 12, are side-by-side buttons (the short name is the words before " (", the chosen one's bracketed
   explanation shows under them: e.g. Pad register, Pad sounds, the Classic/New switches, Distortion type); longer
-  lists are a tile opening a list sheet (kits, Crusher style, Melody rhythm, the movers' Movement). Long lists
+  lists are a tile opening a list sheet (kits, Crusher style, Melody rhythm, the movers' Movement). **Both in the
+  middle** (DadCraft, Oct 20: "left side as the original, Both in the middle as a sort of unity, the other option on
+  the right"): a three-way row ending in "Both" shows as 0, 2, 1 (`displayOrder`; Pad register reads Low | Both |
+  Mid, his pick). Only the screen order: stored values and presets are unchanged. Long lists
   scroll in the sheet (up to 72% of the screen); a drag down closes it only once the list is at its top. The
   Realms menus and Setup's device pickers are still Spinners (their own code).
 

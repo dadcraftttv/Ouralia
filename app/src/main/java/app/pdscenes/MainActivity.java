@@ -2265,6 +2265,22 @@ public class MainActivity extends Activity {
         return true;
     }
 
+    /**
+     * The order the buttons show in: as stored, except that "Both" sits in the middle (DadCraft: the original on the
+     * left, Both as the unity in the middle, the other on the right). Only the screen order: stored values stay.
+     */
+    static int[] displayOrder(String[] choices) {
+        int n = choices.length;
+        if (n == 3 && shortName(choices[2]).equals("Both")) {
+            return new int[] {0, 2, 1};
+        }
+        int[] order = new int[n];
+        for (int i = 0; i < n; i++) {
+            order[i] = i;
+        }
+        return order;
+    }
+
     private void addSegmentRow(LinearLayout parent, Param p, boolean compact) {
         TextView label = new TextView(this);
         label.setText(p.shown());
@@ -2286,7 +2302,7 @@ public class MainActivity extends Activity {
         bar.setDividerDrawable(divider);
         Row row = new Row(p, null, null, null);
         row.segment = new TextView[p.choices.length];
-        for (int i = 0; i < p.choices.length; i++) {
+        for (int i : displayOrder(p.choices)) {
             TextView b = new TextView(this);
             b.setText(shortName(p.choices[i]));
             b.setGravity(Gravity.CENTER);
