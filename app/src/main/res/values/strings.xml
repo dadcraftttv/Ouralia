@@ -249,6 +249,7 @@
     <string name="scene_by_author">%1$s (%2$s)</string>
     <string name="scenes_title">Scenes</string>
     <string name="scenes_none">No imported scenes yet</string>
+    <string name="scenes_delete_hint">Press and hold a scene to delete it.</string>
     <string name="delete_scene_title">Delete scene \"%s\"?</string>
     <string name="toast_scene_deleted">Scene deleted</string>
     <string name="toast_scene_importing">Importing scene…</string>

@@ -935,7 +935,12 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - **XY pad** (Oct 19): on a card; `ScenePad.drawXyPad` (only with no scene: a scene's pad keeps its look) draws a
   quarter grid, the point it holds (`Modulation.padPoint`, what the Pad X / Pad Y movers follow) as an accent dot
   with a halo and guide lines, "PAD X" / "PAD Y" in the corners, and an accent ring under a held finger.
-- Next: the Realms and Scenes tabs (the Realm menus and Setup's device pickers are still Spinners).
+- **Realms, Scenes, Setup** (Oct 19): each Realm is a block (name, when it plays, its preset on a tile opening a
+  list sheet, "What it changes" folding open to switches); the audio Input/Output pickers are tiles with list
+  sheets; the Scenes tab's scene and buttons sit on a card, the scene picker is a list sheet (press and hold to
+  delete), RjDj timing is a switch. No Spinner is left in the app. A sheet opens scrolled to its chosen row.
+- Still framework dialogs (to do if DadCraft wants): Presets, Save, Reset and delete confirmations, the Realms
+  warning, the walkthrough.
 - **Key and Scale** (Oct 19; DadCraft found the mockup's 12-key strip easy to mis-tap): two tiles side by side in
   Music, each opening a sheet: Key = the 12 notes as big buttons (4 x 3), Scale = one row per scale with 12 dots
   (filled = the scale's notes above the key; `Params.SCALE_STEPS`, which test V checks against make_patch.py

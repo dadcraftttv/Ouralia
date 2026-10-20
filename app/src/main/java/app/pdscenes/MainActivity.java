@@ -24,13 +24,8 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.SeekBar;
-import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -118,12 +113,12 @@ public class MainActivity extends Activity {
 
     private static final class WorldRow {
         final Worlds.World world;
-        final Spinner spinner;
+        final TextView value;   // the preset's name on the Realm's tile
         List<String> presets = new ArrayList<>();
 
-        WorldRow(Worlds.World world, Spinner spinner) {
+        WorldRow(Worlds.World world, TextView value) {
             this.world = world;
-            this.spinner = spinner;
+            this.value = value;
         }
     }
     private ScenePad scenePad;
@@ -150,18 +145,16 @@ public class MainActivity extends Activity {
         final TextView label;     // slider rows only
         final SeekBar slider;     // slider rows only
         final Switch switchView;  // toggle rows only
-        final Spinner spinner;    // pick-one rows only
-        String[] choicesShown;    // the spinner's names (the Kit menus change when user kits come and go)
+        String[] choicesShown;    // the names last shown (the Kit lists change when user kits come and go)
         TextView tile;            // pick-one rows shown as a tile that opens a sheet: its value
         TextView[] segment;       // pick-one rows shown as side-by-side buttons
         TextView segmentHint;     // ...and the chosen one's explanation under them
 
-        Row(Param param, TextView label, SeekBar slider, Switch switchView, Spinner spinner) {
+        Row(Param param, TextView label, SeekBar slider, Switch switchView) {
             this.param = param;
             this.label = label;
             this.slider = slider;
             this.switchView = switchView;
-            this.spinner = spinner;
             this.choicesShown = param.choices;
         }
     }
@@ -169,13 +162,17 @@ public class MainActivity extends Activity {
     /** A dropdown of connected audio devices, plus "Automatic" as the first entry. */
     private static final class DevicePicker {
         final boolean input;
-        final Spinner spinner;
+        final View tile;
+        final TextView value;   // the device shown on the tile
         List<AudioDevices.Device> devices = new ArrayList<>();
-        String shownKey = AudioSettings.AUTOMATIC;   // what the dropdown currently displays
+        String[] names = new String[0];   // what the sheet lists: Automatic, then the devices
+        int selected;
+        String shownKey = AudioSettings.AUTOMATIC;   // what the tile currently displays
 
-        DevicePicker(boolean input, Spinner spinner) {
+        DevicePicker(boolean input, View tile, TextView value) {
             this.input = input;
-            this.spinner = spinner;
+            this.tile = tile;
+            this.value = value;
         }
     }
 
@@ -325,11 +322,22 @@ public class MainActivity extends Activity {
         LinearLayout scenes = tabBodies[TAB_SCENES], setup = tabBodies[TAB_SETUP];
 
         // ---- Scenes ----
+        // the scene playing and its buttons, on a card
+        LinearLayout sceneCard = new LinearLayout(this);
+        sceneCard.setOrientation(LinearLayout.VERTICAL);
+        look.card(sceneCard);
+        sceneCard.setPadding(dp(Look.CARD_PAD), dp(16), dp(Look.CARD_PAD), dp(14));
+        LinearLayout.LayoutParams sceneCardParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        sceneCardParams.setMargins(0, 0, 0, dp(Look.CARD_GAP));
+        scenes.addView(sceneCard, sceneCardParams);
         sceneLabel = new TextView(this);
-        sceneLabel.setTextSize(16);
-        sceneLabel.setPadding(0, dp(12), 0, dp(4));
-        scenes.addView(sceneLabel);
-        LinearLayout sceneRow = newButtonRow(scenes);
+        sceneLabel.setTypeface(look.heading());
+        sceneLabel.setTextSize(Look.TEXT_HEADING);
+        sceneLabel.setTextColor(look.p.text);
+        sceneLabel.setPadding(dp(2), 0, 0, dp(8));
+        sceneCard.addView(sceneLabel);
+        LinearLayout sceneRow = newButtonRow(sceneCard);
         addButton(sceneRow, R.string.choose_scene, this::showScenes);
         addButton(sceneRow, R.string.import_scene, this::startImportScene);
         addButton(sceneRow, R.string.import_scene_folder, this::startImportSceneFolder);
@@ -356,8 +364,12 @@ public class MainActivity extends Activity {
             SceneSettings.setMicVolume(this, v);
             sendSceneLevelsIfRunning();
         });
-        CheckBox timing = new CheckBox(this);
+        Switch timing = new Switch(this);
         timing.setText(R.string.scene_rjdj_timing);
+        look.label(timing);
+        look.switchTint(timing);
+        timing.setSwitchPadding(dp(16));
+        timing.setMinHeight(dp(52));
         timing.setChecked(SceneSettings.rjdjTiming(this));
         timing.setOnCheckedChangeListener((b, on) -> {
             SceneSettings.setRjdjTiming(this, on);
@@ -368,7 +380,8 @@ public class MainActivity extends Activity {
         sceneLevels.addView(timing);
         TextView hint = new TextView(this);
         hint.setText(R.string.scene_headphones_hint);
-        hint.setTextSize(13);
+        look.hint(hint);
+        hint.setPadding(dp(4), dp(6), dp(4), 0);
         sceneLevels.addView(hint);
         scenes.addView(sceneLevels);
 
@@ -780,6 +793,18 @@ public class MainActivity extends Activity {
             sheetBody.addView(content);
         }
         sheetBody.scrollTo(0, 0);
+        sheetBody.post(() -> {   // a long list opens with the chosen row in view, not hidden further down
+            if (content instanceof android.view.ViewGroup) {
+                android.view.ViewGroup list = (android.view.ViewGroup) content;
+                for (int i = 0; i < list.getChildCount(); i++) {
+                    View row = list.getChildAt(i);
+                    if (row.isSelected() && row.getBottom() > sheetBody.getHeight()) {
+                        sheetBody.scrollTo(0, row.getTop() - sheetBody.getHeight() / 3);
+                        break;
+                    }
+                }
+            }
+        });
         if (sheetOpen) {
             return;
         }
@@ -1165,8 +1190,10 @@ public class MainActivity extends Activity {
     private void fillWorldsSection(LinearLayout body) {
         Switch auto = new Switch(this);
         auto.setText(R.string.worlds_auto);
-        auto.setTextSize(16);
-        auto.setPadding(0, dp(8), 0, 0);
+        look.label(auto);
+        look.switchTint(auto);
+        auto.setSwitchPadding(dp(16));
+        auto.setMinHeight(dp(52));
         auto.setChecked(Worlds.isEnabled());
         auto.setOnClickListener(v -> {
             if (!auto.isChecked()) {
@@ -1190,42 +1217,76 @@ public class MainActivity extends Activity {
         body.addView(auto);
 
         worldStatus = new TextView(this);
-        worldStatus.setTextSize(14);
-        worldStatus.setPadding(0, dp(8), 0, dp(4));
+        look.hint(worldStatus);
+        worldStatus.setPadding(0, dp(2), 0, dp(6));
         body.addView(worldStatus);
 
+        // each Realm: its name and when it plays, its preset on a tile (a list sheet), what it changes
         for (Worlds.World w : Worlds.ALL) {
-            TextView label = new TextView(this);
-            label.setText(getString(R.string.world_row, w.title, w.when));
-            label.setTextSize(14);
-            label.setPadding(0, dp(8), 0, 0);
-            body.addView(label);
-            Spinner spinner = new Spinner(this);
-            body.addView(spinner);
-            WorldRow row = new WorldRow(w, spinner);
-            worldRows.add(row);
-            spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parentView, View v, int position, long id) {
-                    String chosen = position == 0 || position > row.presets.size()
-                            ? Worlds.NONE : row.presets.get(position - 1);
-                    if (!chosen.equals(Worlds.presetName(w.id))) {   // ignore our own refresh
-                        Worlds.setPreset(w.id, chosen);
-                    }
-                }
+            LinearLayout block = new LinearLayout(this);
+            block.setOrientation(LinearLayout.VERTICAL);
+            block.setPadding(0, dp(14), 0, 0);
+            LinearLayout head = new LinearLayout(this);
+            head.setOrientation(LinearLayout.HORIZONTAL);
+            head.setGravity(Gravity.CENTER_VERTICAL);
+            head.setPadding(dp(4), 0, dp(4), dp(8));
+            TextView name = new TextView(this);
+            name.setText(w.title);
+            look.label(name);
+            head.addView(name, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            TextView when = new TextView(this);
+            when.setText(w.when);
+            look.hint(when);
+            head.addView(when);
+            block.addView(head);
 
-                @Override
-                public void onNothingSelected(AdapterView<?> parentView) { }
-            });
-            addRealmIngredients(body, w);
+            LinearLayout tile = new LinearLayout(this);
+            tile.setOrientation(LinearLayout.VERTICAL);
+            tile.setGravity(Gravity.CENTER_VERTICAL);
+            tile.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
+            tile.setMinimumHeight(dp(52));
+            tile.setPadding(dp(16), dp(8), dp(40), dp(8));
+            TextView value = new TextView(this);
+            value.setTypeface(look.heading());
+            value.setTextSize(15);
+            value.setTextColor(look.p.text);
+            value.setMaxLines(1);
+            value.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            tile.addView(value);
+            tile.setContentDescription(getString(R.string.world_row, w.title, w.when));
+            WorldRow row = new WorldRow(w, value);
+            worldRows.add(row);
+            tile.setOnClickListener(v -> showRealmSheet(row));
+            block.addView(tile);
+            addRealmIngredients(block, w);
+            body.addView(block);
         }
         TextView note = new TextView(this);
         note.setText(R.string.worlds_note);
-        note.setTextSize(13);
-        note.setPadding(0, dp(12), 0, 0);
+        look.hint(note);
+        note.setPadding(dp(4), dp(16), dp(4), 0);
         body.addView(note);
         refreshWorldRows();
         updateWorldStatus();
+    }
+
+    /** A Realm's preset picker: Off, then every preset (built-in and yours), the chosen one ticked. */
+    private void showRealmSheet(WorldRow row) {
+        String[] names = new String[row.presets.size() + 1];
+        names[0] = getString(R.string.world_off);
+        for (int i = 0; i < row.presets.size(); i++) {
+            names[i + 1] = row.presets.get(i);
+        }
+        int chosen = row.presets.indexOf(Worlds.presetName(row.world.id)) + 1;
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.addView(sheetHeading(row.world.title, row.world.when));
+        addListRows(content, names, chosen, null, i -> {
+            Worlds.setPreset(row.world.id, i == 0 ? Worlds.NONE : row.presets.get(i - 1));
+            refreshWorldRows();
+            closeSheet();
+        });
+        openSheet(content);
     }
 
     /**
@@ -1234,11 +1295,15 @@ public class MainActivity extends Activity {
      */
     private void addRealmIngredients(LinearLayout body, Worlds.World w) {
         TextView summary = new TextView(this);
-        summary.setTextSize(13);
-        summary.setPadding(dp(8), dp(4), 0, dp(4));
+        look.hint(summary);
+        summary.setGravity(Gravity.CENTER_VERTICAL);
+        summary.setMinHeight(dp(40));
+        summary.setPadding(dp(4), dp(4), dp(4), dp(4));
+        summary.setCompoundDrawablePadding(dp(6));
+        summary.setBackground(look.pressable(null, look.p.text, Look.RADIUS_TILE));
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(16), 0, 0, dp(4));
+        box.setPadding(dp(8), 0, 0, dp(4));
         box.setVisibility(View.GONE);
         Runnable update = () -> {
             List<String> left = new ArrayList<>();
@@ -1250,11 +1315,21 @@ public class MainActivity extends Activity {
             String what = left.isEmpty() ? getString(R.string.realm_changes_all)
                     : left.size() == Worlds.GROUPS.length ? getString(R.string.realm_changes_none)
                     : getString(R.string.realm_changes_but, String.join(", ", left));
-            summary.setText((box.getVisibility() == View.VISIBLE ? "\u25BE " : "\u25B8 ") + what);
+            summary.setText(what);
+            boolean open = box.getVisibility() == View.VISIBLE;
+            android.graphics.drawable.Drawable chevron = getDrawable(open ? R.drawable.ic_chevron_up : R.drawable.ic_chevron_down).mutate();
+            chevron.setTint(look.p.muted);
+            chevron.setBounds(0, 0, dp(18), dp(18));
+            summary.setCompoundDrawablesRelative(null, null, chevron, null);
         };
         for (String[] g : Worlds.GROUPS) {
-            CheckBox c = new CheckBox(this);
+            Switch c = new Switch(this);
             c.setText(g[1]);
+            look.label(c);
+            c.setTextSize(Look.TEXT_HINT + 1);
+            look.switchTint(c);
+            c.setSwitchPadding(dp(16));
+            c.setMinHeight(dp(48));
             c.setChecked(Worlds.uses(w.id, g[0]));
             c.setOnCheckedChangeListener((b, on) -> {
                 Worlds.setUses(w.id, g[0], on);
@@ -1271,20 +1346,14 @@ public class MainActivity extends Activity {
         body.addView(box);
     }
 
-    /** Fills each world's dropdown with the current presets (they change when you save or import one). */
+    /** Shows each Realm's preset on its tile (the list changes when you save or import a preset). */
     private void refreshWorldRows() {
         List<String> presets = new ArrayList<>(PresetManager.builtInNames());
         presets.addAll(PresetManager.userNames(this));
         for (WorldRow row : worldRows) {
             row.presets = presets;
-            List<String> items = new ArrayList<>();
-            items.add(getString(R.string.world_off));
-            items.addAll(presets);
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                    this, android.R.layout.simple_spinner_item, items);
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            row.spinner.setAdapter(adapter);
-            row.spinner.setSelection(presets.indexOf(Worlds.presetName(row.world.id)) + 1);
+            String chosen = Worlds.presetName(row.world.id);
+            row.value.setText(presets.contains(chosen) ? chosen : getString(R.string.world_off));
         }
     }
 
@@ -1318,51 +1387,69 @@ public class MainActivity extends Activity {
         outputPicker = addDevicePicker(body, R.string.audio_output, false);
 
         if (!AudioService.canSelectDevices()) {
-            inputPicker.spinner.setEnabled(false);
-            outputPicker.spinner.setEnabled(false);
+            for (DevicePicker picker : new DevicePicker[] {inputPicker, outputPicker}) {
+                picker.tile.setEnabled(false);
+                picker.tile.setAlpha(0.5f);
+            }
         }
         micHint = new TextView(this);
-        micHint.setTextSize(13);
-        micHint.setPadding(0, dp(8), 0, 0);
+        look.hint(micHint);
+        micHint.setPadding(dp(4), dp(8), 0, 0);
         body.addView(micHint);
         updateMicHint();
         TextView note = new TextView(this);
         note.setText(AudioService.canSelectDevices()
                 ? R.string.audio_note : R.string.audio_unsupported);
-        note.setTextSize(13);
-        note.setPadding(0, dp(12), 0, 0);
+        look.hint(note);
+        note.setPadding(dp(4), dp(12), 0, 0);
         body.addView(note);
     }
 
+    /** An audio device choice: a tile (its name small, the device large) that opens a list sheet of devices. */
     private DevicePicker addDevicePicker(LinearLayout parent, int labelRes, boolean input) {
-        TextView label = new TextView(this);
-        label.setText(labelRes);
-        label.setTextSize(16);
-        label.setPadding(0, dp(16), 0, 0);
-        parent.addView(label);
-
-        Spinner spinner = new Spinner(this);
-        parent.addView(spinner);
-        DevicePicker picker = new DevicePicker(input, spinner);
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parentView, View v, int position, long id) {
-                String key = position == 0 || position > picker.devices.size()
-                        ? AudioSettings.AUTOMATIC : picker.devices.get(position - 1).key;
+        LinearLayout tile = new LinearLayout(this);
+        tile.setOrientation(LinearLayout.VERTICAL);
+        tile.setGravity(Gravity.CENTER_VERTICAL);
+        tile.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
+        tile.setMinimumHeight(dp(64));
+        tile.setPadding(dp(16), dp(8), dp(40), dp(8));
+        TextView name = new TextView(this);
+        name.setText(labelRes);
+        look.hint(name);
+        name.setTextSize(12);
+        tile.addView(name);
+        TextView value = new TextView(this);
+        value.setTypeface(look.heading());
+        value.setTextSize(15);
+        value.setTextColor(look.p.text);
+        tile.addView(value);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(0, dp(12), 0, 0);
+        parent.addView(tile, lp);
+        DevicePicker picker = new DevicePicker(input, tile, value);
+        tile.setOnClickListener(v -> {
+            LinearLayout content = new LinearLayout(this);
+            content.setOrientation(LinearLayout.VERTICAL);
+            content.addView(sheetHeading(getString(labelRes), null));
+            addListRows(content, picker.names, picker.selected, null, i -> {
+                closeSheet();
+                String key = i == 0 || i > picker.devices.size()
+                        ? AudioSettings.AUTOMATIC : picker.devices.get(i - 1).key;
                 if (key.equals(picker.shownKey)) {
-                    return;   // our own refresh, not a user choice
+                    return;
                 }
                 picker.shownKey = key;
+                picker.selected = i;
+                value.setText(picker.names[i]);
                 AudioSettings.setDeviceKey(MainActivity.this, picker.input, key);
                 updateMicHint();
                 if (AudioService.isRunning()) {
                     startForegroundService(new Intent(MainActivity.this, AudioService.class)
                             .setAction(AudioService.ACTION_RESTART));
                 }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parentView) { }
+            });
+            openSheet(content);
         });
         return picker;
     }
@@ -1392,11 +1479,9 @@ public class MainActivity extends Activity {
             }
         }
         picker.shownKey = selected == 0 ? AudioSettings.AUTOMATIC : saved;
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, names);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        picker.spinner.setAdapter(adapter);
-        picker.spinner.setSelection(selected);
+        picker.names = names.toArray(new String[0]);
+        picker.selected = selected;
+        picker.value.setText(picker.names[selected]);
     }
 
     private void addAboutSection(LinearLayout parent) {
@@ -1881,7 +1966,7 @@ public class MainActivity extends Activity {
                 updateMoverUi();   // a section's movers switch greys its mover controls in or out
             });
             parent.addView(sw);
-            rows.add(new Row(p, null, null, sw, null));
+            rows.add(new Row(p, null, null, sw));
             return;
         }
         if (p.choices != null) {
@@ -1923,7 +2008,7 @@ public class MainActivity extends Activity {
         slider.setProgress(Math.round(p.toNorm(v0) * 1000f));
         label.setText(valueText(p, v0));
         parent.addView(slider);
-        rows.add(new Row(p, label, slider, null, null));
+        rows.add(new Row(p, label, slider, null));
 
         slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -1987,7 +2072,7 @@ public class MainActivity extends Activity {
         value.setText(p.choices[choiceIndex(p, ParamStore.get(p.id))]);
         tile.addView(value);
         tile.setOnClickListener(v -> open.run());
-        Row row = new Row(p, null, null, null, null);
+        Row row = new Row(p, null, null, null);
         row.tile = value;
         rows.add(row);
         return tile;
@@ -2064,10 +2149,15 @@ public class MainActivity extends Activity {
         View make(int index, boolean chosen);
     }
 
-    /** One row per choice: a tick on the chosen one (highlighted), the full name (wrapping), {@code extra} at the end. */
+    /** A setting's choices as list rows; a pick is stored and closes the sheet. */
     private void addChoiceList(LinearLayout content, Param p, RowExtra extra) {
-        int chosen = choiceIndex(p, ParamStore.get(p.id));
-        for (int i = 0; i < p.choices.length; i++) {
+        addListRows(content, p.choices, choiceIndex(p, ParamStore.get(p.id)), extra, i -> pickChoice(p, i));
+    }
+
+    /** One row per name: a tick on the chosen one (highlighted), the full name (wrapping), {@code extra} at the end. */
+    private void addListRows(LinearLayout content, String[] names, int chosen, RowExtra extra,
+                             java.util.function.IntConsumer pick) {
+        for (int i = 0; i < names.length; i++) {
             boolean on = i == chosen;
             int fg = on ? look.p.onContainer : look.p.text;
             LinearLayout row = new LinearLayout(this);
@@ -2083,7 +2173,7 @@ public class MainActivity extends Activity {
             tick.setVisibility(on ? View.VISIBLE : View.INVISIBLE);
             row.addView(tick, new LinearLayout.LayoutParams(dp(20), dp(20)));
             TextView name = new TextView(this);
-            name.setText(p.choices[i]);
+            name.setText(names[i]);
             look.label(name);
             name.setTextColor(fg);
             name.setPadding(dp(10), 0, dp(8), 0);
@@ -2091,8 +2181,8 @@ public class MainActivity extends Activity {
             if (extra != null) {
                 row.addView(extra.make(i, on), new LinearLayout.LayoutParams(dp(128), dp(12)));
             }
-            final int pick = i;
-            row.setOnClickListener(v -> pickChoice(p, pick));
+            final int index = i;
+            row.setOnClickListener(v -> pick.accept(index));
             content.addView(row, new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         }
@@ -2193,7 +2283,7 @@ public class MainActivity extends Activity {
         divider.setColor(look.p.line);
         divider.setSize(dp(1), 1);
         bar.setDividerDrawable(divider);
-        Row row = new Row(p, null, null, null, null);
+        Row row = new Row(p, null, null, null);
         row.segment = new TextView[p.choices.length];
         for (int i = 0; i < p.choices.length; i++) {
             TextView b = new TextView(this);
@@ -2285,32 +2375,6 @@ public class MainActivity extends Activity {
         openSheet(content);
     }
 
-    private ArrayAdapter<String> choiceAdapter(String[] names) {
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, names) {
-            @Override
-            public View getView(int position, View convert, android.view.ViewGroup parent) {
-                return styled(super.getView(position, convert, parent), true);
-            }
-
-            @Override
-            public View getDropDownView(int position, View convert, android.view.ViewGroup parent) {
-                return styled(super.getDropDownView(position, convert, parent), false);
-            }
-
-            private View styled(View v, boolean shown) {
-                if (v instanceof TextView) {
-                    TextView t = (TextView) v;
-                    t.setTypeface(shown ? look.textStrong() : look.text());
-                    t.setTextColor(look.p.text);
-                    t.setTextSize(Look.TEXT_LABEL);
-                }
-                return v;
-            }
-        };
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        return adapter;
-    }
-
     /** The entry a pick-one value shows: the first one if the value points past the list (a user kit gone). */
     private static int choiceIndex(Param p, float v) {
         int i = Math.round(v);
@@ -2378,7 +2442,7 @@ public class MainActivity extends Activity {
     private void refreshRows() {
         for (Row r : rows) {
             View shown = r.slider != null ? r.slider : r.switchView != null ? r.switchView
-                    : r.spinner != null ? r.spinner : r.tile != null ? r.tile : r.segment[0];
+                    : r.tile != null ? r.tile : r.segment[0];
             if (shown != null && !shown.isShown()) {
                 continue;   // folded away: refreshed when its section opens (saves work while worlds fade)
             }
@@ -2393,13 +2457,6 @@ public class MainActivity extends Activity {
                 r.tile.setText(r.param.choices[choiceIndex(r.param, v)]);
             } else if (r.segment != null) {
                 showSegment(r, choiceIndex(r.param, v));
-            } else if (r.spinner != null) {
-                if (r.choicesShown != r.param.choices) {   // (a user kit came or went)
-                    r.choicesShown = r.param.choices;
-                    r.spinner.setAdapter(choiceAdapter(r.param.choices));
-                    updateKitStatus();
-                }
-                r.spinner.setSelection(choiceIndex(r.param, v), false);
             } else {
                 r.slider.setProgress(Math.round(r.param.toNorm(v) * 1000f));
                 r.label.setText(valueText(r.param, v));
@@ -2755,10 +2812,14 @@ public class MainActivity extends Activity {
     private void addLevelSlider(LinearLayout parent, int labelRes, float initial,
                                 java.util.function.Consumer<Float> onChange) {
         TextView label = new TextView(this);
-        label.setPadding(0, dp(8), 0, 0);
+        look.label(label);
+        label.setPadding(dp(4), dp(14), 0, 0);
         label.setText(getString(labelRes, Math.round(initial * 100)));
         SeekBar bar = new SeekBar(this);
         bar.setMax(100);
+        look.slider(bar);
+        bar.setMinimumHeight(dp(40));
+        bar.setContentDescription(getString(labelRes, Math.round(initial * 100)));
         bar.setProgress(Math.round(initial * 100));
         bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -2789,30 +2850,38 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** The scene picker: the built-in effects, then every imported scene; press and hold one to delete it. */
     private void showScenes() {
         List<SceneLibrary.Scene> scenes = SceneLibrary.list(SceneSettings.scenesDir(this));
         String[] labels = new String[scenes.size() + 1];
         labels[0] = getString(R.string.scene_built_in);
+        SceneLibrary.Scene current = SceneSettings.current(this);
+        int chosen = 0;
         for (int i = 0; i < scenes.size(); i++) {
             SceneLibrary.Scene sc = scenes.get(i);
             labels[i + 1] = sc.author.isEmpty() ? sc.name
                     : getString(R.string.scene_by_author, sc.name, sc.author);
-        }
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(scenes.isEmpty() ? getString(R.string.scenes_none) : getString(R.string.scenes_title))
-                .setItems(labels, (d, which) -> selectScene(
-                        which == 0 ? SceneSettings.BUILT_IN : scenes.get(which - 1).dirName))
-                .setNegativeButton(R.string.close, null)
-                .create();
-        dialog.show();
-        dialog.getListView().setOnItemLongClickListener((parent, view, pos, id) -> {
-            if (pos == 0) {
-                return false;
+            if (current != null && sc.dirName.equals(current.dirName)) {
+                chosen = i + 1;
             }
-            confirmDeleteScene(scenes.get(pos - 1));
-            dialog.dismiss();
-            return true;
+        }
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.addView(sheetHeading(getString(R.string.scenes_title),
+                getString(scenes.isEmpty() ? R.string.scenes_none : R.string.scenes_delete_hint)));
+        addListRows(content, labels, chosen, null, i -> {
+            closeSheet();
+            selectScene(i == 0 ? SceneSettings.BUILT_IN : scenes.get(i - 1).dirName);
         });
+        for (int i = 1; i <= scenes.size(); i++) {   // row 0 is the heading, row 1 the built-in effects
+            SceneLibrary.Scene sc = scenes.get(i - 1);
+            content.getChildAt(i + 1).setOnLongClickListener(v -> {
+                closeSheet();
+                confirmDeleteScene(sc);
+                return true;
+            });
+        }
+        openSheet(content);
     }
 
     private void selectScene(String dirName) {
