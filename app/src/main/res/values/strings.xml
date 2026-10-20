@@ -11,6 +11,12 @@
     <string name="holding_world">Let go</string>
     <string name="snapshot">Save sound</string>
     <string name="now_line">Now: %1$s \u00b7 %2$s</string>
+    <string name="kits_heading">Kit</string>
+    <string name="kits_mix_heading">Mix and match</string>
+    <string name="kits_mix_hint">Take a part\'s sound from another kit.</string>
+    <string name="kits_layers_heading">Layers</string>
+    <string name="kits_layers_hint">Add a second kit on top of a part, then blend the two.</string>
+    <string name="music_more_heading">How it plays</string>
     <string name="mini_realm">%s Realm</string>
     <string name="now_line_held">%s (held)</string>
     <string name="why_night">night</string>

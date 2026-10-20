@@ -20,6 +20,7 @@ There are two ways to use it:
 - **Auto Realms is now Realm Hopper**, and the Realm change sound is now the **Warp sound** (Setup, Behavior). They work the same as before.
 - **Realms keep your kits:** a Realm no longer switches the Kit, a part's "from", its layer or its blend back to Classic. It can still change the music's levels and the Mix.
 - **The player names the Realm:** while a Realm plays, the player's line says so ("Flux Realm · Intensity 50") instead of "Built-in effects".
+- **The kit settings are easier to find:** in the Music card they now sit under their own headings: **Kit**, **Mix and match** (a part's sound from another kit) and **Layers** (each part's second kit and its blend together in a box; the blend is faded while the layer is None). The settings after them are under **How it plays**.
 
 **New in rc4 (Oct 17-19):**
 

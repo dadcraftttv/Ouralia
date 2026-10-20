@@ -941,6 +941,10 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - **XY pad** (Oct 19): on a card; `ScenePad.drawXyPad` (only with no scene: a scene's pad keeps its look) draws a
   quarter grid, the point it holds (`Modulation.padPoint`, what the Pad X / Pad Y movers follow) as an accent dot
   with a halo and guide lines, "PAD X" / "PAD Y" in the corners, and an accent ring under a held finger.
+- Kit headings (Oct 20, DadCraft: the kit and layer menus "almost kind of run together"): the Music card has small
+  accent headings with a line above (`addSubheading`): Kit, Mix and match, Layers, How it plays (from Melody rhythm on).
+  Each layer and its blend share an outlined panel (`addLayerPanel`); the blend is at 40% while the layer is None
+  (`updateLayerBlends`, from refreshRows). Phone only (the desktop's Music tab is unchanged).
 - Player line and Realm names (Oct 20, DadCraft): the docked player's line said Built-in effects while a Realm played; it
   now says "Flux Realm · Intensity 50" (`mini_realm`, "(held)" when held; refreshed by the Worlds listener). Realm is
   a proper noun on screen: Hold Realm. Auto Realms renamed **Realm Hopper** and the cue **Warp sound** (DadCraft's names,

@@ -68,6 +68,7 @@ public class MainActivity extends Activity {
     /** The bar pinned to the bottom: what is playing and why, Start/Stop, hold the world, save this sound. */
     private TextView nowLine;
     private final Map<String, TextView> budgetLines = new HashMap<>();   // budget name -> its "used / left" line
+    private final Map<String, View> layerBlends = new HashMap<>();   // layer id -> its blend row (faded while None)
     private Button holdButton;
     private Button snapButton;
     private final android.os.Handler uiHandler = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -1286,6 +1287,21 @@ public class MainActivity extends Activity {
                 } else if (p.id.equals("music_scale")) {
                     continue;
                 }
+                if (p.id.equals(Kits.ID)) {   // the kit settings as three labelled groups (DadCraft: they ran together)
+                    addSubheading(body, R.string.kits_heading, 0);
+                } else if (p.id.equals("kitp_mel")) {
+                    addSubheading(body, R.string.kits_mix_heading, R.string.kits_mix_hint);
+                } else if (p.id.startsWith("kitl_")) {
+                    if (p.id.equals("kitl_mel")) {
+                        addSubheading(body, R.string.kits_layers_heading, R.string.kits_layers_hint);
+                    }
+                    addLayerPanel(body, p, Params.byId("kitb_" + p.id.substring(5)));
+                    continue;
+                } else if (p.id.startsWith("kitb_")) {
+                    continue;   // (inside its layer's panel)
+                } else if (p.id.equals("mel_rhythm")) {
+                    addSubheading(body, R.string.music_more_heading, 0);
+                }
                 addRow(body, p);
                 if (Params.byId(Params.moverId(p.id, "mv")) != null) {
                     addMoverRows(body, section.id, p);
@@ -1301,6 +1317,55 @@ public class MainActivity extends Activity {
             }
         }
         updateBudgetLines();
+    }
+
+    /** A small accent heading inside a card, with a line above it and an optional hint under it. */
+    private void addSubheading(LinearLayout parent, int title, int hint) {
+        View rule = new View(this);
+        rule.setBackgroundColor(look.p.line);
+        LinearLayout.LayoutParams ruleParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(1));
+        ruleParams.setMargins(0, dp(24), 0, dp(14));
+        parent.addView(rule, ruleParams);
+        TextView head = new TextView(this);
+        head.setText(getString(title).toUpperCase(java.util.Locale.ROOT));
+        head.setTypeface(look.textStrong());
+        head.setTextSize(Look.TEXT_HINT);
+        head.setLetterSpacing(0.1f);
+        head.setTextColor(look.p.primaryText);
+        head.setAccessibilityHeading(true);
+        parent.addView(head);
+        if (hint != 0) {
+            TextView line = new TextView(this);
+            line.setText(hint);
+            look.hint(line);
+            line.setPadding(0, dp(2), 0, 0);
+            parent.addView(line);
+        }
+    }
+
+    /** A part's layer and its blend in one outlined panel; the blend fades while the layer is None. */
+    private void addLayerPanel(LinearLayout parent, Param layer, Param blend) {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setBackground(look.outline(look.p.line, Look.RADIUS_TILE));
+        panel.setPadding(dp(12), 0, dp(12), dp(12));
+        addRow(panel, layer, false);
+        LinearLayout blendBox = new LinearLayout(this);
+        blendBox.setOrientation(LinearLayout.VERTICAL);
+        addRow(blendBox, blend, false);
+        panel.addView(blendBox);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(0, dp(12), 0, 0);
+        parent.addView(panel, lp);
+        layerBlends.put(layer.id, blendBox);
+    }
+
+    /** Each blend half-faded while its layer is None (it does nothing then). */
+    private void updateLayerBlends() {
+        for (Map.Entry<String, View> e : layerBlends.entrySet()) {
+            e.getValue().setAlpha(ParamStore.get(e.getKey()) >= 0.5f ? 1f : 0.4f);
+        }
     }
 
     /** A section's own on/off switch ("Echo enabled"...): shown on its card's header. Null if it has none. */
@@ -2727,6 +2792,7 @@ public class MainActivity extends Activity {
         }
         updateMoverUi();
         updateBudgetLines();
+        updateLayerBlends();
         updateIntensityRow();
         undoButton.setEnabled(ParamStore.canUndo());
     }
