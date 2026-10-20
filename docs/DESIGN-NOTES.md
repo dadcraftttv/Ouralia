@@ -945,6 +945,9 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   is a padlock toggle; tapping a switch row's words flips it. Each effect card's header carries its **Movers pill**
   (Movers on/off) and its **on/off switch** (`onSwitch`: the section's "... enabled" toggle), so both work folded;
   they no longer appear inside the card. Sections without them (Sing in key, Mix...) keep a plain header.
+- **Sound tab top** (Oct 20): Presets is one wide button (the list sheet) with Save, Export and Import as 48 dp icon
+  buttons (+, up, down); Randomize, Nudge and Undo are outlined chips with icons (Undo greys out with nothing to
+  undo).
 - **Dialogs** (Oct 19): every AlertDialog is built with `LookDialog` (rounded on the sheet colour, the fonts,
   buttons in the accent; text fields via `boxed()`); Presets is a list sheet (tap loads, press and hold one of
   yours to delete); the walkthrough takes the look through `Walkthrough.applyLook`.

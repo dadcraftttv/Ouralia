@@ -386,24 +386,31 @@ public class MainActivity extends Activity {
         scenes.addView(sceneLevels);
 
         // ---- Sound: presets and shortcuts, the XY pad, then the input and the effects ----
+        // Presets: one wide button (the list sheet), then Save, Export and Import as small icon buttons
         LinearLayout presetRow = newButtonRow(sound);
-        addButton(presetRow, R.string.presets, this::showPresets);
-        addButton(presetRow, R.string.save, this::showSave);
-        addButton(presetRow, R.string.export, this::startExport);
-        addButton(presetRow, R.string.import_preset, this::startImport);
+        Button presets = addButton(presetRow, R.string.presets, this::showPresets);
+        presets.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
+        presets.setTextColor(look.p.text);
+        presets.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        presets.setPadding(dp(16), 0, dp(40), 0);
+        iconButton(presetRow, R.drawable.ic_add, R.string.save, this::showSave);
+        iconButton(presetRow, R.drawable.ic_upload, R.string.export, this::startExport);
+        iconButton(presetRow, R.drawable.ic_download, R.string.import_preset, this::startImport);
 
+        // Randomize, Nudge, Undo: smaller outlined chips with icons
         LinearLayout randomRow = newButtonRow(sound);
-        addButton(randomRow, R.string.randomize, () -> {
+        randomRow.setPadding(0, dp(2), 0, dp(4));
+        chip(randomRow, R.drawable.ic_shuffle, R.string.randomize, () -> {
             ParamStore.randomize();
             refreshRows();
             uiHandler.removeCallbacks(morphFollow);
             uiHandler.post(morphFollow);   // the sliders follow the glide on screen
         });
-        addButton(randomRow, R.string.nudge, () -> {
+        chip(randomRow, R.drawable.ic_wave, R.string.nudge, () -> {
             ParamStore.nudge(ParamStore.get("nudge_amount"));
             refreshRows();
         });
-        undoButton = addButton(randomRow, R.string.undo, () -> {
+        undoButton = chip(randomRow, R.drawable.ic_undo, R.string.undo, () -> {
             ParamStore.undo();
             refreshRows();
         });
@@ -1060,6 +1067,48 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.MATCH_PARENT, 1f);   // (all as tall as the tallest)
         lp.setMargins(dp(3), dp(4), dp(3), dp(4));
+        row.addView(b, lp);
+        return b;
+    }
+
+    /** A square icon button (48 dp, on the card surface) at the end of a button row. */
+    private void iconButton(LinearLayout row, int icon, int description, Runnable action) {
+        ImageButton b = new ImageButton(this);
+        b.setImageResource(icon);
+        b.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.text));
+        b.setBackground(look.pressable(look.round(look.p.s1, 14), look.p.text, 14));
+        b.setContentDescription(getString(description));
+        b.setOnClickListener(v -> action.run());
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(48), dp(48));
+        lp.setMargins(dp(3), dp(4), dp(3), dp(4));
+        row.addView(b, lp);
+    }
+
+    /** A small outlined chip with an icon and a word (Randomize, Nudge, Undo); it greys out when disabled. */
+    private Button chip(LinearLayout row, int icon, int text, Runnable action) {
+        Button b = new Button(this);
+        b.setText(text);
+        b.setAllCaps(false);
+        b.setTypeface(look.textStrong());
+        b.setTextSize(13);
+        b.setTextColor(new android.content.res.ColorStateList(new int[][] {{-android.R.attr.state_enabled}, {}},
+                new int[] {Look.alpha(look.p.muted, 0.5f), look.p.text}));
+        b.setBackground(look.pressable(look.outline(look.p.line, 18), look.p.text, 18));
+        b.setStateListAnimator(null);
+        b.setMinWidth(0);
+        b.setMinimumWidth(0);
+        b.setMinHeight(dp(40));
+        b.setMinimumHeight(dp(40));
+        b.setPadding(dp(14), 0, dp(14), 0);
+        android.graphics.drawable.Drawable d = getDrawable(icon).mutate();
+        d.setBounds(0, 0, dp(16), dp(16));
+        d.setTintList(b.getTextColors());
+        b.setCompoundDrawablesRelative(d, null, null, null);
+        b.setCompoundDrawablePadding(dp(6));
+        b.setOnClickListener(v -> action.run());
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, dp(40));
+        lp.setMargins(dp(3), dp(4), dp(5), dp(4));
         row.addView(b, lp);
         return b;
     }
