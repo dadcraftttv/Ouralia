@@ -30,6 +30,7 @@ final class DialView extends View {
     private final Paint arc = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint number = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint caption = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint dots = new Paint(Paint.ANTI_ALIAS_FLAG);   // the large dial's dotted inner ring
     private final RectF ring = new RectF();
     private final String captionText;
     private float value;
@@ -59,6 +60,10 @@ final class DialView extends View {
         caption.setLetterSpacing(0.14f);
         caption.setColor(look.p.muted);
         caption.setTextAlign(Paint.Align.CENTER);
+        dots.setStyle(Paint.Style.STROKE);
+        dots.setStrokeWidth(look.dp(1.5f));
+        dots.setColor(look.p.line);
+        dots.setPathEffect(new android.graphics.DashPathEffect(new float[] {look.dp(2), look.dp(7)}, 0));
         setImportantForAccessibility(large ? IMPORTANT_FOR_ACCESSIBILITY_YES : IMPORTANT_FOR_ACCESSIBILITY_NO);
     }
 
@@ -96,6 +101,9 @@ final class DialView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
+        if (large) {   // a faint dotted ring inside, as on the mockup's dial
+            canvas.drawCircle(getWidth() / 2f, getHeight() / 2f, ring.width() / 2 * 0.84f, dots);
+        }
         canvas.drawArc(ring, START, SWEEP, false, track);
         if (active && value > 0.002f) {
             canvas.drawArc(ring, START, SWEEP * value, false, arc);

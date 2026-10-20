@@ -951,6 +951,11 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - **Sound tab top** (Oct 20): Presets is one wide button (the list sheet) with Save, Export and Import as 48 dp icon
   buttons (+, up, down); Randomize, Nudge and Undo are outlined chips with icons (Undo greys out with nothing to
   undo). The Scenes card likewise: Choose scene as one wide button, Import zip / Import folder as chips.
+- **Final mockup review** (Oct 20): the player sheet gained the mockup's dotted inner ring on the dial and the hint
+  "Slide around the ring to set Intensity" (hidden for a scene). Deliberate differences from the mockups: "PdScenes"
+  until the rename (the mockups say "ouralia"); no line under the title (the docked player shows the scene and
+  Intensity); the Music card's on/off switch sits on its header; the colour ring previews the Start button in its
+  middle rather than recolouring the whole app behind it while dragging; Both sits in the middle of button rows.
 - **Headphone warning** (Oct 20, DadCraft: "does not match the mockup"): a small red "No headphones" chip (crossed-out
   headphones icon) on the title row instead of a full-width banner; tapping it shows the full warning, which is
   also its screen-reader text. Hidden while headphones are connected, as before.

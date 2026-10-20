@@ -565,6 +565,7 @@ public class MainActivity extends Activity {
     }
 
     private DialView miniDial, playerDial;
+    private TextView dialHint;
     private ImageButton miniStart, miniSave;
     private TextView miniStatus, miniSub;
     // One bottom sheet, slid up over a dimmed screen, for whatever needs it: the player, the Key and Scale pickers.
@@ -709,6 +710,13 @@ public class MainActivity extends Activity {
         status.setGravity(Gravity.CENTER);
         status.setPadding(0, dp(6), 0, 0);
         playerContent.addView(status);
+        dialHint = new TextView(this);   // (hidden while a scene plays: a scene has no Intensity)
+        dialHint.setText(R.string.dial_hint);
+        look.hint(dialHint);
+        dialHint.setTextSize(12);
+        dialHint.setGravity(Gravity.CENTER);
+        dialHint.setPadding(0, dp(2), 0, 0);
+        playerContent.addView(dialHint);
         nowLine = new TextView(this);
         look.label(nowLine);
         nowLine.setTextSize(Look.TEXT_HINT + 1);
@@ -902,6 +910,7 @@ public class MainActivity extends Activity {
         float v = ParamStore.get(Intensity.ID);
         playerDial.setActive(scene == null);
         miniDial.setActive(scene == null);
+        dialHint.setVisibility(scene == null ? View.VISIBLE : View.GONE);
         playerDial.setValue(v);
         miniDial.setValue(v);
         String sub = scene != null ? scene.name : getString(R.string.scene_built_in);
