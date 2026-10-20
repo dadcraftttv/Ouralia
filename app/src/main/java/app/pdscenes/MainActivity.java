@@ -337,10 +337,16 @@ public class MainActivity extends Activity {
         sceneLabel.setTextColor(look.p.text);
         sceneLabel.setPadding(dp(2), 0, 0, dp(8));
         sceneCard.addView(sceneLabel);
+        // Choose scene: one wide button (the list sheet); importing: two chips under it
         LinearLayout sceneRow = newButtonRow(sceneCard);
-        addButton(sceneRow, R.string.choose_scene, this::showScenes);
-        addButton(sceneRow, R.string.import_scene, this::startImportScene);
-        addButton(sceneRow, R.string.import_scene_folder, this::startImportSceneFolder);
+        Button choose = addButton(sceneRow, R.string.choose_scene, this::showScenes);
+        choose.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
+        choose.setTextColor(look.p.text);
+        choose.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
+        choose.setPadding(dp(16), 0, dp(40), 0);
+        LinearLayout importRow = newButtonRow(sceneCard);
+        chip(importRow, R.drawable.ic_download, R.string.import_scene, this::startImportScene);
+        chip(importRow, R.drawable.ic_folder, R.string.import_scene_folder, this::startImportSceneFolder);
         scenePadSlot = new LinearLayout(this);
         scenePadSlot.setOrientation(LinearLayout.VERTICAL);
         scenes.addView(scenePadSlot);
