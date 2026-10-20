@@ -28,7 +28,7 @@
     <string name="why_room_middle">ordinary room (%d dB)</string>
     <string name="status_call">Paused during the phone call. It plays again when the call ends.</string>
     <string name="mic_permission_required">Microphone permission is required.</string>
-    <string name="no_headphones_warning">No headphones detected. Using the speaker will cause feedback. Plug in or connect headphones first.</string>
+    <string name="no_headphones_warning">No headphones connected. The app only ever plays through wired or Bluetooth headphones, never the phone speaker. Connect some, then press Start.</string>
     <string name="no_headphones_chip">No headphones</string>
 
     <!-- Sections and appearance -->
@@ -235,7 +235,7 @@
     <string name="show_licenses">Show licences</string>
     <string name="scene_volume">Volume: %d%%</string>
     <string name="scene_mic_volume">Mic volume: %d%%</string>
-    <string name="scene_headphones_hint">Use headphones: a speaker feeds back into the mic. If a scene screeches, lower the mic volume.</string>
+    <string name="scene_headphones_hint">If a scene screeches or howls, lower Mic volume.</string>
     <string name="scene_rjdj_timing">RjDj timing (22 kHz). Keeps scene delays and loops as their authors heard them; off uses the phone\'s own rate.</string>
     <string name="sensors_line">Sensors on this phone: %1$s</string>
     <string name="pad_hint">XY pad: switch on Movers in a section, set a slider\'s movement to Pad X or Pad Y, then drag here. The pad holds where you last touched.</string>
