@@ -461,7 +461,11 @@ public class MainActivity extends Activity {
         addDiagnosticsSection(setup);
         addAppearanceSection(setup);
         LinearLayout resetRow = newButtonRow(setup);
-        look.danger(addButton(resetRow, R.string.reset_all, this::confirmResetAll));
+        Button reset = addButton(resetRow, R.string.reset_all, this::confirmResetAll);
+        look.danger(reset);
+        // the same gap above and below it as between the cards
+        ((LinearLayout.LayoutParams) reset.getLayoutParams()).setMargins(dp(3), 0, dp(3), 0);
+        ((LinearLayout.LayoutParams) resetRow.getLayoutParams()).bottomMargin = dp(Look.CARD_GAP);
         addAboutSection(setup);
         look.fonts(root);
         showTab(UiSettings.tab(this));
@@ -2167,7 +2171,9 @@ public class MainActivity extends Activity {
             lock.setContentDescription(getString(R.string.lock) + ": " + p.label);
             lock.setChecked(ParamStore.isLocked(p.id));
             lock.setOnCheckedChangeListener((b, checked) -> ParamStore.setLocked(p.id, checked));
-            head.addView(lock, new LinearLayout.LayoutParams(dp(44), dp(44)));
+            LinearLayout.LayoutParams lockParams = new LinearLayout.LayoutParams(dp(44), dp(44));
+            lockParams.setMarginStart(dp(8));   // a little room between the value and its padlock
+            head.addView(lock, lockParams);
         }
         parent.addView(head);
 
