@@ -69,7 +69,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   samples, and MP3/OGG/FLAC import), kit layers, kit drums in "Your steps", wired + Bluetooth together, the Pocket
   Realm; his desktop "<Part> from" report (likely a kit with no part of its own, now labelled "(Classic's drums)").
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
-  https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). DadCraft, Oct 20: "looks and feels great".
+  https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
+  mockups (DadCraft: "looks and feels great"); only the Ouralia wordmark waits for the rename.
 - **GitHub:** DadCraft asked Support to purge the old commits that held his name. When they answer, check that
   `gh api repos/dadcraftttv/PdScenes/commits/c193786cad2b75e94f01912ec5b3c7b4a1dd26e0` no longer finds it.
 - Push only when DadCraft asks (`git log origin/main..HEAD` shows what is unpushed).
