@@ -33,6 +33,13 @@ final class Look {
         return hsl(hue, 80 * Math.max(0f, Math.min(1f, chroma)), 55);
     }
 
+    /**
+     * Stop-sign red for the one button that can't be undone (Reset everything): the same in every theme and with any
+     * accent, white text on it (DadCraft: "unmistakable, like a stop sign").
+     */
+    static final int DANGER = 0xFFC62828;
+    static final int ON_DANGER = 0xFFFFFFFF;
+
     /** The least contrast any text colour gets against what it sits on. */
     static final double MIN_TEXT_CONTRAST = 4.5;
 

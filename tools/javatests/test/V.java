@@ -19,6 +19,8 @@ public class V {
       +String.format("%.2f",worst)+" ("+worstAt+")");
     Look.Palette amo=Look.palette(Look.AMOLED,Look.DEFAULT_HUE,Look.DEFAULT_CHROMA);
     check(amo.bg==0xFF000000,"AMOLED stays true black");
+    check(Look.contrast(Look.ON_DANGER,Look.DANGER)>=Look.MIN_TEXT_CONTRAST,"Reset's white on stop-sign red reads ("
+      +String.format("%.2f",Look.contrast(Look.ON_DANGER,Look.DANGER))+":1)");
     float[] hc=Look.hueChroma(0xFF8B6CFF);
     check(Math.abs(hc[0]-Look.DEFAULT_HUE)<1.5f && hc[1]>0.95f,"Ouralia violet #8B6CFF is the default hue ("+hc[0]+")");
     check(Look.hsl(0,100,50)==0xFFFF0000 && Look.hsl(120,100,25)==0xFF008000,"hsl() gives the textbook colours");

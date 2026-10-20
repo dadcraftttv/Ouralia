@@ -917,8 +917,9 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   dial's number). Variable fonts: one file each, the weight chosen in `Styler`.
 - **`Styler.java`** puts the palette on plain Views: section cards (s1 surface, header row with a chevron),
   Material 3 switches (52x32 track; thumb a LayerDrawable, since an InsetDrawable's padding made the Switch shrink its
-  track), tinted sliders, pick-one menus on a rounded tile with a chevron, tonal pill buttons, Reset everything as a
-  red outline. `Styler.fonts()` gives every other text Inter and the palette's colours (run on each section when it
+  track), tinted sliders, pick-one menus on a rounded tile with a chevron, tonal pill buttons, Reset everything is solid
+  stop-sign red (`Look.DANGER` #C62828, white bold text, 5.6:1, the same in every theme; DadCraft Oct 20:
+  "unmistakable, like a stop sign"). `Styler.fonts()` gives every other text Inter and the palette's colours (run on each section when it
   first fills).
 - **The bottom** (DadCraft: in thumb reach while one-handed): the docked player (small dial, Start/Stop inside it,
   status on one line with warnings in the error colour, scene + Intensity, Save sound) above the pill tab bar. Tap

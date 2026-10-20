@@ -183,10 +183,11 @@ final class Styler {
         return pressable(layers, p.text, Look.RADIUS_TILE);
     }
 
-    /** A button for something that can't be undone (Reset everything): an outline in the error colour. */
+    /** A button for something that can't be undone (Reset everything): solid stop-sign red, white bold text. */
     void danger(Button b) {
-        b.setBackground(pressable(outline(p.err, Look.RADIUS_PILL), p.err, Look.RADIUS_PILL));
-        b.setTextColor(p.err);
+        b.setBackground(pressable(round(Look.DANGER, Look.RADIUS_PILL), Look.ON_DANGER, Look.RADIUS_PILL));
+        b.setTextColor(Look.ON_DANGER);
+        b.setTypeface(sora);
     }
 
     void check(CompoundButton c) {
