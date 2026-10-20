@@ -548,7 +548,7 @@ final class Params {
             new Param("nudge_amount", "Nudge strength", 0.005f, 0.3f, 0.04f, "", Param.Curve.LOG)
                     .inSection("behavior").noRandom().noPreset().noPd().decimals(3),
             // A soft two-note chime when a Realm starts (rising) or your own settings come back (falling).
-            new Param("cue_sound", "Realm change sound", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("cue_sound", "Warp sound", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("behavior").toggle().noPreset());
 
     /** Everything: the sound parameters plus the settings of each mover (app-side only). */

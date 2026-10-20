@@ -927,7 +927,7 @@ public class MainActivity extends Activity {
         }
         miniSub.setText(sub);
     }
-    /** The title of the Realm playing now (Auto Realms on, built-in effects running), or null. */
+    /** The title of the Realm playing now (Realm Hopper on, built-in effects running), or null. */
     private String playingRealm() {
         if (!AudioService.isRunning() || !Worlds.isEnabled()) {
             return null;

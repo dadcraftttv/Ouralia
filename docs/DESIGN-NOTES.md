@@ -943,7 +943,8 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   with a halo and guide lines, "PAD X" / "PAD Y" in the corners, and an accent ring under a held finger.
 - Player line and Realm names (Oct 20, DadCraft): the docked player's line said Built-in effects while a Realm played; it
   now says "Flux Realm · Intensity 50" (`mini_realm`, "(held)" when held; refreshed by the Worlds listener). Realm is
-  a proper noun on screen: Auto Realms, Hold Realm (built-in preset names "Flux realm" unchanged: stored choices use them).
+  a proper noun on screen: Hold Realm. Auto Realms renamed **Realm Hopper** and the cue **Warp sound** (DadCraft's names,
+  Oct 20; ids unchanged: worlds_auto, cue_sound) (built-in preset names "Flux realm" unchanged: stored choices use them).
 - **Realms, Scenes, Setup** (Oct 19): each Realm is a block (name, when it plays, its preset on a tile opening a
   list sheet, "What it changes" folding open to switches); the audio Input/Output pickers are tiles with list
   sheets; the Scenes tab's scene and buttons sit on a card, the scene picker is a list sheet (press and hold to

@@ -483,12 +483,12 @@ final class DesktopWindow {
             body.add(note("Realms change the sound by themselves when the room changes: Tranquil when it's "
                     + "quiet, Flux when it's loud and lively, Ghost after midnight. Each plays a preset; your own settings "
                     + "come back when none fits. (Walking, a pocket and shaking need the phone.)"), full(body));
-            JCheckBox on = new JCheckBox("Auto Realms");
+            JCheckBox on = new JCheckBox("Realm Hopper");
             on.setSelected(Worlds.isEnabled());
             on.addActionListener(e -> {
                 if (on.isSelected() && JOptionPane.showConfirmDialog(frame, "Realms set the sliders from their own "
                         + "presets while they play (\"What it changes\" on the phone keeps a part). Your own settings "
-                        + "come back when no Realm fits.", "Let Realms change your sound?", JOptionPane.OK_CANCEL_OPTION)
+                        + "come back when no Realm fits.", "Let Realm Hopper change your sound?", JOptionPane.OK_CANCEL_OPTION)
                         != JOptionPane.OK_OPTION) {
                     on.setSelected(false);
                     return;

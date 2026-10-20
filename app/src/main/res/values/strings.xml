@@ -46,8 +46,8 @@
     <string name="key_sheet_hint">The music\'s home note</string>
     <string name="scale_sheet_hint">Dots: the notes each scale uses, from %s up</string>
     <string name="player_open">Show the player: Intensity, Hold Realm, Save sound</string>
-    <string name="realms_warn_title">Let Realms change your sound?</string>
-    <string name="realms_warn_text">While a Realm plays, it sets your sliders from its own preset: effects, music, rhythm and the Mix. Your own settings come back when it ends or when you switch Auto Realms off.\n\nTo keep part of your sound, open a Realm\'s \"What it changes\" below and switch that part off.</string>
+    <string name="realms_warn_title">Let Realm Hopper change your sound?</string>
+    <string name="realms_warn_text">While a Realm plays, it sets your sliders from its own preset: effects, music, rhythm and the Mix. Your own settings come back when it ends or when you switch Realm Hopper off.\n\nTo keep part of your sound, open a Realm\'s \"What it changes\" below and switch that part off.</string>
     <string name="realms_warn_ok">Turn on Realms</string>
     <string name="section_kits">Your kits (sounds for the music)</string>
     <string name="kit_import">Import kit</string>
@@ -174,10 +174,10 @@
     <string name="tab_scenes">Scenes</string>
     <string name="tab_setup">Setup</string>
     <string name="tab_paused_scene">Paused while a scene is playing. To use these again, choose Built-in effects in the Scenes tab.</string>
-    <string name="worlds_auto">Auto Realms: change the sound to fit what is happening around you</string>
+    <string name="worlds_auto">Realm Hopper: hop between Realms to fit what is happening around you</string>
     <string name="worlds_now">Right now: %s</string>
     <string name="worlds_yours">your own settings</string>
-    <string name="worlds_off_status">Auto Realms are off.</string>
+    <string name="worlds_off_status">Realm Hopper is off.</string>
     <string name="world_row">%1$s (%2$s)</string>
     <string name="world_off">Off (not used)</string>
     <string name="worlds_note">Each Realm fades the sliders to the preset you pick when its situation lasts a few seconds. When none applies, your own settings fade back. Locked sliders stay put, and so does any group a realm is set not to change. Only for the built-in effects, not scenes.</string>
@@ -210,7 +210,7 @@
     <string name="walk_mic_no">The microphone isn\'t allowed yet.</string>
     <string name="walk_mic_allow">Allow microphone</string>
     <string name="walk_t3">It starts quiet</string>
-    <string name="walk_b3">When you press Start you\'ll hear only the world around you through your headphones, with nothing added. Everything is switched off.\n\nThat\'s on purpose: turn one thing on, listen to what it does, then try the next. A few places to begin:\n\n• Sound tab: Echo level, then the effects below it.\n• Music tab: Rhythm (Beat level) and Music (switch it on).\n• Realms tab: Auto Realms, which change the sound by themselves to fit where you are.\n\nClap, knock, talk, hum a note, walk around, and hear how each one answers.</string>
+    <string name="walk_b3">When you press Start you\'ll hear only the world around you through your headphones, with nothing added. Everything is switched off.\n\nThat\'s on purpose: turn one thing on, listen to what it does, then try the next. A few places to begin:\n\n• Sound tab: Echo level, then the effects below it.\n• Music tab: Rhythm (Beat level) and Music (switch it on).\n• Realms tab: Realm Hopper, which change the sound by themselves to fit where you are.\n\nClap, knock, talk, hum a note, walk around, and hear how each one answers.</string>
     <string name="walk_t4">The card at the bottom</string>
     <string name="walk_b4">The card at the bottom stays in reach of your thumb on every tab:\n\n• The tabs: Sound (effects and your microphone), Music (rhythm and music), Realms, Scenes (other sound worlds to load) and Setup (devices, looks, about).\n• What\'s happening now, and why.\n• Intensity: calmer to the left, busier to the right, your own settings in the middle.\n• Start / Stop and Save sound (keeps what you hear as a preset).</string>
     <string name="walk_t5">Ready</string>

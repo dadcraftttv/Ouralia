@@ -15,6 +15,12 @@ There are two ways to use it:
 
 ## What's new
 
+**New in rc5 (Oct 20):**
+
+- **Auto Realms is now Realm Hopper**, and the Realm change sound is now the **Warp sound** (Setup, Behavior). They work the same as before.
+- **Realms keep your kits:** a Realm no longer switches the Kit, a part's "from", its layer or its blend back to Classic. It can still change the music's levels and the Mix.
+- **The player names the Realm:** while a Realm plays, the player's line says so ("Flux Realm · Intensity 50") instead of "Built-in effects".
+
 **New in rc4 (Oct 17-19):**
 
 - **Kits** (Music): choose what the music sounds like. Nine built-in kits: Classic (the sound so far), Acoustic,
@@ -103,7 +109,7 @@ You need an Android phone or tablet with **Android 9 or newer**, and headphones 
 1. **Put on headphones first.** If the sound comes out of the phone speaker, the microphone hears it and it screeches back (feedback). The app only plays into headphones or earbuds, never the phone speaker, so it will not start until some are connected. If you unplug them while it runs, it stops by itself. Wired or Bluetooth both work; wired is better (see Audio devices below).
 2. Install the APK. If you already have an earlier copy, just install over it; your saved presets and settings stay. Only if Android refuses with "App not installed" do you need to uninstall the old copy first (see "Starting fresh with Reset" for what that erases). Android may ask you to allow installs from the app you opened it from, and Play Protect may show an "unknown developer" warning. Choose **More details > Install anyway**.
 3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone (you can see them again under Setup, About). Then press **Start**, the round button in the player at the bottom of the screen.
-4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on the Music tab, Auto Realms on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
+4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on the Music tab, Realm Hopper on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
 5. Press **Stop** when finished.
 
 Start with the volume low. Some settings can get loud.
@@ -119,7 +125,7 @@ The full player shows:
 
 - **The Intensity dial:** slide your finger around the ring. You feel a light tick every 5 steps.
 - **The status line**, including the audio rate your phone is using. Under it a **Now:** line shows the Realm playing and why (see The Realms tab), and while the Rhythm plays, the tempo ("walking 112 BPM") and the found-sound kit ("kit K2 S1 H3 · 24 caught": how many kicks, snares and hats it holds, and how many sounds it has caught in all).
-- **Save sound** and **Hold Realm** (appears when Auto Realms is on).
+- **Save sound** and **Hold Realm** (appears when Realm Hopper is on).
 
 What **Intensity** does: one dial for how much is going on. In the middle (50) everything plays exactly as you set it. Slide left for calmer: fewer glitches and chimes, less echo and reverb, quieter and simpler drums, lighter effects. Slide right for busier: more of all of those and busier drum patterns. It only turns up what is already on (an effect you set to 0 stays off), it never changes your sliders, and presets and Realms leave it alone. The same setting is a slider at the top of Input & output, where you can also give it a mover (for example Shake = higher). While a scene plays the ring stays empty: scenes have no Intensity.
 
@@ -131,7 +137,7 @@ Inside a tab, settings are grouped in cards. Tap a card's heading to open or fol
 | --- | --- |
 | Sound | Presets and shortcuts, the XY pad, Input & output, and all the effects |
 | Music | Rhythm and Music |
-| Realms | Auto Realms: the sound changing by itself to fit where you are |
+| Realms | Realm Hopper: the sound changing by itself to fit where you are |
 | Scenes | Choosing and importing scenes, the scene's touch pad, its volume sliders |
 | Setup | Audio devices, diagnostics, appearance, behavior, Reset everything, About |
 
@@ -481,7 +487,7 @@ Tip: a gentle Smooth wave or Random drift on a few sliders makes the sound feel 
 
 ## The Realms tab
 
-Switch on **Auto Realms** and the app listens to the room and to how you are moving, then changes the sound for you. Because a Realm sets your sliders from its own preset (effects, music, rhythm and the Mix), the app asks first; your own settings come back when the Realm ends or you switch Auto Realms off. To keep part of your sound, switch that part off under the Realm's "What it changes". Your kit choices are always yours: a Realm never changes the Kit, a part's "from", its layer or its blend (it can still change the music's levels and the Mix). (Realms were called Auto worlds before; they work the same.) They only work with the built-in effects, not with scenes.
+Switch on **Realm Hopper** and the app listens to the room and to how you are moving, then changes the sound for you. Because a Realm sets your sliders from its own preset (effects, music, rhythm and the Mix), the app asks first; your own settings come back when the Realm ends or you switch Realm Hopper off. To keep part of your sound, switch that part off under the Realm's "What it changes". Your kit choices are always yours: a Realm never changes the Kit, a part's "from", its layer or its blend (it can still change the music's levels and the Mix). (Realms were called Auto worlds before; they work the same.) They only work with the built-in effects, not with scenes.
 
 | Realm | When it plays | What it sounds like |
 | --- | --- | --- |
@@ -491,7 +497,7 @@ Switch on **Auto Realms** and the app listens to the room and to how you are mov
 | Ghost | Midnight to 5 AM | Eerie backwards echoes and a deep, hollow room. Sudden sounds hang in the air, smeared out slowly or played backwards, and come back as rising reverse-reverb swells |
 | Pocket | The phone is in a pocket or face down (covered and dark for about a second) and no other Realm fits | Quiet and muffled, with a soft room. Your drums and the music (if it is on) carry the sound. |
 
-A Realm only starts after the situation has lasted a few seconds, so a single clap won't flip it. The sliders then glide to the new sound over about three seconds. When nothing special is going on, your own settings glide back. Stopping the app also gives them back right away. A soft, dreamy "warp" plays when a Realm starts (gliding up), when your own settings come back (gliding down), and when one Realm hands over to another (swerving sideways, from one ear to the other); you can switch it off with **Realm change sound** on the Setup tab.
+A Realm only starts after the situation has lasted a few seconds, so a single clap won't flip it. The sliders then glide to the new sound over about three seconds. When nothing special is going on, your own settings glide back. Stopping the app also gives them back right away. A soft, dreamy "warp" plays when a Realm starts (gliding up), when your own settings come back (gliding down), and when one Realm hands over to another (swerving sideways, from one ear to the other); you can switch it off with **Warp sound** on the Setup tab.
 
 There is also an **Unstable** Realm, switched off unless you pick a preset for it in the list: shake the phone hard while standing still and everything piles on at once (glitches, crushed and ring-modulated sound, a pitch shift), getting wilder the harder you shake. It comes in almost instantly and lets go about 5 seconds after you stop.
 
@@ -537,7 +543,7 @@ On the Setup tab is a **Reset everything to defaults** button. It asks you to co
 
 If you ever uninstall the app, everything in it is erased, including your saved presets. To keep your favorites, use Presets > Export on each one first and Import them again afterward.
 
-A preset file holds the effect sliders, their movers, the Music and Rhythm levels, Chime character, and the Dry level. It does not hold: Input gain, noise gate and compressor (and their shape); Pocket hush, Mic-down protection and Handling hush; Intensity; Smoothing and Nudge strength; whether Music is switched on, its key and scale, Pad register, the home-chord drift and "Light, pocket and stairs move the notes" switches, Calm builds, and the Synth / Found sounds choices; the Rhythm's tempo settings and "Beat follows" and "Beat plays"; the Realm change sound; locks; the Realm choices; your audio device choices; imported scenes and kits; or the appearance look. Set those again by hand after reinstalling.
+A preset file holds the effect sliders, their movers, the Music and Rhythm levels, Chime character, and the Dry level. It does not hold: Input gain, noise gate and compressor (and their shape); Pocket hush, Mic-down protection and Handling hush; Intensity; Smoothing and Nudge strength; whether Music is switched on, its key and scale, Pad register, the home-chord drift and "Light, pocket and stairs move the notes" switches, Calm builds, and the Synth / Found sounds choices; the Rhythm's tempo settings and "Beat follows" and "Beat plays"; the Warp sound; locks; the Realm choices; your audio device choices; imported scenes and kits; or the appearance look. Set those again by hand after reinstalling.
 
 ## The Setup tab
 
@@ -546,7 +552,7 @@ A preset file holds the effect sliders, their movers, the Music and Rhythm level
 - **About and licenses** shows the open-source licenses and where to send feedback, and can show the welcome pages again. **Send feedback** writes an email to Dad for you: your phone model, Android and app versions are filled in, and if you leave the box ticked, the app's recent event log is added (no sound and nothing you said: just times, the room's loudness as numbers, and what the app did). You can read and change everything before sending. The app is free software and includes parts of the original RjDj project.
 
 - **Diagnostics** (tap to open) shows, while the sound runs: the mic Android is really using (handy with Input on Automatic), whether a Bluetooth mic is in thin call mode, the headphones being played to, the mic level after Input gain (with the noise gate's setting next to it, so you can see whether the room is above or below it), and overloads in the last minute. **Mic overloads** mean the sound was too loud or too close for the mic itself, which sounds harsh; Input gain can't fix that, because the overload happens before it. **Output limiter squashing hard** means the mix is too hot: if it sounds harsh, lower Input gain or some effect levels. It also counts **handling noises skipped**: taps and grips on the phone that weren't caught as found sounds. One loud clap may count once; that's fine. When the mic keeps overloading, the status line at the bottom says "Mic overloading" on every tab until it stops. Please mention these numbers when you report a harsh or distorted sound.
-- **Behavior:** **Smoothing** sets how smoothly the sound glides when you change a slider (low gives instant, snappy changes, high gives slow slides). **Nudge strength** sets how far the Nudge button moves things. **Realm change sound** switches the warp sound off or on.
+- **Behavior:** **Smoothing** sets how smoothly the sound glides when you change a slider (low gives instant, snappy changes, high gives slow slides). **Nudge strength** sets how far the Nudge button moves things. **Warp sound** switches the warp sound off or on.
 - **Reset everything to defaults** (see "Starting fresh with Reset").
 
 **Earbud and headset mics are much quieter than the phone's.** They are made for your voice right next to them, not for hearing a room, so a USB-C, wired or Bluetooth headset mic can sound silent at first. If you pick one as Input, open **Input & output**, raise **Input gain** (around 8 worked for USB-C earbuds, against 1 to 2.5 for the phone mic) and lower **Noise gate threshold**, all the way to -80 if needed (-80 switches the gate off). When you go back to the phone's mic, turn them back, or it will be loud and hissy. The app keeps one set of these settings for every mic, because Android gives many headsets the same generic name and the app can't tell them apart.
