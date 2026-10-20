@@ -914,12 +914,33 @@ public class MainActivity extends Activity {
         playerDial.setValue(v);
         miniDial.setValue(v);
         String sub = scene != null ? scene.name : getString(R.string.scene_built_in);
+        String realm = playingRealm();
+        if (scene == null && realm != null) {   // DadCraft: the bar showed Built-in effects while a Realm played
+            sub = getString(R.string.mini_realm, realm);
+            if (Worlds.isHeld()) {
+                sub = getString(R.string.now_line_held, sub);
+            }
+        }
         if (scene == null) {
             sub += " · " + getString(R.string.intensity_card_value, Math.round(v * 100))
                     + (Modulation.isMoving(Intensity.ID) ? MOVER_DOT : "");
         }
         miniSub.setText(sub);
     }
+    /** The title of the Realm playing now (Auto Realms on, built-in effects running), or null. */
+    private String playingRealm() {
+        if (!AudioService.isRunning() || !Worlds.isEnabled()) {
+            return null;
+        }
+        String id = Worlds.currentWorld();
+        for (Worlds.World w : Worlds.ALL) {
+            if (w.id.equals(id)) {
+                return w.title;
+            }
+        }
+        return null;
+    }
+
     /** The accent: the palette's (Ouralia violet until Appearance offers a choice). */
     private int accentColor() {
         return look.p.primary;
@@ -1059,6 +1080,7 @@ public class MainActivity extends Activity {
         Worlds.load(this);
         Worlds.setListener(() -> {
             updateWorldStatus();
+            updateIntensityRow();   // the player's line names the Realm
             refreshRows();   // sliders move on their own while a world fades in
         });
         refreshWorldRows();

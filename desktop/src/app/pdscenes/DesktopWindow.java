@@ -483,7 +483,7 @@ final class DesktopWindow {
             body.add(note("Realms change the sound by themselves when the room changes: Tranquil when it's "
                     + "quiet, Flux when it's loud and lively, Ghost after midnight. Each plays a preset; your own settings "
                     + "come back when none fits. (Walking, a pocket and shaking need the phone.)"), full(body));
-            JCheckBox on = new JCheckBox("Auto realms");
+            JCheckBox on = new JCheckBox("Auto Realms");
             on.setSelected(Worlds.isEnabled());
             on.addActionListener(e -> {
                 if (on.isSelected() && JOptionPane.showConfirmDialog(frame, "Realms set the sliders from their own "
@@ -953,7 +953,7 @@ final class DesktopWindow {
         quiet = false;
         String world = Worlds.currentWorld();
         String realm = !Worlds.isEnabled() ? "your own settings" : world == null ? "your own settings (no Realm fits)"
-                : title(world) + " realm" + (Worlds.isHeld() ? " (held)" : "");
+                : title(world) + " Realm" + (Worlds.isHeld() ? " (held)" : "");
         float bpm = DesktopApp.tempo();
         float mic = Modulation.micLevelDb();
         now.setText("Now: " + realm + " · " + (Worlds.isEnabled() ? Worlds.hearing()

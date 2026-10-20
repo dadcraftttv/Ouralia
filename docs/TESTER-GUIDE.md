@@ -103,7 +103,7 @@ You need an Android phone or tablet with **Android 9 or newer**, and headphones 
 1. **Put on headphones first.** If the sound comes out of the phone speaker, the microphone hears it and it screeches back (feedback). The app only plays into headphones or earbuds, never the phone speaker, so it will not start until some are connected. If you unplug them while it runs, it stops by itself. Wired or Bluetooth both work; wired is better (see Audio devices below).
 2. Install the APK. If you already have an earlier copy, just install over it; your saved presets and settings stay. Only if Android refuses with "App not installed" do you need to uninstall the old copy first (see "Starting fresh with Reset" for what that erases). Android may ask you to allow installs from the app you opened it from, and Play Protect may show an "unknown developer" warning. Choose **More details > Install anyway**.
 3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone (you can see them again under Setup, About). Then press **Start**, the round button in the player at the bottom of the screen.
-4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on the Music tab, Auto realms on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
+4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on the Music tab, Auto Realms on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
 5. Press **Stop** when finished.
 
 Start with the volume low. Some settings can get loud.
@@ -113,13 +113,13 @@ Start with the volume low. Some settings can get loud.
 The screen has five tabs. Two things stay at the bottom on every tab, in reach of your thumb when you walk:
 
 - **The tab bar:** icons for **Sound**, **Music**, **Realms**, **Scenes** and **Setup**. The tab you are on widens and shows its name. Each tab keeps its own place when you scroll, and the app opens on the tab you used last.
-- **The player**, just above it: the round **Start / Stop** button inside a small ring that shows Intensity, a line saying what is happening (warnings show in red), and **Save sound** (the bookmark button: keeps the sound you are hearing as a preset in one tap). **Tap the middle of the player** to open it full size. Close it by dragging it down, tapping outside it, or Back.
+- **The player**, just above it: the round **Start / Stop** button inside a small ring that shows Intensity, a line saying what is happening (the Realm playing, if one is, and Intensity; warnings show in red), and **Save sound** (the bookmark button: keeps the sound you are hearing as a preset in one tap). **Tap the middle of the player** to open it full size. Close it by dragging it down, tapping outside it, or Back.
 
 The full player shows:
 
 - **The Intensity dial:** slide your finger around the ring. You feel a light tick every 5 steps.
 - **The status line**, including the audio rate your phone is using. Under it a **Now:** line shows the Realm playing and why (see The Realms tab), and while the Rhythm plays, the tempo ("walking 112 BPM") and the found-sound kit ("kit K2 S1 H3 · 24 caught": how many kicks, snares and hats it holds, and how many sounds it has caught in all).
-- **Save sound** and **Hold realm** (appears when Auto realms is on).
+- **Save sound** and **Hold Realm** (appears when Auto Realms is on).
 
 What **Intensity** does: one dial for how much is going on. In the middle (50) everything plays exactly as you set it. Slide left for calmer: fewer glitches and chimes, less echo and reverb, quieter and simpler drums, lighter effects. Slide right for busier: more of all of those and busier drum patterns. It only turns up what is already on (an effect you set to 0 stays off), it never changes your sliders, and presets and Realms leave it alone. The same setting is a slider at the top of Input & output, where you can also give it a mover (for example Shake = higher). While a scene plays the ring stays empty: scenes have no Intensity.
 
@@ -131,7 +131,7 @@ Inside a tab, settings are grouped in cards. Tap a card's heading to open or fol
 | --- | --- |
 | Sound | Presets and shortcuts, the XY pad, Input & output, and all the effects |
 | Music | Rhythm and Music |
-| Realms | Auto realms: the sound changing by itself to fit where you are |
+| Realms | Auto Realms: the sound changing by itself to fit where you are |
 | Scenes | Choosing and importing scenes, the scene's touch pad, its volume sliders |
 | Setup | Audio devices, diagnostics, appearance, behavior, Reset everything, About |
 
@@ -481,7 +481,7 @@ Tip: a gentle Smooth wave or Random drift on a few sliders makes the sound feel 
 
 ## The Realms tab
 
-Switch on **Auto realms** and the app listens to the room and to how you are moving, then changes the sound for you. Because a Realm sets your sliders from its own preset (effects, music, rhythm and the Mix), the app asks first; your own settings come back when the Realm ends or you switch Auto realms off. To keep part of your sound, switch that part off under the Realm's "What it changes". Your kit choices are always yours: a Realm never changes the Kit, a part's "from", its layer or its blend (it can still change the music's levels and the Mix). (Realms were called Auto worlds before; they work the same.) They only work with the built-in effects, not with scenes.
+Switch on **Auto Realms** and the app listens to the room and to how you are moving, then changes the sound for you. Because a Realm sets your sliders from its own preset (effects, music, rhythm and the Mix), the app asks first; your own settings come back when the Realm ends or you switch Auto Realms off. To keep part of your sound, switch that part off under the Realm's "What it changes". Your kit choices are always yours: a Realm never changes the Kit, a part's "from", its layer or its blend (it can still change the music's levels and the Mix). (Realms were called Auto worlds before; they work the same.) They only work with the built-in effects, not with scenes.
 
 | Realm | When it plays | What it sounds like |
 | --- | --- | --- |
@@ -497,7 +497,7 @@ There is also an **Unstable** Realm, switched off unless you pick a preset for i
 
 Being in a pocket doesn't stop the other Realms. In your pocket, walking still gives Kinetic, a loud and lively place still gives Flux, a quiet one Tranquil, and late night Ghost. Pocket only plays when none of them fits. Whatever Realm is playing, the pocket's own protection rides on top: Pocket hush and Mic-down protection (under Input & output).
 
-The **Now:** line in the full player names the Realm and why it was chosen, for example "Now: Kinetic · walking · ordinary room (-45 dB)": night, walking, a pocket, and how the room sounds (quiet, ordinary, loud but steady, or loud and lively). Tap **Hold realm** to keep the current Realm, for example through doorways and shops where light and noise keep changing. Tap **Let go** to release it. Stopping the sound also lets go.
+The **Now:** line in the full player names the Realm and why it was chosen, for example "Now: Kinetic · walking · ordinary room (-45 dB)": night, walking, a pocket, and how the room sounds (quiet, ordinary, loud but steady, or loud and lively). Tap **Hold Realm** to keep the current Realm, for example through doorways and shops where light and noise keep changing. Tap **Let go** to release it. Stopping the sound also lets go.
 
 **Choosing what each Realm plays.** Each Realm has a menu where you pick which preset it plays (the built-in ones are called "Tranquil realm", "Kinetic realm" and so on, and any preset you saved can be used), or turn that Realm off. Sliders you've **locked** are never changed by a Realm.
 
