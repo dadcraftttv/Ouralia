@@ -221,6 +221,18 @@ and microphone declarations, icon, store listing, numbered pd-core release.
       (b) the first built-in kits one style at a time (each one DadCraft's ears pass before the next), (c) mix and match
       per part, (d) user kits and the format page, (e) retire stems.
 
+20. **More kit parts (DadCraft, Oct 20: "lets plan on doing at least one and two, maybe three"; keep all four).**
+    Today a kit has four parts (mel, bass, pad, drums). A kit only picks instruments for notes the band already
+    writes, so a new part needs the band to write something for it too. Each costs only while it plays.
+    1. **More drum hits** (planned): clap, tom, shaker, crash, rim beside kick, snare and hat, with the beat writing
+       patterns for them. Recorded drums play as recorded, so each house sound gets its own role in the beat.
+    2. **A "moments" part** (planned): one-shot sounds at moments, not on notes: a Realm change, the start of a phrase,
+       a sudden sound in the room, now and then while standing still. The best home for sounds with no note (a door
+       chime, a squeak).
+    3. **Kits for the parts the band already plays** (maybe): Harmony (the note answering a hum) and the Room notes'
+       found bells. The easiest: their notes already exist.
+    4. **A second melody** (later): an arpeggio or counter-melody around the main one; needs new music-writing rules.
+
 ## Compatibility and scene findings (PdParty, rjlib PDF, composer pack)
 
 - **Real scenes for testing.** `danomatika/PdParty` ships RjDj scenes in `res/patches/samples/rjdj/` (ApolloVoice, Atsuke, Boomerang,
