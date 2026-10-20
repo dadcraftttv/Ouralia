@@ -889,6 +889,17 @@ to date in the same commit when behaviour changes.
   **Pd lessons from it:** a value stored with `[f]`'s right inlet never reaches anyone: send the message to every
   consumer's cold inlet. `[pipe]` with several arguments splits a list into outlets (use `[list split]` + `[del]` + `[list]`).
   A second voice in the same switch~ group was silently lost (never explained); voices in their own groups work.
+- **Scatter style** (`echo_scatter_style`, Oct 20, DadCraft: "grabbing each echo ... and throwing those sounds
+  around"; Classic default, New = `dcs_scatter~`, noPreset like the other style switches): the same place-per-echo-period
+  pick as Classic, then (1) direction: the far ear 0.65 ms x |place| later (linear read of a 256-sample ring), at
+  1 - 0.75 |place| (never silent, so the delay is heard) and low-passed for the head's shadow (20 kHz x 0.2^|place|);
+  (2) `echo_throw`: within the window the place glides from p to p(1 - 2 throw); (3) `echo_depth`: a distance per
+  repeat, uniform 0..depth: gain 1 - 0.6 d, both ears darker (x 0.1^d), and wet x d sent to the reverb's input
+  (third outlet into `rev_src1`). The ear filters are two one-poles (12 dB/oct; one pole was only 7% darker on
+  noise). All moves glide 15 ms. The Classic gains fade out as New fades in (20 ms); off, the object writes zeros.
+  Measured (test_patch "Scatter style New"): lag -19..27 samples on the far side, Throw 0.79 gliding steps vs 0.20,
+  depth 1 halves the level and the share above 4 kHz 0.78 -> 0.62; cost +6% of the near-empty patch
+  (0.01 s per 20 s of audio). Throw and Near and far default 0.5, in presets, faded on the phone while Classic.
 - **Switchable DSP:** make_patch.py groups reverb, pitch, chorus, flanger, phaser, reverse echo, Room notes and music
   into `[switch~]` subpatches (`Patch.group` + `add_switch`), on while their level > 0, off 3x smoothing + tail after.
   Room notes fade in 200 ms on switch-on. Phone: music on ~39% of a core on the audio thread, music off ~18%.
@@ -944,7 +955,7 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - Kit headings (Oct 20, DadCraft: the kit and layer menus "almost kind of run together"): the Music card has small
   accent headings with a line above (`addSubheading`): Kit, Mix and match, Layers, How it plays (from Melody rhythm on).
   Each layer and its blend share an outlined panel (`addLayerPanel`); the blend is at 40% while the layer is None
-  (`updateLayerBlends`, from refreshRows). Phone only (the desktop's Music tab is unchanged). Same headings in Mix
+  (`updateFadedRows`, from refreshRows). Phone only (the desktop's Music tab is unchanged). Same headings in Mix
   (Drums, Pad and bass, Melody, Answers: ring, bells, Harmony), Glitch (cloud, kinds, Freeze) and Input & output
   (Microphone, Pocket and handling, Output): `SUBHEADINGS` (param id -> heading, hint) in MainActivity; no line above
   a card's first heading. The XY pad is a foldable section (`xy_pad`, open by default; DadCraft: hide it if unused).

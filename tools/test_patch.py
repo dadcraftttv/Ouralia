@@ -2449,6 +2449,55 @@ moves = sum(abs(b - a) > 0.3 for a, b in zip(b1, b1[1:]))
 check(moves >= 5 and max(abs(v) for v in b0) < 0.02,
       "echo scatter: repeats jump between places (%s), at 0 they stay centred (max %.3f)" % (["%.2f" % v for v in b1], max(abs(v) for v in b0)))
 
+# Scatter style New (dcs_scatter~): direction (the far ear later and quieter), throw (a repeat flies across while it
+# plays), near and far (quieter, darker)
+def scatter_clicks(**over):
+    x = np.zeros(5 * SR, np.float32); x[SR:SR + 40] = 0.5
+    e = fresh(**dict(dict(dry=0, wet=1, feedback=0.8, echo_time=300, echo_sync=0, echo_scatter=1, reverb_mix=0,
+                          echo_scatter_style=1, echo_throw=0, echo_depth=0), **over))
+    y = e.run(x); out = []
+    for k in range(1, 12):
+        a = int((1.0 + 0.3 * k) * SR); w = y[a - int(0.02 * SR):a + int(0.06 * SR)]
+        l, r = w[:, 0].astype(float), w[:, 1].astype(float)
+        bal = (rms(l) - rms(r)) / max(rms(l) + rms(r), 1e-9)
+        lags = range(-40, 41)
+        cc = [float(np.dot(l[40:-40], np.roll(r, g)[40:-40])) for g in lags]
+        out.append((bal, lags[int(np.argmax(cc))]))
+    return out
+sc = scatter_clicks()
+placed = [(b, g) for b, g in sc if abs(b) > 0.1]
+# (louder on the left = the right ear later: r rolled forward by the lag lines up with l, so the lag is negative)
+later = sum((g < -3) if b > 0 else (g > 3) for b, g in placed)
+lags = [g for _, g in sc]
+check(len(placed) >= 4 and later >= len(placed) - 1 and max(lags) - min(lags) >= 30,
+      "scatter New: each repeat from a direction: the far ear quieter and later (balance, lag in samples: %s)"
+      % ["%.2f %d" % v for v in sc])
+sc0 = scatter_clicks(echo_scatter=0)
+check(max(abs(b) for b, _ in sc0) < 0.02 and all(g == 0 for _, g in sc0),
+      "scatter New at amount 0: centred, no ear delay (%s)" % ["%.2f %d" % v for v in sc0])
+def throw_moves(throw):
+    rng = np.random.default_rng(3)
+    x = (rng.standard_normal(6 * SR) * 0.1).astype(np.float32)
+    e = fresh(dry=0, wet=1, feedback=0, echo_time=400, echo_sync=0, echo_scatter=1, reverb_mix=0,
+              echo_scatter_style=1, echo_throw=throw, echo_depth=0)
+    y = e.run(x)[2 * SR:6 * SR]; c = int(0.02 * SR); bal = []
+    for t in range(0, len(y) - c, c):
+        l, r = rms(y[t:t + c, 0]), rms(y[t:t + c, 1]); bal.append((l - r) / max(l + r, 1e-9))
+    return sum(0.02 < abs(b - a) < 0.25 for a, b in zip(bal, bal[1:])) / len(bal)
+t0, t1 = throw_moves(0), throw_moves(1)
+check(t1 > 0.5 and t1 > 2.5 * t0, "scatter New: Throw makes each repeat glide across (gliding steps %.2f at Throw 1, %.2f at 0)" % (t1, t0))
+def depth_sound(depth):
+    rng = np.random.default_rng(4)
+    x = (rng.standard_normal(6 * SR) * 0.1).astype(np.float32)
+    e = fresh(dry=0, wet=1, feedback=0, echo_time=300, echo_sync=0, echo_scatter=0, reverb_mix=0,
+              echo_scatter_style=1, echo_throw=0, echo_depth=depth)
+    y = e.run(x)[2 * SR:6 * SR, 0].astype(float)
+    sp = np.abs(np.fft.rfft(y)) ** 2; f = np.fft.rfftfreq(len(y), 1 / SR)
+    return rms(y), float(sp[f > 4000].sum() / sp.sum())
+(l0, c0_), (l1, c1_) = depth_sound(0), depth_sound(1)
+check(l1 < 0.7 * l0 and c1_ < 0.85 * c0_, "scatter New: Near and far makes repeats quieter and darker on average (level %.4f -> %.4f, "
+      "share above 4 kHz %.2f -> %.2f)" % (l0, l1, c0_, c1_))
+
 # CPU: what the glitch cloud costs while it runs, and that at Amount 0 it costs nothing
 import time
 def cost(**over):
@@ -2460,6 +2509,10 @@ check(c_on < c_off * 1.35, "glitch cloud: cost while on +%.0f%% of the whole pat
       % (100 * (c_on / c_off - 1), c_off, c_on))
 check(c_new < c_off * 1.35, "glitch voice New: cost while on +%.0f%% of the whole patch (Classic +%.0f%%)"
       % (100 * (c_new / c_off - 1), 100 * (c_on / c_off - 1)))
+runs = [(cost(wet=0.5), cost(wet=0.5, echo_scatter_style=1)) for _ in range(3)]
+s_cl, s_new = (min(r[k] for r in runs) for k in range(2))
+check(s_new < s_cl * 1.12, "scatter New: cost +%.1f%% of the whole patch over Classic (%.2f s, %.2f s for 20 s of audio)"
+      % (100 * (s_new / s_cl - 1), s_cl, s_new))
 
 # room notes: resonators make the mic's own sound ring the current chord
 def claps(n, gap, amp, quiet=0.0005, seed=1):

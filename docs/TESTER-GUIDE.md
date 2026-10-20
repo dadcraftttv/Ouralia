@@ -22,6 +22,7 @@ There are two ways to use it:
 - **The player names the Realm:** while a Realm plays, the player's line says so ("Flux Realm · Intensity 50") instead of "Built-in effects".
 - **The kit settings are easier to find:** in the Music card they now sit under their own headings: **Kit**, **Mix and match** (a part's sound from another kit) and **Layers** (each part's second kit and its blend together in a box; the blend is faded while the layer is None). The settings after them are under **How it plays**.
 - **More cards are grouped:** **Mix** (Drums, Pad and bass, Melody, Answers), **Glitch** (Glitch cloud, Kinds of glitch, Freeze) and **Input & output** (Microphone, Pocket and handling, Output).
+- **New echo scatter** (Echo, Scatter style: New): each repeat comes from a real direction, can fly across while it plays (Throw) and can sound near or far (Near and far). Classic stays the default.
 - **The XY pad folds** like the other cards: tap its heading to hide it if you don't use it.
 
 **New in rc4 (Oct 17-19):**
@@ -191,6 +192,9 @@ Repeats what you said, like shouting in a canyon.
 - **Echo time:** how long before the repeat comes back. Short is a metallic ring, long is a distinct repeat.
 - **Echo follows your steps:** while you walk, the repeats lock to your step rhythm: 1 step, Half a step (the default) or a Quarter step. About 2.5 seconds after you stop, Echo time takes over again. Choose Off to always use Echo time.
 - **Echo scatter:** each repeat lands somewhere else between your ears, so a clap's echoes bounce around you. 0 keeps the echo in the middle. It starts at 0.5.
+- **Scatter style \***: **Classic** places each repeat by making it louder in one ear. **New** gives each repeat a real direction (the far ear hears it a split second later and a little darker, the way your head hears a sound from the side), and adds two sliders that only work with New (faded while Classic is chosen):
+  - **Throw:** each repeat flies across while it plays, from where it lands towards the other side. 0 = it stays put, 1 = all the way across.
+  - **Near and far:** some repeats sound farther away (quieter, darker, and with more reverb if Reverb is up). 0 = all close.
 - **Echo feedback:** how many times it repeats. Too high and it never dies away.
 - **Echo level:** how loud the repeats are. It starts at 0 on a new install (no echo); raise it to hear the echo.
 
@@ -587,7 +591,7 @@ Thank you for trying this. Anything you notice is useful, even "it felt weird." 
 - **Found pad:** after you hum a steady note, does the pad sound like your voice holding the chord?
 - **Rhythm:** does the beat stay steady while you walk and follow a change of pace? With Tempo set to Set, does it settle on your tempo, and does walking pull it the right amount? Do the occasional sparse bars and the drifting swing feel musical? With Melody rhythm on, do the walking notes and chimes feel like they have a rhythm, and do long and short notes sound right? With Melody phrases on, can you hear the line repeat and come back? With Breakbeat up, do the chops, rolls and fills feel like a breakbeat, and is the top of the slider too much or not enough? Does the beat still land on your steps as you walk?
 - **Realms:** do they change at the right moments? Do the "What it changes" switches leave the groups you switch off alone? Is the warp sound pleasant, and noticeable without being annoying?
-- **Glitch:** with Glitch cloud amount up, do sudden sounds come back in a fun way, and do they feel like they are all around you? Which glitch matrix mix did you like best? Do the echoes bouncing around (Echo scatter) feel good or dizzying?
+- **Glitch:** with Glitch cloud amount up, do sudden sounds come back in a fun way, and do they feel like they are all around you? Which glitch matrix mix did you like best? Do the echoes bouncing around (Echo scatter) feel good or dizzying? With Scatter style New, do the repeats sound like they come from places around you? Which Throw and Near and far settings do you like?
 - **Headphones and mic:** did the app refuse to start, stop when you unplugged, or pick the wrong mic? Did it go quiet during a call and come back after, and did it dip when another app played music?
 - **Kits:** which kits do you like, and for which parts? Do any parts sound too loud or too quiet next to the
   others? If you make a kit of your own, did the format make sense, and did your recordings play?

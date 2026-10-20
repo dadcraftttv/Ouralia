@@ -327,6 +327,16 @@ final class Params {
                     .inSection("echo").rand(0f, 0.8f),
             new Param("echo_scatter", "Echo scatter (each repeat lands somewhere else)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("echo").rand(0f, 1f).resetWhenAbsent(),
+            // Scatter style (Oct 20, DadCraft: "throwing those sounds around"): New = dcs_scatter~: each repeat comes
+            // from a direction (the far ear hears it later and darker), flies across while it plays (Throw) and sits
+            // near or far (Near and far: quieter, darker, more reverb). Classic = by level only, as before.
+            new Param("echo_scatter_style", "Scatter style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Classic (louder in one ear)", "New (direction, throw, near and far)")
+                    .inSection("echo").noRandom().noPreset().resetWhenAbsent().dcs(),
+            new Param("echo_throw", "Throw (each repeat flies across, New scatter)", 0f, 1f, 0.5f, "",
+                    Param.Curve.LINEAR).inSection("echo").rand(0f, 1f).resetWhenAbsent().dcs(),
+            new Param("echo_depth", "Near and far (some repeats farther away, New scatter)", 0f, 1f, 0.5f, "",
+                    Param.Curve.LINEAR).inSection("echo").rand(0f, 1f).resetWhenAbsent().dcs(),
 
             // ---- Sing in key (Oct 18) ---- dcs_shift~ moves each sung note to the nearest note of the Music key
             // and scale (the music needn't be playing). On, the voice runs 30 ms late. Older presets turn it off.

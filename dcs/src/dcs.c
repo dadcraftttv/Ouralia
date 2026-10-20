@@ -25,6 +25,7 @@ void dcs_filter_tilde_setup(void);
 void dcs_echo_tilde_setup(void);
 void dcs_freeze_tilde_setup(void);
 void dcs_space_tilde_setup(void);
+void dcs_scatter_tilde_setup(void);
 void dcs_chorus_tilde_setup(void);
 void dcs_flanger_tilde_setup(void);
 void dcs_phaser_tilde_setup(void);
@@ -95,6 +96,7 @@ void dcs_setup(void)
     dcs_echo_tilde_setup();
     dcs_freeze_tilde_setup();
     dcs_space_tilde_setup();
+    dcs_scatter_tilde_setup();
     dcs_chorus_tilde_setup();
     dcs_flanger_tilde_setup();
     dcs_phaser_tilde_setup();

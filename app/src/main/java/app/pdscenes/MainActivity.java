@@ -68,7 +68,7 @@ public class MainActivity extends Activity {
     /** The bar pinned to the bottom: what is playing and why, Start/Stop, hold the world, save this sound. */
     private TextView nowLine;
     private final Map<String, TextView> budgetLines = new HashMap<>();   // budget name -> its "used / left" line
-    private final Map<String, View> layerBlends = new HashMap<>();   // layer id -> its blend row (faded while None)
+    private final Map<View, String> fadedUnless = new HashMap<>();   // a row -> the setting it needs on (faded while off)
     private Button holdButton;
     private Button snapButton;
     private final android.os.Handler uiHandler = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -1292,6 +1292,13 @@ public class MainActivity extends Activity {
                     continue;
                 } else if (p.id.startsWith("kitb_")) {
                     continue;   // (inside its layer's panel)
+                } else if (p.id.equals("echo_throw") || p.id.equals("echo_depth")) {
+                    LinearLayout box = new LinearLayout(this);   // (only the New scatter style uses them)
+                    box.setOrientation(LinearLayout.VERTICAL);
+                    addRow(box, p);
+                    body.addView(box);
+                    fadedUnless.put(box, "echo_scatter_style");
+                    continue;
                 }
                 addRow(body, p);
                 if (Params.byId(Params.moverId(p.id, "mv")) != null) {
@@ -1377,13 +1384,13 @@ public class MainActivity extends Activity {
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         lp.setMargins(0, dp(12), 0, 0);
         parent.addView(panel, lp);
-        layerBlends.put(layer.id, blendBox);
+        fadedUnless.put(blendBox, layer.id);
     }
 
-    /** Each blend half-faded while its layer is None (it does nothing then). */
-    private void updateLayerBlends() {
-        for (Map.Entry<String, View> e : layerBlends.entrySet()) {
-            e.getValue().setAlpha(ParamStore.get(e.getKey()) >= 0.5f ? 1f : 0.4f);
+    /** Rows that do nothing while another setting is off or None (a layer's blend, the New scatter's sliders) fade. */
+    private void updateFadedRows() {
+        for (Map.Entry<View, String> e : fadedUnless.entrySet()) {
+            e.getKey().setAlpha(ParamStore.get(e.getValue()) >= 0.5f ? 1f : 0.4f);
         }
     }
 
@@ -2811,7 +2818,7 @@ public class MainActivity extends Activity {
         }
         updateMoverUi();
         updateBudgetLines();
-        updateLayerBlends();
+        updateFadedRows();
         updateIntensityRow();
         undoButton.setEnabled(ParamStore.canUndo());
     }

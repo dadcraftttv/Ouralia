@@ -42,7 +42,7 @@ DEFAULTS = [
     ("beat_on", 1), ("beat_level", 0), ("beat_hats", 0.5), ("beat_snare", 0.6), ("beat_pitch", 55),
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
-    ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
+    ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
     ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
@@ -4601,9 +4601,25 @@ def build():
     for k, side in enumerate(("l", "r")):
         P.obj(f"es_pk_{side}", "pack f 15", 1040 + 80 * k, 340); P.obj(f"es_g_{side}", "line~", 1040 + 80 * k, 370)
         P.c("es_gains", f"es_pk_{side}", k, 0); P.c(f"es_pk_{side}", f"es_g_{side}")
-        P.sig2(f"wet_{side}", "*~", "wet_sig", f"es_g_{side}", 700 + 80 * k, 400)
+        P.sig2(f"wet_{side}0", "*~", "wet_sig", f"es_g_{side}", 700 + 80 * k, 400)
     P.obj("es_init", "loadbang", 1200, 340); P.msg("es_one", "1", 1200, 360)
     P.c("es_init", "es_one"); P.c("es_one", "es_g_l"); P.c("es_one", "es_g_r")
+    # Scatter style (`echo_scatter_style`, Oct 20): Classic (0) = the places above, by level only; New (1) =
+    # dcs_scatter~: each repeat from a direction (ear delay, the head's shadow), thrown across while it plays, and
+    # near or far (quieter, darker, more reverb). The Classic gains fade out as New fades in (20 ms).
+    P.obj("es_r_style", "r echo_scatter_style", 1300, 160)
+    ex("es_cl_v", "1-($f1>=0.5)", 1300, 190)
+    P.obj("es_cl_pk", "pack f 20", 1300, 220); P.obj("es_cl", "line~", 1300, 250)
+    P.c("es_r_style", "es_cl_v"); P.c("es_cl_v", "es_cl_pk"); P.c("es_cl_pk", "es_cl")
+    P.obj("es_cl_lb", "loadbang", 1400, 190); P.msg("es_cl_one", "1", 1400, 220)
+    P.c("es_cl_lb", "es_cl_one"); P.c("es_cl_one", "es_cl")
+    fx(P, "es_new", "dcs_scatter~", "wet_sig", ("echo_scatter", "amount"), ("echo_throw", "throw"),
+       ("echo_depth", "depth"), ("echo_scatter_style", "on"), x=1300, y=440, smooth=None)
+    P.c("ln_echo_time", "es_new", 0, 1)
+    for k, side in enumerate(("l", "r")):
+        P.sig2(f"wet_{side}1", "*~", f"wet_{side}0", "es_cl", 700 + 80 * k, 430)
+        P.sig2(f"wet_{side}", "+~", f"wet_{side}1", "es_new", 700 + 80 * k, 460)
+        P.conns[-1] = ("es_new", k, f"wet_{side}", 1)
 
     # --- dry level and output ---
     P.obj("dry_sig", "*~ 1", 250, 380); P.c("voice", "dry_sig")     # (already at the Dry level, see the music join)
@@ -4629,7 +4645,9 @@ def build():
     P.obj("gcx_mono_h", "*~ 0.5", 1700, 530)
     P.c("gcx_mono", "gcx_mono_h")
     P.sig2("rev_src0", "+~", "mix_out", "gcx_mono_h", 1600, 525)       # the glitch cloud echoes in the reverb too
-    P.sig2("rev_src", "+~", "rev_src0", "wet_sig", 1600, 530)            # and the echo, as before
+    P.sig2("rev_src1", "+~", "wet_sig", "es_new", 1600, 515)            # (a far repeat sends more: New scatter)
+    P.conns[-1] = ("es_new", 2, "rev_src1", 1)
+    P.sig2("rev_src", "+~", "rev_src0", "rev_src1", 1600, 530)            # and the echo, as before
     P.sig2("rev_in", "*~", "rev_src", "ln_rin", 1600, 540)
 
     rmix = smoothed(P, "reverb_mix", "reverb_mix", 2000, 400)
