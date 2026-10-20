@@ -194,6 +194,39 @@ final class Styler {
                 new int[] {p.primary, p.muted}));
     }
 
+    /** A lock toggle shown as a padlock: closed and in the accent when locked, open and quiet when not. */
+    void lock(CompoundButton c, Drawable closed, Drawable open) {
+        android.graphics.drawable.StateListDrawable icon = new android.graphics.drawable.StateListDrawable();
+        icon.addState(new int[] {android.R.attr.state_checked}, closed);
+        icon.addState(new int[] {}, open);
+        c.setButtonDrawable(icon);
+        c.setButtonTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}},
+                new int[] {p.primary, p.muted}));
+        c.setText("");
+        c.setGravity(android.view.Gravity.CENTER);
+        c.setPadding(dp(10), 0, 0, 0);
+        c.setBackground(pressable(null, p.text, 22));
+    }
+
+    /** A small on/off pill (a card header's Movers): filled when on, an outline when off. */
+    void pill(android.widget.ToggleButton b) {
+        android.graphics.drawable.StateListDrawable bg = new android.graphics.drawable.StateListDrawable();
+        bg.addState(new int[] {android.R.attr.state_checked}, round(p.container, 10));
+        bg.addState(new int[] {}, outline(p.line, 10));
+        b.setBackground(pressable(bg, p.text, 10));
+        b.setTextColor(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}},
+                new int[] {p.onContainer, p.muted}));
+        b.setTypeface(interSemi);
+        b.setTextSize(12);
+        b.setAllCaps(false);
+        b.setStateListAnimator(null);
+        b.setMinWidth(0);
+        b.setMinimumWidth(0);
+        b.setMinHeight(dp(32));
+        b.setMinimumHeight(dp(32));
+        b.setPadding(dp(12), 0, dp(12), 0);
+    }
+
     void slider(SeekBar s) {
         s.setProgressTintList(ColorStateList.valueOf(p.primary));
         s.setProgressBackgroundTintList(ColorStateList.valueOf(p.s2));

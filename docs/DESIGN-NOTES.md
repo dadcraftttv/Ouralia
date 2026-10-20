@@ -939,6 +939,12 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   list sheet, "What it changes" folding open to switches); the audio Input/Output pickers are tiles with list
   sheets; the Scenes tab's scene and buttons sit on a card, the scene picker is a list sheet (press and hold to
   delete), RjDj timing is a switch. No Spinner is left in the app. A sheet opens scrolled to its chosen row.
+- **Rows and card headers** (Oct 20, the mockup's remaining details): a setting's bracketed explanation moves to a
+  quieter line under its name (`splitLabel`: "Calm builds" / "standing still, the music slowly grows"; " *" stays
+  on the name); a slider shows its value on the right in the accent mono font (`valueText` is the value only), Lock
+  is a padlock toggle; tapping a switch row's words flips it. Each effect card's header carries its **Movers pill**
+  (Movers on/off) and its **on/off switch** (`onSwitch`: the section's "... enabled" toggle), so both work folded;
+  they no longer appear inside the card. Sections without them (Sing in key, Mix...) keep a plain header.
 - **Dialogs** (Oct 19): every AlertDialog is built with `LookDialog` (rounded on the sheet colour, the fonts,
   buttons in the accent; text fields via `boxed()`); Presets is a list sheet (tap loads, press and hold one of
   yours to delete); the walkthrough takes the look through `Walkthrough.applyLook`.

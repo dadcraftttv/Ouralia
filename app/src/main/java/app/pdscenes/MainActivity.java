@@ -144,13 +144,13 @@ public class MainActivity extends Activity {
         final Param param;
         final TextView label;     // slider rows only
         final SeekBar slider;     // slider rows only
-        final Switch switchView;  // toggle rows only
+        final android.widget.CompoundButton switchView;  // toggle rows (a switch, or a card header's Movers pill)
         String[] choicesShown;    // the names last shown (the Kit lists change when user kits come and go)
         TextView tile;            // pick-one rows shown as a tile that opens a sheet: its value
         TextView[] segment;       // pick-one rows shown as side-by-side buttons
         TextView segmentHint;     // ...and the chosen one's explanation under them
 
-        Row(Param param, TextView label, SeekBar slider, Switch switchView) {
+        Row(Param param, TextView label, SeekBar slider, android.widget.CompoundButton switchView) {
             this.param = param;
             this.label = label;
             this.slider = slider;
@@ -425,7 +425,7 @@ public class MainActivity extends Activity {
             LinearLayout tab = "beat".equals(section.id) || "music".equals(section.id) || "mix".equals(section.id) ? music
                     : "behavior".equals(section.id) ? setup : sound;
             addSection(tab, section.id, section.title, section.openByDefault,
-                    body -> fillEffectSection(body, section));
+                    body -> fillEffectSection(body, section), headerExtras(section));
         }
 
         addSection(music, "kits", getString(R.string.section_kits), false, this::fillKitsSection);
@@ -1076,19 +1076,42 @@ public class MainActivity extends Activity {
      */
     private LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
                                     java.util.function.Consumer<LinearLayout> fill) {
-        // Each section is a card: its header a full-width tappable row with a chevron, the rows inside.
+        return addSection(parent, id, title, openByDefault, fill, new ArrayList<>());
+    }
+
+    /**
+     * A foldable section card: a full-width tappable header (title, {@code extras} such as the Movers pill and the
+     * section's on/off switch, a chevron), the rows inside. {@code fill} (may be null) builds the rows the first time
+     * the section opens, so folded sections cost nothing at startup.
+     */
+    private LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
+                                    java.util.function.Consumer<LinearLayout> fill, List<View> extras) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
         look.card(card);
+        LinearLayout headRow = new LinearLayout(this);
+        headRow.setOrientation(LinearLayout.HORIZONTAL);
+        headRow.setGravity(Gravity.CENTER_VERTICAL);
+        headRow.setMinimumHeight(dp(56));
+        headRow.setPadding(dp(Look.CARD_PAD), dp(6), dp(14), dp(6));
+        headRow.setBackground(look.pressable(null, look.p.text, 0));
         TextView header = new TextView(this);
         header.setTextSize(Look.TEXT_HEADING);
         header.setTypeface(look.heading());
         header.setTextColor(look.p.text);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-        header.setMinHeight(dp(56));
-        header.setPadding(dp(Look.CARD_PAD), dp(12), dp(16), dp(12));
-        header.setBackground(look.pressable(null, look.p.text, 0));
-        header.setCompoundDrawablePadding(dp(8));
+        headRow.addView(header, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        for (View extra : extras) {
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            lp.setMarginStart(dp(8));
+            headRow.addView(extra, lp);
+        }
+        ImageView chevron = new ImageView(this);
+        chevron.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.muted));
+        LinearLayout.LayoutParams chevronParams = new LinearLayout.LayoutParams(dp(22), dp(22));
+        chevronParams.setMarginStart(dp(10));
+        headRow.addView(chevron, chevronParams);
+        sectionChevrons.put(header, chevron);
 
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
@@ -1108,7 +1131,7 @@ public class MainActivity extends Activity {
         if (open) {
             show.run();
         }
-        header.setOnClickListener(v -> {
+        headRow.setOnClickListener(v -> {
             boolean nowOpen = body.getVisibility() != View.VISIBLE;
             UiSettings.setExpanded(this, id, nowOpen);
             showSectionState(header, body, title, nowOpen);
@@ -1118,7 +1141,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        card.addView(header);
+        card.addView(headRow);
         card.addView(body);
         LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -1130,11 +1153,9 @@ public class MainActivity extends Activity {
     /** One effect section: its Movers switch, then each slider followed by its movement settings. */
     private void fillEffectSection(LinearLayout body, Params.Section section) {
         Param moversSwitch = Params.byId(Params.moversSwitchId(section.id));
-        if (moversSwitch != null) {
-            addRow(body, moversSwitch);
-        }
+        Param onSwitch = onSwitch(section);   // (both sit on the card's header)
         for (Param p : Params.ALL) {
-            if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch) {
+            if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch && p != onSwitch) {
                 if (p.id.equals("music_key")) {   // Key and Scale: two tiles side by side, each opening a sheet
                     addKeyScaleTiles(body);
                     continue;
@@ -1156,6 +1177,53 @@ public class MainActivity extends Activity {
             }
         }
         updateBudgetLines();
+    }
+
+    /** A section's own on/off switch ("Echo enabled"...): shown on its card's header. Null if it has none. */
+    private static Param onSwitch(Params.Section section) {
+        for (Param p : Params.ALL) {
+            if (p.section.equals(section.id) && p.toggle && p.moverOf == null && p.label.endsWith(" enabled")) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * What a section's header carries: the Movers pill (automatic movement for this section, on or off) and the
+     * section's on/off switch, so both work with the card folded.
+     */
+    private List<View> headerExtras(Params.Section section) {
+        List<View> extras = new ArrayList<>();
+        Param movers = Params.byId(Params.moversSwitchId(section.id));
+        if (movers != null) {
+            android.widget.ToggleButton pill = new android.widget.ToggleButton(this);
+            pill.setTextOn(getString(R.string.movers_on));
+            pill.setTextOff(getString(R.string.movers_off));
+            look.pill(pill);
+            pill.setContentDescription(movers.label);
+            pill.setChecked(ParamStore.get(movers.id) >= 0.5f);
+            pill.setOnClickListener(v -> {
+                ParamStore.set(movers.id, pill.isChecked() ? 1f : 0f);
+                updateMoverUi();   // greys the section's mover controls in or out
+            });
+            extras.add(pill);
+            rows.add(new Row(movers, null, null, pill));
+        }
+        Param on = onSwitch(section);
+        if (on != null) {
+            Switch sw = new Switch(this);
+            look.switchTint(sw);
+            sw.setContentDescription(on.label);
+            sw.setChecked(ParamStore.get(on.id) >= 0.5f);
+            sw.setOnClickListener(v -> {
+                ParamStore.set(on.id, sw.isChecked() ? 1f : 0f);
+                updateMoverUi();
+            });
+            extras.add(sw);
+            rows.add(new Row(on, null, null, sw));
+        }
+        return extras;
     }
 
     /** True for the last slider of its budget group (the line showing what is used goes under it). */
@@ -1372,13 +1440,18 @@ public class MainActivity extends Activity {
                 : getString(R.string.worlds_now, name));
     }
 
+    /** Each section header's chevron, by its title view. */
+    private final Map<TextView, ImageView> sectionChevrons = new HashMap<>();
+
     private void showSectionState(TextView header, View body, String title, boolean open) {
         body.setVisibility(open ? View.VISIBLE : View.GONE);
         header.setText(title);
-        android.graphics.drawable.Drawable chevron = getDrawable(open ? R.drawable.ic_chevron_up : R.drawable.ic_chevron_down).mutate();
-        chevron.setTint(look.p.muted);
-        header.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, chevron, null);
-        header.setContentDescription(getString(open ? R.string.section_open : R.string.section_closed, title));
+        ImageView chevron = sectionChevrons.get(header);
+        if (chevron != null) {
+            chevron.setImageResource(open ? R.drawable.ic_chevron_up : R.drawable.ic_chevron_down);
+        }
+        ((View) header.getParent()).setContentDescription(
+                getString(open ? R.string.section_open : R.string.section_closed, title));
     }
 
     private void addAudioSection(LinearLayout parent) {
@@ -1954,19 +2027,28 @@ public class MainActivity extends Activity {
     /** {@code compact} makes a smaller, tighter row, for the mover settings under a slider. */
     private void addRow(LinearLayout parent, Param p, boolean compact) {
         if (p.toggle) {
+            // the name (its bracketed explanation on a quieter line under it) and the switch; tapping the words
+            // flips it too
+            LinearLayout line = new LinearLayout(this);
+            line.setOrientation(LinearLayout.HORIZONTAL);
+            line.setGravity(Gravity.CENTER_VERTICAL);
+            line.setMinimumHeight(dp(52));
+            line.setPadding(0, dp(6), 0, dp(6));
+            line.addView(nameAndHint(p, compact), new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
             Switch sw = new Switch(this);
-            sw.setText(p.shown());
-            look.label(sw);
             look.switchTint(sw);
-            sw.setSwitchPadding(dp(16));
-            sw.setMinHeight(dp(52));
-            sw.setPadding(0, dp(4), 0, dp(4));
+            sw.setContentDescription(p.label);
             sw.setChecked(ParamStore.get(p.id) >= 0.5f);   // right from the start (folded rows aren't refreshed)
             sw.setOnClickListener(v -> {
                 ParamStore.set(p.id, sw.isChecked() ? 1f : 0f);
                 updateMoverUi();   // a section's movers switch greys its mover controls in or out
             });
-            parent.addView(sw);
+            LinearLayout.LayoutParams swParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            swParams.setMarginStart(dp(12));
+            line.addView(sw, swParams);
+            line.setOnClickListener(v -> sw.performClick());
+            parent.addView(line);
             rows.add(new Row(p, null, null, sw));
             return;
         }
@@ -1980,23 +2062,23 @@ public class MainActivity extends Activity {
         head.setGravity(Gravity.CENTER_VERTICAL);
         head.setPadding(0, dp(compact ? 4 : 14), 0, 0);
 
-        TextView label = new TextView(this);
-        look.label(label);
-        if (compact) {
-            look.hint(label);
-        }
-        head.addView(label, new LinearLayout.LayoutParams(
+        // the name (and its explanation) on the left, the value on the right in the accent, then the lock
+        head.addView(nameAndHint(p, compact), new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        TextView label = new TextView(this);   // (the value: what refreshRows and the mover dot update)
+        label.setTypeface(look.value());
+        label.setTextSize(compact ? Look.TEXT_HINT : Look.TEXT_VALUE);
+        label.setTextColor(look.p.primaryText);
+        label.setPadding(dp(12), 0, 0, 0);
+        head.addView(label);
 
         if (Params.lockable(p)) {
             CheckBox lock = new CheckBox(this);
-            lock.setText(R.string.lock);
+            look.lock(lock, getDrawable(R.drawable.ic_lock), getDrawable(R.drawable.ic_lock_open));
             lock.setContentDescription(getString(R.string.lock) + ": " + p.label);
             lock.setChecked(ParamStore.isLocked(p.id));
-            look.check(lock);
-            look.hint(lock);
             lock.setOnCheckedChangeListener((b, checked) -> ParamStore.setLocked(p.id, checked));
-            head.addView(lock);
+            head.addView(lock, new LinearLayout.LayoutParams(dp(44), dp(44)));
         }
         parent.addView(head);
 
@@ -2434,8 +2516,43 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** A slider's value as shown on its right (its name is a separate label). */
     private String valueText(Param p, float value) {
-        return getString(R.string.param_value, p.shown(), p.format(value));
+        return p.format(value);
+    }
+
+    /** A setting's name and its bracketed explanation, split: "Calm builds (standing still...)". " *" stays on the name. */
+    static String[] splitLabel(String shown) {
+        String star = shown.endsWith(" *") ? " *" : "";
+        String core = star.isEmpty() ? shown : shown.substring(0, shown.length() - 2);
+        String hint = detail(core);
+        String name = hint.isEmpty() ? core : shortName(core);
+        return new String[] {name + star, hint};
+    }
+
+    /** The name in the label style and, if it has one, its explanation under it in the hint style. */
+    private View nameAndHint(Param p, boolean compact) {
+        String[] parts = splitLabel(p.shown());
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        TextView name = new TextView(this);
+        name.setText(parts[0]);
+        if (compact) {
+            look.hint(name);
+        } else {
+            look.label(name);
+        }
+        box.addView(name);
+        if (!parts[1].isEmpty()) {
+            TextView hint = new TextView(this);
+            hint.setText(parts[1]);
+            look.hint(hint);
+            if (compact) {
+                hint.setTextSize(12);
+            }
+            box.addView(hint);
+        }
+        return box;
     }
 
     /** Pull current values from the store into every control. */

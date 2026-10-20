@@ -38,6 +38,8 @@
     <string name="intensity_card">Intensity: calmer to busier, the middle plays your settings as they are</string>
     <string name="intensity_card_value">Intensity %1$d</string>
     <string name="intensity_caption">INTENSITY</string>
+    <string name="movers_on">Movers on</string>
+    <string name="movers_off">Movers off</string>
     <string name="key_sheet_hint">The music\'s home note</string>
     <string name="scale_sheet_hint">Dots: the notes each scale uses, from %s up</string>
     <string name="player_open">Show the player: Intensity, Hold realm, Save sound</string>
@@ -146,7 +148,6 @@
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
     <!-- 1$ = parameter name, 2$ = its current value with unit -->
-    <string name="param_value">%1$s: %2$s</string>
 
     <!-- Preset dialogs and messages -->
     <string name="preset_saved_suffix">%s  (saved)</string>
