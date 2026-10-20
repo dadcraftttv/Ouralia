@@ -141,6 +141,9 @@ final class DialView extends View {
         float a = (float) Math.toDegrees(Math.atan2(dy, dx));
         float along = ((a - START) % 360f + 360f) % 360f;
         float v = along <= SWEEP ? along / SWEEP : (along > SWEEP + 45f ? 0f : 1f);
+        if (Math.round(v * 20) != Math.round(value * 20)) {   // a fine tick every 5 steps, felt under the finger
+            performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK);
+        }
         value = v;
         invalidate();
         if (listener != null) {

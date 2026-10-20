@@ -2279,7 +2279,10 @@ public class MainActivity extends Activity {
                 int bg = on ? look.p.primary : look.p.s2;
                 b.setBackground(look.pressable(look.round(bg, Look.RADIUS_TILE), on ? look.p.onPrimary : look.p.text, Look.RADIUS_TILE));
                 b.setSelected(on);
-                b.setOnClickListener(v -> pickChoice(p, i));
+                b.setOnClickListener(v -> {
+                    v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
+                    pickChoice(p, i);
+                });
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(60), 1f);
                 lp.setMargins(dp(4), dp(4), dp(4), dp(4));
                 row.addView(b, lp);
@@ -2341,7 +2344,10 @@ public class MainActivity extends Activity {
                 row.addView(extra.make(i, on), new LinearLayout.LayoutParams(dp(128), dp(12)));
             }
             final int index = i;
-            row.setOnClickListener(v -> pick.accept(index));
+            row.setOnClickListener(v -> {
+                v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
+                pick.accept(index);
+            });
             content.addView(row, new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
         }
@@ -2466,6 +2472,7 @@ public class MainActivity extends Activity {
             b.setContentDescription(p.label + ": " + full);
             final int pick = i;
             b.setOnClickListener(v -> {
+                v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
                 if (pick != choiceIndex(p, ParamStore.get(p.id))) {
                     ParamStore.set(p.id, pick);
                     updateMoverUi();
@@ -2524,6 +2531,7 @@ public class MainActivity extends Activity {
             styleSegment(b, i == chosen);
             final int index = i;
             b.setOnClickListener(v -> {
+                v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
                 for (int k = 0; k < buttons.length; k++) {
                     styleSegment(buttons[k], k == index);
                 }
