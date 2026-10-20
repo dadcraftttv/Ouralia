@@ -199,9 +199,22 @@ final class ScenePad extends View {
         setMeasuredDimension(width, Math.round(width * aspect));
     }
 
+    private Look.Palette look;
+    private static final String LABEL_X = "PAD X \u2192", LABEL_Y = "\u2191 PAD Y";
+
+    /** The app's look, for the XY pad (no scene): its card, grid, held point and labels. A scene's pad keeps its own. */
+    void setLook(Look.Palette look) {
+        this.look = look;
+        invalidate();
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         updateImageRect();
+        if (look != null && sceneDir == null) {
+            drawXyPad(canvas);
+            return;
+        }
         float corner = getResources().getDisplayMetrics().density * CORNER_DP;
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(0xFF1B1B1F);
@@ -234,6 +247,57 @@ final class ScenePad extends View {
                 paint.setStrokeWidth(4f);
                 paint.setColor(0xFFFFFFFF);
                 canvas.drawCircle(fingerX[i], fingerY[i], radius, paint);
+            }
+        }
+    }
+
+    /**
+     * The XY pad: a rounded surface with a quarter grid, the point it holds (where it was last touched, the place the
+     * Pad X / Pad Y movers follow) as an accent dot with a halo and guide lines, and the axes named in the corners.
+     */
+    private void drawXyPad(Canvas canvas) {
+        float d = getResources().getDisplayMetrics().density;
+        float corner = d * Look.RADIUS_TILE;
+        clip.reset();
+        clip.addRoundRect(imageRect, corner, corner, Path.Direction.CW);
+        canvas.save();
+        canvas.clipPath(clip);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(look.bg);
+        canvas.drawRect(imageRect, paint);
+        paint.setColor(look.line);
+        paint.setStrokeWidth(d);
+        for (int i = 1; i < 4; i++) {
+            float x = imageRect.left + imageRect.width() * i / 4f, y = imageRect.top + imageRect.height() * i / 4f;
+            canvas.drawLine(x, imageRect.top, x, imageRect.bottom, paint);
+            canvas.drawLine(imageRect.left, y, imageRect.right, y, paint);
+        }
+        float[] at = Modulation.padPoint();
+        float px = imageRect.left + at[0] * imageRect.width(), py = imageRect.top + at[1] * imageRect.height();
+        paint.setColor(Look.alpha(look.primary, 0.5f));
+        canvas.drawLine(px, imageRect.top, px, imageRect.bottom, paint);
+        canvas.drawLine(imageRect.left, py, imageRect.right, py, paint);
+        paint.setColor(Look.alpha(look.primary, 0.22f));
+        canvas.drawCircle(px, py, d * 17, paint);
+        paint.setColor(look.primary);
+        canvas.drawCircle(px, py, d * 9, paint);
+        textPaint.setShadowLayer(0f, 0f, 0f, 0);
+        textPaint.setColor(look.muted);
+        textPaint.setTextSize(d * 10);
+        textPaint.setTextAlign(Paint.Align.RIGHT);
+        canvas.drawText(LABEL_X, imageRect.right - d * 10, imageRect.bottom - d * 8, textPaint);
+        textPaint.setTextAlign(Paint.Align.LEFT);
+        canvas.drawText(LABEL_Y, imageRect.left + d * 10, imageRect.top + d * 16, textPaint);
+        canvas.restore();
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setStrokeWidth(d);
+        paint.setColor(look.line);
+        canvas.drawRoundRect(imageRect, corner, corner, paint);
+        for (int i = 0; i < MAX_FINGERS; i++) {   // a ring under a held finger, in the accent
+            if (fingerPointer[i] >= 0) {
+                paint.setStrokeWidth(d * 2);
+                paint.setColor(look.primary);
+                canvas.drawCircle(fingerX[i], fingerY[i], d * 28, paint);
             }
         }
     }

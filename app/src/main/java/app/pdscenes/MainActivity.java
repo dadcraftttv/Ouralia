@@ -340,9 +340,11 @@ public class MainActivity extends Activity {
         scenePad = new ScenePad(this);
         scenePad.setContentDescription(getString(R.string.pad_description));
         scenePad.setListener(this::sendTouch);
+        scenePad.setLook(look.p);
         padHint = new TextView(this);
         padHint.setText(R.string.pad_hint);
-        padHint.setTextSize(13);
+        look.hint(padHint);
+        padHint.setPadding(dp(4), dp(8), dp(4), 0);
 
         sceneLevels = new LinearLayout(this);
         sceneLevels.setOrientation(LinearLayout.VERTICAL);
@@ -394,7 +396,12 @@ public class MainActivity extends Activity {
         });
         xyPadSlot = new LinearLayout(this);
         xyPadSlot.setOrientation(LinearLayout.VERTICAL);
-        sound.addView(xyPadSlot);
+        look.card(xyPadSlot);   // the XY pad and its hint on a card, like the sections
+        xyPadSlot.setPadding(dp(12), dp(4), dp(12), dp(14));
+        LinearLayout.LayoutParams xyParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        xyParams.setMargins(0, dp(6), 0, dp(Look.CARD_GAP));
+        sound.addView(xyPadSlot, xyParams);
 
         // ---- Realms ----
         Worlds.load(this);

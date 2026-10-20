@@ -119,6 +119,11 @@ final class Modulation {
         padY = clamp(1f - 2f * y);
     }
 
+    /** Where the pad was last touched, as fractions of its size (x from the left, y from the top), for drawing it. */
+    static float[] padPoint() {
+        return new float[] {(padX + 1f) / 2f, (1f - padY) / 2f};
+    }
+
     private static float clamp(float v) {
         return clamp(v, -1f, 1f);
     }

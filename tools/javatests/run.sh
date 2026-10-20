@@ -9,7 +9,7 @@ for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V}"; do for x in $t; do
   extra=""; [ "$x" = W -o "$x" = X ] && extra="$SRC/StepDetector.java $SRC/WorldSelector.java $SRC/Worlds.java $SRC/MotifMemory.java $SRC/NoteRegister.java"
   [ "$x" = E ] && extra="$SRC/SceneEvents.java"
   [ "$x" = C ] && extra="$SRC/SensorInput.java $SRC/StepDetector.java $SRC/HandlingDetector.java"
-  [ "$x" = P2 ] && extra="$SRC/SensorInput.java $SRC/StepDetector.java $SRC/HandlingDetector.java $SRC/ScenePad.java $SRC/SceneLibrary.java $SRC/SceneGraphics.java"
+  [ "$x" = P2 ] && extra="$SRC/SensorInput.java $SRC/StepDetector.java $SRC/HandlingDetector.java $SRC/ScenePad.java $SRC/SceneLibrary.java $SRC/SceneGraphics.java $SRC/Look.java"
   [ "$x" = S ] && extra="$SRC/SceneLibrary.java"
   [ "$x" = D ] && extra="$SRC/ClipWatch.java"
   [ "$x" = H ] && extra="$SRC/HandlingDetector.java"

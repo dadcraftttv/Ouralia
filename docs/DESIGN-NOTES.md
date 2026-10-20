@@ -932,7 +932,10 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   `system_accent1_500`'s hue and colourfulness), "custom" (hue + colourfulness, set in the colour ring sheet whose
   middle previews the Start button in this theme). A change calls `recreate()`; the sound keeps playing. Existing
   installs show violet (before the redesign the accent was the wallpaper's on Android 12+).
-- Next: the XY pad, the Realms and Scenes tabs.
+- **XY pad** (Oct 19): on a card; `ScenePad.drawXyPad` (only with no scene: a scene's pad keeps its look) draws a
+  quarter grid, the point it holds (`Modulation.padPoint`, what the Pad X / Pad Y movers follow) as an accent dot
+  with a halo and guide lines, "PAD X" / "PAD Y" in the corners, and an accent ring under a held finger.
+- Next: the Realms and Scenes tabs (the Realm menus and Setup's device pickers are still Spinners).
 - **Key and Scale** (Oct 19; DadCraft found the mockup's 12-key strip easy to mis-tap): two tiles side by side in
   Music, each opening a sheet: Key = the 12 notes as big buttons (4 x 3), Scale = one row per scale with 12 dots
   (filled = the scale's notes above the key; `Params.SCALE_STEPS`, which test V checks against make_patch.py
