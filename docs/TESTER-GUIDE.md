@@ -17,7 +17,7 @@ There are two ways to use it:
 
 **New since rc5 (Oct 21):**
 
-- **Presets keep how the band plays:** Chord Colours, Hooks That Grow, Living Grooves, The Band Plays and Slow Bloom are saved in a preset. A Realm never changes them, and a preset saved before this keeps the ones you have.
+- **Presets keep how the band plays:** a preset now saves everything on The Band tab: Music on, Key, Scale, Song Shape, Chord Colours, Hooks That Grow, Living Grooves, The Band Plays, Slow Bloom, Soft Steps, the Sounds choices, Melody Rhythm, the Beat's tempo and sounds, and the rest. Load one and the band plays exactly as it was saved. A Realm never changes them, the built-in presets (Robot, Cave...) leave them as they are, and a preset saved before this keeps what you have.
 - **Fixed:** loading a preset on the Sound tab now updates the Kit and Band Members menus on The Band tab (the sound changed, but the menus kept showing the old kit).
 
 **New in rc5 (Oct 20-21):**

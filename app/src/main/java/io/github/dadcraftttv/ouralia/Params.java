@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The single list of parameters. The UI, presets, randomize and (later) sensor
@@ -162,18 +163,18 @@ final class Params {
                     .inSection("beat").toggle().resetWhenAbsent(),
             new Param("beat_follow", "Beat Follows", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Your steps (as before)", "Tempo clock (steadier, follows your pace)")
-                    .inSection("beat").noPreset().resetWhenAbsent(),
+                    .inSection("beat"),
             new Param("tempo_mode", "Tempo", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Auto (follows your steps)", "Set (your BPM, walking nudges it)")
-                    .inSection("beat").noPreset().resetWhenAbsent(),
+                    .inSection("beat"),
             new Param("tempo_bpm", "Set Tempo", 60f, 160f, 100f, " BPM", Param.Curve.LINEAR)
-                    .inSection("beat").noPreset().noRandom().noMover().resetWhenAbsent(),
+                    .inSection("beat").noRandom().noMover(),
             new Param("beat_when", "Beat Plays", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Only while walking", "Always (softly when you stand still)")
-                    .inSection("beat").noPreset().resetWhenAbsent(),
+                    .inSection("beat"),
             new Param("rhythm_src", "Beat Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth drums", "Found sounds (made from what the mic hears)", "Both")
-                    .inSection("beat").noPreset().resetWhenAbsent(),
+                    .inSection("beat"),
             new Param("beat_level", "Beat Level (0 = off)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("beat").rand(0f, 0.7f).resetWhenAbsent(),
             new Param("beat_pitch", "Kick Drum Pitch", 40f, 120f, 55f, " Hz", Param.Curve.LOG)
@@ -186,16 +187,13 @@ final class Params {
 
             // ---- Music ---- (a reactive synth: notes snapped to a key and scale, added after the first presets)
             new Param("music_on", "Music Enabled", 0f, 1f, 0f, "", Param.Curve.LINEAR)
-                    .inSection("music").toggle().noPreset().resetWhenAbsent(),
+                    .inSection("music").toggle(),
             // Music variety (Oct 21, DadCraft: with a key and scale he likes, "the band keeps playing much of the same
             // things"): Evolving = chord progressions in sections from our dcs_composer (Home, Lift, Calm, Turn), the
             // pentatonic scales borrowing the full scale's chords. Classic = the chord near the room's brightness.
             new Param("music_var", "Song Shape (how the chords and sections go)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Steady (as before)", "Evolving (chord progressions and sections)")
-                    .inSection("music").noPreset().resetWhenAbsent().dcs(),
-            // Chord Colours, Hooks That Grow, Living Grooves, The Band Plays and Slow Bloom are saved in presets
-            // (DadCraft, Oct 21) but not reset by a preset that says nothing about them, and a Realm never changes them
-            // (Worlds.realmChanges), like the kit.
+                    .inSection("music").dcs(),
             // Melodies that develop (Oct 21, stage 2): the chimes play a motif per section in statements, like a theme
             // and its variations (again, answered, moved, upside down, backwards, cut short, carried on), instead of a
             // random step from the last note. Works with either Music variety.
@@ -214,41 +212,41 @@ final class Params {
             // below the standing chimes' loudness, following the pace smoothly, a walk starting soft. Off = as before.
             // The default since Oct 21 (DadCraft: "just be the default", and softer still).
             new Param("walk_ease", "Soft Steps (walking notes softer, gliding to their level)", 0f, 1f, 1f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
+                    Param.Curve.LINEAR).inSection("music").toggle(),
             // The Band Plays (Oct 21, DadCraft: more "build and flow", and more going on in a calm room): 8-bar phrases
             // that build up to a fill and drop back, a band that never quite stops standing still, chimes in a quiet room.
             new Param("band_plays", "The Band Plays (builds and drops back, busier in a calm room)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("music_drift", "Wandering Home (the home chord drifts every few minutes, same notes)", 0f, 1f, 1f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
+                    Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("music_follow", "Sway with the World (light, pocket and stairs move the notes higher or lower)", 0f, 1f, 1f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().noPd().resetWhenAbsent(),
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd(),
             // Calm builds (DadCraft, Oct 14): standing still in a calm room, the music slowly grows a layer at a time,
             // then eases back (CalmBuild.java). Off by default.
             new Param("calm_build", "Slow Bloom (standing still, the music slowly grows)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd(),
             new Param("music_key", "Key", 0f, 11f, 0f, "", Param.Curve.LINEAR)
                     .choices("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             new Param("music_scale", "Scale", 0f, 7f, 0f, "", Param.Curve.LINEAR)
                     .choices("Major", "Minor", "Major pentatonic", "Minor pentatonic", "Dorian",
                             "Mixolydian", "Lydian", "Whole tone")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             // Low = a bass voice on the root under everything, Mid = the chords as before, Both (default) = the two together.
             new Param("music_pad_reg", "Pad Register", 0f, 2f, 2f, "", Param.Curve.LINEAR)
                     .choices("Low (bass)", "Mid", "Both")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             new Param("pad_src", "Pad Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth", "Found sounds (a held hum or voice, stretched)", "Both")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             new Param("bass_src", "Bass Sound", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Synth", "Found sounds (a held hum or voice, pitched down)")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             new Param("music_arp", "Notes and Chimes Level", 0f, 1f, 0.4f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0f, 0.8f).resetWhenAbsent(),
             new Param("melody_src", "Melody Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth chimes", "Found sounds (tuned from what the mic hears)", "Both")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             // Kit (Oct 17): what each part of the music sounds like (Kits.java, assets/kits). Classic = as always.
             // Saved in presets, so a shared preset sounds the same. Not reset when a preset or Realm says nothing
             // about it. A Realm never changes any kit setting (Worlds.realmChanges).
@@ -293,19 +291,19 @@ final class Params {
             // (whole to 8th notes, or dotted and syncopated ones), each note ringing as long as it lasts. Off = as before.
             new Param("mel_rhythm", "Melody Rhythm", 0f, 3f, 0f, "", Param.Curve.LINEAR)
                     .choices("Off (as before)", "Straight (quarters, halves, 8ths)", "Dotted (dotted and syncopated)", "Mixed")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             // Melody phrases (Oct 15, with Melody rhythm on): four-bar phrases, A A' B A. The melody moves mostly by
             // step, lands on chord tones on beats 1 and 3, repeats its first bar (the repeat ending on the chord's root),
             // goes somewhere new, then comes back to the first bar.
             new Param("mel_phrase", "Phrasing (repeat and answer, needs Melody Rhythm)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
+                    Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("chime_char", "Chime Character (ring to your sound)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0f, 1f).resetWhenAbsent(),
             // Found note ring (prototype, Oct 16): what a found melody note rings with. String = our own C object
             // (dcs_string~): the caught sound plucks a string tuned to the note.
             new Param("fm_ring", "Found Note Ring", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Resonator", "String (the sound plucks a string)")
-                    .inSection("music").noPreset().resetWhenAbsent().dcs(),
+                    .inSection("music").dcs(),
             new Param("music_tone", "Tone (dark to bright)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0.2f, 0.9f).resetWhenAbsent(),
             new Param("music_react", "Ear for the Room (how much the music follows what it hears)", 0f, 1f, 0.8f, "",
@@ -314,17 +312,17 @@ final class Params {
                     Param.Curve.LINEAR).inSection("music").rand(0.2f, 1f).resetWhenAbsent(),
             new Param("res_src", "Singing Room Sound", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Ring (the room rings the chord)", "Found sounds (a sound plays one of yours on the chord)", "Both")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             // Sing, hum or whistle a short phrase and the app answers it a moment later, a third away, in key (CallResponse.java).
             new Param("music_answer", "Call and Response (a sung phrase gets an answer)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("music").rand(0f, 1f).resetWhenAbsent(),
             new Param("harm_src", "Harmony Sound", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Organ", "Your voice (a pitch-shifted copy of you)", "Both")
-                    .inSection("music").noPreset().resetWhenAbsent(),
+                    .inSection("music"),
             // Pitch tracker (prototype, Oct 17): New = our own (dcs_pitch~): exact, and hiss reads as no pitch at all.
             new Param("harm_tracker", "Pitch Tracker (what Harmony hears)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic", "New (more exact, ignores hiss)")
-                    .inSection("music").noPreset().resetWhenAbsent().dcs(),
+                    .inSection("music").dcs(),
 
             // ---- Mix (DadCraft, Oct 13): a level for every part, 0 = taken out. The x trims sit inside their group's
             // level (Beat level, Pad level, Notes and chimes level, Room notes): 1 = as before. Saved in presets
@@ -602,6 +600,16 @@ final class Params {
                     .inSection("behavior").toggle().noPreset());
 
     /** Everything: the sound parameters plus the settings of each mover (app-side only). */
+    /**
+     * How the band plays: saved in presets (DadCraft, Oct 21: a preset is "the sum of all the things they did to shape
+     * the sound", so it loads exactly as meant), but a Realm never changes them, a built-in preset says nothing about
+     * them, and a preset made before keeps what you have (none is resetWhenAbsent).
+     */
+    static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src",
+            "music_on", "music_var", "chord_color", "mel_dev", "pat_gen", "walk_ease", "band_plays", "music_drift",
+            "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
+            "melody_src", "mel_rhythm", "mel_phrase", "fm_ring", "res_src", "harm_src", "harm_tracker");
+
     static final List<Param> ALL = Collections.unmodifiableList(withMovers(CORE));
 
     /** Id of the section's "movers on" switch. */

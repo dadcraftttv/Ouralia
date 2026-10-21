@@ -146,7 +146,7 @@ public class W {
     check(!Worlds.isEnabled()&&"Tranquil realm".equals(Worlds.presetName("tranquil")),"defaults: off, each world has its preset");
     check("Kinetic realm".equals(Worlds.renamedBuiltIn("Kinetic world"))&&Worlds.renamedBuiltIn("My world")==null&&Worlds.renamedBuiltIn("Kinetic realm")==null,"a stored built-in world preset name moves to its realm name, user presets are left alone");
     for(Worlds.World wd:Worlds.ALL){ check(PresetManager.builtIn(wd.defaultPreset)!=null,"built-in preset exists: "+wd.defaultPreset); }
-    for(String n:new String[]{"Tranquil realm","Flux realm","Kinetic realm","Ghost realm","Pocket realm"}){ Map<String,Float> pr=PresetManager.builtIn(n); boolean ok=true; for(Param p:Params.ALL) if(p.inPreset){Float v=pr.get(p.id); if(v==null||Math.abs(p.clamp(v)-v)>1e-4) ok=false;} check(ok,n+" has valid values for every preset setting"); }
+    for(String n:new String[]{"Tranquil realm","Flux realm","Kinetic realm","Ghost realm","Pocket realm"}){ Map<String,Float> pr=PresetManager.builtIn(n); boolean ok=true; for(Param p:Params.ALL) if(p.inPreset&&!Params.BAND.contains(p.id)){Float v=pr.get(p.id); if(v==null||Math.abs(p.clamp(v)-v)>1e-4) ok=false;} check(ok,n+" has valid values for every preset setting"); }
     ParamStore.set("wet",0.2f); ParamStore.set("reverb_mix",0f);
     Worlds.tick(0.033,-60f,false,12*60);
     check(ParamStore.get("wet")==0.2f,"auto worlds off: sliders untouched");
@@ -209,19 +209,27 @@ public class W {
     Worlds.reset();
     check(ParamStore.get("kit")==2f&&ParamStore.get("kitp_bass")==7f,"and a stop leaves them too");
     ParamStore.set("kit",0f); ParamStore.set("kitp_bass",0f); ParamStore.set("kitl_pad",0f); ParamStore.set("kitb_pad",0.5f);
-    // how the band plays is saved in presets, but a Realm never changes it (DadCraft, Oct 21)
+    // how the band plays is saved in presets, but a Realm never changes it (DadCraft, Oct 21), even one playing a
+    // preset of yours that holds the band at its defaults
+    Map<String,Float> bandRealm=new java.util.LinkedHashMap<>(PresetManager.builtIn("Flux realm"));
+    for(String id:Params.BAND) bandRealm.put(id,Params.byId(id).def);
+    PresetManager.save(ctx,"Band realm",bandRealm); Worlds.setPreset("flux","Band realm");
     Worlds.reset(); Worlds.setEnabled(true);
-    for(String id:Worlds.BAND_STYLE){ Param bp=Params.byId(id); check(bp.inPreset&&!bp.resetWhenAbsent,id+" is saved in presets, not reset by one without it"); ParamStore.set(id,1f); }
+    for(String id:Params.BAND){ Param bp=Params.byId(id); check(bp.inPreset&&!bp.resetWhenAbsent,id+" is saved in presets, not reset by one without it"); ParamStore.set(id,bp.max); }
     for(int i=0;i<600;i++) Worlds.tick(0.033,(i%5<2?-6f:-16f),false,12*60);
-    boolean bandKept=true; for(String id:Worlds.BAND_STYLE) bandKept&=ParamStore.get(id)==1f;
-    check("flux".equals(Worlds.currentWorld())&&bandKept,"a Realm leaves Chord Colours, Hooks That Grow, Living Grooves, The Band Plays and Slow Bloom alone");
-    Worlds.reset();
+    boolean bandKept=true; for(String id:Params.BAND) bandKept&=ParamStore.get(id)==Params.byId(id).max;
+    check("flux".equals(Worlds.currentWorld())&&bandKept,"a Realm leaves how the band plays alone ("+Params.BAND.size()+" settings: Music on, Key, Song Shape, Chord Colours...)");
+    Worlds.reset(); Worlds.setPreset("flux","Flux realm");
     Map<String,Float> back=PresetManager.parse(PresetManager.toJson("Band",ParamStore.snapshot())).values;
-    boolean bandSaved=true; for(String id:Worlds.BAND_STYLE) bandSaved&=back.get(id)!=null&&back.get(id)==1f;
+    boolean bandSaved=true; for(String id:Params.BAND) bandSaved&=back.get(id)!=null&&back.get(id)==Params.byId(id).max;
     ParamStore.applyPreset(Map.of("wet",0.3f));
-    boolean bandStays=true; for(String id:Worlds.BAND_STYLE) bandStays&=ParamStore.get(id)==1f;
+    boolean bandStays=true; for(String id:Params.BAND) bandStays&=ParamStore.get(id)==Params.byId(id).max;
     check(bandSaved&&bandStays,"a saved preset carries them, and one without them (made before) leaves them as they are");
-    for(String id:Worlds.BAND_STYLE) ParamStore.set(id,0f);
+    for(String id:Params.BAND) ParamStore.set(id,Params.byId(id).def);
+    // a built-in preset says nothing about the band: picking one leaves it (DadCraft, Oct 21)
+    ParamStore.set("music_on",1f); ParamStore.set("music_key",5f); ParamStore.applyPreset(PresetManager.builtIn("Robot"));
+    check(ParamStore.get("music_on")==1f&&ParamStore.get("music_key")==5f&&!PresetManager.builtIn("Default").containsKey("music_var"),"a built-in preset (Robot) leaves Music on and the Key alone");
+    ParamStore.set("music_on",0f); ParamStore.set("music_key",0f);
     // stop restores home
     Worlds.reset();
     check(Worlds.currentWorld()==null,"reset leaves no world");
