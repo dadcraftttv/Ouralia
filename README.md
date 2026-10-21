@@ -23,7 +23,7 @@ it can also play the original RjDj scenes. It will be free on Google Play. (Its 
 
 ## What it does
 
-- **The room, reshaped.** Echo (with repeats that fly around your head), reverb, glitches that bring back bits of
+- **The world, reshaped.** Echo (with repeats that fly around your head), reverb, glitches that bring back bits of
   what you just heard, pitch, ring modulation, a vocoder, filters, chorus, flanger, phaser and more, all on the
   sound around you.
 - **Music that listens.** Chords, a melody, a bass line and a beat, in a key you choose. Sounds in the room ring
