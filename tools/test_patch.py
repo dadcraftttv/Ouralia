@@ -2631,6 +2631,32 @@ check(len(played) >= 15 and played == chosen and len(forms) >= 3 and cl_played a
       "melodies that develop: each of %d chimes plays the composer's note (%d statements); off, Classic's walk (%d chimes)"
       % (len(played), len(forms), len(cl_played)))
 
+# ---- 10x. patterns made by rules: the walking notes and the drums play bars dcs_composer writes each bar ----
+# (the rules themselves: test_dcs "patterns")
+def walk_run(gen, secs=30):
+    e = fresh(music_on=1, music_arp=1, music_pad=0, music_res=0, wet=0, beat_level=1, beat_follow=1, pat_gen=gen)
+    e.listen("rh_gen_bar", "arp_gen_bar", "chime_deg", "pad_chord")
+    t, nxt = 0.0, 0.5
+    for _ in range(int(secs * SR) // 64):
+        if t >= nxt:
+            e.send("step", 0.5); nxt += 0.5
+        e.run(np.zeros(64, np.float32)); t += 64 / SR
+    return e
+e = walk_run(1)
+dl, al = e.lists.get("rh_gen_bar", []), e.lists.get("arp_gen_bar", [])
+kick_row = [round(float(v), 3) for v in e.array("rh_kpat")[160:176]]
+last_kick = [round(float(v), 3) for v in [l for l in dl if l[0] == 0][-1][1:]] if dl else None
+arp_row = [int(v) for v in e.array("arp_pat")[40:48]]
+figs = {int(v) for l in al for v in l}
+chords = set(int(c) for c in e.heard.get("pad_chord", [])) | {0}
+walk = [int(v) for v in e.heard["chime_deg"]]
+fits = all(any(d - 7 - c in figs for c in chords) for d in walk)
+check(len(dl) >= 30 and len(al) >= 5 and kick_row == last_kick and arp_row == [int(v) for v in al[-1]] and len(walk) >= 20 and fits,
+      "patterns made by rules: %d drum bars and %d walking figures written as they come, the walking notes from them (%d notes)"
+      % (len(dl) // 3, len(al), len(walk)))
+e = walk_run(0, 10)
+check(not e.lists.get("rh_gen_bar") and not e.lists.get("arp_gen_bar"), "patterns made by rules: off, nothing is written (the usual lists play)")
+
 # ---- diagnostics: counting overloads once a second (in, after Input gain, at the output limiter) ----
 def clip_counts(sig, **over):
     e = fresh(**over)

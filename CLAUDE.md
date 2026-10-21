@@ -66,7 +66,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   and Distortion quality (Smooth). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
 - **Waiting on DadCraft:** whether Music variety Evolving (`dcs_composer`, ROADMAP 21 stage 1, he likes it, opt-in for now)
-  becomes the default; his ears on Melodies that develop (`mel_dev`, stage 2); stage 3 next; phone checks of user kits (with
+  becomes the default; his ears on Melodies that develop (`mel_dev`, stage 2) and Patterns made by rules (`pat_gen`, stage 3); phone checks of user kits (with
   samples, and MP3/OGG/FLAC import), kit layers, kit drums in "Your steps", wired + Bluetooth together, the Pocket
   Realm; his desktop "<Part> from" report (likely a kit with no part of its own, now labelled "(Classic's drums)").
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas

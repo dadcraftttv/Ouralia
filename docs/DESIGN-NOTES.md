@@ -860,6 +860,27 @@ to date in the same commit when behaviour changes.
   with one note moved a step (60%). Reports: `comp_form` (form, first note), `comp_note`. Measured (test_dcs, 40
   bursts): the motif came back 13 times identical, all 8 forms used, statements started on 5 different notes; 60
   bursts across sections: 10 different motifs. The walking arpeggio is untouched (stage 3).
+  **Patterns made by rules** (`pat_gen`, Music toggle, default off, noPreset, `.dcs()`; Oct 21, ROADMAP 21 stage 3;
+  `dcs_composer` `drums`/`arp`; test_dcs "patterns", Pd test "patterns made by rules"). Before: the drums pick per
+  lane from KICK/SNARE/HAT_PATS (5 each, + 5 breakbeat) every RH_HOLD_BARS by the drive; the walking arpeggio from
+  5 ARP_PATTERNS each bar by the pace. Now each table has one more row (rh_kpat/rh_spat row 10, rh_hpat row 5,
+  arp_pat row 5, starting as a middle pattern) and `value rgen` points the players at it (`rh_kp_bb`/`rh_sp_bb`/
+  `rh_hp_g`, `mu_pat_idx`); fills, ghosts, drop-outs, chops, the learned groove, breaks and the arpeggio's rests
+  still layer on top. Drums: at each bar's tick 15 (`rh_bar_sel`) the composer gets `drums <rh_drive> <rh_bbv>` and
+  sends three "drum <lane> <16 velocities>" lists, written in with `list prepend` into the tables. Its bar: kicks
+  2 + 3d evenly spread (k in 16, rotation 0: the downbeat; 1.0 / beat 3 0.85 / others 0.65), a breakbeat leaning
+  the middle kick to step 10 (half the time when rh_bbv > 0.3); snare on 12 (d < 0.2) or 4 and 12, 0..3 ghosts
+  (0.3) on 7/9/10/14/15; hats 4 + 8d evenly spread (four of them sometimes on the off-beats), accents by beat, an
+  open hat on 14 (d > 0.5, half the time). d = drive + the section's lean (Lift +0.15, Calm -0.25, Turn +0.05). The
+  section's base bar is made once (again if d moves by 0.15); each bar 70% one change (a weak kick moves 1-2 steps,
+  a ghost comes or goes, an off-beat hat comes or goes or opens), every 4th bar the base again. Walking: at each
+  walking bar's first step (`mu_pat_bar`) `arp <pace> <scale_n>` -> "arp <8 steps>" into arp_pat row 5: chord tones
+  0..3+2pace up (tone t = (t%3)*2 + (t/3)*n steps above the chord root) as rise-and-fall, rising, falling, broken
+  or around the root, a passing note (+1) on a weak step 25%; each bar 60% one note (not the first) moves to a
+  neighbouring chord tone; every 4th bar the base, bar 7 of 8 the base backwards (and bar 8 varies that). A section
+  that comes back brings its base patterns back; a new pace (by 0.3) or scale makes a new walking base.
+  Measured (test_dcs, 24 bars at drive 0.5): every bar kept the downbeat and backbeat, bars changed 0-2 hits from
+  the last; drive 0.05 -> 0.95: kicks 2 -> 5, hats 4 -> 12; pace 0 -> 1: the figure's top 5 -> 9 steps.
   **Register from sensors** (`music_follow`, Music, default on, noPreset, app-only `noPd`; `NoteRegister.java`, test W):
   room-relative light < 0.25 -> 2 scale steps down + warm, > 0.75 -> 2 up; a pocket -> an octave down + warm; climbing
   (climb > 0.5) +2. A new register must hold 3 s and changes come at most every 8 s. The app sends `music_register

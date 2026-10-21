@@ -190,6 +190,11 @@ final class Params {
             // random step from the last note. Works with either Music variety.
             new Param("mel_dev", "Melodies that develop (a motif, repeated and changed)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
+            // Patterns made by rules (Oct 21, stage 3): the walking notes and the drums get a bar made by rules each bar
+            // (evenly spread hits as the drive asks, a figure of the chord's tones), keeping most of it and changing
+            // one thing, every 4th bar the section's own again, instead of picks from the short lists.
+            new Param("pat_gen", "Patterns made by rules (walking notes and drums)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
             new Param("music_drift", "Let the home chord drift (every few minutes, same notes)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
             new Param("music_follow", "Light, pocket and stairs move the notes higher or lower", 0f, 1f, 1f, "",

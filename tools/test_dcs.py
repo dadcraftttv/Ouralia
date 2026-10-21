@@ -845,6 +845,38 @@ st2 = melody(60, seed=5, sections=True)
 shapes = {tuple(steps(x[2])) for x in st2 if x[0] == 0 and len(x[2]) >= 4}
 check(len(shapes) >= 2, f"melody: sections bring their own motifs ({len(shapes)} different heard)")
 
+# patterns made by rules: drum bars and walking figures, each bar mostly the last one, every 4th the base again
+pp = patch("composer_pat", ["r cin", "dcs_composer", "route drum arp", "s cdrum", "s carp"],
+           [(0, 0, 1, 0), (1, 4, 2, 0), (2, 0, 3, 0), (2, 1, 4, 0)])
+
+def patterns(drive, bars, pace=0.5, n=5, seed=3):
+    e = Engine(LIB, pp); e.listen("cdrum", "carp")
+    e.send_msg("cin", "seed", seed); e.send_msg("cin", "scale", 3)
+    for _ in range(bars):
+        e.send_msg("cin", "drums", drive, 0); e.send_msg("cin", "arp", pace, n)
+    d, a = e.lists.get("cdrum", []), e.lists.get("carp", [])
+    e.close()
+    return [[l[1:] for l in d[3 * b:3 * b + 3]] for b in range(bars)], [[int(v) for v in x] for x in a]
+
+drums, arps = patterns(0.5, 24)
+diff = lambda a, b: sum(1 for u, v in zip(a, b) if (u > 0) != (v > 0) or (u >= 2) != (v >= 2))
+changes = [sum(diff(a, b) for a, b in zip(drums[i], drums[i + 1])) for i in range(len(drums) - 1)]
+check(all(b[0][0] >= 1 and b[1][4] > 0.8 and b[1][12] > 0.8 for b in drums),
+      "patterns: every bar has the downbeat kick and the backbeat snare")
+small = [c for i, c in enumerate(changes) if (i + 1) % 4]          # (not the bars that go back to the base)
+check(max(small) <= 2 and sum(1 for c in small if c) >= 8 and all(drums[i] == drums[0] for i in range(0, 24, 4)),
+      f"patterns: each drum bar changes one thing from the last (hits changed {changes}), every 4th bar the base again")
+sparse, busy = patterns(0.05, 1)[0][0], patterns(0.95, 1)[0][0]
+hits = lambda b, l: sum(1 for v in b[l] if v > 0)
+check(hits(sparse, 0) < hits(busy, 0) and hits(sparse, 2) < hits(busy, 2) and hits(sparse, 1) < hits(busy, 1) + 1,
+      f"patterns: the drive asks for more kicks and hats (kicks {hits(sparse, 0)} -> {hits(busy, 0)}, hats {hits(sparse, 2)} -> {hits(busy, 2)})")
+tones = {0, 2, 4, 5, 7, 9, 10, 12}                       # chord tones up two octaves of a pentatonic (n = 5)
+check(all(v in tones or v - 1 in tones for a in arps for v in a) and all(a[0] == arps[0][0] for i, a in enumerate(arps) if i % 8 < 6)
+      and all(arps[i] == arps[0] for i in range(0, 24, 4)) and any(arps[i] == arps[0][::-1] for i in range(24)),
+      f"patterns: the walking figure is chord tones (a passing note between), its first note kept (bars 7-8 of 8 play it backwards), every 4th bar the base, now and then backwards ({arps[0]} ..)")
+wide, narrow = patterns(0.5, 1, pace=1.0)[1][0], patterns(0.5, 1, pace=0.0)[1][0]
+check(max(wide) >= max(narrow), f"patterns: a brisk walk reaches higher ({narrow} -> {wide})")
+
 # ---------------------------------------------------------------- dcs_loaded
 print("dcs_loaded:")
 d = patch("loaded", ["dcs_loaded", "f", "r dl_ping", "t b", "s dl_out", "r dl_bang", "t b", "dcs_loaded", "s dl_out2"],

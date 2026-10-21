@@ -228,8 +228,10 @@ and microphone declarations, icon, store listing, numbered pd-core release.
     2. **Melodies that develop** (built Oct 21, `mel_dev`, waiting on DadCraft's ears): a motif per section, played
        in statements (again, answered, moved, upside down, backwards, cut short, carried on); its place travels.
        The chimes only: rhythm still comes from what triggers them; the walking arpeggio is stage 3.
-    3. **Rhythms made by rules** (after): arpeggios from the chord's notes, even-spread ("Euclidean") rhythms for
-       the melody and drums, each repeat keeping most of the bar and changing a little.
+    3. **Patterns made by rules** (built Oct 21, `pat_gen`, waiting on DadCraft's ears): the walking notes and the
+       drums, a bar made by rules each bar (evenly spread hits, a figure of the chord's tones), each keeping most of
+       the last and changing one thing, every 4th bar the section's own again. Not done: the chimes' rhythm (still
+       set by what triggers them) and Melody rhythm's cells.
     Later maybe: chord colours (sevenths, sus) now and then.
 
 20. **More kit parts (DadCraft, Oct 20: "lets plan on doing at least one and two, maybe three"; keep all four).**

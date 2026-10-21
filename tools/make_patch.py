@@ -43,7 +43,7 @@ DEFAULTS = [
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
@@ -1426,8 +1426,9 @@ def add_rhythm(P, x):
         return P.obj(name, "expr " + text.replace(",", BS + ",").replace("$", BS + "$"), xx, yy)
     nk = len(KICK_PATS)
     assert len(BREAK_KICK_PATS) == len(BREAK_SNARE_PATS) == len(SNARE_PATS) == nk   # (break pool = index + nk)
-    tabs = (("rh_kpat", KICK_PATS + BREAK_KICK_PATS), ("rh_spat", SNARE_PATS + BREAK_SNARE_PATS), ("rh_hpat", HAT_PATS),
-            ("rh_fpat", (FILL_PAT,)), ("rh_flong", (FILL_LONG,)), ("rh_cmap", CHOP_MAPS), ("rh_rvel", (ROLL_VELS,)),
+    # (each lane's last row is Patterns made by rules': dcs_composer rewrites it every bar; it starts as a middle one)
+    tabs = (("rh_kpat", KICK_PATS + BREAK_KICK_PATS + [KICK_PATS[2]]), ("rh_spat", SNARE_PATS + BREAK_SNARE_PATS + [SNARE_PATS[2]]),
+            ("rh_hpat", HAT_PATS + [HAT_PATS[1]]), ("rh_fpat", (FILL_PAT,)), ("rh_flong", (FILL_LONG,)), ("rh_cmap", CHOP_MAPS), ("rh_rvel", (ROLL_VELS,)),
             ("rh_rst", (ROLL_STARTS,)))
     for k, (nm, pats) in enumerate(tabs):
         P.obj(nm, f"table {nm} {len(pats) * len(pats[0])}", x + 1500, y + 20 * k)
@@ -1610,10 +1611,27 @@ def add_rhythm(P, x):
     for k, nm in enumerate(("kp", "sp", "hp", "fill")):
         P.obj(f"rh_{nm}", f"value rh_{nm}", x + 300 + 70 * k, y + 170)
         if nm in ("kp", "sp"):                                             # (the breakbeat pool sits after the usual one)
-            ex(f"rh_{nm}_bb", f"$f1+{nk}*rh_bbf", x + 300 + 70 * k, y + 160)
+            ex(f"rh_{nm}_bb", f"if(rgen,{2 * nk},$f1+{nk}*rh_bbf)", x + 300 + 70 * k, y + 160)
             P.c("rh_pick", f"rh_{nm}_bb", k, 0); P.c(f"rh_{nm}_bb", f"rh_{nm}")
+        elif nm == "hp":
+            ex("rh_hp_g", f"if(rgen,{len(HAT_PATS)},$f1)", x + 300 + 70 * k, y + 160)
+            P.c("rh_pick", "rh_hp_g", k, 0); P.c("rh_hp_g", "rh_hp")
         else:
             P.c("rh_pick", f"rh_{nm}", k, 0)
+    # Patterns made by rules (pat_gen): after each bar's last tick dcs_composer writes the next bar into those rows
+    P.obj("rh_gen_g", "spigot 0", x + 900, y + 60); P.obj("rh_gen_r", "r pat_gen", x + 960, y + 40)
+    P.c("rh_gen_r", "rh_gen_g", 0, 1); P.c("rh_bar_sel", "rh_gen_g")
+    P.obj("rh_gen_t", "t b b", x + 900, y + 80); P.c("rh_gen_g", "rh_gen_t")
+    P.obj("rh_gen_d", "value rh_drive", x + 900, y + 100); P.obj("rh_gen_b", "value rh_bbv", x + 960, y + 100)
+    P.obj("rh_gen_pk", "pack f f", x + 900, y + 120)
+    P.c("rh_gen_t", "rh_gen_b", 1, 0); P.c("rh_gen_b", "rh_gen_pk", 0, 1); P.c("rh_gen_t", "rh_gen_d", 0, 0); P.c("rh_gen_d", "rh_gen_pk")
+    P.msg("rh_gen_m", f"drums {BS}$1 {BS}$2", x + 900, y + 140); P.c("rh_gen_pk", "rh_gen_m"); P.c("rh_gen_m", "cmp")
+    P.obj("rh_gen_rt", "route drum", x + 900, y + 160); P.c("cmp", "rh_gen_rt", 4, 0)
+    P.obj("rh_gen_lane", "route 0 1 2", x + 900, y + 180); P.c("rh_gen_rt", "rh_gen_lane")
+    for k, (tab, row) in enumerate((("rh_kpat", 2 * nk), ("rh_spat", 2 * nk), ("rh_hpat", len(HAT_PATS)))):
+        P.obj(f"rh_gen_at{k}", f"list prepend {row * 16}", x + 900 + 90 * k, y + 200); P.c("rh_gen_lane", f"rh_gen_at{k}", k, 0)
+        P.obj(f"rh_gen_s{k}", f"s {tab}", x + 900 + 90 * k, y + 220); P.c(f"rh_gen_at{k}", f"rh_gen_s{k}")
+    P.obj("rh_gen_snd", "s rh_gen_bar", x + 1200, y + 180); P.c("rh_gen_rt", "rh_gen_snd")   # (for the tests)
     P.obj("rh_kp_last", "f", x + 300, y + 150); P.c("rh_pick", "rh_kp_last", 0, 0); P.c("rh_kp_last", "rh_pick", 0, 5)
     P.obj("rh_bar_s", "s rh_bar_patterns", x + 600, y + 170)              # (for the tests: which kick pattern)
     P.c("rh_pick", "rh_bar_s", 0, 0)
@@ -2035,6 +2053,21 @@ def add_composer(P, x, y):
     P.c("cmp", "mu_pick_ph", 2, 0)
     P.obj("cmp_s_note", "s comp_note", x + 700, y + 560); P.c("cmp", "cmp_s_note", 2, 0)   # (for the tests)
     P.obj("cmp_s_form", "s comp_form", x + 800, y + 560); P.c("cmp", "cmp_s_form", 3, 0)   # (for the tests)
+    # Patterns made by rules (pat_gen, stage 3; the drums' side is in add_rhythm): rgen points the walking notes and
+    # the drums at their generated rows; at each walking bar's first step the composer writes the next figure
+    P.obj("cmp_r_gen", "r pat_gen", x + 1000, y + 400); P.obj("cmp_gen_v", "value rgen", x + 1000, y + 420)
+    P.c("cmp_r_gen", "cmp_gen_v")
+    P.obj("cmp_arp_g", "spigot 0", x + 1000, y + 440); P.c("cmp_r_gen", "cmp_arp_g", 0, 1); P.c("mu_pat_bar", "cmp_arp_g")
+    P.obj("cmp_arp_t", "t b b", x + 1000, y + 460); P.c("cmp_arp_g", "cmp_arp_t")
+    P.obj("cmp_arp_pace", "f", x + 1000, y + 480); P.c("mu_pace_f", "cmp_arp_pace", 0, 1)
+    P.obj("cmp_arp_n", "value scale_n", x + 1060, y + 480)
+    P.obj("cmp_arp_pk", "pack f f", x + 1000, y + 500)
+    P.c("cmp_arp_t", "cmp_arp_n", 1, 0); P.c("cmp_arp_n", "cmp_arp_pk", 0, 1); P.c("cmp_arp_t", "cmp_arp_pace", 0, 0); P.c("cmp_arp_pace", "cmp_arp_pk")
+    P.msg("cmp_arp_m", f"arp {BSd}1 {BSd}2", x + 1000, y + 520); P.c("cmp_arp_pk", "cmp_arp_m"); P.c("cmp_arp_m", "cmp")
+    P.obj("cmp_arp_rt", "route arp", x + 1000, y + 540); P.c("cmp", "cmp_arp_rt", 4, 0)
+    P.obj("cmp_arp_at", f"list prepend {len(ARP_PATTERNS) * len(ARP_PATTERNS[0])}", x + 1000, y + 560); P.c("cmp_arp_rt", "cmp_arp_at")
+    P.obj("cmp_arp_s", "s arp_pat", x + 1000, y + 580); P.c("cmp_arp_at", "cmp_arp_s")
+    P.obj("cmp_arp_snd", "s arp_gen_bar", x + 1100, y + 580); P.c("cmp_arp_rt", "cmp_arp_snd")   # (for the tests)
 
 
 def add_music(P):
@@ -2448,8 +2481,8 @@ def add_music(P):
     P.c("mu_arp_gate", "mu_arp_t")
     P.obj("mu_v_chord", "value mchord", x + 1100, 720)
     n_pat, bar = len(ARP_PATTERNS), len(ARP_PATTERNS[0])
-    P.obj("mu_ptab", f"table arp_pat {n_pat * bar}", x + 1300, 20)
-    P.msg("mu_ptab_init", f"{BS}; arp_pat 0 {' '.join(str(v) for pat in ARP_PATTERNS for v in pat)}", x + 1300, 50)
+    P.obj("mu_ptab", f"table arp_pat {(n_pat + 1) * bar}", x + 1300, 20)    # (the last row: Patterns made by rules)
+    P.msg("mu_ptab_init", f"{BS}; arp_pat 0 {' '.join(str(v) for pat in ARP_PATTERNS + (ARP_PATTERNS[0],) for v in pat)}", x + 1300, 50)
     P.c("mu_load", "mu_ptab_init")
     # step counter within the bar; at the start of each bar a different pattern is picked
     P.obj("mu_pat_i", "f", x + 1100, 750)
@@ -2471,7 +2504,7 @@ def add_music(P):
     P.obj("mu_pat_cur", "t f f", x + 960, 900)
     P.c("mu_pat_it", "mu_pat_bar", 1, 0); P.c("mu_pat_bar", "mu_pat_rnd"); P.c("mu_pat_rnd", "mu_pat_new")
     P.c("mu_pat_new", "mu_pat_cur"); P.c("mu_pat_cur", "mu_pat_new", 1, 1)
-    ex("mu_pat_idx", f"$f1+{bar}*$f2", x + 1100, 830)
+    ex("mu_pat_idx", f"$f1+{bar}*if(rgen,{n_pat},$f2)", x + 1100, 830)
     P.c("mu_pat_cur", "mu_pat_idx", 0, 1); P.c("mu_pat_it", "mu_pat_idx", 0, 0)
     P.obj("mu_pat_tab", "tabread arp_pat", x + 1100, 845)
     P.c("mu_pat_idx", "mu_pat_tab")
