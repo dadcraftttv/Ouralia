@@ -8,7 +8,7 @@ public class B {
   static float out(String id){ return Modulation.output(Params.byId(id),ParamStore.get(id)); }
   public static void main(String[] a){
     Param cb=Params.byId("calm_build");
-    check(cb!=null && cb.def==0f && !cb.inPreset && !cb.sendToPd,"Calm builds: off by default, the user's own (not in presets), app-only");
+    check(cb!=null && cb.def==0f && cb.inPreset && !cb.resetWhenAbsent && !cb.sendToPd,"Calm builds: off by default, in presets (not reset by one without it), app-only");
     CalmBuild.reset(); Modulation.reset();
     ParamStore.set("music_pad",0.3f); ParamStore.set("reverb_mix",0f); ParamStore.set("music_harm",0.5f); ParamStore.set("music_res",0.5f);
     run(29,true);

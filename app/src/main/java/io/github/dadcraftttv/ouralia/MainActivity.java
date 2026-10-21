@@ -469,7 +469,6 @@ public class MainActivity extends Activity {
         addAboutSection(setup);
         look.fonts(root);
         showTab(UiSettings.tab(this));
-        refreshRows();
         if (FirstRun.showWalkthrough(UiSettings.walkthroughSeen(this), installTimes()[0], installTimes()[1])) {
             showWalkthrough();
         }
@@ -541,6 +540,7 @@ public class MainActivity extends Activity {
         }
         currentTab = tab;
         UiSettings.setTab(this, tab);
+        refreshRows();   // rows on a hidden tab skip every refresh (a preset loaded on Sound left The Band's kit menus stale)
         if (mainScroll != null) {
             final int y = tabScroll[tab];
             mainScroll.post(() -> mainScroll.scrollTo(0, y));

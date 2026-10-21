@@ -15,6 +15,11 @@ There are two ways to use it:
 
 ## What's new
 
+**New since rc5 (Oct 21):**
+
+- **Presets keep how the band plays:** Chord Colours, Hooks That Grow, Living Grooves, The Band Plays and Slow Bloom are saved in a preset. A Realm never changes them, and a preset saved before this keeps the ones you have.
+- **Fixed:** loading a preset on the Sound tab now updates the Kit and Band Members menus on The Band tab (the sound changed, but the menus kept showing the old kit).
+
 **New in rc5 (Oct 20-21):**
 
 - **A new name: Ouralia.** It installs as a new app next to PdScenes, starting fresh. To keep your presets, Export them in PdScenes first and Import them in Ouralia. Then you can uninstall PdScenes.
