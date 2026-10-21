@@ -60,8 +60,9 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - Android build: `./gradlew assembleDebug`. Real-device check is DadCraft's.
 
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
-- **Release:** rc4 (0.9.0-rc4, versionCode 12) built Oct 20 (release APK, debug key like rc3) and handed to
-  DadCraft to send; it carries the tester guide's "New in rc4" list. rc5 next: bump versionCode/versionName.
+- **Release:** rc5 (0.9.0-rc5, versionCode 13, the first as Ouralia, the first public beta) built Oct 21
+  (`./gradlew assembleRelease`, debug key; ~/Downloads/Ouralia-0.9.0-rc5.apk). To go under GitHub Releases, not
+  advertised until GitHub purges the old commits. Next: rc6 / versionCode 14.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).

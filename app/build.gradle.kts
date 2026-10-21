@@ -11,8 +11,8 @@ android {
         // libpd's pd-core (Oboe backend) requires API 28+, i.e. Android 9 and newer.
         minSdk = 28
         targetSdk = 36
-        versionCode = 12
-        versionName = "0.9.0-rc4"
+        versionCode = 13
+        versionName = "0.9.0-rc5"
     }
 
     buildTypes {

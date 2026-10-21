@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Oct 20, 2026 · Dad · for 0.9.0-rc4
+Oct 21, 2026 · Dad · for 0.9.0-rc5
 
 ## What this app is
 

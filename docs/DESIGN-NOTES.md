@@ -553,7 +553,8 @@ to date in the same commit when behaviour changes.
   event-log lines in the body (no attachment, no FileProvider). 0.9.0-rc2 = versionCode 10, 0.9.0-rc3 (Oct 16) = 11 (posted to testers; built on the snapshot pd-core). 0.9.0-rc4 (Oct 20) = 12
   (`./gradlew assembleRelease`, signed with the debug key so it installs over earlier builds; DadCraft sends the APK;
   shipped with user kits, kit layers and the Pocket Realm untested on his phone, by his choice: testers try them). For rc4: our own
-  pd-core and the unplug fix (b4d0473, 2fd2344).
+  pd-core and the unplug fix (b4d0473, 2fd2344). 0.9.0-rc5 (Oct 21) = 13: the first as Ouralia (a new app), the first
+  public beta, for GitHub Releases.
 - **Rustle detector: REMOVED** (Oct 14, DadCraft: "take it out completely... hold on to it in our backpocket"). The full
   version (`add_rustle`, `rustle_guard`, tests, Now line/Diagnostics) is in commit ea57dde. Why: on DadCraft's phone a
   quiet room already reads 12-20k zero crossings/s and highs only 5-7 dB under the whole (mic hiss); sleeve rubbing
