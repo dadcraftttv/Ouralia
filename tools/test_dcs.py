@@ -795,6 +795,56 @@ n = len(e.lists.get("cchord", []))
 e.close()
 check(4 <= n <= 14, f"no clock: chords still change by themselves ({n} in 40 s at 120 BPM)")
 
+# melodies that develop: statements of a motif per section
+mp = patch("composer_mel", ["r cin", "dcs_composer", "s cmel", "s cform", "s csect"],
+           [(0, 0, 1, 0), (1, 2, 2, 0), (1, 3, 3, 0), (1, 1, 4, 0)])
+
+def melody(bursts, seed=3, middle=7, chord=0, n=5, sections=False):
+    """Bursts of 3-8 notes 0.4 s apart, 3 s pauses between: [(form, base, [notes])] per statement."""
+    e = Engine(LIB, mp); e.listen("cmel", "cform", "csect")
+    e.send_msg("cin", "seed", seed); e.send_msg("cin", "scale", 3)
+    if sections:
+        e.send_msg("cin", "start")
+    rng, stmts = np.random.default_rng(seed), []
+    for _ in range(bursts):
+        for _ in range(int(rng.integers(3, 9))):
+            nf = len(e.lists.get("cform", []))
+            e.send_msg("cin", "note", middle, chord, n)
+            for f in e.lists.get("cform", [])[nf:]:
+                stmts.append((int(f[0]), int(f[1]), []))
+            stmts[-1][2].append(int(e.heard["cmel"][-1]))
+            e.run(np.zeros(int(0.4 * SR), np.float32))
+            if sections:
+                for _ in range(3):
+                    e.send_msg("cin", "bar")
+        e.run(np.zeros(3 * SR, np.float32))
+    e.close()
+    return stmts
+
+st = melody(40)
+steps = lambda notes: [b - a for a, b in zip(notes, notes[1:])]
+full_motifs = [x for x in st if x[0] == 0 and len(x[2]) >= 3]
+shape = max((steps(x[2]) for x in full_motifs), key=len)          # the longest heard statement of the motif
+same = all(steps(x[2]) == shape[:len(x[2]) - 1] for x in full_motifs)
+inv = [x for x in st if x[0] == 4 and len(x[2]) >= 3]
+back = [x for x in st if x[0] == 5 and len(x[2]) == len(shape) + 1]
+check(len(full_motifs) >= 5 and same, f"melody: the motif comes back the same ({len(full_motifs)} times, steps {shape})")
+check(all(steps(x[2]) == [-v for v in shape[:len(x[2]) - 1]] for x in inv) and all(steps(x[2]) == [-v for v in shape[::-1]] for x in back),
+      f"melody: upside down is the motif's steps turned over ({len(inv)} heard), backwards its steps reversed ({len(back)})")
+forms = {x[0] for x in st}
+check(len(forms) >= 6, f"melody: the motif is developed in many ways ({sorted(forms)}: 0 motif .. 7 carried on)")
+on_chord = [x for x in st if x[0] in (0, 1, 2)]
+check(all((x[1] - 0) % 5 in (0, 2, 4) for x in on_chord), "melody: a statement of the motif starts on a chord tone")
+notes = [v for x in st for v in x[2]]
+check(min(notes) >= 7 - 8 and max(notes) <= 7 + 8, f"melody: notes stay near the middle ({min(notes)}..{max(notes)} around 7)")
+check(all(len(x[2]) <= 8 for x in st) and len(st) > 40, f"melody: a pause starts a new statement ({len(st)} statements in 40 bursts)")
+moved = [x for x in st if x[0] == 3]
+check(moved and len({x[1] for x in st}) >= 3, f"melody: it travels (statements start on {sorted({x[1] for x in st})})")
+# a new section brings its own motif
+st2 = melody(60, seed=5, sections=True)
+shapes = {tuple(steps(x[2])) for x in st2 if x[0] == 0 and len(x[2]) >= 4}
+check(len(shapes) >= 2, f"melody: sections bring their own motifs ({len(shapes)} different heard)")
+
 # ---------------------------------------------------------------- dcs_loaded
 print("dcs_loaded:")
 d = patch("loaded", ["dcs_loaded", "f", "r dl_ping", "t b", "s dl_out", "r dl_bang", "t b", "dcs_loaded", "s dl_out2"],

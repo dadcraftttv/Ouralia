@@ -2617,6 +2617,20 @@ for a in range(6, 20, 2):
 check(len(e.lists.get("comp_chord", [])) == n and not bad,
       "music variety back to Classic: its chords come back, only E minor pentatonic notes (off-key %s)" % sorted(set(bad))[:6])
 
+# ---- 10w. melodies that develop: the chimes play the composer's motif statements, not a random walk ----
+# (the statements themselves, their forms and travels: test_dcs "melody")
+def chime_run(dev):
+    e = fresh(dry=0, wet=0, music_on=1, music_arp=1, music_pad=0, music_res=0, music_harm=0, music_answer=0,
+              melody_src=0, mel_rhythm=3, beat_level=0, mel_dev=dev)
+    e.listen("chime_deg", "comp_note", "comp_form"); e.send("calm_chimes", 25)   # (standing: the cells' notes play)
+    e.run(np.zeros(40 * SR, np.float32))
+    return [int(v) for v in e.heard["chime_deg"]], [int(v) for v in e.heard["comp_note"]], e.lists.get("comp_form", [])
+played, chosen, forms = chime_run(1)
+cl_played, cl_chosen, cl_forms = chime_run(0)
+check(len(played) >= 15 and played == chosen and len(forms) >= 3 and cl_played and not cl_chosen and not cl_forms,
+      "melodies that develop: each of %d chimes plays the composer's note (%d statements); off, Classic's walk (%d chimes)"
+      % (len(played), len(forms), len(cl_played)))
+
 # ---- diagnostics: counting overloads once a second (in, after Input gain, at the output limiter) ----
 def clip_counts(sig, **over):
     e = fresh(**over)

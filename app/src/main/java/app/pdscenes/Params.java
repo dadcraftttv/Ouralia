@@ -185,6 +185,11 @@ final class Params {
             new Param("music_var", "Music variety", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (as before)", "Evolving (chord progressions and sections)")
                     .inSection("music").noPreset().resetWhenAbsent().dcs(),
+            // Melodies that develop (Oct 21, stage 2): the chimes play a motif per section in statements, like a theme
+            // and its variations (again, answered, moved, upside down, backwards, cut short, carried on), instead of a
+            // random step from the last note. Works with either Music variety.
+            new Param("mel_dev", "Melodies that develop (a motif, repeated and changed)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
             new Param("music_drift", "Let the home chord drift (every few minutes, same notes)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
             new Param("music_follow", "Light, pocket and stairs move the notes higher or lower", 0f, 1f, 1f, "",

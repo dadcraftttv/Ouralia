@@ -15,12 +15,24 @@
  *    without bars (no clock) it keeps its own bar time from the tempo.
  *  - Voicing: each chord is voiced (inversion and octave) closest to the last one, so the pad moves smoothly.
  *
+ * Melodies that develop (stage 2, the chimes' notes when `mel_dev` is on): each kind of section has a motif of 3-6
+ * notes (mostly steps, a leap now and then). A burst of notes plays it in statements, like a theme and its
+ * variations: the motif, then it again or answered (ending on the chord's root), then developed (moved up or down a
+ * step or two, turned upside down, played backwards, cut short, or carried on a note further), then the motif
+ * back; and round again. A statement starts on the chord tone nearest where the melody sits now, and that place
+ * travels a little with each development. A pause (GAP_MS) ends a statement: the next note starts a new one. When
+ * a section comes back, so does its motif, a step changed now and then.
+ *
  * Messages: scale <0-7> (Major, Minor, Major pent., Minor pent., Dorian, Mixolydian, Lydian, Whole tone: a new piece,
  * home chord now), tempo <bpm>, bright <0-1>, energy <0-1> (both lean the choice of section), bar, start (the chord
  * now), again (the chord again: the key changed), seed <n>.
- * Left outlet: a list per chord: anchor (the scale step that fits it best, for the parts that think in steps), bass
- * (semitones above the key note, 0-11), then four pad notes (semitones from the key note, about -5..+28).
- * Right outlet: a list when a section starts: kind (0 Home, 1 Lift, 2 Calm, 3 Turn), melody register (scale steps).
+ * note <middle> <chord> <n>: the next melody note, as a scale step (middle: where the melody would sit, chord: the
+ * chord's scale step, n: notes in the scale).
+ * Outlets, left to right: a list per chord: anchor (the scale step that fits it best, for the parts that think in
+ * steps), bass (semitones above the key note, 0-11), then four pad notes (semitones from the key note, about
+ * -5..+28); a list when a section starts: kind (0 Home, 1 Lift, 2 Calm, 3 Turn), melody register (scale steps); the
+ * melody note (a float); a list when a statement starts: its form (0 the motif, 1 again, 2 answered, 3 moved,
+ * 4 upside down, 5 backwards, 6 cut short, 7 carried on), its first note.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  * Copyright (c) 2026 dadcraft (DadCraft Studios)
@@ -87,6 +99,16 @@ static const int KIND_REG[NKINDS] = {0, 2, -2, 1};
 static const int KIND_BASS[NKINDS] = {65, 100, 0, 100};
 static const int KIND_OPEN[NKINDS] = {0, 0, 1, 0};
 
+#define MOTIF_MAX 8
+#define GAP_MS 2200        /* a pause this long ends a statement */
+#define ROAM 4             /* how far (scale steps) the statements travel from the melody's middle */
+enum { F_MOTIF, F_AGAIN, F_ANSWER, F_MOVED, F_INVERT, F_BACK, F_SHORT, F_LONGER };
+
+typedef struct {
+    int n;
+    int iv[MOTIF_MAX];     /* each note in scale steps from the first */
+} t_motif;
+
 typedef struct {
     t_object x_obj;
     t_outlet *out_sect;
@@ -101,6 +123,11 @@ typedef struct {
     int started;
     /* the sound now */
     int deg, voice[4], voiced, bass;
+    /* the melody */
+    t_outlet *out_mel, *out_form;
+    t_motif motif[NKINDS], stmt;
+    int have_motif[NKINDS], mel_kind, stmt_k, stmt_pos, stmt_base, stmt_on, drift;
+    double last_note;
 } t_dcs_composer;
 
 static int rnd(t_dcs_composer *x, int n)   /* 0..n-1 */
@@ -347,6 +374,139 @@ static void advance(t_dcs_composer *x)
     play_pos(x, 0);
 }
 
+/* ---- the melody ---- */
+
+static void make_motif(t_dcs_composer *x, t_motif *m)
+{
+    m->n = 3 + rnd(x, 4);
+    m->iv[0] = 0;
+    int dir = rnd(x, 2) ? 1 : -1, run = 0;
+    for (int i = 1; i < m->n; i++) {
+        int r = rnd(x, 11), size = r < 6 ? 1 : r < 9 ? 2 : r < 10 ? 0 : 3;   /* steps, some skips, a repeat, a leap */
+        if (rnd(x, 100) < 35 || run >= 2) {
+            dir = -dir;
+            run = 0;
+        }
+        int v = m->iv[i - 1] + dir * size;
+        if (v > 4 || v < -4) {                   /* keep it within a narrow range */
+            dir = -dir;
+            v = m->iv[i - 1] + dir * size;
+        }
+        run += size != 0;
+        m->iv[i] = v;
+    }
+}
+
+/* a returning motif: one of its notes moved a step (not the first) */
+static void nudge_motif(t_dcs_composer *x, t_motif *m)
+{
+    if (rnd(x, 10) < 6)
+        m->iv[1 + rnd(x, m->n - 1)] += rnd(x, 2) ? 1 : -1;
+}
+
+/* the chord tone (chord, +2, +4 steps, any octave) nearest a step */
+static int chord_tone(int target, int chord, int n, int root_only)
+{
+    int best = target, bd = 1 << 20;
+    for (int o = -4; o <= 6; o++)
+        for (int k = 0; k < (root_only ? 1 : 3); k++) {
+            int d = chord + 2 * k + o * n, dist = abs(d - target);
+            if (dist < bd) {
+                bd = dist;
+                best = d;
+            }
+        }
+    return best;
+}
+
+static void new_statement(t_dcs_composer *x, int middle, int chord, int n)
+{
+    if (x->mel_kind != x->kind || !x->have_motif[x->kind]) {   /* the section's own motif */
+        x->mel_kind = x->kind;
+        if (x->have_motif[x->kind])
+            nudge_motif(x, &x->motif[x->kind]);
+        else
+            make_motif(x, &x->motif[x->kind]);
+        x->have_motif[x->kind] = 1;
+        x->stmt_k = 0;
+        x->drift = 0;
+    }
+    const t_motif *m = &x->motif[x->mel_kind];
+    t_motif *st = &x->stmt;
+    /* the first round states it: the motif, again or answered, developed, the motif; later rounds work on it:
+     * the motif, developed, developed, answered */
+    int form, k = x->stmt_k % 4, first = x->stmt_k < 4;
+    int develop = first ? k == 2 : k == 1 || k == 2;
+    if (k == 0 || (first && k == 3))
+        form = F_MOTIF;
+    else if (!develop)
+        form = first && rnd(x, 2) ? F_AGAIN : F_ANSWER;
+    else {
+        int r = rnd(x, 10);
+        form = r < 3 ? F_MOVED : r < 5 ? F_INVERT : r < 6 ? F_BACK : r < 8 ? F_SHORT : F_LONGER;
+    }
+    *st = *m;
+    switch (form) {
+    case F_INVERT:
+        for (int i = 0; i < st->n; i++)
+            st->iv[i] = -m->iv[i];
+        break;
+    case F_BACK:
+        for (int i = 0; i < st->n; i++)
+            st->iv[i] = m->iv[m->n - 1 - i] - m->iv[m->n - 1];
+        break;
+    case F_SHORT:
+        st->n = m->n > 3 ? m->n - 1 - rnd(x, m->n - 3) : m->n;
+        break;
+    case F_LONGER:
+        if (st->n < MOTIF_MAX) {
+            int last = m->iv[m->n - 1], prev = m->n > 1 ? m->iv[m->n - 2] : 0;
+            st->iv[st->n++] = last + (last >= prev ? 1 : -1);   /* one more step the way it was going */
+        }
+        break;
+    }
+    int base;
+    if (form == F_MOVED || (form == F_INVERT && rnd(x, 2))) {
+        int s = (rnd(x, 2) ? 1 : -1) * (1 + rnd(x, 2));       /* the melody travels */
+        x->drift = x->drift + s > ROAM || x->drift + s < -ROAM ? x->drift - s : x->drift + s;
+        base = x->stmt_on ? x->stmt_base + s : chord_tone(middle + x->drift, chord, n, 0);
+    } else {
+        if (k == 0 && first)
+            x->drift = 0;
+        else if (k == 0)
+            x->drift /= 2;                                   /* the theme comes back, partway toward the middle */
+        base = chord_tone(middle + x->drift, chord, n, 0);
+    }
+    if (base > middle + ROAM + 1 || base < middle - ROAM - 1)
+        base = chord_tone(middle + x->drift, chord, n, 0);
+    if (form == F_ANSWER) {   /* the motif again, landing on the chord's root */
+        int end = base + st->iv[st->n - 1];
+        st->iv[st->n - 1] = chord_tone(end, chord, n, 1) - base;
+    }
+    x->stmt_base = base;
+    x->stmt_pos = 0;
+    x->stmt_on = 1;
+    x->stmt_k++;
+    t_atom a[2];
+    SETFLOAT(a, form);
+    SETFLOAT(a + 1, base);
+    outlet_list(x->out_form, &s_list, 2, a);
+}
+
+static void dcs_composer_note(t_dcs_composer *x, t_floatarg fmid, t_floatarg fchord, t_floatarg fn)
+{
+    int middle = (int)fmid, chord = (int)fchord, n = fn >= 1 ? (int)fn : 7;
+    if (!x->stmt_on || clock_gettimesince(x->last_note) > GAP_MS || x->stmt_pos >= x->stmt.n)
+        new_statement(x, middle, chord, n);
+    int deg = x->stmt_base + x->stmt.iv[x->stmt_pos++];
+    while (deg > middle + ROAM + 4)   /* (whole octaves back toward the middle) */
+        deg -= n;
+    while (deg < middle - ROAM - 4)
+        deg += n;
+    x->last_note = clock_getlogicaltime();
+    outlet_float(x->out_mel, deg);
+}
+
 static void dcs_composer_bar(t_dcs_composer *x)
 {
     clock_delay(x->watch, bar_ms(x) * 1.6);
@@ -366,8 +526,10 @@ static void dcs_composer_watch(t_dcs_composer *x)
 static void piece(t_dcs_composer *x)   /* a new piece: forget the sections, Home first */
 {
     for (int k = 0; k < NKINDS; k++)
-        x->have[k] = 0;
+        x->have[k] = x->have_motif[k] = 0;
     x->voiced = 0;
+    x->mel_kind = -1;
+    x->stmt_on = 0;
     x->last_away = CALM;
     begin_section(x, HOME);
 }
@@ -410,6 +572,12 @@ static void *dcs_composer_new(void)
     t_dcs_composer *x = (t_dcs_composer *)pd_new(dcs_composer_class);
     outlet_new(&x->x_obj, &s_list);
     x->out_sect = outlet_new(&x->x_obj, &s_list);
+    x->out_mel = outlet_new(&x->x_obj, &s_float);
+    x->out_form = outlet_new(&x->x_obj, &s_list);
+    x->mel_kind = -1;
+    x->stmt_on = 0;
+    for (int k = 0; k < NKINDS; k++)
+        x->have_motif[k] = 0;
     x->watch = clock_new(x, (t_method)dcs_composer_watch);
     x->rng = (unsigned int)time(0) * 2654435761u + ++made;   /* a different piece every time */
     x->bpm = 100;
@@ -447,4 +615,5 @@ void dcs_composer_setup(void)
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_bright, gensym("bright"), A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_energy, gensym("energy"), A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_seed, gensym("seed"), A_FLOAT, 0);
+    class_addmethod(dcs_composer_class, (t_method)dcs_composer_note, gensym("note"), A_FLOAT, A_FLOAT, A_FLOAT, 0);
 }

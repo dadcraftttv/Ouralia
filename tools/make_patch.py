@@ -43,7 +43,7 @@ DEFAULTS = [
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
@@ -2017,6 +2017,24 @@ def add_composer(P, x, y):
     P.c("cmp_var_t", "cmp_reg_on", 1, 1)                              # (set before the bang below re-sends)
     P.obj("cmp_reg_b", "t b", x + 640, y + 60); P.c("cmp_var_t", "cmp_reg_b", 0, 0); P.c("cmp_reg_b", "cmp_reg")
     P.c("cmp_reg_on", "mu_sreg_add", 0, 1)
+    # Melodies that develop (mel_dev, stage 2): instead of a random step from the last chime, each chime asks the
+    # composer for the next note of its motif's statements, around the same middle (the brightness note) and on the
+    # chord sounding now; the sensors' and the section's registers and Melody phrases still apply after it
+    P.obj("cmp_r_dev", "r mel_dev", x + 700, y + 400); P.obj("cmp_dev_t", "t f f", x + 700, y + 420)
+    P.obj("cmp_dev_is", ">= 0.5", x + 700, y + 440); P.obj("cmp_dev_not", "< 0.5", x + 760, y + 440)
+    P.c("cmp_r_dev", "cmp_dev_t"); P.c("cmp_dev_t", "cmp_dev_is", 1, 0); P.c("cmp_dev_t", "cmp_dev_not", 0, 0)
+    P.c("cmp_dev_not", "mu_dev_cl", 0, 1)
+    P.obj("cmp_dev_g", "spigot 0", x + 700, y + 460); P.c("cmp_dev_is", "cmp_dev_g", 0, 1); P.c("mu_pick", "cmp_dev_g")
+    P.obj("cmp_dev_b", "t b", x + 700, y + 480); P.c("cmp_dev_g", "cmp_dev_b")
+    P.obj("cmp_dev_q", "expr int(mbright*2*scale_n+0.5)+scale_n" + BS + "; mchord" + BS + "; scale_n", x + 700, y + 500)
+    P.c("cmp_dev_b", "cmp_dev_q")
+    P.obj("cmp_dev_pk", "pack f f f", x + 700, y + 520)
+    for k in (2, 1, 0):
+        P.c("cmp_dev_q", "cmp_dev_pk", k, k)
+    P.msg("cmp_dev_m", f"note {BSd}1 {BSd}2 {BSd}3", x + 700, y + 540); P.c("cmp_dev_pk", "cmp_dev_m"); P.c("cmp_dev_m", "cmp")
+    P.c("cmp", "mu_pick_ph", 2, 0)
+    P.obj("cmp_s_note", "s comp_note", x + 700, y + 560); P.c("cmp", "cmp_s_note", 2, 0)   # (for the tests)
+    P.obj("cmp_s_form", "s comp_form", x + 800, y + 560); P.c("cmp", "cmp_s_form", 3, 0)   # (for the tests)
 
 
 def add_music(P):
@@ -2291,7 +2309,8 @@ def add_music(P):
     P.obj("mu_wr_last", "value clast", cx + 60, cy + 160)
     ex("mu_pick_ph", "if(mphon,mphdeg,$f1)", cx, cy + 115)                  # (a Melody phrase brings its own note)
     P.obj("mu_ph_v", "value mphon", cx + 100, cy + 115)
-    P.c("mu_pick", "mu_pick_ph"); P.c("mu_pick_ph", "mu_pick_t"); P.c("mu_pick_t", "mu_wr_last", 1, 0)
+    P.obj("mu_dev_cl", "spigot 1", cx, cy + 108)                         # (Melodies that develop: add_composer)
+    P.c("mu_pick", "mu_dev_cl"); P.c("mu_dev_cl", "mu_pick_ph"); P.c("mu_pick_ph", "mu_pick_t"); P.c("mu_pick_t", "mu_wr_last", 1, 0)
     P.obj("mu_reg_add", "+ 0", cx + 200, cy + 50)                       # register from the sensors (the app)
     P.obj("mu_reg_r", "r music_register", cx + 260, cy + 30); P.c("mu_reg_r", "mu_reg_add", 0, 1)
     P.obj("mu_sreg_add", "+ 0", cx + 200, cy + 60)                   # ...and the Evolving section's (add_composer)

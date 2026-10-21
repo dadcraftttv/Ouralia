@@ -225,8 +225,9 @@ and microphone declarations, icon, store listing, numbered pd-core release.
     playing much of the same things").** Behind Music variety (Classic / Evolving), built in C (`dcs_composer`).
     1. **Chords and sections** (done Oct 21; DadCraft: "familiar without being something I can expect ... I like it"): progressions, Home / Lift / Calm / Turn,
        borrowed chords for the pentatonics, the full chord set for the seven-note scales.
-    2. **Melodies that develop** (next): a motif made, then repeated, moved, turned upside down, re-rhythmed through
-       a section, instead of a fresh random walk each time; the melody's range travels.
+    2. **Melodies that develop** (built Oct 21, `mel_dev`, waiting on DadCraft's ears): a motif per section, played
+       in statements (again, answered, moved, upside down, backwards, cut short, carried on); its place travels.
+       The chimes only: rhythm still comes from what triggers them; the walking arpeggio is stage 3.
     3. **Rhythms made by rules** (after): arpeggios from the chord's notes, even-spread ("Euclidean") rhythms for
        the melody and drums, each repeat keeping most of the bar and changing a little.
     Later maybe: chord colours (sevenths, sus) now and then.

@@ -842,7 +842,24 @@ to date in the same commit when behaviour changes.
   in whole tone), a voice moves 1.2-1.6 semitones a chord on average; E minor pentatonic borrows F# or C in 59%
   of chords; through the patch the pad stays in E natural minor. Stage 2 (melodies that develop) and 3 (rules-made
   rhythms): ROADMAP 21. DadCraft, Oct 21: "it feels familiar without being something I can expect to play in a
-  certain way. I like it."
+  certain way. I like it." He kept it opt-in for now.
+  **Melodies that develop** (`mel_dev`, Music toggle, default off, noPreset, `.dcs()`; Oct 21, ROADMAP 21 stage 2;
+  `dcs_composer` `note`; test_dcs "melody", Pd test "melodies that develop"). Every chime (sudden sound, standing
+  still, rhythm cell) took its pitch in `mu_pick`: a random +-1/2 step from the last, near the brightness note. With
+  the switch on, `mu_pick`'s output is shut (`mu_dev_cl`) and the same bang asks the composer `note <middle> <mchord>
+  <scale_n>` (middle = mu_pick's own centre, int(mbright*2n+0.5)+n); its third outlet goes into `mu_pick_ph`, so
+  Melody phrases (if on) still win, and the sensors' and the section's registers still apply after. Works with
+  either Music variety (the sections run unheard in Classic; mchord is then Classic's chord). In C: each kind of
+  section has a motif (3-6 notes, mostly steps, a skip, now and then a repeat or a leap of 3, within +-4, direction
+  turning after two steps or by 35% chance). Notes play it in statements: round one = the motif, again or answered
+  (its last note on the chord's root), developed, the motif; later rounds = the motif, developed, developed,
+  answered. Developed = moved +-1/2 steps (30%), upside down (20%), backwards (10%: steps reversed and turned over),
+  cut short (20%), carried one step further (20%). A statement starts on the chord tone nearest middle + drift; moves
+  change the drift (within ROAM 4), the theme's return halves it (round one: back to 0). A pause of GAP_MS 2.2 s ends
+  a statement; notes past it fold by octaves to within middle +-8. A section that returns brings its motif back
+  with one note moved a step (60%). Reports: `comp_form` (form, first note), `comp_note`. Measured (test_dcs, 40
+  bursts): the motif came back 13 times identical, all 8 forms used, statements started on 5 different notes; 60
+  bursts across sections: 10 different motifs. The walking arpeggio is untouched (stage 3).
   **Register from sensors** (`music_follow`, Music, default on, noPreset, app-only `noPd`; `NoteRegister.java`, test W):
   room-relative light < 0.25 -> 2 scale steps down + warm, > 0.75 -> 2 up; a pocket -> an octave down + warm; climbing
   (climb > 0.5) +2. A new register must hold 3 s and changes come at most every 8 s. The app sends `music_register
