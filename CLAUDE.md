@@ -61,8 +61,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
 - **Release:** rc5 (0.9.0-rc5, versionCode 13, the first as Ouralia, the first public beta) built Oct 21
-  (`./gradlew assembleRelease`, debug key; ~/Downloads/Ouralia-0.9.0-rc5.apk). To go under GitHub Releases, not
-  advertised until GitHub purges the old commits. Next: rc6 / versionCode 14.
+  (`./gradlew assembleRelease`, debug key; ~/Downloads/Ouralia-0.9.0-rc5.apk). Posted Oct 21 as GitHub pre-release
+  v0.9.0-rc5; DadCraft doesn't advertise it until GitHub purges the old commits. Next: rc6 / versionCode 14.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
@@ -78,8 +78,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
   mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.
-- **GitHub:** DadCraft asked Support to purge the old commits that held his name. When they answer, check that
-  `gh api repos/dadcraftttv/PdScenes/commits/c193786cad2b75e94f01912ec5b3c7b4a1dd26e0` no longer finds it.
+- **GitHub:** the repo is dadcraftttv/Ouralia since Oct 21 (renamed from PdScenes; old links redirect). DadCraft asked Support to purge the old commits that held his name. When they answer, check that
+  `gh api repos/dadcraftttv/Ouralia/commits/c193786cad2b75e94f01912ec5b3c7b4a1dd26e0` no longer finds it.
 - Push only when DadCraft asks (`git log origin/main..HEAD` shows what is unpushed).
 
 ## Pd gotchas
