@@ -277,10 +277,12 @@ final class PresetManager {
 
     private PresetManager() { }
 
+    /** Every preset setting at its default, except how the band plays (Params.BAND): a built-in preset leaves it as
+     *  it is, so picking Robot doesn't stop your band. */
     private static Map<String, Float> defaults() {
         Map<String, Float> m = new LinkedHashMap<>();
         for (Param p : Params.ALL) {
-            if (p.inPreset) {
+            if (p.inPreset && !Params.BAND.contains(p.id)) {
                 m.put(p.id, p.def);
             }
         }
