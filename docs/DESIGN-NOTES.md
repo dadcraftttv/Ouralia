@@ -1257,6 +1257,10 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   new applicationId (e.g. com.dadcraftstudios.ouralia), which testers get as a new app (they export presets first).
 
 ## Open / next
+- **Flaky test, come back to it (DadCraft, Oct 21):** test_patch "scatter New: cost" (the New echo scatter must cost
+  under 12% more of the whole patch than Classic) fails on the full run: +12.6% and +12.9%, also with Oct 21's changes
+  stashed, so it isn't new. A timing check (best of three, interleaved) on a busy machine, or New scatter's real cost
+  sitting right at the line: measure it alone before deciding between a looser limit and a cheaper scatter.
 - **Ideas queue with details: `docs/ROADMAP.md`.** Its numbered items are built, removed or set aside by DadCraft
   (Oct 19); still open there: the small items in 11 (location input, unported scene objects, `rj_zcr~` if a scene
   needs it, a beat-offset slider if drift returns).
