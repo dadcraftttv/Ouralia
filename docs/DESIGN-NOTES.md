@@ -1262,6 +1262,8 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   under 12% more of the whole patch than Classic) fails on the full run: +12.6% and +12.9%, also with Oct 21's changes
   stashed, so it isn't new. A timing check (best of three, interleaved) on a busy machine, or New scatter's real cost
   sitting right at the line: measure it alone before deciding between a looser limit and a cheaper scatter.
+  Both failing runs were while the build machine was busy with other programs; the next full run (machine quiet)
+  passed. Likely load, but it sits close to the limit, so it can come back.
 - **Ideas queue with details: `docs/ROADMAP.md`.** Its numbered items are built, removed or set aside by DadCraft
   (Oct 19); still open there: the small items in 11 (location input, unported scene objects, `rj_zcr~` if a scene
   needs it, a beat-offset slider if drift returns).
