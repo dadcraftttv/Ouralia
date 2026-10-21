@@ -62,7 +62,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
 - **Release:** rc5.1 (0.9.0-rc5.1, versionCode 14, Oct 21; DadCraft: a hotfix of rc5, not rc6) = rc5 + presets that save
   The Band, Intensity and the effects' voices, the Kit menus refreshing after a preset loads, and the cards'
-  on/off switches back (its APK was replaced on the release for that, before any download, DadCraft's choice). Release APK, debug
+  on/off switches back, Notes and Chimes Level in Mix (its APK was replaced twice on the release for those, before
+  any download, DadCraft's choice). Release APK, debug
   key, ~/Downloads/Ouralia-0.9.0-rc5.1.apk; GitHub pre-releases v0.9.0-rc5 and v0.9.0-rc5.1, not advertised until
   GitHub purges the old commits. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 15.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
