@@ -60,9 +60,10 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - Android build: `./gradlew assembleDebug`. Real-device check is DadCraft's.
 
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
-- **Release:** rc5 (0.9.0-rc5, versionCode 13, the first as Ouralia, the first public beta) built Oct 21
-  (`./gradlew assembleRelease`, debug key; ~/Downloads/Ouralia-0.9.0-rc5.apk). Posted Oct 21 as GitHub pre-release
-  v0.9.0-rc5; DadCraft doesn't advertise it until GitHub purges the old commits. Next: rc6 / versionCode 14.
+- **Release:** rc5.1 (0.9.0-rc5.1, versionCode 14, Oct 21; DadCraft: a hotfix of rc5, not rc6) = rc5 + presets that save
+  The Band, Intensity and the effects' voices, and the Kit menus refreshing after a preset loads. Release APK, debug
+  key, ~/Downloads/Ouralia-0.9.0-rc5.1.apk; GitHub pre-releases v0.9.0-rc5 and v0.9.0-rc5.1, not advertised until
+  GitHub purges the old commits. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 15.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
