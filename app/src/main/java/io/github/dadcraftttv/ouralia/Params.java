@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -747,6 +748,18 @@ final class Params {
      * slider kept in presets). Before, only the dice's sliders had one, so the Mix trims (kept out of the dice)
      * couldn't be held while a Realm played (DadCraft, Oct 16). Switches and menus have none.
      */
+    /** A section's on/off switch ("Echo Enabled"), shown on its card's header; null if it has none. Matched in any
+     *  case: the Oct 21 Title Case renames ("enabled" became "Enabled") had hidden every card's switch. */
+    static Param onSwitch(Section section) {
+        for (Param p : ALL) {
+            if (p.section.equals(section.id) && p.toggle && p.moverOf == null
+                    && p.label.toLowerCase(Locale.ROOT).endsWith(" enabled")) {
+                return p;
+            }
+        }
+        return null;
+    }
+
     static boolean lockable(Param p) {
         return !p.toggle && p.choices == null && p.moverOf == null && (p.randomizable || p.inPreset)
                 && !realmsLeave(p.id);   // (Intensity, Set tempo: in presets, but neither dice nor Realms move them)
