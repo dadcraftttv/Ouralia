@@ -65,10 +65,15 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
-- **Waiting on DadCraft:** whether Music variety Evolving (`dcs_composer`, ROADMAP 21 stage 1, he likes it, opt-in for now)
-  becomes the default; his ears on Melodies that develop (`mel_dev`, stage 2) Patterns made by rules (`pat_gen`, stage 3, also Melody rhythm's bar) and Chord colours (`chord_color`); The Band Plays (`band_plays`, he compares it with Intensity up); the renames, effect families, rounded icons (Oct 21); phone checks of user kits (with
-  samples, and MP3/OGG/FLAC import), kit layers, kit drums in "Your steps", wired + Bluetooth together, the Pocket
-  Realm; his desktop "<Part> from" report (likely a kit with no part of its own, now labelled "(Classic's drums)").
+- **Plan (DadCraft, Oct 21):** rc5 = the first public beta, renamed to Ouralia, posted under GitHub Releases but not
+  advertised until GitHub purges the old commits. Before rc5: the rename and the found-sound rhythm section (ROADMAP
+  16); everything else waits for wider testers' feedback.
+- **DadCraft's verdicts (Oct 21):** Evolving stays opt-in (not the default). Hooks That Grow (`mel_dev`), Living
+  Grooves (`pat_gen`), Chord Colours (`chord_color`): "all good". The Band Plays good with Intensity 50 (he is
+  comparing it off with Intensity 100). Renames, effect families, rounded icons: good.
+- **Open, as time allows:** user kits with his own samples (and MP3/OGG/FLAC import), kit layers, kit drums in "Your
+  steps", wired + Bluetooth together, the Pocket Realm; his desktop "<Part> from" report (likely a kit with no part
+  of its own, now labelled "(Classic's drums)").
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
   mockups (DadCraft: "looks and feels great"); only the Ouralia wordmark waits for the rename.
