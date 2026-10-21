@@ -24,6 +24,7 @@ There are two ways to use it:
 - **More cards are grouped:** **Mix** (Drums, Pad and bass, Melody, Answers), **Glitch** (Glitch cloud, Kinds of glitch, Freeze) and **Input & output** (Microphone, Pocket and handling, Output).
 - **New echo scatter** (Echo, Scatter style: New): each repeat comes from a real direction, can fly across while it plays (Throw) and can sound near or far (Near and far). Classic stays the default.
 - **The XY pad folds** like the other cards: tap its heading to hide it if you don't use it.
+- **A new welcome and a guided tour:** the welcome pages have a new look, and end with **Show me around**: the screen dims and arrows point at the small buttons (Save, Export, Import, Randomize, Nudge, Undo, Movers, the on/off switches, the player and the tab icons) with what each one does. Then you try it: press **Start**, open **Echo**, turn it up and hear your own voice change. When you tap Done, Echo goes back to how it was. **Skip tour** (or Back) leaves at any time. See it under Setup, About, **Show the walkthrough again**.
 
 **New in rc4 (Oct 17-19):**
 
@@ -112,7 +113,7 @@ You need an Android phone or tablet with **Android 9 or newer**, and headphones 
 
 1. **Put on headphones first.** If the sound comes out of the phone speaker, the microphone hears it and it screeches back (feedback). The app only plays into headphones or earbuds, never the phone speaker, so it will not start until some are connected. If you unplug them while it runs, it stops by itself. Wired or Bluetooth both work; wired is better (see Audio devices below).
 2. Install the APK. If you already have an earlier copy, just install over it; your saved presets and settings stay. Only if Android refuses with "App not installed" do you need to uninstall the old copy first (see "Starting fresh with Reset" for what that erases). Android may ask you to allow installs from the app you opened it from, and Play Protect may show an "unknown developer" warning. Choose **More details > Install anyway**.
-3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone (you can see them again under Setup, About). Then press **Start**, the round button in the player at the bottom of the screen.
+3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone, then a short guided tour points out the small buttons and has you press **Start** (the round button in the player at the bottom of the screen) and try Echo on your own voice. You can see it all again under Setup, About.
 4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on the Music tab, Realm Hopper on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
 5. Press **Stop** when finished.
 

@@ -473,6 +473,24 @@ to date in the same commit when behaviour changes.
   by itself only on a fresh install (firstInstallTime == lastUpdateTime) and once (`UiSettings` walkthrough_seen;
   Reset everything leaves it); Setup, About has "Show the walkthrough again" and the feedback email (DadCraft: email
   only, no Discord).
+  **Redesign + tour (Oct 21; `Walkthrough.java`, `Tour.java`, `MainActivity.startTour`).** DadCraft: "it gets the job
+  done but it doesn't quite pop"; wanted arrows to the small unlabelled Sound-tab buttons, then a live try of Echo
+  with the screen dimmed, the app visible but untouchable until Next, and everything reset at the end. Now five pages
+  (welcome, headphones, mic, it starts quiet, "Let's look around"), each with a badge (icon on a disc in a slowly
+  turning ring in the dial's two colours, a little bounce per page), progress pills, a soft accent glow, pages that
+  slide; the live lines are chips (tick or warning). The last page's "Show me around" starts the tour: a `Tour`
+  overlay on the main screen dims everything (even-odd path with rounded holes, a pulsing ring per hole), curved
+  arrows run from the card to each spot, numbered badges on the spot's far edge match the card's lines (bold before
+  the colon). Steps: Save/Export/Import; Randomize/Nudge/Undo; Echo's heading (Movers, switch, open); the player
+  (Start, now playing, Save sound); the five tab icons; then "try it" steps whose lit spot passes touches through
+  (`dispatchTouchEvent` returns false on DOWN inside it): press Start (auto-next on `AudioService.isRunning`, a line
+  asks for headphones), tap Echo (auto-next when its body shows), turn it up (Echo time row, and Echo feedback to
+  Echo level: two spots, so Echo follows your steps stays dark, its sheet would open under the overlay; Next lights
+  once Echo level >= 0.15); "Now it's yours" (feedback email). At the start Echo is set to its defaults (level 0,
+  on, movers off) and folded; at the end however it ends (Done, Skip tour, Back, onDestroy) Echo's values, movers and
+  fold go back to what they were: on a new install Echo level 0 (Hard rule: nothing else resets settings). While a
+  scene is chosen the try steps are left out. Checked on the phone by screenshots (no headphones: the Echo steps
+  with a temporary build that skipped Start).
 - **Mix** (DadCraft, Oct 13: "every musical and rhythmic element should either have a volume slider or on/off
   switch"): section `mix` on the Music tab, in presets (DadCraft: shared with a preset), a Realm ingredient (`Worlds.GROUPS`
   "mix"). It holds the existing beat_snare, beat_hats, beat_glitch, music_pad, music_harm (moved from Rhythm/Music,

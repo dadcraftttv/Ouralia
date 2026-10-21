@@ -413,20 +413,20 @@ public class MainActivity extends Activity {
         presets.setTextColor(look.p.text);
         presets.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
         presets.setPadding(dp(16), 0, dp(40), 0);
-        iconButton(presetRow, R.drawable.ic_add, R.string.save, this::showSave);
-        iconButton(presetRow, R.drawable.ic_upload, R.string.export, this::startExport);
-        iconButton(presetRow, R.drawable.ic_download, R.string.import_preset, this::startImport);
+        presetSave = iconButton(presetRow, R.drawable.ic_add, R.string.save, this::showSave);
+        presetExport = iconButton(presetRow, R.drawable.ic_upload, R.string.export, this::startExport);
+        presetImport = iconButton(presetRow, R.drawable.ic_download, R.string.import_preset, this::startImport);
 
         // Randomize, Nudge, Undo: smaller outlined chips with icons
         LinearLayout randomRow = newButtonRow(sound);
         randomRow.setPadding(0, dp(2), 0, dp(4));
-        chip(randomRow, R.drawable.ic_shuffle, R.string.randomize, () -> {
+        randomizeChip = chip(randomRow, R.drawable.ic_shuffle, R.string.randomize, () -> {
             ParamStore.randomize();
             refreshRows();
             uiHandler.removeCallbacks(morphFollow);
             uiHandler.post(morphFollow);   // the sliders follow the glide on screen
         });
-        chip(randomRow, R.drawable.ic_wave, R.string.nudge, () -> {
+        nudgeChip = chip(randomRow, R.drawable.ic_wave, R.string.nudge, () -> {
             ParamStore.nudge(ParamStore.get("nudge_amount"));
             refreshRows();
         });
@@ -564,6 +564,11 @@ public class MainActivity extends Activity {
     private DialView miniDial, playerDial;
     private TextView dialHint;
     private ImageButton miniStart, miniSave;
+    private View playerMiddle;   // (the tour points at it)
+    private ImageButton presetSave, presetExport, presetImport;
+    private Button randomizeChip, nudgeChip;
+    private Tour tour;                     // the spotlight tour after the walkthrough, while it shows
+    private Object backEndsTour;           // its OnBackInvokedCallback on Android 13+
     private TextView miniStatus, miniSub;
     // One bottom sheet, slid up over a dimmed screen, for whatever needs it: the player, the Key and Scale pickers.
     private View sheetScrim;
@@ -601,6 +606,7 @@ public class MainActivity extends Activity {
         middle.setBackground(look.pressable(null, look.p.text, Look.RADIUS_TILE));
         middle.setContentDescription(getString(R.string.player_open));
         middle.setOnClickListener(v -> openPlayer());
+        playerMiddle = middle;
         LinearLayout texts = new LinearLayout(this);
         texts.setOrientation(LinearLayout.VERTICAL);
         miniStatus = new TextView(this);
@@ -880,8 +886,10 @@ public class MainActivity extends Activity {
 
     @Override
     @SuppressWarnings("deprecation")
-    public void onBackPressed() {   // Android 12 and older (13+ uses the callback registered in openSheet)
-        if (sheetOpen) {
+    public void onBackPressed() {   // Android 12 and older (13+ uses the callbacks registered in openSheet, startTour)
+        if (tour != null && tour.isRunning()) {
+            tour.end();
+        } else if (sheetOpen) {
             closeSheet();
         } else {
             super.onBackPressed();
@@ -1123,7 +1131,7 @@ public class MainActivity extends Activity {
     }
 
     /** A square icon button (48 dp, on the card surface) at the end of a button row. */
-    private void iconButton(LinearLayout row, int icon, int description, Runnable action) {
+    private ImageButton iconButton(LinearLayout row, int icon, int description, Runnable action) {
         ImageButton b = new ImageButton(this);
         b.setImageResource(icon);
         b.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.text));
@@ -1133,6 +1141,7 @@ public class MainActivity extends Activity {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(48), dp(48));
         lp.setMargins(dp(3), dp(4), dp(3), dp(4));
         row.addView(b, lp);
+        return b;
     }
 
     /**
@@ -1268,6 +1277,7 @@ public class MainActivity extends Activity {
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         cardParams.setMargins(0, 0, 0, dp(Look.CARD_GAP));
         parent.addView(card, cardParams);
+        sectionCards.put(id, card);
         return body;
     }
 
@@ -1657,6 +1667,7 @@ public class MainActivity extends Activity {
 
     /** Each section header's chevron, by its title view. */
     private final Map<TextView, ImageView> sectionChevrons = new HashMap<>();
+    private final Map<String, LinearLayout> sectionCards = new HashMap<>();   // by section id: header row, then body
 
     private void showSectionState(TextView header, View body, String title, boolean open) {
         body.setVisibility(open ? View.VISIBLE : View.GONE);
@@ -1903,10 +1914,8 @@ public class MainActivity extends Activity {
             }
 
             @Override
-            public void start() {
-                if (!AudioService.isRunning()) {
-                    onStartStop();
-                }
+            public void startTour() {
+                MainActivity.this.startTour();
             }
 
             @Override
@@ -1916,6 +1925,176 @@ public class MainActivity extends Activity {
         });
         walkthrough.applyLook(look);
         walkthrough.open();
+    }
+
+    /**
+     * The spotlight tour after the walkthrough (DadCraft, Oct 21): arrows to the small buttons on the Sound tab and
+     * the player, then a live try: press Start, open Echo, turn it up from its defaults and hear your voice change.
+     * Echo (its values, switch, movers and whether its card was open) goes back to how it was when the tour ends,
+     * however it ends: on a new install, Echo level 0. (Between them sits Echo follows your steps: left dark, as its
+     * sheet would open under the tour.)
+     */
+    private void startTour() {
+        if (tour != null && tour.isRunning()) {
+            return;
+        }
+        closeSheet();
+        showTab(TAB_SOUND);
+        LinearLayout echoCard = sectionCards.get("echo");
+        View echoHead = echoCard.getChildAt(0), echoBody = echoCard.getChildAt(1);
+        View movers = null, onOff = null, chevron = null;
+        android.view.ViewGroup head = (android.view.ViewGroup) echoHead;
+        for (int i = 1; i < head.getChildCount(); i++) {
+            View c = head.getChildAt(i);
+            if (c instanceof android.widget.ToggleButton) {
+                movers = c;
+            } else if (c instanceof Switch) {
+                onOff = c;
+            } else if (c instanceof ImageView) {
+                chevron = c;
+            }
+        }
+
+        // what the tour may change, to put back at the end
+        Map<String, Float> echoBefore = new HashMap<>();
+        String echoMovers = Params.moversSwitchId("echo");
+        for (Param p : Params.ALL) {
+            if (p.section.equals("echo") || p.id.equals(echoMovers)) {
+                echoBefore.put(p.id, ParamStore.get(p.id));
+            }
+        }
+        boolean echoWasOpen = echoBody.getVisibility() == View.VISIBLE;
+        if (echoWasOpen) {
+            echoHead.performClick();   // folded, so the tour can ask for it to be opened
+        }
+        // the try starts from Echo's defaults (Echo level 0, switched on) with nothing moving it but the user
+        for (Param p : Params.ALL) {
+            if (p.section.equals("echo")) {
+                ParamStore.set(p.id, p.def);
+            }
+        }
+        ParamStore.set("echo_on", 1f);
+        if (Params.byId(echoMovers) != null) {
+            ParamStore.set(echoMovers, 0f);
+        }
+        refreshRows();
+        updateMoverUi();
+
+        boolean scene = SceneSettings.current(this) != null;   // (the effects are paused: no live try)
+        Runnable top = () -> mainScroll.post(() -> mainScroll.scrollTo(0, 0));
+        Runnable toEcho = () -> mainScroll.post(() -> scrollToShow(echoHead, 0.3f));
+        List<Tour.Step> steps = new ArrayList<>();
+        Tour.Step s = new Tour.Step(getString(R.string.tour_presets_t), getString(R.string.tour_presets_b))
+                .spot(getString(R.string.tour_save), presetSave)
+                .spot(getString(R.string.tour_export), presetExport)
+                .spot(getString(R.string.tour_import), presetImport);
+        s.enter = top;
+        steps.add(s);
+        s = new Tour.Step(getString(R.string.tour_shortcuts_t), getString(R.string.tour_shortcuts_b))
+                .spot(getString(R.string.tour_randomize), randomizeChip)
+                .spot(getString(R.string.tour_nudge), nudgeChip)
+                .spot(getString(R.string.tour_undo), undoButton);
+        s.enter = top;
+        steps.add(s);
+        s = new Tour.Step(getString(R.string.tour_card_t), getString(R.string.tour_card_b));
+        if (movers != null) {
+            s.spot(getString(R.string.tour_movers), movers);
+        }
+        if (onOff != null) {
+            s.spot(getString(R.string.tour_switch), onOff);
+        }
+        s.spot(getString(R.string.tour_open), chevron);
+        s.enter = toEcho;
+        steps.add(s);
+        steps.add(new Tour.Step(getString(R.string.tour_player_t), getString(R.string.tour_player_b))
+                .spot(getString(R.string.tour_start), miniStart)
+                .spot(getString(R.string.tour_middle), playerMiddle)
+                .spot(getString(R.string.tour_snapshot), miniSave));
+        s = new Tour.Step(getString(R.string.tour_tabs_t), getString(R.string.tour_tabs_b));
+        int[] tabWords = {R.string.tour_tab_sound, R.string.tour_tab_music, R.string.tour_tab_realms,
+                R.string.tour_tab_scenes, R.string.tour_tab_setup};
+        for (int t = 0; t < tabWords.length; t++) {
+            s.spot(getString(tabWords[t]), tabViews[t]);
+        }
+        steps.add(s);
+        if (!scene) {
+            s = new Tour.Step(getString(R.string.tour_go_t), getString(R.string.tour_go_b))
+                    .spot(null, true, () -> new View[] {miniStart});
+            s.done = AudioService::isRunning;
+            s.autoNext = true;
+            s.status = () -> headphonesConnected() ? "" : getString(R.string.tour_go_phones);
+            steps.add(s);
+            s = new Tour.Step(getString(R.string.tour_echo_t), getString(R.string.tour_echo_b))
+                    .spot(null, true, () -> new View[] {echoHead});
+            s.enter = toEcho;
+            s.done = () -> echoBody.getVisibility() == View.VISIBLE;
+            s.autoNext = true;
+            steps.add(s);
+            s = new Tour.Step(getString(R.string.tour_try_t), getString(R.string.tour_try_b))
+                    .spot(null, true, () -> new View[] {rowView("echo_time", false), rowView("echo_time", true)})
+                    .spot(null, true, () -> new View[] {rowView("feedback", false), rowView("wet", true)});
+            s.enter = () -> mainScroll.post(() -> scrollToShow(rowView("echo_time", false), 0.12f));
+            s.done = () -> ParamStore.get("wet") >= 0.15f;
+            s.status = () -> getString(ParamStore.get("wet") >= 0.15f ? R.string.tour_try_more : R.string.tour_try_first);
+            steps.add(s);
+        }
+        s = new Tour.Step(getString(R.string.tour_end_t), getString(scene ? R.string.tour_end_scene_b : R.string.tour_end_b));
+        s.enter = top;
+        steps.add(s);
+
+        tour = new Tour(this, look, steps, () -> {
+            for (Map.Entry<String, Float> e : echoBefore.entrySet()) {
+                if (ParamStore.get(e.getKey()) != e.getValue()) {
+                    ParamStore.set(e.getKey(), e.getValue());
+                }
+            }
+            if ((echoBody.getVisibility() == View.VISIBLE) != echoWasOpen) {
+                echoHead.performClick();
+            }
+            refreshRows();
+            updateMoverUi();
+            if (Build.VERSION.SDK_INT >= 33 && backEndsTour != null) {
+                getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backEndsTour);
+                backEndsTour = null;
+            }
+        });
+        tour.start((android.view.ViewGroup) mainScroll.getParent());
+        if (Build.VERSION.SDK_INT >= 33) {
+            android.window.OnBackInvokedCallback back = tour::end;
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    android.window.OnBackInvokedDispatcher.PRIORITY_OVERLAY, back);
+            backEndsTour = back;
+        }
+    }
+
+    /** A slider row's name line, or its slider, for the tour. Null until its card has opened. */
+    private View rowView(String id, boolean slider) {
+        for (Row r : rows) {
+            if (r.param.id.equals(id) && r.slider != null) {
+                return slider ? r.slider : (View) r.label.getParent();
+            }
+        }
+        return null;
+    }
+
+    /** Scrolls the settings so {@code v} sits {@code fromTop} (0..1) of the way down the visible part. */
+    private void scrollToShow(View v, float fromTop) {
+        if (v == null) {
+            return;
+        }
+        int y = 0;
+        for (View x = v; x != null && x != mainScroll; x = x.getParent() instanceof View ? (View) x.getParent() : null) {
+            y += x.getTop();
+        }
+        mainScroll.scrollTo(0, Math.max(0, y - Math.round(mainScroll.getHeight() * fromTop)));
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (tour != null && tour.isRunning()) {
+            tour.end();   // (puts Echo back)
+        }
+        super.onDestroy();
     }
 
     /** Licence texts shipped inside the app (assets/licenses), as the GPL requires. */
