@@ -514,7 +514,7 @@ to date in the same commit when behaviour changes.
   continuous two-grain reversal fed the reverb) rose nicely but peaked wherever the sound fell, never on the beat.
   Audio group `revrev` (reverb_on x reverb_mix x reverb_rev).
 - **Calm builds** (roadmap item 7, Oct 14; `CalmBuild.java`, test B; `calm_build` toggle in Music, off by default,
-  noPreset, noPd: DadCraft, "keeping it your own works best"): calm = switch on, music on, not walking, room not
+  noPd; noPreset until Oct 21, when DadCraft wanted it saved in presets, see "How the band plays in presets"): calm = switch on, music on, not walking, room not
   loud-and-lively. After `WAIT_S` 30 s of calm, the level rises over 180 s, holds 60, falls over 120, then rests 180
   before another; not calm -> it fades within `DROP_S` 5 s and waits for 30 s of calm again. Layers join along the
   rise (pad from 0, room notes from 0.25, standing-still chimes from 0.5, harmony and reverb from 0.75) and each is
@@ -1257,6 +1257,13 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
 - **The name** (Oct 17): **Ouralia**, chosen by DadCraft; no USPTO or EUIPO results for it (he checked), though Oura
   the ring maker has fought similar marks. The final name and applicationId must not contain "RjDj". Renaming gives a
   new applicationId (e.g. com.dadcraftstudios.ouralia), which testers get as a new app (they export presets first).
+- **How the band plays in presets** (Oct 21, DadCraft: a preset made in PdScenes didn't bring them over): Chord
+  Colours, Hooks That Grow, Living Grooves, The Band Plays and Slow Bloom (`Worlds.BAND_STYLE`) are saved in presets,
+  not resetWhenAbsent (a preset made before keeps what you have), and a Realm never changes them (like the kit; test
+  W). The kit and Band Members were always in presets: loading one on the Sound tab left The Band tab's menus showing
+  the old kit (rows on a hidden tab skip refreshRows), so `showTab` now refreshes. Still the user's own (noPreset):
+  Music on, Key, Scale, Song Shape, Soft Steps, Wandering Home, Sway, the Sounds choices, Melody rhythm, Phrasing,
+  the Beat's tempo and sounds.
 - **The rename** (Oct 21, DadCraft: rc5 is to be the first public beta, as Ouralia): applicationId and Java package
   `io.github.dadcraftttv.ouralia` (tied to the GitHub account he owns; his pick over com.dadcraftstudios.ouralia), app
   name "Ouralia", the in-app wordmark lower case "ouralia" as in the mockups, prefs stores `ouralia_*`, themes

@@ -5,7 +5,7 @@ public class W {
   static int fails=0;
   static void check(boolean c,String m){ if(!c){fails++;System.out.println("FAIL: "+m);} else System.out.println("ok:   "+m); }
   static void walk(double from,double to,double hz,float amp){ for(double t=from;t<to;t+=0.02){ float bump=amp*(float)Math.max(0,Math.sin(2*Math.PI*hz*t)); StepDetector.onAcceleration(0,0,9.80665f+bump,t); } }
-  public static void main(String[] a){
+  public static void main(String[] a) throws Exception {
     // ---- step detector ----
     StepDetector.reset(); walk(0,6,1.8,4f);
     check(StepDetector.walking(6),"walking signal is detected");
@@ -209,6 +209,19 @@ public class W {
     Worlds.reset();
     check(ParamStore.get("kit")==2f&&ParamStore.get("kitp_bass")==7f,"and a stop leaves them too");
     ParamStore.set("kit",0f); ParamStore.set("kitp_bass",0f); ParamStore.set("kitl_pad",0f); ParamStore.set("kitb_pad",0.5f);
+    // how the band plays is saved in presets, but a Realm never changes it (DadCraft, Oct 21)
+    Worlds.reset(); Worlds.setEnabled(true);
+    for(String id:Worlds.BAND_STYLE){ Param bp=Params.byId(id); check(bp.inPreset&&!bp.resetWhenAbsent,id+" is saved in presets, not reset by one without it"); ParamStore.set(id,1f); }
+    for(int i=0;i<600;i++) Worlds.tick(0.033,(i%5<2?-6f:-16f),false,12*60);
+    boolean bandKept=true; for(String id:Worlds.BAND_STYLE) bandKept&=ParamStore.get(id)==1f;
+    check("flux".equals(Worlds.currentWorld())&&bandKept,"a Realm leaves Chord Colours, Hooks That Grow, Living Grooves, The Band Plays and Slow Bloom alone");
+    Worlds.reset();
+    Map<String,Float> back=PresetManager.parse(PresetManager.toJson("Band",ParamStore.snapshot())).values;
+    boolean bandSaved=true; for(String id:Worlds.BAND_STYLE) bandSaved&=back.get(id)!=null&&back.get(id)==1f;
+    ParamStore.applyPreset(Map.of("wet",0.3f));
+    boolean bandStays=true; for(String id:Worlds.BAND_STYLE) bandStays&=ParamStore.get(id)==1f;
+    check(bandSaved&&bandStays,"a saved preset carries them, and one without them (made before) leaves them as they are");
+    for(String id:Worlds.BAND_STYLE) ParamStore.set(id,0f);
     // stop restores home
     Worlds.reset();
     check(Worlds.currentWorld()==null,"reset leaves no world");

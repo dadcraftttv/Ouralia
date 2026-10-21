@@ -206,9 +206,13 @@ final class Worlds {
         return null;
     }
 
+    /** How the band plays: saved in presets since Oct 21, never changed by a Realm. */
+    static final Set<String> BAND_STYLE = Set.of("chord_color", "mel_dev", "pat_gen", "band_plays", "calm_build");
+
     private static boolean realmChanges(String worldId, Param p) {
-        if (p.id.startsWith(Kits.ID)) {
-            return false;   // the kit, each part's "from", layer and blend stay the user's (DadCraft, Oct 20)
+        if (p.id.startsWith(Kits.ID) || BAND_STYLE.contains(p.id)) {
+            return false;   // the kit, each part's "from", layer and blend stay the user's (DadCraft, Oct 20), and so
+                            // does how the band plays (DadCraft, Oct 21: saved in presets, not a Realm's to change)
         }
         String g = groupOf(p);
         return g == null || uses(worldId, g);

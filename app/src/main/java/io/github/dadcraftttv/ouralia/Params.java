@@ -193,20 +193,23 @@ final class Params {
             new Param("music_var", "Song Shape (how the chords and sections go)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Steady (as before)", "Evolving (chord progressions and sections)")
                     .inSection("music").noPreset().resetWhenAbsent().dcs(),
+            // Chord Colours, Hooks That Grow, Living Grooves, The Band Plays and Slow Bloom are saved in presets
+            // (DadCraft, Oct 21) but not reset by a preset that says nothing about them, and a Realm never changes them
+            // (Worlds.realmChanges), like the kit.
             // Melodies that develop (Oct 21, stage 2): the chimes play a motif per section in statements, like a theme
             // and its variations (again, answered, moved, upside down, backwards, cut short, carried on), instead of a
             // random step from the last note. Works with either Music variety.
             // Chord colours (Oct 21, with Evolving): now and then a seventh, an added ninth, or a sus chord resolving at
             // the next bar, more in Calm, more sus in Lift. Classic's chords stay as they are.
             new Param("chord_color", "Chord Colours (sevenths, sus, added notes, with Evolving)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
+                    Param.Curve.LINEAR).inSection("music").toggle().dcs(),
             new Param("mel_dev", "Hooks That Grow (a motif, repeated and changed)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
+                    Param.Curve.LINEAR).inSection("music").toggle().dcs(),
             // Patterns made by rules (Oct 21, stage 3): the walking notes and the drums get a bar made by rules each bar
             // (evenly spread hits as the drive asks, a figure of the chord's tones), keeping most of it and changing
             // one thing, every 4th bar the section's own again, instead of picks from the short lists.
             new Param("pat_gen", "Living Grooves (walking notes and drums made by rules)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
+                    Param.Curve.LINEAR).inSection("music").toggle().dcs(),
             // Walking notes ease in (Oct 21, DadCraft: the notes get "extremely loud on walking"): the footstep notes
             // below the standing chimes' loudness, following the pace smoothly, a walk starting soft. Off = as before.
             // The default since Oct 21 (DadCraft: "just be the default", and softer still).
@@ -215,15 +218,15 @@ final class Params {
             // The Band Plays (Oct 21, DadCraft: more "build and flow", and more going on in a calm room): 8-bar phrases
             // that build up to a fill and drop back, a band that never quite stops standing still, chimes in a quiet room.
             new Param("band_plays", "The Band Plays (builds and drops back, busier in a calm room)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
+                    Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("music_drift", "Wandering Home (the home chord drifts every few minutes, same notes)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
             new Param("music_follow", "Sway with the World (light, pocket and stairs move the notes higher or lower)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().noPd().resetWhenAbsent(),
             // Calm builds (DadCraft, Oct 14): standing still in a calm room, the music slowly grows a layer at a time,
-            // then eases back (CalmBuild.java). Off by default, the user's own (not in presets).
+            // then eases back (CalmBuild.java). Off by default.
             new Param("calm_build", "Slow Bloom (standing still, the music slowly grows)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().noPd().resetWhenAbsent(),
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd(),
             new Param("music_key", "Key", 0f, 11f, 0f, "", Param.Curve.LINEAR)
                     .choices("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
                     .inSection("music").noPreset().resetWhenAbsent(),
