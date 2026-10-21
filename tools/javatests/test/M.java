@@ -70,7 +70,7 @@ public class M {
     check(Math.abs(ml.get(ml.size()-1)-(0.4f-0.5f*span*wet.max))<0.01f,"louder = lower pushes down");
     Modulation.setMicLevelDb(-100f); off("wet"); run(0.1,0.033);
     // presets
-    for(String n:PresetManager.builtInNames()){ Map<String,Float> pr=PresetManager.builtIn(n); for(Param p:Params.ALL) if(p.inPreset&&!Params.BAND.contains(p.id)) { Float v=pr.get(p.id); if(v==null||Math.abs(p.clamp(v)-v)>1e-4) check(false,n+": bad/missing "+p.id+"="+v);} }
+    for(String n:PresetManager.builtInNames()){ Map<String,Float> pr=PresetManager.builtIn(n); for(Param p:Params.ALL) if(p.inPreset&&!Params.builtInsLeave(p.id)) { Float v=pr.get(p.id); if(v==null||Math.abs(p.clamp(v)-v)>1e-4) check(false,n+": bad/missing "+p.id+"="+v);} }
     ParamStore.applyPreset(PresetManager.builtIn("Wobbly pitch"));
     check(ParamStore.get(Params.moverId("pitch_semi","mv"))==1f&&ParamStore.get(Params.moversSwitchId("pitch"))==1f,"Wobbly pitch: pitch mover on, section switch on");
     Map<String,Float> old=new HashMap<>(); old.put("wet",0.2f); ParamStore.applyPreset(old);

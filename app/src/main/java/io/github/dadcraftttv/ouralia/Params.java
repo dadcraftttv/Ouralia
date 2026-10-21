@@ -105,9 +105,10 @@ final class Params {
             // ---- Input & output ----
             // Intensity (DadCraft, Oct 13): how much is going on, 0.5 = as set. Scales effect levels, glitches, chimes
             // and the beat's busyness on their way to Pd (Intensity.java), never the stored values. Also in the bottom card.
-            // The user's own hand control: not in presets, not randomized, Realms leave it alone.
+            // The user's hand control: saved in presets since Oct 21 (DadCraft), not randomized, Realms and built-in
+            // presets leave it alone (Params.realmsLeave, builtInsLeave).
             new Param("intensity", "Intensity (calmer to busier, middle = as set)", 0f, 1f, 0.5f, "",
-                    Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent(),
+                    Param.Curve.LINEAR).inSection("main").noRandom(),
             new Param("gain", "Input Gain", 0f, 10f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("main").noRandom().noPreset(),
             // Input conditioning: depends on the room and the mic, so not part of presets/randomize.
@@ -370,7 +371,7 @@ final class Params {
             // near or far (Near and far: quieter, darker, more reverb). Classic = by level only, as before.
             new Param("echo_scatter_style", "Scatter Style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (louder in one ear)", "New (direction, throw, near and far)")
-                    .inSection("echo").noRandom().noPreset().resetWhenAbsent().dcs(),
+                    .inSection("echo").noRandom().dcs(),
             new Param("echo_throw", "Throw (each repeat flies across, New scatter)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("echo").rand(0f, 1f).resetWhenAbsent().dcs(),
             new Param("echo_depth", "Near and Far (some repeats farther away, New scatter)", 0f, 1f, 0.5f, "",
@@ -428,7 +429,7 @@ final class Params {
             // chipmunk) and doesn't warble. Also used by Your voice harmony.
             new Param("shift_voice", "Pitch Shifter (also Your voice harmony)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic", "New (keeps your voice's tone)")
-                    .inSection("pitch").noPreset().resetWhenAbsent().dcs(),
+                    .inSection("pitch").dcs(),
 
             // ---- Bit crusher ---- (added after the first presets: older presets switch it off)
             new Param("crush_on", "Bit Crusher Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
@@ -445,7 +446,7 @@ final class Params {
             new Param("crush_style", "Crusher Style", 0f, 6f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (Bit depth and Sample rate below)", "8-bit sampler (11 kHz)",
                             "SP-1200 (12-bit, 26 kHz)", "NES", "Game Boy", "SNES", "Genesis / Mega Drive")
-                    .inSection("crush").noPreset().resetWhenAbsent().dcs(),
+                    .inSection("crush").dcs(),
 
             // ---- Spatial ---- (added after the first presets: older presets centre it)
             new Param("space_on", "Stereo Space Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
@@ -516,7 +517,7 @@ final class Params {
             // (DadCraft, Oct 19), and installs that already stored Classic keep it.
             new Param("dist_quality", "Distortion Quality", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Classic", "Smooth (4x oversampled: less harsh fizz)")
-                    .inSection("dist").noRandom().noPreset().resetWhenAbsent().dcs(),
+                    .inSection("dist").noRandom().dcs(),
 
             // ---- Reverse echo ---- (added after the first presets: older presets switch it off)
             new Param("rvs_on", "Reverse Echo Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
@@ -538,7 +539,7 @@ final class Params {
             // default since Oct 19 (DadCraft: New the standard, the old one kept as a fallback, renamed Legacy).
             new Param("gc_voice", "Glitch Voice", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Legacy (the Pd voices, one at a time)", "New (several at once, smoother stretch)")
-                    .inSection("glitch").noPreset().resetWhenAbsent().dcs(),
+                    .inSection("glitch").dcs(),
             // The glitch matrix: how each glitch is shared out. Together at most 100%, and what is left over is the chance
             // that nothing happens (DadCraft's idea). Amount says how often a glitch gets its chance.
             new Param("gc_pct_stutter", "Stutter Share (a slice repeated, on the beat while walking)", 0f, 100f, 35f, " %",
@@ -609,6 +610,22 @@ final class Params {
             "music_on", "music_var", "chord_color", "mel_dev", "pat_gen", "walk_ease", "band_plays", "music_drift",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
             "melody_src", "mel_rhythm", "mel_phrase", "fm_ring", "res_src", "harm_src", "harm_tracker");
+
+    /** Which voice an effect plays with (Classic or New...): saved in presets since Oct 21 (DadCraft), left out of the
+     *  built-in presets. */
+    static final Set<String> STYLES = Set.of("gc_voice", "shift_voice", "crush_style", "dist_quality",
+            "echo_scatter_style");
+
+    /** A built-in preset says nothing about these, so picking one leaves them as they are. */
+    static boolean builtInsLeave(String id) {
+        return BAND.contains(id) || STYLES.contains(id) || Intensity.ID.equals(id);
+    }
+
+    /** A Realm never changes these, even playing a preset of yours: the kit (DadCraft, Oct 20), how the band plays
+     *  and Intensity (Oct 21). */
+    static boolean realmsLeave(String id) {
+        return id.startsWith(Kits.ID) || BAND.contains(id) || Intensity.ID.equals(id);
+    }
 
     static final List<Param> ALL = Collections.unmodifiableList(withMovers(CORE));
 
@@ -730,7 +747,8 @@ final class Params {
      * couldn't be held while a Realm played (DadCraft, Oct 16). Switches and menus have none.
      */
     static boolean lockable(Param p) {
-        return !p.toggle && p.choices == null && p.moverOf == null && (p.randomizable || p.inPreset);
+        return !p.toggle && p.choices == null && p.moverOf == null && (p.randomizable || p.inPreset)
+                && !realmsLeave(p.id);   // (Intensity, Set tempo: in presets, but neither dice nor Realms move them)
     }
 
     static Param byId(String id) {

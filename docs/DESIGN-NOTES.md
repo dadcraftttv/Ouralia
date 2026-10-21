@@ -453,8 +453,8 @@ to date in the same commit when behaviour changes.
   the last minute; the Now line says "handling". Untested on the phone: whether the jolt reaches Pd before the mic's
   onset (the chimes assume so).
 - **Intensity** (roadmap item 4, Oct 13; `Intensity.java`, test I): `intensity` (main section, first row, and a
-  the dial in the player sheet since Oct 19, "The look"; noPreset, noRandom, movable; DadCraft: the user's own control, Realms and presets
-  never touch it). 0.5 = as set. `Modulation.output` (the one path every value takes to Pd) applies the mover, then
+  the dial in the player sheet since Oct 19, "The look"; noRandom, movable; DadCraft: the user's own control, Realms and built-in presets
+  never touch it; saved in your presets since Oct 21, DadCraft: "Intensity should be saved"). 0.5 = as set. `Modulation.output` (the one path every value takes to Pd) applies the mover, then
   `Intensity.apply` to the params in its RULES: only what is already there is scaled (0 stays 0), down by `calm` x the
   value at 0, up by `lift` x at 1, capped at max(value, randMax). Wet/reverb/scatter/room notes 0.6/0.6, feedback
   0.5/0.3, glitch amount/glitch loops/reverse echo 1/0.8, colour effects and tremolo 1/0.6, music react 0.6/0.5,
@@ -1266,6 +1266,11 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   kit; test W); built-in presets leave them out (`PresetManager.defaults`), so picking Robot doesn't stop the band. The
   kit and Band Members were always in presets (built-in ones still hold Classic): loading one on the Sound tab left The
   Band tab's menus showing the old kit (rows on a hidden tab skip refreshRows), so `showTab` now refreshes.
+  Also saved since Oct 21 (DadCraft: "yes, those should go into presets"), left out of built-in presets
+  (`Params.builtInsLeave`): the effects' voices `Params.STYLES` (Glitch voice, Pitch shifter, Crusher style,
+  Distortion quality, Scatter style; none resetWhenAbsent) and Intensity (Realms leave it too, `Params.realmsLeave`).
+  Kept out by DadCraft's choice: the phone and listening setup (input gain, gate, compressor and their shape, pocket
+  and handling, the sudden-sound detector) and Smoothing, Nudge strength and the Warp sound ("a personal choice").
 - **The rename** (Oct 21, DadCraft: rc5 is to be the first public beta, as Ouralia): applicationId and Java package
   `io.github.dadcraftttv.ouralia` (tied to the GitHub account he owns; his pick over com.dadcraftstudios.ouralia), app
   name "Ouralia", the in-app wordmark lower case "ouralia" as in the mockups, prefs stores `ouralia_*`, themes

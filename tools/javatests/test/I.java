@@ -9,7 +9,7 @@ public class I {
     ParamStore.set("wet",0.5f); ParamStore.set("ring_mix",0f); ParamStore.set("gc_amount",0.4f); ParamStore.set("feedback",0.6f);
     ParamStore.set("music_pad",0.33f); ParamStore.set("gain",2.5f);
     Param in=Params.byId("intensity");
-    check(in!=null && in.def==0.5f && !in.inPreset,"Intensity: default 0.5, not in presets");
+    check(in!=null && in.def==0.5f && in.inPreset && !in.resetWhenAbsent && Params.builtInsLeave("intensity") && Params.realmsLeave("intensity"),"Intensity: default 0.5, in presets (Oct 21), left alone by built-in presets and Realms");
     ParamStore.set("intensity",0.5f);
     check(out("wet")==0.5f && out("gc_amount")==0.4f && out("feedback")==0.6f,"at 0.5 everything plays as set");
     ParamStore.set("intensity",0f);

@@ -146,7 +146,7 @@ public class W {
     check(!Worlds.isEnabled()&&"Tranquil realm".equals(Worlds.presetName("tranquil")),"defaults: off, each world has its preset");
     check("Kinetic realm".equals(Worlds.renamedBuiltIn("Kinetic world"))&&Worlds.renamedBuiltIn("My world")==null&&Worlds.renamedBuiltIn("Kinetic realm")==null,"a stored built-in world preset name moves to its realm name, user presets are left alone");
     for(Worlds.World wd:Worlds.ALL){ check(PresetManager.builtIn(wd.defaultPreset)!=null,"built-in preset exists: "+wd.defaultPreset); }
-    for(String n:new String[]{"Tranquil realm","Flux realm","Kinetic realm","Ghost realm","Pocket realm"}){ Map<String,Float> pr=PresetManager.builtIn(n); boolean ok=true; for(Param p:Params.ALL) if(p.inPreset&&!Params.BAND.contains(p.id)){Float v=pr.get(p.id); if(v==null||Math.abs(p.clamp(v)-v)>1e-4) ok=false;} check(ok,n+" has valid values for every preset setting"); }
+    for(String n:new String[]{"Tranquil realm","Flux realm","Kinetic realm","Ghost realm","Pocket realm"}){ Map<String,Float> pr=PresetManager.builtIn(n); boolean ok=true; for(Param p:Params.ALL) if(p.inPreset&&!Params.builtInsLeave(p.id)){Float v=pr.get(p.id); if(v==null||Math.abs(p.clamp(v)-v)>1e-4) ok=false;} check(ok,n+" has valid values for every preset setting"); }
     ParamStore.set("wet",0.2f); ParamStore.set("reverb_mix",0f);
     Worlds.tick(0.033,-60f,false,12*60);
     check(ParamStore.get("wet")==0.2f,"auto worlds off: sliders untouched");
@@ -213,12 +213,14 @@ public class W {
     // preset of yours that holds the band at its defaults
     Map<String,Float> bandRealm=new java.util.LinkedHashMap<>(PresetManager.builtIn("Flux realm"));
     for(String id:Params.BAND) bandRealm.put(id,Params.byId(id).def);
+    bandRealm.put("intensity",0.5f);
     PresetManager.save(ctx,"Band realm",bandRealm); Worlds.setPreset("flux","Band realm");
     Worlds.reset(); Worlds.setEnabled(true);
     for(String id:Params.BAND){ Param bp=Params.byId(id); check(bp.inPreset&&!bp.resetWhenAbsent,id+" is saved in presets, not reset by one without it"); ParamStore.set(id,bp.max); }
+    ParamStore.set("intensity",0.9f);
     for(int i=0;i<600;i++) Worlds.tick(0.033,(i%5<2?-6f:-16f),false,12*60);
-    boolean bandKept=true; for(String id:Params.BAND) bandKept&=ParamStore.get(id)==Params.byId(id).max;
-    check("flux".equals(Worlds.currentWorld())&&bandKept,"a Realm leaves how the band plays alone ("+Params.BAND.size()+" settings: Music on, Key, Song Shape, Chord Colours...)");
+    boolean bandKept=ParamStore.get("intensity")==0.9f; for(String id:Params.BAND) bandKept&=ParamStore.get(id)==Params.byId(id).max;
+    check("flux".equals(Worlds.currentWorld())&&bandKept,"a Realm leaves Intensity and how the band plays alone ("+Params.BAND.size()+" settings: Music on, Key, Song Shape, Chord Colours...)");
     Worlds.reset(); Worlds.setPreset("flux","Flux realm");
     Map<String,Float> back=PresetManager.parse(PresetManager.toJson("Band",ParamStore.snapshot())).values;
     boolean bandSaved=true; for(String id:Params.BAND) bandSaved&=back.get(id)!=null&&back.get(id)==Params.byId(id).max;
@@ -230,6 +232,14 @@ public class W {
     ParamStore.set("music_on",1f); ParamStore.set("music_key",5f); ParamStore.applyPreset(PresetManager.builtIn("Robot"));
     check(ParamStore.get("music_on")==1f&&ParamStore.get("music_key")==5f&&!PresetManager.builtIn("Default").containsKey("music_var"),"a built-in preset (Robot) leaves Music on and the Key alone");
     ParamStore.set("music_on",0f); ParamStore.set("music_key",0f);
+    // the effects' voices and Intensity: saved in presets, left alone by built-in ones (DadCraft, Oct 21)
+    ParamStore.set("gc_voice",0f); ParamStore.set("dist_quality",0f); ParamStore.set("intensity",0.8f);
+    Map<String,Float> styled=PresetManager.parse(PresetManager.toJson("Styled",ParamStore.snapshot())).values;
+    ParamStore.applyPreset(PresetManager.builtIn("Robot"));
+    check(styled.get("gc_voice")==0f&&styled.get("dist_quality")==0f&&styled.get("intensity")==0.8f&&ParamStore.get("gc_voice")==0f&&ParamStore.get("intensity")==0.8f,
+          "Glitch Voice, Distortion Quality and Intensity are saved in a preset; Robot leaves them as they are");
+    for(String id:Params.STYLES) check(Params.byId(id).inPreset&&!Params.byId(id).resetWhenAbsent,id+" is saved in presets, not reset by one without it");
+    ParamStore.set("gc_voice",Params.byId("gc_voice").def); ParamStore.set("dist_quality",Params.byId("dist_quality").def); ParamStore.set("intensity",0.5f);
     // stop restores home
     Worlds.reset();
     check(Worlds.currentWorld()==null,"reset leaves no world");
