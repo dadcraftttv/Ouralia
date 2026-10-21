@@ -207,9 +207,8 @@ final class Worlds {
     }
 
     private static boolean realmChanges(String worldId, Param p) {
-        if (p.id.startsWith(Kits.ID) || Params.BAND.contains(p.id)) {
-            return false;   // the kit, each part's "from", layer and blend stay the user's (DadCraft, Oct 20), and so
-                            // does how the band plays (Params.BAND, DadCraft Oct 21: saved in presets, not a Realm's to change)
+        if (Params.realmsLeave(p.id)) {
+            return false;   // the kit, how the band plays and Intensity stay the user's (DadCraft, Oct 20 and 21)
         }
         String g = groupOf(p);
         return g == null || uses(worldId, g);
