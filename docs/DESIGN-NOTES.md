@@ -1259,6 +1259,9 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
 - **The name** (Oct 17): **Ouralia**, chosen by DadCraft; no USPTO or EUIPO results for it (he checked), though Oura
   the ring maker has fought similar marks. The final name and applicationId must not contain "RjDj". Renaming gives a
   new applicationId (e.g. com.dadcraftstudios.ouralia), which testers get as a new app (they export presets first).
+- **Notes and Chimes Level** (`music_arp`) moved from Music to Mix (Oct 21, DadCraft: "it directly controls the
+  Lead's volume"), heading the Melody group above its Chimes and Walking Notes trims, as Pad Level did before. A Realm
+  now sets it through its Mix ingredient (on by default, like Music).
 - **Card on/off switches** (fixed Oct 21, DadCraft: "the switches for the effects in Sounds are gone"): a card's
   header switch is the section's toggle whose label ends in " enabled"; the Title Case renames made it "Enabled", so
   no card found its switch (rc5, rc5.1), and Music Enabled sat in the card's body. `Params.onSwitch` now matches in any

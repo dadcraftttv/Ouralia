@@ -1347,7 +1347,7 @@ public class MainActivity extends Activity {
         SUBHEADINGS.put("mel_rhythm", new int[]{R.string.music_more_heading, 0});
         SUBHEADINGS.put("mix_kick", new int[]{R.string.sub_drums, 0});
         SUBHEADINGS.put("music_pad", new int[]{R.string.sub_pad_bass, 0});
-        SUBHEADINGS.put("mix_chimes", new int[]{R.string.sub_melody, 0});
+        SUBHEADINGS.put("music_arp", new int[]{R.string.sub_melody, 0});
         SUBHEADINGS.put("mix_ring", new int[]{R.string.sub_answers, R.string.sub_answers_hint});
         SUBHEADINGS.put("gc_amount", new int[]{R.string.sub_cloud, 0});
         SUBHEADINGS.put("gc_pct_stutter", new int[]{R.string.sub_kinds, R.string.sub_kinds_hint});

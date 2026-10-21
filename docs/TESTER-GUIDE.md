@@ -18,6 +18,7 @@ There are two ways to use it:
 **New in rc5.1 (Oct 21, a fix for rc5):**
 
 - **Presets keep how the band plays:** a preset now saves everything on The Band tab: Music on, Key, Scale, Song Shape, Chord Colours, Hooks That Grow, Living Grooves, The Band Plays, Slow Bloom, Soft Steps, the Sounds choices, Melody Rhythm, the Beat's tempo and sounds, and the rest. Load one and the band plays exactly as it was saved. A Realm never changes them, the built-in presets (Robot, Cave...) leave them as they are (your Kit and Band Members too), and a preset saved before this keeps what you have. Presets also save **Intensity** and each effect's voice (Glitch Voice, Pitch Shifter, Crusher Style, Distortion Quality, Scatter Style). They don't save your mic and pocket settings, Smoothing, Nudge Strength or the Warp sound: those stay yours.
+- **Notes and Chimes Level** has moved to **Mix**, with the other parts' levels (it is the Lead's volume).
 - **Fixed:** the on/off switches on the effect cards (and Rhythm and Music) are back on each card's header.
 - **Fixed:** loading a preset on the Sound tab now updates the Kit and Band Members menus on The Band tab (the sound changed, but the menus kept showing the old kit).
 
@@ -416,7 +417,6 @@ This adds a soft, drifting musical layer that reacts to the world around you, in
 - **Pad register:** where the pad plays. **Low** is a soft bass note under everything that stays on the key's root and only sometimes moves. **Mid** is the chords. **Both** (the default) is the two together. When the beat is playing, the bass dips briefly on each step so it doesn't clash with the kick drum.
 - **Pad sounds:** **Found sounds** (the default), **Synth** or **Both**. With Found sounds, when you hum, sing or whistle a steady note (or a steady hum from a machine or a bird), the app keeps a short snippet of it, and from the next chord change the pad's chord is sung by that sound, stretched out and pitched to each chord note. It sounds like a choir of you holding the harmony. Until the first held note it plays the synth pad.
 - **Bass sound:** **Synth** (the default) or **Found sounds**, which plays the bass with that same held-note snippet, pitched down. It is subtle.
-- **Notes and chimes level:** how loud the melody notes are (the chimes and the walking notes). Turn it to 0 to hear only the pad.
 - **Melody rhythm:** **Off** (the start: as before), **Straight**, **Dotted** or **Mixed**. Switched on, the melody follows one-bar rhythms in time with the beat: Straight uses whole, half, quarter and 8th notes; Dotted uses dotted and syncopated ones (like a dotted quarter then an 8th, or a 3-3-2 pattern); Mixed uses both. Each bar picks a rhythm that suits how fast you walk (or how lively the room is, standing still), and each note rings as long as it lasts: a half note rings long, an 8th is short. While you walk the walking notes follow it; standing still, the chimes that come now and then land on it. Chimes set off by a sound around you are not affected.
 - **Phrasing (repeat and answer, needs Melody Rhythm):** off at first. Switched on (with Melody rhythm on), the melody comes in four-bar phrases: bar 1 makes up a line, bar 2 repeats it but ends on the chord's home note like an answer, bar 3 goes somewhere new, and bar 4 brings the first line back. The rhythm repeats with the notes. The notes mostly move one step at a time, and the notes on beats 1 and 3 belong to the chord. Walking, it plays the walking notes; standing still, the chimes that come now and then (so you hear only some of the phrase).
 - **Melody sounds:** **Found sounds** (the default), **Synth chimes** or **Both**. With Found sounds, the chimes and walking notes play the sounds caught for the beat, tuned to each note. Until the first catch they play synth chimes.
@@ -461,6 +461,7 @@ One place to set how loud each part of the music and rhythm is, so you can turn 
 
 - **Kick, Snare, Hi-hat:** each drum on its own, synth and found alike. **Glitch loops woven into the beat:** the glitch bars in the beat.
 - **Pad level:** the soft chords. **Bass:** the low note under the pad.
+- **Notes and chimes level:** the Lead's own volume: all the melody notes (the chimes and the walking notes). Turn it to 0 to hear only the pad.
 - **Chimes:** the notes set off by sudden sounds, the slow standing-still pattern and remembered phrases coming back. **Walking notes:** the run of notes with your steps and the groove note.
 - **Singing Room: Ring** and **Singing Room: Found Bells:** the two kinds of room notes (see Singing Room Sound), each on its own.
 - **Harmony:** the answering note.

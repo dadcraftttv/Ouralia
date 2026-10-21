@@ -244,8 +244,6 @@ final class Params {
             new Param("bass_src", "Bass Sound", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Synth", "Found sounds (a held hum or voice, pitched down)")
                     .inSection("music"),
-            new Param("music_arp", "Notes and Chimes Level", 0f, 1f, 0.4f, "", Param.Curve.LINEAR)
-                    .inSection("music").rand(0f, 0.8f).resetWhenAbsent(),
             new Param("melody_src", "Melody Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth chimes", "Found sounds (tuned from what the mic hears)", "Both")
                     .inSection("music"),
@@ -341,6 +339,9 @@ final class Params {
                     Param.Curve.LINEAR).inSection("mix").rand(0f, 0.6f).resetWhenAbsent(),
             new Param("mix_bass", "Bass (inside Pad Level)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("mix").noRandom(),   // synth and found bass
+            // the Lead's own level, in Mix since Oct 21 (DadCraft: "it directly controls the Lead's volume")
+            new Param("music_arp", "Notes and Chimes Level", 0f, 1f, 0.4f, "", Param.Curve.LINEAR)
+                    .inSection("mix").rand(0f, 0.8f).resetWhenAbsent(),
             new Param("mix_chimes", "Chimes (inside Notes and Chimes Level)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("mix").noRandom(),   // sudden-sound chimes, the still pattern, motif replays
             new Param("mix_walk", "Walking Notes (inside Notes and Chimes Level)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
