@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Oct 21, 2026 · Dad · for 0.9.0-rc5
+Oct 21, 2026 · Dad · for 0.9.0-rc5.1
 
 ## What this app is
 
@@ -15,7 +15,7 @@ There are two ways to use it:
 
 ## What's new
 
-**New since rc5 (Oct 21):**
+**New in rc5.1 (Oct 21, a fix for rc5):**
 
 - **Presets keep how the band plays:** a preset now saves everything on The Band tab: Music on, Key, Scale, Song Shape, Chord Colours, Hooks That Grow, Living Grooves, The Band Plays, Slow Bloom, Soft Steps, the Sounds choices, Melody Rhythm, the Beat's tempo and sounds, and the rest. Load one and the band plays exactly as it was saved. A Realm never changes them, the built-in presets (Robot, Cave...) leave them as they are (your Kit and Band Members too), and a preset saved before this keeps what you have. Presets also save **Intensity** and each effect's voice (Glitch Voice, Pitch Shifter, Crusher Style, Distortion Quality, Scatter Style). They don't save your mic and pocket settings, Smoothing, Nudge Strength or the Warp sound: those stay yours.
 - **Fixed:** loading a preset on the Sound tab now updates the Kit and Band Members menus on The Band tab (the sound changed, but the menus kept showing the old kit).
