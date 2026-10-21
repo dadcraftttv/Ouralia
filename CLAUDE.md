@@ -65,8 +65,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   and Distortion quality (Smooth). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
-- **Waiting on DadCraft:** his ears on Music variety: Evolving (`dcs_composer`, stage 1 of ROADMAP 21; stages 2-3
-  next); phone checks of user kits (with
+- **Waiting on DadCraft:** whether Music variety Evolving (`dcs_composer`, ROADMAP 21 stage 1, he likes it) becomes
+  the default; stages 2-3 next; phone checks of user kits (with
   samples, and MP3/OGG/FLAC import), kit layers, kit drums in "Your steps", wired + Bluetooth together, the Pocket
   Realm; his desktop "<Part> from" report (likely a kit with no part of its own, now labelled "(Classic's drums)").
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas

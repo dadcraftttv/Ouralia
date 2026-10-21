@@ -841,7 +841,8 @@ to date in the same commit when behaviour changes.
   The app logs "Music section: <name>". Measured (test_dcs, 400 bars each scale): 112-135 chords, 5-6 different (2
   in whole tone), a voice moves 1.2-1.6 semitones a chord on average; E minor pentatonic borrows F# or C in 59%
   of chords; through the patch the pad stays in E natural minor. Stage 2 (melodies that develop) and 3 (rules-made
-  rhythms): ROADMAP 21. Waiting on DadCraft's ears.
+  rhythms): ROADMAP 21. DadCraft, Oct 21: "it feels familiar without being something I can expect to play in a
+  certain way. I like it."
   **Register from sensors** (`music_follow`, Music, default on, noPreset, app-only `noPd`; `NoteRegister.java`, test W):
   room-relative light < 0.25 -> 2 scale steps down + warm, > 0.75 -> 2 up; a pocket -> an octave down + warm; climbing
   (climb > 0.5) +2. A new register must hold 3 s and changes come at most every 8 s. The app sends `music_register

@@ -223,7 +223,7 @@ and microphone declarations, icon, store listing, numbered pd-core release.
 
 21. **Music that doesn't go stale (DadCraft, Oct 21: with E minor pentatonic and a kit he likes, "the band keeps
     playing much of the same things").** Behind Music variety (Classic / Evolving), built in C (`dcs_composer`).
-    1. **Chords and sections** (built Oct 21, waiting on DadCraft's ears): progressions, Home / Lift / Calm / Turn,
+    1. **Chords and sections** (done Oct 21; DadCraft: "familiar without being something I can expect ... I like it"): progressions, Home / Lift / Calm / Turn,
        borrowed chords for the pentatonics, the full chord set for the seven-note scales.
     2. **Melodies that develop** (next): a motif made, then repeated, moved, turned upside down, re-rhythmed through
        a section, instead of a fresh random walk each time; the melody's range travels.
