@@ -200,10 +200,10 @@ public class W {
     Worlds.setUses("flux","reverb",true); for(int i=0;i<200;i++) Worlds.tick(0.033,(i%5<2?-6f:-16f),false,12*60);
     check(Math.abs(ParamStore.get("reverb_mix")-PresetManager.builtIn("Flux realm").get("reverb_mix"))<1e-3,"turning the ingredient back on while the Realm plays fades it in");
     Worlds.reset();
-    // the user's kit and part choices are never a Realm's (every built-in Realm preset holds Classic for them)
+    // the user's kit and part choices are never a Realm's (no built-in preset says anything about them)
     Worlds.reset(); Worlds.setEnabled(true);
     ParamStore.set("kit",2f); ParamStore.set("kitp_bass",7f); ParamStore.set("kitl_pad",3f); ParamStore.set("kitb_pad",0.8f);
-    check(PresetManager.builtIn("Flux realm").get("kit")==0f,"Flux realm's preset holds Classic for the kit");
+    check(!PresetManager.builtIn("Flux realm").containsKey("kit"),"Flux realm's preset says nothing about the kit");
     for(int i=0;i<600;i++) Worlds.tick(0.033,(i%5<2?-6f:-16f),false,12*60);
     check("flux".equals(Worlds.currentWorld())&&ParamStore.get("kit")==2f&&ParamStore.get("kitp_bass")==7f&&ParamStore.get("kitl_pad")==3f&&ParamStore.get("kitb_pad")==0.8f,"a Realm leaves the kit, parts, layers and blends alone (kit "+ParamStore.get("kit")+", bass from "+ParamStore.get("kitp_bass")+")");
     Worlds.reset();
@@ -229,7 +229,10 @@ public class W {
     check(bandSaved&&bandStays,"a saved preset carries them, and one without them (made before) leaves them as they are");
     for(String id:Params.BAND) ParamStore.set(id,Params.byId(id).def);
     // a built-in preset says nothing about the band: picking one leaves it (DadCraft, Oct 21)
+    ParamStore.set("kit",6f); ParamStore.set("kitp_pad",2f); ParamStore.set("kitl_bass",3f); ParamStore.set("kitb_bass",0.8f);
     ParamStore.set("music_on",1f); ParamStore.set("music_key",5f); ParamStore.applyPreset(PresetManager.builtIn("Robot"));
+    check(ParamStore.get("kit")==6f&&ParamStore.get("kitp_pad")==2f&&ParamStore.get("kitl_bass")==3f&&ParamStore.get("kitb_bass")==0.8f,"a built-in preset (Robot) leaves the kit, Band Members, layers and blends alone");
+    ParamStore.set("kit",0f); ParamStore.set("kitp_pad",0f); ParamStore.set("kitl_bass",0f); ParamStore.set("kitb_bass",0.5f);
     check(ParamStore.get("music_on")==1f&&ParamStore.get("music_key")==5f&&!PresetManager.builtIn("Default").containsKey("music_var"),"a built-in preset (Robot) leaves Music on and the Key alone");
     ParamStore.set("music_on",0f); ParamStore.set("music_key",0f);
     // the effects' voices and Intensity: saved in presets, left alone by built-in ones (DadCraft, Oct 21)
