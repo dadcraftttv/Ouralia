@@ -63,11 +63,11 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **Release:** rc4 (0.9.0-rc4, versionCode 12) built Oct 20 (release APK, debug key like rc3) and handed to
   DadCraft to send; it carries the tester guide's "New in rc4" list. rc5 next: bump versionCode/versionName.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
-  and Distortion quality (Smooth). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
+  Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
 - **Waiting on DadCraft:** whether Music variety Evolving (`dcs_composer`, ROADMAP 21 stage 1, he likes it, opt-in for now)
   becomes the default; his ears on Melodies that develop (`mel_dev`, stage 2) Patterns made by rules (`pat_gen`, stage 3, also Melody rhythm's bar) and Chord colours (`chord_color`); The Band Plays (`band_plays`, he compares it with Intensity up) and Soft Steps
-  (`walk_ease`, the walking notes were too loud); the renames, effect families, rounded icons (Oct 21); phone checks of user kits (with
+  (`walk_ease`, now the default and ~3 dB softer again: soft enough?); the renames, effect families, rounded icons (Oct 21); phone checks of user kits (with
   samples, and MP3/OGG/FLAC import), kit layers, kit drums in "Your steps", wired + Bluetooth together, the Pocket
   Realm; his desktop "<Part> from" report (likely a kit with no part of its own, now labelled "(Classic's drums)").
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas

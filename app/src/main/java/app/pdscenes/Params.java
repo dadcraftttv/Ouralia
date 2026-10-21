@@ -208,8 +208,9 @@ final class Params {
             new Param("pat_gen", "Living Grooves (walking notes and drums made by rules)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
             // Walking notes ease in (Oct 21, DadCraft: the notes get "extremely loud on walking"): the footstep notes
-            // at about the standing chimes' loudness, following the pace smoothly, a walk starting soft. Off = as before.
-            new Param("walk_ease", "Soft Steps (walking notes softer, gliding to their level)", 0f, 1f, 0f, "",
+            // below the standing chimes' loudness, following the pace smoothly, a walk starting soft. Off = as before.
+            // The default since Oct 21 (DadCraft: "just be the default", and softer still).
+            new Param("walk_ease", "Soft Steps (walking notes softer, gliding to their level)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
             // The Band Plays (Oct 21, DadCraft: more "build and flow", and more going on in a calm room): 8-bar phrases
             // that build up to a fill and drop back, a band that never quite stops standing still, chimes in a quiet room.

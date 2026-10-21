@@ -51,7 +51,7 @@ def fresh(**over):
                 phaser_on=1, phaser_mix=0, phaser_rate=0.4, phaser_depth=0.7, phaser_fb=0.4,
                 beat_on=1, beat_level=0, beat_hats=0.5, beat_snare=0.6, beat_pitch=55,
                 music_on=0, music_key=0, music_scale=0, music_pad=0.33, music_arp=0.4,
-                music_tone=0.5, music_react=0.8, music_res=0.8, music_harm=0, echo_scatter=0, beat_follow=0, music_pad_reg=2, pocket_hush=0.5, pocket_guard=0.6, melody_src=0, harm_src=0, pad_src=0, bass_src=0, chime_char=0, res_src=0, music_answer=0)
+                music_tone=0.5, music_react=0.8, music_res=0.8, music_harm=0, echo_scatter=0, beat_follow=0, music_pad_reg=2, pocket_hush=0.5, pocket_guard=0.6, melody_src=0, harm_src=0, pad_src=0, bass_src=0, chime_char=0, res_src=0, music_answer=0, walk_ease=0)   # (Soft Steps: tested on its own)
     base.update(over)
     for k, v in base.items():
         e.send(k, v)
@@ -1005,10 +1005,10 @@ def walk(interval, n=10, **over):
 stroll, brisk = walk(1.0), walk(0.38, n=26)
 check(rms(brisk[-SR * 3:]) > 2.0 * rms(stroll[-SR * 3:]) > 1e-4,
       "music: the arpeggio swells with pace (stroll %.4f, brisk %.4f)" % (rms(stroll[-SR * 3:]), rms(brisk[-SR * 3:])))
-# walking notes ease in (walk_ease): a brisk walk at about the standing chimes' loudness, the first steps softer still
+# walking notes ease in (walk_ease): a brisk walk below the standing chimes' loudness, the first steps softer still
 stroll_e, brisk_e = walk(1.0, walk_ease=1), walk(0.38, n=26, walk_ease=1)
 first, first_e = rms(brisk[:SR * 2]), rms(brisk_e[:SR * 2])
-check(0.4 * rms(brisk[-SR * 3:]) < rms(brisk_e[-SR * 3:]) < 0.75 * rms(brisk[-SR * 3:])
+check(0.28 * rms(brisk[-SR * 3:]) < rms(brisk_e[-SR * 3:]) < 0.5 * rms(brisk[-SR * 3:])
       and rms(brisk_e[-SR * 3:]) > 1.5 * rms(stroll_e[-SR * 3:]) and first_e < 0.45 * first,
       "music: walking notes ease in: brisk %.4f (as before %.4f), still above a stroll %.4f, first 2 s %.4f (as before %.4f)"
       % (rms(brisk_e[-SR * 3:]), rms(brisk[-SR * 3:]), rms(stroll_e[-SR * 3:]), first_e, first))
