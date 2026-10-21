@@ -1,4 +1,4 @@
-package app.pdscenes;
+package io.github.dadcraftttv.ouralia;
 
 import java.util.Calendar;
 import java.util.TimeZone;

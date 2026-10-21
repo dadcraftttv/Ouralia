@@ -6,7 +6,7 @@ Oct 20, 2026 · Dad · for 0.9.0-rc4
 
 This app listens to the world through your phone's microphone, changes the sound as you hear it, and plays the result into your headphones in real time. Clap, talk, or walk around, and the sound you hear is a twisted, echoing, wobbling version of your surroundings. It can also turn the sounds around you into music: a beat made from your claps and knocks, melodies played on them, and chords sung by your own hum.
 
-It is a free, open-source homage to RjDj, an older iPhone app that made "reactive music" this way. The app is still unfinished and has no final name yet, so expect rough edges. That is what this test is for.
+It is a free, open-source homage to RjDj, an older iPhone app that made "reactive music" this way. The app is called **Ouralia** (its working name was PdScenes). It is still unfinished, so expect rough edges. That is what this test is for.
 
 There are two ways to use it:
 
@@ -15,8 +15,9 @@ There are two ways to use it:
 
 ## What's new
 
-**New in rc5 (Oct 20):**
+**New in rc5 (Oct 20-21):**
 
+- **A new name: Ouralia.** It installs as a new app next to PdScenes, starting fresh. To keep your presets, Export them in PdScenes first and Import them in Ouralia. Then you can uninstall PdScenes.
 - **Auto Realms is now Realm Hopper**, and the Realm change sound is now the **Warp sound** (Setup, Behavior). They work the same as before.
 - **Realms keep your kits:** a Realm no longer switches the Kit, a part's "from", its layer or its blend back to Classic. It can still change the music's levels and the Mix.
 - **The player names the Realm:** while a Realm plays, the player's line says so ("Flux Realm · Intensity 50") instead of "Built-in effects".

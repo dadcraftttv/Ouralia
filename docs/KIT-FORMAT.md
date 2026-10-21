@@ -157,7 +157,7 @@ drums: engine sample, kick kick.wav, snare snare.wav, hat hat.wav, ohat open hat
 - **Presets:** a preset saved with your kit carries the kit's text, so a friend who loads it hears your kit. Recordings
   don't travel inside presets. Until your friend imports the kit's zip, the parts that use recordings play Classic.
   Once they import it, those parts fill in.
-- **Desktop app (a kit-making bench):** kits live in `~/.local/share/pdscenes/kits/<number> <title>/kit.txt`. Edit
+- **Desktop app (a kit-making bench):** kits live in `~/.local/share/ouralia/kits/<number> <title>/kit.txt`. Edit
   the file while the music plays. Each time you save, the parts you changed play again within a second.
 
 ## Tips

@@ -1,5 +1,5 @@
 #N canvas 28 259 520 320 10;
-#X text 20 10 [rj_text some words]: shows text on the scene pad (a 320 x 320 grid) - PdScenes. Messages: text <words> \, visible 0/1 \, move x y (its centre) \, size <points> \, alpha 0-1 \, rotate degrees. It starts shown \, in the middle.;
+#X text 20 10 [rj_text some words]: shows text on the scene pad (a 320 x 320 grid) - Ouralia. Messages: text <words> \, visible 0/1 \, move x y (its centre) \, size <points> \, alpha 0-1 \, rotate degrees. It starts shown \, in the middle.;
 #X obj 20 80 inlet;
 #X obj 160 80 loadbang;
 #X msg 160 110 args;

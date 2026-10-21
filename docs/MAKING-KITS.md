@@ -249,7 +249,7 @@ You can also build a sound from kits that already exist, with no files at all. O
 
 ## Making kits on the computer (the fast way)
 
-The desktop app is the best kit-making bench. Kits live in `~/.local/share/pdscenes/kits/`, one folder each. Open a
+The desktop app is the best kit-making bench. Kits live in `~/.local/share/ouralia/kits/`, one folder each. Open a
 kit's `kit.txt` in a text editor while the music plays, change a number and save. **The part you changed plays the
 new sound within a second.** When it sounds right, copy the folder to the phone and import it.
 

@@ -34,4 +34,18 @@ public class Context {
     public synchronized SharedPreferences getSharedPreferences(String name, int mode) {
         return stores.computeIfAbsent(name, n -> new JsonPrefs(new File(config, n + ".json")));
     }
+
+    /** The working name's folders (~/.config/pdscenes, ~/.local/share/pdscenes) become Ouralia's, once, their stores
+     *  renamed from pdscenes_* to ouralia_*, so settings, presets and kits carry over the rename. */
+    public static void moveFromWorkingName(File old, File now) {
+        if (!old.isDirectory() || now.exists() || !old.renameTo(now)) {
+            return;
+        }
+        File[] files = now.listFiles();
+        for (File f : files != null ? files : new File[0]) {
+            if (f.getName().startsWith("pdscenes_")) {
+                f.renameTo(new File(now, "ouralia_" + f.getName().substring("pdscenes_".length())));
+            }
+        }
+    }
 }

@@ -1,4 +1,4 @@
-# PdScenes / Ouralia — design notes and history
+# Ouralia (first PdScenes) — design notes and history
 
 The full record of how each part works and why (moved out of CLAUDE.md on Oct 17 so it is not loaded into every
 session). Search it for the feature you are touching (`grep -n "Glitch cloud" docs/DESIGN-NOTES.md`) and keep it up
@@ -11,7 +11,7 @@ to date in the same commit when behaviour changes.
 - Commit small, descriptive commits. Do not push or publish anything unless asked.
 
 ## Layout
-- `app/src/main/java/app/pdscenes/` — Java, plain Views (no Compose; do not rewrite).
+- `app/src/main/java/io/github/dadcraftttv/ouralia/` — Java, plain Views (no Compose; do not rewrite).
   Param/Params/ParamStore/PresetManager/Modulation (slider registry, presets, movers), Worlds/WorldSelector (Auto Worlds),
   StepDetector (walking beat), AudioService/AudioDevices/AudioSettings (audio engine and devices), SceneSettings, MainActivity.
 - `app/src/main/assets/patches/test_scene.pd` — the built-in effects patch. **Generated.** Edit `tools/make_patch.py`, then run
@@ -59,7 +59,7 @@ to date in the same commit when behaviour changes.
   `tools/build_dcs_android.sh` with NDK 29 against pd-core's libpd.so, 16 KB-aligned); Pd finds `lib<name>.so` in the
   native lib folder. Desktop/tests: `make -C dcs` -> `dcs/build/dcs.pd_linux`; pdtest adds dcs/build to the search
   path; the desktop app opens libpdnative.so RTLD_GLOBAL via JNA first (Java loads it privately: the library then
-  finds no Pd symbols) and run.sh passes `-Dpdscenes.dcs`. After changing dcs/src: `make -C dcs`,
+  finds no Pd symbols) and run.sh passes `-Douralia.dcs`. After changing dcs/src: `make -C dcs`,
   `tools/build_dcs_android.sh`, `tools/test_dcs.py`. If libdcs is missing, its objects fail to create, and since
   the effect ports (Oct 17) sit in every sound's path **nothing plays**, not even the dry room (measured Oct 19: the
   brain still runs and fires glitches into a dead chain, so a Legacy fallback for one part would be useless).
@@ -299,7 +299,7 @@ to date in the same commit when behaviour changes.
   note (chance and hchance dropped there; sparseness is test_dcs's, over 200 notes: 55-64 of 200 at 0.3).
   **User kits** (Oct 17, step d, stage 1: text only; DadCraft chose kit.txt over kit.json, text kits before samples,
   and presets that carry the kit's text): `files/kits/<NNN title>/kit.txt` (phone and desktop:
-  `~/.local/share/pdscenes/kits`; `Kits.userDir`, set in `ParamStore.loadOnce`), numbered in import order and listed
+  `~/.local/share/ouralia/kits`; `Kits.userDir`, set in `ParamStore.loadOnce`), numbered in import order and listed
   after the built-in kits (menu index BUILT_IN.length + n; Params `kit`/`kitp_*` ranges have room for MAX_USER 99,
   `Kits.refreshChoices()` sets the menus; Android rows and desktop combos swap their adapter when `p.choices`
   changes). Music tab "Your kits": Import kit (a kit.txt or a zip), Import kit folder (kit.txt at the top or one
@@ -438,7 +438,7 @@ to date in the same commit when behaviour changes.
   arpeggio, beat and pad are untouched. Needed because walking with the phone pocketed picks Kinetic, not Pocket, so the Pocket
   world alone never quieted the rustle (DadCraft heard all the cloth noise at the store). Pocket and world changes, plus a
   "Hearing:" line every 30 s (level, floor, swing), go to `files/events.log` (64 KB, one rollover):
-  `adb shell run-as app.pdscenes cat files/events.log`. Phone logcat only holds ~10 minutes.
+  `adb shell run-as io.github.dadcraftttv.ouralia cat files/events.log`. Phone logcat only holds ~10 minutes.
 - **Handling noise** (roadmap item 3, Oct 13; `HandlingDetector.java`, test H; `add_handling`, `handling_gate`):
   taps, grips and rubbing on the phone. Measured on DadCraft's phone (jerk = change of acceleration between readings at
   200 Hz): table ~0, held still 0.1-0.3, walking in hand 0.4-0.9 (once 2.0), rubbing/fiddling 0.6-1.7 steadily, taps
@@ -529,7 +529,7 @@ to date in the same commit when behaviour changes.
   files/packs/<name>/ with pack.txt (title, bpm, key "A minor", bars; "file role: x [bars: n] [section: B]", _A/_B
   file suffixes = sections; max 8 stems). Import zip/folder (Music tab "Stem packs"); non-WAV stems are decoded once
   with MediaExtractor/MediaCodec into `.decoded-<file>.wav`; loop lengths are checked (warnings). Selected pack in
-  prefs `pdscenes_packs`, not in presets (DadCraft); built-in sound only. While playing, `Modulation.output` lets
+  prefs `ouralia_packs`, not in presets (DadCraft); built-in sound only. While playing, `Modulation.output` lets
   `PackPlayer` override tempo_mode (2 = locked: the clock sits on tc_Pu, steps change nothing), tempo_bpm, music_key,
   music_scale, and beat_level x 0.3 while the pack's drums play (DadCraft agreed). Pd: STEM_SLOTS 8, each two tables via
   soundfiler (`[list]` after `[route]`: route leaves a path as a selector), restarted by vline~ (N / file rate, so any
@@ -1113,8 +1113,7 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   buttons (+, up, down); Randomize, Nudge and Undo are outlined chips with icons (Undo greys out with nothing to
   undo). The Scenes card likewise: Choose scene as one wide button, Import zip / Import folder as chips.
 - **Final mockup review** (Oct 20): the player sheet gained the mockup's dotted inner ring on the dial and the hint
-  "Slide around the ring to set Intensity" (hidden for a scene). Deliberate differences from the mockups: "PdScenes"
-  until the rename (the mockups say "ouralia"); no line under the title (the docked player shows the scene and
+  "Slide around the ring to set Intensity" (hidden for a scene). Deliberate differences from the mockups: no line under the title (the docked player shows the scene and
   Intensity); the Music card's on/off switch sits on its header; the colour ring previews the Start button in its
   middle rather than recolouring the whole app behind it while dragging; Both sits in the middle of button rows.
 - **Headphone warning** (Oct 20, DadCraft: "does not match the mockup"): a small red "No headphones" chip (crossed-out
@@ -1168,9 +1167,9 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   Step 1 done: `desktop/run.sh` runs the built-in patch in libpd for Java (`make javalib` in tools/.libpd, via
   `desktop/fetch_libs.sh`, with JNAJack 1.4.0 / JNA 5.14.0 / org.json 20240303 from Maven Central, SHA-1 checked,
   not in git) through PipeWire's JACK layer (`pw-jack`). Mic (+ optional game sound = a sink's monitor) mixed to the
-  patch's one input; output to its own null sink "pdscenes" (description "PdScenes", made with pactl, removed on
-  exit), which OBS records with Audio Output Capture. The JACK client is "PdScenes Engine" (JACK port names are
-  device *descriptions*, so the sink's "PdScenes" would clash). Routes (output, mic, game, --listen) are re-checked
+  patch's one input; output to its own null sink "ouralia" (description "Ouralia"; "pdscenes" before the rename, made with pactl, removed on
+  exit), which OBS records with Audio Output Capture. The JACK client is "Ouralia Engine" (JACK port names are
+  device *descriptions*, so the sink's "Ouralia" would clash). Routes (output, mic, game, --listen) are re-checked
   every 2 s and reconnected; devices match by name or part of name/description. Never hears itself: the sink is
   never an input, --listen refused/skipped while the game sound comes from that sink. Typed lines change settings.
 - DadCraft's machine: PreSonus AudioBox Go (its USB link drops now and then; nodes come back renamed ".3"/".4"),
@@ -1179,7 +1178,7 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   comp_thresh 0. Pd 0.55.2's expr prints "realloc called with N bytes" to stdout (filtered in run.sh).
 - **Window** (Oct 16; `DesktopApp` tick + Pd receiver, `DesktopWindow` Swing, `DesktopEngine` routes): compiles the
   phone's 15 logic classes unchanged (`run.sh` SHARED list) with `desktop/shim/` stand-ins: android.content.Context
-  (files dir ~/.local/share/pdscenes, prefs ~/.config/pdscenes/<store>.json via JsonPrefs) and AudioService
+  (files dir ~/.local/share/ouralia, prefs ~/.config/ouralia/<store>.json via JsonPrefs) and AudioService
   (isRunning). Tabs Sound/Music/Realms/Presets/Setup built from Params (sections as on the phone; mover params,
   section mover switches and `PHONE_ONLY` hidden), rows refreshed 4x a second from ParamStore. The tick is the
   phone's mover tick minus sensors: `PdBase.pollPdMessageQueue()` first (desktop libpd queues messages; without it
@@ -1187,7 +1186,7 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   CalmBuild + calm_chimes, call and response, motif. `DESKTOP_DEFAULTS` (first start and Reset): comp_thresh 0,
   tempo_mode Set. First start connects no mic (DadCraft's laptop mic reads 0 dBFS nonstop) and opens Setup. Device
   menus / `mic_device`, `game_device`, `listen` commands call `engine.apply`. A loop the engine can't see: OBS
-  monitoring PdScenes onto the output the game sound is taken from (UI and README say: give the game its own
+  monitoring Ouralia onto the output the game sound is taken from (UI and README say: give the game its own
   output). `desktop/test.sh` (DesktopTest): phone preset in (unknown keys ignored, clamped, noPreset not taken,
   sensor mover kept), out in the same format, settings file written. `--snapshot prefix` draws each tab to a png.
 - Responsiveness (DadCraft: sliders and dB readings "sluggish"): FlatLaf 3.4.1 instead of the GTK look (slow to
@@ -1198,11 +1197,11 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - Echo scatter in a quiet room: steady mic hiss in the echo hops ear to ear each repeat (DadCraft heard it on the
   desktop; outdoors on the phone it was masked). Not a bug (only with the echo on). Fix: raise the noise gate (~-55 dB): DadCraft, "raising the noise gate works fine" (README tip).
 - Realms tab: "What it changes" per Realm (Worlds.uses/setUses, as the phone), phone-only Realms greyed. Cleanup
-  round 1: window size/place, last tab and open sections kept (pdscenes_desktop), wider label column, the glitch
+  round 1: window size/place, last tab and open sections kept (ouralia_desktop), wider label column, the glitch
   budget line, "Mic in"/"Out" meters. DadCraft (Oct 16): stem packs and scenes are not part of the desktop app; it is
   for showing the engine on stream.
-- App menu launcher (Oct 16): `desktop/install-launcher.sh` writes ~/.local/share/applications/pdscenes-desktop.desktop
-  (no app icon yet: the theme's audio-x-generic), `desktop/launch.sh` = flock on ~/.local/state/pdscenes/running.lock
+- App menu launcher (Oct 16): `desktop/install-launcher.sh` writes ~/.local/share/applications/ouralia-desktop.desktop
+  (no app icon yet: the theme's audio-x-generic), `desktop/launch.sh` = flock on ~/.local/state/ouralia/running.lock
   (a second start: notify-send and exit), log to desktop.log (one rotation), zenity on an error exit. Installed on
   DadCraft's machine. The desktop stays in this repo (it compiles the phone's sources in place; split later with a
   shared library if it gets its own releases). Movers: not wanted for now (DadCraft).
@@ -1214,7 +1213,7 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 - Game sound from an app (Oct 16; DadCraft agreed to "give the game its own output", built instead as app capture:
   no pavucontrol step, no loopback delay): `Setup.gameOutput` "app:<name>" = a route of kind "apps" linking that
   JACK client's `output_*` ports (any playing stream shows as "<name>:output_FL") to our game ports, reconnected
-  when the game restarts. `DesktopEngine.apps()` leaves out PdScenes, anything with "obs" (its monitoring carries
+  when the game restarts. `DesktopEngine.apps()` leaves out Ouralia, anything with "obs" (its monitoring carries
   our music), EasyEffects' ee_ filters, speech-dispatcher, MIDI. A whole output's monitor can still be picked
   (loop guard as before). Tested with a pw-cat tone into a throwaway sink: listed, linked, lost on quit, back.
   DadCraft's Minecraft (Prism Launcher Flatpak) plays as a stream named just "java": the menu labels apps from
@@ -1257,6 +1256,15 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
 - **The name** (Oct 17): **Ouralia**, chosen by DadCraft; no USPTO or EUIPO results for it (he checked), though Oura
   the ring maker has fought similar marks. The final name and applicationId must not contain "RjDj". Renaming gives a
   new applicationId (e.g. com.dadcraftstudios.ouralia), which testers get as a new app (they export presets first).
+- **The rename** (Oct 21, DadCraft: rc5 is to be the first public beta, as Ouralia): applicationId and Java package
+  `io.github.dadcraftttv.ouralia` (tied to the GitHub account he owns; his pick over com.dadcraftstudios.ouralia), app
+  name "Ouralia", the in-app wordmark lower case "ouralia" as in the mockups, prefs stores `ouralia_*`, themes
+  `Theme.Ouralia.*`, presets written as format "ouralia-preset" (old "pdscenes-preset" files import as before: the
+  format isn't checked). A new app beside the PdScenes one (testers export presets there and import them). Desktop:
+  its ~/.config/pdscenes and ~/.local/share/pdscenes move to .../ouralia on the first start, stores renamed
+  (`Context.moveFromWorkingName`); its output is now "Ouralia" (pick it again in OBS); re-run install-launcher.sh.
+  Kept: the libpd forks' `pdscenes` branches and the `1.4.2-pdscenes.1` pd-core version (they name branches in other
+  public repos), and the repo folder name until DadCraft moves it.
 
 ## Open / next
 - **Flaky test, settled (DadCraft, Oct 21: the machine was busy both times):** test_patch "scatter New: cost" (the New echo scatter must cost

@@ -1,5 +1,5 @@
 #N canvas 0 50 640 520 10;
-#X text 10 5 PdScenes: left and right to the headphones. DC offset removed \, limited to +-1 \, then scaled by the player's volume: "set v" on #volume (0 to 1 \, 1 until set) and "play 0/1" on #transport (0 mutes);
+#X text 10 5 Ouralia: left and right to the headphones. DC offset removed \, limited to +-1 \, then scaled by the player's volume: "set v" on #volume (0 to 1 \, 1 until set) and "play 0/1" on #transport (0 mutes);
 #X obj 40 90 inlet~;
 #X obj 200 90 inlet~;
 #X obj 40 120 hip~ 3;

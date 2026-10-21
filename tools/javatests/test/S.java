@@ -1,4 +1,4 @@
-package app.pdscenes;
+package io.github.dadcraftttv.ouralia;
 import java.io.*; import java.nio.file.*; import java.util.*; import java.util.zip.*;
 public class S {
     static int fails = 0;

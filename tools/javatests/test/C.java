@@ -1,4 +1,4 @@
-package app.pdscenes;
+package io.github.dadcraftttv.ouralia;
 public class C {
     static int fails = 0;
     static void check(boolean c, String m) { System.out.println((c ? "ok:   " : "FAIL: ") + m); if (!c) fails++; }

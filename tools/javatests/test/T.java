@@ -1,4 +1,4 @@
-package app.pdscenes;
+package io.github.dadcraftttv.ouralia;
 import android.content.Context; import java.io.File; import java.util.*; import org.puredata.core.PdBase;
 public class T {
   static int fails=0;

@@ -1,4 +1,4 @@
-package app.pdscenes;
+package io.github.dadcraftttv.ouralia;
 // The look (Look.java): any accent, in any theme, keeps every text colour readable on what it sits on.
 public class V {
   static int fails=0;

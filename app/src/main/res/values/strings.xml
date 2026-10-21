@@ -1,5 +1,6 @@
 <resources>
-    <string name="app_name">PdScenes</string>
+    <string name="app_name">Ouralia</string>
+    <string name="wordmark">ouralia</string>
 
     <!-- Engine state -->
     <string name="start">Start</string>
@@ -83,7 +84,7 @@
     <string name="kit_warnings">Some of it won\'t play on this version of the app (those bits are skipped):</string>
     <string name="kit_import_done">Kit imported</string>
     <string name="kit_import_failed">Couldn\'t import the kit</string>
-    <string name="kit_howto_text">A kit picks the instruments. The app still writes the music: the kit only decides what each part sounds like.\n\nThe parts: mel (the melody), bass, pad (the chords) and drums. A part you leave out plays the normal (Classic) sound.\n\nA kit is a text file named kit.txt. The smallest one is two lines:\n\ntitle: My First Kit\nmel: engine modal, modal bell, level 6\n\nEach part gets one line: its name, a colon, then settings separated by commas. "engine" picks the instrument: pluck, bowed, modal (bell, marimba, bowl), analog (a synth), sub (an 808 bass), drums, chip (an old game console), chop, or sample (your own recordings). "level" sets the volume.\n\nYour own recordings: put kit.txt and the sound files in one folder and use Import kit folder.\n• As drums, a recording plays just as you recorded it (good for knocks, squeaks and claps):\ndrums: engine sample, kick knock.wav, snare squeak.wav, hat keys.wav\n• As melody, bass or pad, the band plays it at different notes. Write the note it already is after the file name (C4 is middle C, or leave it out):\nmel: engine sample, sample chime.wav C5\n\nLines starting with # are notes to yourself. If something is mistyped, the import report says which setting was skipped.\n\nThe full step-by-step guide, with every instrument and setting, is docs/MAKING-KITS.md in the app\'s GitHub repository (dadcraftttv/PdScenes).</string>
+    <string name="kit_howto_text">A kit picks the instruments. The app still writes the music: the kit only decides what each part sounds like.\n\nThe parts: mel (the melody), bass, pad (the chords) and drums. A part you leave out plays the normal (Classic) sound.\n\nA kit is a text file named kit.txt. The smallest one is two lines:\n\ntitle: My First Kit\nmel: engine modal, modal bell, level 6\n\nEach part gets one line: its name, a colon, then settings separated by commas. "engine" picks the instrument: pluck, bowed, modal (bell, marimba, bowl), analog (a synth), sub (an 808 bass), drums, chip (an old game console), chop, or sample (your own recordings). "level" sets the volume.\n\nYour own recordings: put kit.txt and the sound files in one folder and use Import kit folder.\n• As drums, a recording plays just as you recorded it (good for knocks, squeaks and claps):\ndrums: engine sample, kick knock.wav, snare squeak.wav, hat keys.wav\n• As melody, bass or pad, the band plays it at different notes. Write the note it already is after the file name (C4 is middle C, or leave it out):\nmel: engine sample, sample chime.wav C5\n\nLines starting with # are notes to yourself. If something is mistyped, the import report says which setting was skipped.\n\nThe full step-by-step guide, with every instrument and setting, is docs/MAKING-KITS.md in the app\'s GitHub repository (dadcraftttv/Ouralia).</string>
     <string name="kit_missing_file">%1$s isn\'t in the kit (or can\'t be read): that part plays Classic</string>
     <string name="section_diag">Diagnostics</string>
     <string name="diag_not_running">Start the sound to see which mic and headphones are in use and whether anything overloads.</string>
@@ -212,7 +213,7 @@
 
     <!-- Foreground-service notification and errors -->
     <string name="notification_channel">Audio engine</string>
-    <string name="notification_title">PdScenes is listening</string>
+    <string name="notification_title">Ouralia is listening</string>
     <string name="notification_text">Processing microphone audio. Use headphones.</string>
     <string name="err_no_mic_permission">Microphone permission not granted</string>
     <string name="walk_back">Back</string>
@@ -284,7 +285,7 @@
     <string name="feedback_with_log">Include the app\'s event log</string>
     <string name="feedback_log_note">The event log holds no sound and nothing you said: just times, the room\'s loudness as numbers, and what the app did (for example "Phone went into a pocket" or "Caught a snare"). It helps DadCraft see what happened. You can read it in the email before you send it.</string>
     <string name="feedback_address">dadcraftstudios@gmail.com</string>
-    <string name="feedback_subject">PdScenes feedback (%1$s)</string>
+    <string name="feedback_subject">Ouralia feedback (%1$s)</string>
     <string name="feedback_body_start">What did you try, what did you hear, and what did you expect? What did you like?</string>
     <string name="feedback_device">Phone: %1$s · Android %2$s · app %3$s</string>
     <string name="feedback_playing">Playing: %1$s</string>

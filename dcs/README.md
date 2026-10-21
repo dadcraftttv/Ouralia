@@ -45,8 +45,8 @@ Each object's source file starts with a full description of what it does.
 
 - Desktop (Linux): `make` builds `build/dcs.pd_linux`. Put `build/` on Pd's search path. `PD_SRC` points at
   Pd's `src` folder (for `m_pd.h`).
-- Android: `tools/build_dcs_android.sh` (in the PdScenes repo) builds `libdcs.so` for each ABI. It links against
+- Android: `tools/build_dcs_android.sh` (in the Ouralia repo) builds `libdcs.so` for each ABI. It links against
   pd-for-android's `libpd.so`; Pd on Android finds `lib<name>.so` in the app's native library folder.
 
-Tests: `tools/test_dcs.py` in the PdScenes repo checks tuning, decay, stability, sample-exact starts, each
+Tests: `tools/test_dcs.py` in the Ouralia repo checks tuning, decay, stability, sample-exact starts, each
 glitch kind, voice stealing and the stretch.

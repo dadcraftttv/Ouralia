@@ -3,7 +3,7 @@
 One-time setup so Claude can build, install and debug the app itself.
 
 1. **Put the project on the machine** (the same folder Android Studio opens). If it is not a git repo yet:
-   `cd PdScenes && git init && git add -A && git commit -m "Initial import"`.
+   `cd Ouralia && git init && git add -A && git commit -m "Initial import"`.
 2. **Install Claude Code.** In a terminal run `curl -fsSL https://claude.ai/install.sh | bash`, then open a new terminal and check
    `claude --version`. If it says "command not found", add `~/.local/bin` to PATH:
    `echo 'export PATH=$PATH:$HOME/.local/bin' >> ~/.bashrc`. Then run `claude` inside the project folder and sign in through the browser

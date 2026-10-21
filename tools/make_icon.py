@@ -6,7 +6,7 @@ https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R, page "App icon"). One set of 
   app/src/main/res/values/ic_launcher.xml          the background colour
   app/src/main/res/mipmap-anydpi/ic_launcher.xml   the adaptive icon (and ic_launcher_round.xml)
   docs/icon/ouralia-icon.svg                       the master, background included (desktop menu, store, iOS later)
-desktop/src/app/pdscenes/AppIcon.java draws the same shapes in Java2D (the window icon, and the 512 px PNG): keep the
+desktop/src/io/github/dadcraftttv/ouralia/AppIcon.java draws the same shapes in Java2D (the window icon, and the 512 px PNG): keep the
 numbers there in step with these. Run: python3 tools/make_icon.py
 """
 import math, os

@@ -1,6 +1,6 @@
-# PdScenes: overview for an outside review
+# Ouralia: overview for an outside review
 
-PdScenes is a working name. It is an open-source Android app (GPLv3-or-later) that turns the world around you into music
+Ouralia (first called PdScenes) is an open-source Android app (GPLv3-or-later) that turns the world around you into music
 through headphones. It is in the spirit of RjDj, the 2008-2013 "reactive music" iPhone app, and Dimensions, its successor.
 The phone's mic, motion sensors and light sensor feed a Pure Data patch that runs inside the app through libpd. What you
 hear is the room around you, processed and set to music, and it changes with how loud the room is, how you move, how bright
@@ -98,7 +98,7 @@ The code for all of this is in `MainActivity.java`, about 1,300 lines.
   scenes). The built-in effects are one Pd patch, `test_scene.pd`. **That patch is generated** by
   `tools/make_patch.py` (about 1,500 lines of Python that writes Pd objects and connections). Review the Python, not the
   `.pd` file.
-- **Java side**, `app/src/main/java/app/pdscenes/`, about 5,000 lines:
+- **Java side**, `app/src/main/java/io/github/dadcraftttv/ouralia/`, about 5,000 lines:
   - `AudioService`: the foreground service. It starts and stops libpd, picks devices, watches for headphones being
     unplugged, runs the 30 Hz tick that applies movers and worlds and sends pocket state, and writes an event log.
   - `AudioDevices` / `AudioSettings`: device selection. A Bluetooth mic needs call mode (`MODE_IN_COMMUNICATION` plus

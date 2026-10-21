@@ -1,5 +1,5 @@
 #N canvas 0 50 520 280 10;
-#X text 20 10 [aubiopitch~]: the pitch heard \, as a MIDI note \, about 20 times a second (nothing while unpitched) - a PdScenes stand-in for the aubio external \, built on sigmund~.;
+#X text 20 10 [aubiopitch~]: the pitch heard \, as a MIDI note \, about 20 times a second (nothing while unpitched) - a Ouralia stand-in for the aubio external \, built on sigmund~.;
 #X obj 20 60 inlet~;
 #X obj 20 100 sigmund~ -hop 2048 -npts 2048 pitch env;
 #X obj 20 140 moses 1;

@@ -1,6 +1,6 @@
 <resources>
     <!-- Android 12+: the launch splash shows the icon on its own dark background (the manifest's theme is Dark). -->
-    <style name="Theme.PdScenes.Dark" parent="android:Theme.Material.NoActionBar">
+    <style name="Theme.Ouralia.Dark" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowSplashScreenBackground">@color/ic_launcher_bg</item>
     </style>
 </resources>

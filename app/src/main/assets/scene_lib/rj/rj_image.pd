@@ -1,5 +1,5 @@
 #N canvas 77 42 520 300 10;
-#X text 20 10 [rj_image file.png]: shows an image from the scene folder on the scene pad (a 320 x 320 grid) - PdScenes. Messages: visible 0/1 \, move x y (its centre) \, alpha 0-1 \, scale sx sy \, rotate degrees. It starts hidden.;
+#X text 20 10 [rj_image file.png]: shows an image from the scene folder on the scene pad (a 320 x 320 grid) - Ouralia. Messages: visible 0/1 \, move x y (its centre) \, alpha 0-1 \, scale sx sy \, rotate degrees. It starts hidden.;
 #X obj 20 80 inlet;
 #X obj 160 80 loadbang;
 #X obj 160 110 symbol \$1;

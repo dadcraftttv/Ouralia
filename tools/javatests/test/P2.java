@@ -1,4 +1,4 @@
-package app.pdscenes;
+package io.github.dadcraftttv.ouralia;
 import android.view.MotionEvent; import java.io.File; import java.util.*;
 public class P2 {
     static int fails=0;

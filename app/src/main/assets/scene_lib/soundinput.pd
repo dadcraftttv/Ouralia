@@ -1,5 +1,5 @@
 #N canvas 0 50 560 420 10;
-#X text 10 5 PdScenes: microphone (mono) on both outlets \, DC offset removed \, scaled by the player's mic volume: float on the receiver #micvolume (0 to 1 \, 1 until set);
+#X text 10 5 Ouralia: microphone (mono) on both outlets \, DC offset removed \, scaled by the player's mic volume: float on the receiver #micvolume (0 to 1 \, 1 until set);
 #X obj 40 70 adc~ 1;
 #X obj 40 100 hip~ 5;
 #X obj 40 140 *~;

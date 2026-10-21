@@ -1,4 +1,4 @@
-package app.pdscenes;
+package io.github.dadcraftttv.ouralia;
 
 import java.nio.file.Files;
 import java.nio.file.Path;

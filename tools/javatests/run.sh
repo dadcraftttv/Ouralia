@@ -3,7 +3,7 @@
 # Android classes are replaced by tiny stubs in stubs/ and stubs2/.
 set -e
 export JAVA_TOOL_OPTIONS=
-H="$(cd "$(dirname "$0")" && pwd)"; SRC="$H/../../app/src/main/java/app/pdscenes"
+H="$(cd "$(dirname "$0")" && pwd)"; SRC="$H/../../app/src/main/java/io/github/dadcraftttv/ouralia"
 CORE="$SRC/Param.java $SRC/Params.java $SRC/ParamStore.java $SRC/PresetManager.java $SRC/Modulation.java $SRC/PhoneContext.java $SRC/Intensity.java $SRC/CalmBuild.java $SRC/Kits.java"
 for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V}"; do for x in $t; do
   extra=""; [ "$x" = W -o "$x" = X ] && extra="$SRC/StepDetector.java $SRC/WorldSelector.java $SRC/Worlds.java $SRC/MotifMemory.java $SRC/NoteRegister.java"
@@ -20,5 +20,5 @@ for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V}"; do for x in $t; do
   [ "$x" = X ] && extra="$extra $H/test/M.java"
   out=$(mktemp -d)
   javac -d "$out" -proc:none -cp "$H/stubs:$H/stubs2" $CORE $extra "$H/test/$x.java" 2>&1 | grep -v "^Note:" || true
-  echo "== $x"; java -Drepo="$H/../.." -cp "$out:$H/stubs:$H/stubs2" app.pdscenes.$x
+  echo "== $x"; java -Drepo="$H/../.." -cp "$out:$H/stubs:$H/stubs2" io.github.dadcraftttv.ouralia.$x
 done; done

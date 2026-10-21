@@ -1,18 +1,17 @@
 <p align="center"><img src="docs/icon/ouralia-icon.svg" width="128" height="128" alt="The app icon: the dial as a pair of headphones"></p>
 
-<h1 align="center">PdScenes <sub>(soon: Ouralia)</sub></h1>
+<h1 align="center">Ouralia</h1>
 
 <p align="center"><b>The world around you, turned into music, through your headphones.</b></p>
 
-PdScenes is a free, open-source Android app in the spirit of **RjDj**, the "reactive music" app from 2008. Put on
+Ouralia is a free, open-source Android app in the spirit of **RjDj**, the "reactive music" app from 2008. Put on
 headphones and press Start: you hear the room around you, shaped by effects and set to music that the app makes up
 as it goes. The music follows how loud the room is, how you move, how bright it is and whether the phone is in your
 pocket. Walk and the beat follows your steps. Stand still somewhere calm and the music slowly grows. Clap, and the
 room answers.
 
 It runs on [Pure Data](https://puredata.info/) inside the app (through [libpd](https://github.com/libpd/libpd)), and
-it can also play the original RjDj scenes. It will be free on Google Play. **Ouralia** is its chosen name: the app
-gets it at the rename.
+it can also play the original RjDj scenes. It will be free on Google Play. (Its working name was PdScenes.)
 
 <p align="center">
 <img src="docs/screenshots/player.png" width="260" alt="The player: the Intensity dial around the Start button">
@@ -80,7 +79,7 @@ Everything the build needs is in the repository, including our own build of `pd-
 
 How the code is laid out:
 
-- `app/src/main/java/app/pdscenes/`: the app, in Java with plain Android Views. `Params.java` lists every setting.
+- `app/src/main/java/io/github/dadcraftttv/ouralia/`: the app, in Java with plain Android Views. `Params.java` lists every setting.
 - `app/src/main/assets/patches/test_scene.pd`: the built-in Pure Data patch. It's generated: edit
   `tools/make_patch.py` and run it, never the `.pd` file itself.
 - `dcs/`: our own Pd objects in C (the effects, the kits' instruments). After changing them, run `make -C dcs` and

@@ -1,6 +1,6 @@
 # Licensing and third-party notices
 
-PdScenes is free software, released under the **GNU General Public License v3.0 or later**
+Ouralia is free software, released under the **GNU General Public License v3.0 or later**
 (see `LICENSE`). You may use, study, change and share it under those terms.
 
 It bundles and depends on the following. Full texts are in `app/src/main/assets/licenses/` and are shown

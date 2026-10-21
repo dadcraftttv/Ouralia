@@ -1,5 +1,5 @@
 #N canvas 0 50 450 240 10;
-#X text 20 10 [avg~]: the average size of a signal \, as a number about every 10 ms - a PdScenes stand-in for zexy's avg~.;
+#X text 20 10 [avg~]: the average size of a signal \, as a number about every 10 ms - a Ouralia stand-in for zexy's avg~.;
 #X obj 20 60 inlet~;
 #X obj 20 90 abs~;
 #X obj 20 120 lop~ 50;

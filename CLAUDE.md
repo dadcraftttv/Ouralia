@@ -1,4 +1,4 @@
-# PdScenes (working name; chosen name: Ouralia) — notes for Claude Code
+# Ouralia (working name was PdScenes) — notes for Claude Code
 
 Open-source (GPLv3-or-later, bundles RjDj's rjlib) Android app: RjDj-style reactive music on libpd / Pure Data, plus a
 Linux desktop "stream mode" (`desktop/`). Free on Google Play eventually.
@@ -14,7 +14,7 @@ behaviour changes, or tell DadCraft it needs one).
 
 ## How we work
 - Build and install yourself: `./gradlew assembleDebug`, then `~/Android/Sdk/platform-tools/adb -s ZD222T44PP install -r
-  app/build/outputs/apk/debug/app-debug.apk`. Crashes: `adb logcat`. Event log: `adb shell run-as app.pdscenes cat files/events.log`.
+  app/build/outputs/apk/debug/app-debug.apk`. Crashes: `adb logcat`. Event log: `adb shell run-as io.github.dadcraftttv.ouralia cat files/events.log`.
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
 - New sound ideas go in behind a switch (old sound the default) so he can compare, until he says otherwise.
   A setting that uses our C objects gets `.dcs()` in Params.java (shown with " *").
@@ -23,8 +23,8 @@ behaviour changes, or tell DadCraft it needs one).
   only failures and summaries; read files in parts (grep first); don't re-read what's already in context.
 
 ## Hard rules
-- **The final name and applicationId must not contain "RjDj".** Chosen name: **Ouralia** (not renamed yet: a new
-  applicationId is a new app for testers; DESIGN-NOTES "The name").
+- **The final name and applicationId must not contain "RjDj".** Renamed to **Ouralia** on Oct 21
+  (applicationId and package `io.github.dadcraftttv.ouralia`; DESIGN-NOTES "The rename").
 - **Output never goes to the phone speaker** (headphones only; see "Output never goes" in DESIGN-NOTES).
 - **The mic never touches disk.** No recording audio to files.
 - Nothing resets settings except the Reset everything button. Existing installs keep stored values when defaults change.
@@ -32,7 +32,7 @@ behaviour changes, or tell DadCraft it needs one).
 - Defaults: input gain 1, compressor -30 dB 4:1; a fresh install plays only the dry room.
 
 ## Layout
-- `app/src/main/java/app/pdscenes/` — Java, plain Views (no Compose; do not rewrite). Params.java = every setting.
+- `app/src/main/java/io/github/dadcraftttv/ouralia/` — Java, plain Views (no Compose; do not rewrite). Params.java = every setting.
 - `app/src/main/assets/patches/test_scene.pd` — the built-in patch. **Generated:** edit `tools/make_patch.py`, run
   `python3 tools/make_patch.py`. Never hand-edit the .pd.
 - `app/src/main/assets/scene_lib` (rjlib + our scene helpers), `builtin_scenes/` (4 official RjDj scenes).
@@ -66,8 +66,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
 - **Plan (DadCraft, Oct 21):** rc5 = the first public beta, renamed to Ouralia, posted under GitHub Releases but not
-  advertised until GitHub purges the old commits. Before rc5: the rename and the found-sound rhythm section (ROADMAP
-  16); everything else waits for wider testers' feedback.
+  advertised until GitHub purges the old commits. The rename is done (Oct 21); the found-sound rhythm section (ROADMAP 16) was
+  already built (DadCraft will walk-test it). Everything else waits for wider testers' feedback.
 - **DadCraft's verdicts (Oct 21):** Evolving stays opt-in (not the default). Hooks That Grow (`mel_dev`), Living
   Grooves (`pat_gen`), Chord Colours (`chord_color`): "all good". The Band Plays good with Intensity 50 (he is
   comparing it off with Intensity 100). Renames, effect families, rounded icons: good.
@@ -76,7 +76,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   of its own, now labelled "(Classic's drums)").
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
-  mockups (DadCraft: "looks and feels great"); only the Ouralia wordmark waits for the rename.
+  mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.
 - **GitHub:** DadCraft asked Support to purge the old commits that held his name. When they answer, check that
   `gh api repos/dadcraftttv/PdScenes/commits/c193786cad2b75e94f01912ec5b3c7b4a1dd26e0` no longer finds it.
 - Push only when DadCraft asks (`git log origin/main..HEAD` shows what is unpushed).

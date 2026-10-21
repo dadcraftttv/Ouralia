@@ -13,10 +13,10 @@ dependencyResolutionManagement {
         // Our own pd-core build (tools/build_pdcore.sh, from the dadcraftttv/pd-for-android and libpd forks), kept
         // in the repo. Only the libpd group comes from here, and libpd only from here.
         exclusiveContent {
-            forRepository { maven(uri("third_party/maven")) { name = "pdscenes-pdcore" } }
+            forRepository { maven(uri("third_party/maven")) { name = "ouralia-pdcore" } }
             filter { includeGroup("io.github.libpd.android") }
         }
     }
 }
-rootProject.name = "PdScenes"
+rootProject.name = "Ouralia"
 include(":app")

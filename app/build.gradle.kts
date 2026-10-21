@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    namespace = "app.pdscenes"
+    namespace = "io.github.dadcraftttv.ouralia"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "app.pdscenes"
+        applicationId = "io.github.dadcraftttv.ouralia"
         // libpd's pd-core (Oboe backend) requires API 28+, i.e. Android 9 and newer.
         minSdk = 28
         targetSdk = 36
@@ -18,9 +18,8 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Tester release candidates are signed with the same (debug) key as the builds testers already have, so
-            // they install over them and keep their settings. A real release key comes with release prep (the final
-            // name and applicationId will be a new app anyway).
+            // Release candidates are signed with the debug key, as rc3 and rc4 were (those were app.pdscenes, the working
+            // name: Ouralia is a new app beside them). A real release key comes with Play release prep.
             signingConfig = signingConfigs.getByName("debug")
         }
     }

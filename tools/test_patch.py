@@ -11,7 +11,7 @@ from pdtest import Engine, SR
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 PATCH = os.path.join(ROOT, "app/src/main/assets/patches/test_scene.pd")
-PARAMS_JAVA = os.path.join(ROOT, "app/src/main/java/app/pdscenes/Params.java")
+PARAMS_JAVA = os.path.join(ROOT, "app/src/main/java/io/github/dadcraftttv/ouralia/Params.java")
 LIB = sys.argv[1] if len(sys.argv) > 1 else "libpd.so"
 
 fails = 0
