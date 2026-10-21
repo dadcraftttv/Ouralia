@@ -1258,6 +1258,10 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
 - **The name** (Oct 17): **Ouralia**, chosen by DadCraft; no USPTO or EUIPO results for it (he checked), though Oura
   the ring maker has fought similar marks. The final name and applicationId must not contain "RjDj". Renaming gives a
   new applicationId (e.g. com.dadcraftstudios.ouralia), which testers get as a new app (they export presets first).
+- **Card on/off switches** (fixed Oct 21, DadCraft: "the switches for the effects in Sounds are gone"): a card's
+  header switch is the section's toggle whose label ends in " enabled"; the Title Case renames made it "Enabled", so
+  no card found its switch (rc5, rc5.1), and Music Enabled sat in the card's body. `Params.onSwitch` now matches in any
+  case (test M: all 17 cards find theirs).
 - **How the band plays in presets** (Oct 21, DadCraft: a preset made in PdScenes didn't bring them over; a preset is
   "the sum of all the things they did to shape the sound", so it loads exactly as meant): `Params.BAND`, 27 settings
   (Music on, Key, Scale, Song Shape, Chord Colours, Hooks That Grow, Living Grooves, Soft Steps, The Band Plays,

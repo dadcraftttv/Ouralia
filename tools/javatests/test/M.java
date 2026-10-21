@@ -87,6 +87,11 @@ public class M {
     Params.upgradeLegacyMovers(o);
     check(o.getDouble("wet_mv")==3&&Math.abs(o.getDouble("wet_mvspeed")-0.7)<1e-9&&Math.abs(o.getDouble("wet_mvdepth")-0.6)<1e-9&&o.getInt("echo_movers")==1,"legacy mover1 -> wet 'Louder = higher'");
     check(o.getDouble("pitch_semi_mv")==1&&o.getInt("pitch_movers")==1,"legacy mover2 -> pitch smooth wave");
+    // every card with an "..._on" switch shows it on its header (DadCraft, Oct 21: the effects' switches were gone)
+    int switches=0; String missing="";
+    for(Params.Section sec:Params.SECTIONS){ boolean has=false; for(Param p:Params.ALL) if(p.section.equals(sec.id)&&p.id.endsWith("_on")&&p.toggle&&p.moverOf==null) has=true;
+      Param on=Params.onSwitch(sec); if(on!=null) switches++; if(has&&on==null) missing+=sec.id+" "; }
+    check(switches==17&&missing.isEmpty(),"every card's on/off switch is found for its header ("+switches+" cards"+(missing.isEmpty()?"":", missing: "+missing)+")");
     org.json.JSONObject none=new org.json.JSONObject(); none.put("wet",0.3); Params.upgradeLegacyMovers(none); check(!none.has("echo_movers"),"no legacy movers: nothing added");
     System.out.println(fails==0?"ALL PASSED":(fails+" FAILED")); System.exit(fails==0?0:1);
   }

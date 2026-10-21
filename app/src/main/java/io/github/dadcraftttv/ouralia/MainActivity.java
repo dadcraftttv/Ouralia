@@ -1288,7 +1288,7 @@ public class MainActivity extends Activity {
     /** One effect section: its Movers switch, then each slider followed by its movement settings. */
     private void fillEffectSection(LinearLayout body, Params.Section section) {
         Param moversSwitch = Params.byId(Params.moversSwitchId(section.id));
-        Param onSwitch = onSwitch(section);   // (both sit on the card's header)
+        Param onSwitch = Params.onSwitch(section);   // (both sit on the card's header)
         for (Param p : Params.ALL) {
             if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch && p != onSwitch) {
                 if (p.id.equals("music_key")) {   // Key and Scale: two tiles side by side, each opening a sheet
@@ -1422,15 +1422,6 @@ public class MainActivity extends Activity {
     }
 
     /** A section's own on/off switch ("Echo enabled"...): shown on its card's header. Null if it has none. */
-    private static Param onSwitch(Params.Section section) {
-        for (Param p : Params.ALL) {
-            if (p.section.equals(section.id) && p.toggle && p.moverOf == null && p.label.endsWith(" enabled")) {
-                return p;
-            }
-        }
-        return null;
-    }
-
     /**
      * What a section's header carries: the Movers pill (automatic movement for this section, on or off) and the
      * section's on/off switch, so both work with the card folded.
@@ -1452,7 +1443,7 @@ public class MainActivity extends Activity {
             extras.add(pill);
             rows.add(new Row(movers, null, null, pill));
         }
-        Param on = onSwitch(section);
+        Param on = Params.onSwitch(section);
         if (on != null) {
             Switch sw = new Switch(this);
             look.switchTint(sw);
