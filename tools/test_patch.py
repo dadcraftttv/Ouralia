@@ -2657,6 +2657,16 @@ check(len(dl) >= 30 and len(al) >= 5 and kick_row == last_kick and arp_row == [i
 e = walk_run(0, 10)
 check(not e.lists.get("rh_gen_bar") and not e.lists.get("arp_gen_bar"), "patterns made by rules: off, nothing is written (the usual lists play)")
 
+# ---- 10y. melody rhythm by rules: with Patterns made by rules, its bar is the composer's (test_dcs "melody rhythm by rules") ----
+e = fresh(dry=0, wet=0, music_on=1, music_arp=1, music_pad=0, music_res=0, music_harm=0, music_answer=0,
+          melody_src=0, mel_rhythm=2, beat_level=0, pat_gen=1)
+e.listen("cell_gen_bar", "mel_cell", "mel_note"); e.send("calm_chimes", 25)
+e.run(np.zeros(30 * SR, np.float32))
+gen, rows_, notes = e.lists.get("cell_gen_bar", []), [int(v) for v in e.heard.get("mel_cell", [])], e.lists.get("mel_note", [])
+lens_ok = all(any(int(c[int(tk)]) == int(n) for c in gen) for tk, n, _ in notes)
+check(len(gen) >= 8 and rows_ and all(r == 28 for r in rows_[1:]) and len(notes) >= 10 and lens_ok,
+      "melody rhythm by rules: %d bars written, the bars play its row (%s), %d notes of its lengths" % (len(gen), sorted(set(rows_)), len(notes)))
+
 # ---- diagnostics: counting overloads once a second (in, after Input gain, at the output limiter) ----
 def clip_counts(sig, **over):
     e = fresh(**over)

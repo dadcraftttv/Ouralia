@@ -795,6 +795,35 @@ n = len(e.lists.get("cchord", []))
 e.close()
 check(4 <= n <= 14, f"no clock: chords still change by themselves ({n} in 40 s at 120 BPM)")
 
+# chord colours: sevenths, added ninths, sus chords that resolve at the next bar; all in the chords' scale
+def colored(scale, bars, on):
+    e = Engine(LIB, cp); e.listen("cchord")
+    for sel, v in (("seed", 5), ("color", on), ("tempo", 100), ("scale", scale)):
+        e.send_msg("cin", sel, v)
+    e.send_msg("cin", "start")
+    out = []
+    for _ in range(bars):
+        n0 = len(e.lists.get("cchord", []))
+        e.send_msg("cin", "bar")
+        out.append([sorted({int(v) % 12 for v in c[2:6]}) for c in e.lists.get("cchord", [])[n0:]])
+    e.close()
+    return out
+for sc in (0, 3, 4):
+    bars = colored(sc, 400, 1)
+    flat = [c for b in bars for c in b]
+    four = sum(1 for c in flat if len(c) == 4)
+    sus, resolved = 0, 0
+    for i, b in enumerate(bars):
+        for c in b:
+            if len(c) == 3 and not any({(r + 3) % 12, (r + 7) % 12} <= set(c) or {(r + 4) % 12, (r + 7) % 12} <= set(c) for r in c):
+                sus += 1
+                nxt = bars[i + 1] if i + 1 < len(bars) else []
+                resolved += bool(nxt) and any({(r + 3) % 12, (r + 7) % 12} <= set(nxt[0]) or {(r + 4) % 12, (r + 7) % 12} <= set(nxt[0]) for r in nxt[0])
+    check(all(set(c) <= set(PARENT_IV[sc]) for c in flat) and four >= 0.15 * len(flat) and sus >= 3 and resolved >= 0.8 * sus,
+          f"chord colours, {SC_NAMES[sc]}: {four} of {len(flat)} chords with a 7th or 9th, {sus} sus chords ({resolved} resolving at the next bar), all in the scale")
+plain = [c for b in colored(0, 200, 0) for c in b]
+check(all(len(c) == 3 for c in plain), "chord colours off: only plain chords")
+
 # melodies that develop: statements of a motif per section
 mp = patch("composer_mel", ["r cin", "dcs_composer", "s cmel", "s cform", "s csect"],
            [(0, 0, 1, 0), (1, 2, 2, 0), (1, 3, 3, 0), (1, 1, 4, 0)])
@@ -876,6 +905,29 @@ check(all(v in tones or v - 1 in tones for a in arps for v in a) and all(a[0] ==
       f"patterns: the walking figure is chord tones (a passing note between), its first note kept (bars 7-8 of 8 play it backwards), every 4th bar the base, now and then backwards ({arps[0]} ..)")
 wide, narrow = patterns(0.5, 1, pace=1.0)[1][0], patterns(0.5, 1, pace=0.0)[1][0]
 check(max(wide) >= max(narrow), f"patterns: a brisk walk reaches higher ({narrow} -> {wide})")
+
+# Melody rhythm's bar by rules: straight on the 8ths, dotted with odd counts on the 16ths, a little change a bar
+pcl = patch("composer_cell", ["r cin", "dcs_composer", "route cell", "s ccell"], [(0, 0, 1, 0), (1, 4, 2, 0), (2, 0, 3, 0)])
+def cells(drive, style, bars=24, seed=4):
+    e = Engine(LIB, pcl); e.listen("ccell"); e.send_msg("cin", "seed", seed); e.send_msg("cin", "scale", 0)
+    for _ in range(bars):
+        e.send_msg("cin", "cell", drive, style)
+    out = [[int(v) for v in c] for c in e.lists.get("ccell", [])]
+    e.close()
+    return out
+ok, info = True, []
+for drive in (0.1, 0.5, 0.9):
+    st, dt = cells(drive, 1), cells(drive, 2)
+    for c in st + dt:
+        ons = [i for i in range(16) if c[i]]
+        ok &= c[16] == len(ons) and c[17] == ons[-1] and sum(c[:16]) == 16 - ons[0] and ons[0] <= 2
+    ok &= all(i % 2 == 0 for c in st for i in range(16) if c[i])            # straight: on the 8ths
+    ok &= sum(1 for i in range(16) if dt[0][i]) in (3, 5, 7)                  # dotted: an odd count spread on the 16ths
+    ok &= all(st[i] == st[0] for i in range(0, 24, 4)) and all(dt[i] == dt[0] for i in range(0, 24, 4))
+    info.append((drive, st[0][16], dt[0][16], sum(1 for a, b in zip(st, st[1:]) if a != b)))
+check(ok and info[0][1] < info[2][1] and all(x[3] >= 6 for x in info),
+      f"melody rhythm by rules: straight on the 8ths, dotted odd counts on the 16ths, lengths fill the bar, every 4th bar the base; "
+      f"(drive, straight notes, dotted notes, bars changed of 23) {info}")
 
 # ---------------------------------------------------------------- dcs_loaded
 print("dcs_loaded:")

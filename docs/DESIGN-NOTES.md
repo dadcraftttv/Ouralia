@@ -881,6 +881,23 @@ to date in the same commit when behaviour changes.
   that comes back brings its base patterns back; a new pace (by 0.3) or scale makes a new walking base.
   Measured (test_dcs, 24 bars at drive 0.5): every bar kept the downbeat and backbeat, bars changed 0-2 hits from
   the last; drive 0.05 -> 0.95: kicks 2 -> 5, hats 4 -> 12; pace 0 -> 1: the figure's top 5 -> 9 steps.
+  With Melody rhythm on, its bar too (`cell <rh_drive> <mrhy>` at the bar's tick 0, `mr_bar0`, before the first
+  onset is read; "cell <16 lengths> <count> <last onset>" into mel_cells / mel_cn / mel_lo row 28 = 2 x (straight +
+  dotted) rows; `mr_pick` takes it while rgen, `mr_pick2`'s never-twice skipped). Straight: 1, 2, 4, 6 or 8 notes
+  by drive spread on the 8ths (3 on the 8ths would be 3+3+2, a dotted feel); dotted: 3, 5 or 7 spread on the 16ths
+  (6+5+5, 4+3+3+3+3 ..), a quarter of the time starting an 8th late; mixed: one of the two per section. The
+  section's lean on the drive as for the drums; each bar 60% one change (a note but the first moves a grid step, a
+  long note splits, two merge), every 4th bar the base. Melody phrases' A' still takes "A's cell": the same row,
+  now as rewritten (the two not tried together yet). Measured (24 bars): drive 0.1/0.5/0.9 -> straight 1/4/8 notes,
+  dotted 3/5/7; 6-12 of 23 bars changed.
+  **Chord colours** (`chord_color`, Music toggle, default off, noPreset, `.dcs()`; Oct 21; composer `color`; test_dcs
+  "chord colours"). Evolving only. After voicing, per chord by section (percent seventh / added ninth / sus; Home
+  25/10/10, Lift 20/10/30, Calm 30/40/0, Turn 35/10/15): the seventh (degree + 6 of the chords' mode) replaces the
+  doubled root, just below it; the ninth (degree + 1) goes an octave and a step above the root; sus4 (if the fourth
+  is perfect, else sus2; sus2 a third of the time when both work) moves the third and resolves at the next bar
+  (`bar`: the third back, the chord sent again; a one-bar chord moves on unresolved). Whole tone: none. Measured
+  (400 bars): major 46/159 chords with a 7th or 9th and 26 sus (all resolved), minor pentatonic 47/146 and 17,
+  Dorian 51/151 and 19; every note in the chords' scale.
   **Register from sensors** (`music_follow`, Music, default on, noPreset, app-only `noPd`; `NoteRegister.java`, test W):
   room-relative light < 0.25 -> 2 scale steps down + warm, > 0.75 -> 2 up; a pocket -> an octave down + warm; climbing
   (climb > 0.5) +2. A new register must hold 3 s and changes come at most every 8 s. The app sends `music_register

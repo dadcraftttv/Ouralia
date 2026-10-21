@@ -43,7 +43,7 @@ DEFAULTS = [
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
@@ -1863,6 +1863,7 @@ def add_melody_rhythm(P, x, ex):
     mixed = sorted(MEL_CELLS_STRAIGHT + MEL_CELLS_DOTTED, key=lambda c: sum(1 for v in c if v > 0))
     pools = [rows(MEL_CELLS_STRAIGHT), rows(MEL_CELLS_DOTTED), rows(mixed)]
     allrows = [r for p in pools for r in p]
+    allrows.append(rows(MEL_CELLS_STRAIGHT)[3])   # (the last row: Patterns made by rules', rewritten each bar: add_composer)
     offs = [0, len(pools[0]), len(pools[0]) + len(pools[1])]
     ns = [len(p) for p in pools]
     y = 1400; mx = x + 1700
@@ -1896,9 +1897,9 @@ def add_melody_rhythm(P, x, ex):
     P.obj("phr_r", "r mel_phrase", mx + 450, y + 60); P.obj("phr_rv", "value mphr", mx + 450, y + 75); P.c("phr_r", "phr_rv")
     pool = "min(max(mrhy,1),3)-1"
     near = f"min(max(int(rh_drive*(mel_po[{pool}+3]-1)+0.5)+random(0,3)-1,0),mel_po[{pool}+3]-1)"
-    ex("mr_pick", f"mel_po[{pool}]+{near}", mx + 150, y + 85); P.c("mr_bar", "mr_pick")
+    ex("mr_pick", f"if(rgen,{len(allrows) - 1},mel_po[{pool}]+{near})", mx + 150, y + 85); P.c("mr_bar", "mr_pick")
     # (never the same cell twice in a row: a repeat moves one along, within the pool)
-    ex("mr_pick2", f"if($f1==mel_row,if($f1-mel_po[{pool}]<mel_po[{pool}+3]-1,$f1+1,$f1-1),$f1)", mx + 150, y + 100)
+    ex("mr_pick2", f"if(rgen,$f1,if($f1==mel_row,if($f1-mel_po[{pool}]<mel_po[{pool}+3]-1,$f1+1,$f1-1),$f1))", mx + 150, y + 100)
     P.c("mr_pick", "mr_pick2")
     # (phrases: A' and the last A take A's cell again; A keeps its own)
     ex("phr_rowx", "if(mph_bar==1||mph_bar==3,ph_row,$f1)", mx + 150, y + 105); P.c("mr_pick2", "phr_rowx")
@@ -2009,7 +2010,7 @@ def add_composer(P, x, y):
     P.obj("cmp_br", "value mbright", x + 360, y + 60); P.msg("cmp_br_m", f"bright {BSd}1", x + 360, y + 80)
     P.c("cmp_bar_t", "cmp_br", 1, 0); P.c("cmp_br", "cmp_br_m"); P.c("cmp_br_m", "cmp")
     P.msg("cmp_bar", "bar", x + 300, y + 100); P.c("cmp_bar_t", "cmp_bar", 0, 0); P.c("cmp_bar", "cmp")
-    for k, (rcv, sel) in enumerate((("tempo", "tempo"), ("intensity", "energy"), ("comp_seed", "seed"))):
+    for k, (rcv, sel) in enumerate((("tempo", "tempo"), ("intensity", "energy"), ("comp_seed", "seed"), ("chord_color", "color"))):
         P.obj(f"cmp_r{k}", f"r {rcv}", x + 460 + 80 * k, y); P.msg(f"cmp_m{k}", f"{sel} {BSd}1", x + 460 + 80 * k, y + 20)
         P.c(f"cmp_r{k}", f"cmp_m{k}"); P.c(f"cmp_m{k}", "cmp")
     # a chord: the four pad notes and the bass held first, then the anchor goes where Classic's root goes; that
@@ -2068,6 +2069,24 @@ def add_composer(P, x, y):
     P.obj("cmp_arp_at", f"list prepend {len(ARP_PATTERNS) * len(ARP_PATTERNS[0])}", x + 1000, y + 560); P.c("cmp_arp_rt", "cmp_arp_at")
     P.obj("cmp_arp_s", "s arp_pat", x + 1000, y + 580); P.c("cmp_arp_at", "cmp_arp_s")
     P.obj("cmp_arp_snd", "s arp_gen_bar", x + 1100, y + 580); P.c("cmp_arp_rt", "cmp_arp_snd")   # (for the tests)
+    # ...and Melody rhythm's bar: at each bar's tick 0 (before its first onset is read) the composer writes the
+    # next cell into mel_cells' last row, its note count into mel_cn and its last onset into mel_lo
+    G = 2 * (len(MEL_CELLS_STRAIGHT) + len(MEL_CELLS_DOTTED))   # (add_melody_rhythm's rows: straight, dotted, mixed = both)
+    P.obj("cmp_cell_g", "spigot 0", x + 1200, y + 440); P.c("cmp_r_gen", "cmp_cell_g", 0, 1); P.c("mr_bar0", "cmp_cell_g")
+    P.obj("cmp_cell_t", "t b b", x + 1200, y + 460); P.c("cmp_cell_g", "cmp_cell_t")
+    P.obj("cmp_cell_d", "value rh_drive", x + 1200, y + 480); P.obj("cmp_cell_s", "value mrhy", x + 1260, y + 480)
+    P.obj("cmp_cell_pk", "pack f f", x + 1200, y + 500)
+    P.c("cmp_cell_t", "cmp_cell_s", 1, 0); P.c("cmp_cell_s", "cmp_cell_pk", 0, 1); P.c("cmp_cell_t", "cmp_cell_d", 0, 0); P.c("cmp_cell_d", "cmp_cell_pk")
+    P.msg("cmp_cell_m", f"cell {BSd}1 {BSd}2", x + 1200, y + 520); P.c("cmp_cell_pk", "cmp_cell_m"); P.c("cmp_cell_m", "cmp")
+    P.obj("cmp_cell_rt", "route cell", x + 1200, y + 540); P.c("cmp", "cmp_cell_rt", 4, 0)
+    P.obj("cmp_cell_sp", "list split 16", x + 1200, y + 560); P.c("cmp_cell_rt", "cmp_cell_sp")
+    P.obj("cmp_cell_at", f"list prepend {G * 16}", x + 1200, y + 580); P.c("cmp_cell_sp", "cmp_cell_at", 0, 0)
+    P.obj("cmp_cell_tab", "s mel_cells", x + 1200, y + 600); P.c("cmp_cell_at", "cmp_cell_tab")
+    P.obj("cmp_cell_up", "unpack f f", x + 1300, y + 580); P.c("cmp_cell_sp", "cmp_cell_up", 1, 0)
+    for k, tab in enumerate(("mel_cn", "mel_lo")):
+        P.obj(f"cmp_cell_p{k}", f"list prepend {G}", x + 1300 + 80 * k, y + 600); P.c("cmp_cell_up", f"cmp_cell_p{k}", k, 0)
+        P.obj(f"cmp_cell_w{k}", f"s {tab}", x + 1300 + 80 * k, y + 620); P.c(f"cmp_cell_p{k}", f"cmp_cell_w{k}")
+    P.obj("cmp_cell_snd", "s cell_gen_bar", x + 1400, y + 560); P.c("cmp_cell_rt", "cmp_cell_snd")   # (for the tests)
 
 
 def add_music(P):

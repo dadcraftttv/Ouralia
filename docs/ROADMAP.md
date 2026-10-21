@@ -232,7 +232,9 @@ and microphone declarations, icon, store listing, numbered pd-core release.
        drums, a bar made by rules each bar (evenly spread hits, a figure of the chord's tones), each keeping most of
        the last and changing one thing, every 4th bar the section's own again. Not done: the chimes' rhythm (still
        set by what triggers them) and Melody rhythm's cells.
-    Later maybe: chord colours (sevenths, sus) now and then.
+    4. **Chord colours and Melody rhythm by rules** (built Oct 21, `chord_color`; Melody rhythm's bar under
+       `pat_gen`; waiting on DadCraft's ears).
+    Left: the chimes' own timing when Melody rhythm is off (set by what triggers them, by design).
 
 20. **More kit parts (DadCraft, Oct 20: "lets plan on doing at least one and two, maybe three"; keep all four).**
     Today a kit has four parts (mel, bass, pad, drums). A kit only picks instruments for notes the band already

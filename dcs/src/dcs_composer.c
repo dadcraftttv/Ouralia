@@ -29,11 +29,18 @@
  * ghost notes, each section leaning it (Calm sparser, Lift busier). The walking notes: an 8-step figure of the chord's
  * tones (rising, falling, rise and fall, broken, or around the root) wider with the pace, a passing note now and
  * then. Both keep most of the bar each time and change one thing; every 4th bar is the section's own pattern again
- * (the walking figure now and then backwards). A section that comes back brings its patterns back.
+ * (the walking figure now and then backwards). A section that comes back brings its patterns back. With Melody
+ * rhythm on, its one-bar rhythm too (`cell <drive> <style 1 straight, 2 dotted, 3 mixed>`): as many notes as the
+ * drive asks, spread evenly (straight on the 8ths; dotted on the 16ths, which gives 3+3+2 feels, now and then a
+ * late start), each bar one note moved, split or merged.
+ *
+ * Chord colours (`color 1`): now and then a chord gets its seventh (in place of the doubled root), an added ninth, or
+ * is sus4 / sus2 (the fourth or second in place of the third) and resolves to the plain chord at the next bar; how
+ * often leans on the section (Calm the lushest, Lift the most sus). Every note is from the chords' own scale.
  *
  * Messages: scale <0-7> (Major, Minor, Major pent., Minor pent., Dorian, Mixolydian, Lydian, Whole tone: a new piece,
  * home chord now), tempo <bpm>, bright <0-1>, energy <0-1> (both lean the choice of section), bar, start (the chord
- * now), again (the chord again: the key changed), seed <n>.
+ * now), again (the chord again: the key changed), seed <n>, color <0|1>.
  * note <middle> <chord> <n>: the next melody note, as a scale step (middle: where the melody would sit, chord: the
  * chord's scale step, n: notes in the scale).
  * Outlets, left to right: a list per chord: anchor (the scale step that fits it best, for the parts that think in
@@ -42,7 +49,8 @@
  * melody note (a float); a list when a statement starts: its form (0 the motif, 1 again, 2 answered, 3 moved,
  * 4 upside down, 5 backwards, 6 cut short, 7 carried on), its first note; per `drums <drive 0-1> <break 0-1>`
  * three lists, lane (0 kick, 1 snare, 2 hat) then 16 velocities (a hat from 2 up is open: velocity + 2); per
- * `arp <pace 0-1> <n>` "arp" and 8 scale steps above the chord's root. (The drum lists come as "drum ...".)
+ * `arp <pace 0-1> <n>` "arp" and 8 scale steps above the chord's root (the drum lists come as "drum ..."); per
+ * `cell` "cell", 16 note lengths in 16ths at their onsets (0 elsewhere), the number of notes, the last onset.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  * Copyright (c) 2026 dadcraft (DadCraft Studios)
@@ -109,6 +117,8 @@ static const float KIND_SECS[NKINDS] = {6.5f, 4.5f, 9.0f, 5.5f};
 static const int KIND_REG[NKINDS] = {0, 2, -2, 1};
 static const int KIND_BASS[NKINDS] = {65, 100, 0, 100};
 static const int KIND_OPEN[NKINDS] = {0, 0, 1, 0};
+/* chord colours per section, percent: seventh, added ninth, sus (the rest plain) */
+static const int KIND_COLOR[NKINDS][3] = {{25, 10, 10}, {20, 10, 30}, {30, 40, 0}, {35, 10, 15}};
 
 #define MOTIF_MAX 8
 #define GAP_MS 2200        /* a pause this long ends a statement */
@@ -149,6 +159,10 @@ typedef struct {
     int drum_have[NKINDS], drum_kind, drum_bars;
     int arp_base[NKINDS][ARP_LEN], arp_cur[ARP_LEN], arp_have[NKINDS], arp_kind, arp_bars, arp_n;
     float arp_pace[NKINDS];
+    int cell_base[NKINDS][16], cell_cur[16], cell_have[NKINDS], cell_style[NKINDS], cell_kind, cell_bars;
+    float cell_d[NKINDS];
+    /* chord colours */
+    int color, sus_voice, sus_third;   /* a sus chord's voice and the third it resolves to (-1: none pending) */
 } t_dcs_composer;
 
 static int rnd(t_dcs_composer *x, int n)   /* 0..n-1 */
@@ -325,6 +339,27 @@ static void voice_chord(t_dcs_composer *x)
     x->voice[3] = root + 12;
     x->voiced = 1;
     x->bass = rnd(x, 100) < KIND_BASS[x->kind] ? t[0] : 0;
+    x->sus_voice = -1;
+    if (x->color && PARENT[x->scale] != WHOLE) {
+        const int *c = KIND_COLOR[x->kind];
+        int r = rnd(x, 100);
+        if (r < c[0])                                          /* its seventh, a little below the doubled root */
+            x->voice[3] = root + (pc(m, x->deg + 6) - pc(m, x->deg) + 24) % 12;
+        else if (r < c[0] + c[1])                              /* an added ninth */
+            x->voice[3] = root + 12 + (pc(m, x->deg + 1) - pc(m, x->deg) + 24) % 12;
+        else if (r < c[0] + c[1] + c[2]) {                     /* sus4 or sus2, resolving at the next bar */
+            int four = (pc(m, x->deg + 3) - pc(m, x->deg) + 24) % 12, two = (pc(m, x->deg + 1) - pc(m, x->deg) + 24) % 12;
+            int up = four == 5 && (two != 2 || rnd(x, 3)) ? 1 : two == 2 ? -1 : 0;
+            for (int i = 0; i < 3 && up; i++)
+                if ((x->voice[i] + 120) % 12 == t[1]) {
+                    x->sus_voice = i;
+                    x->sus_third = x->voice[i];
+                    int third = (t[1] - t[0] + 12) % 12;       /* 3 or 4 semitones above the root */
+                    x->voice[i] += up > 0 ? four - third : two - third;
+                    break;
+                }
+        }
+    }
 }
 
 /* the step of the chosen scale that fits the chord best: its root, else the most notes shared */
@@ -530,9 +565,9 @@ static void dcs_composer_note(t_dcs_composer *x, t_floatarg fmid, t_floatarg fch
 
 /* ---- patterns made by rules ---- */
 
-static int euclid(int i, int k, int rot)   /* is step i one of k hits spread evenly over 16 */
+static int euclid(int i, int k, int rot, int steps)   /* is step i one of k hits spread evenly over the steps */
 {
-    return k > 0 && (((i + rot) % 16) * k) % 16 < k;
+    return k > 0 && (((i + rot) % steps) * k) % steps < k;
 }
 
 static void make_drums(t_dcs_composer *x, float d, float brk, float (*p)[16])
@@ -542,7 +577,7 @@ static void make_drums(t_dcs_composer *x, float d, float brk, float (*p)[16])
             p[l][i] = 0;
     int kicks = 2 + (int)(3 * d + 0.5f);
     for (int i = 0; i < 16; i++)
-        if (euclid(i, kicks, 0))
+        if (euclid(i, kicks, 0, 16))
             p[0][i] = i == 0 ? 1.0f : i == 8 ? 0.85f : 0.65f;
     if (brk > 0.3f && p[0][8] > 0 && rnd(x, 2)) {   /* a breakbeat leans the middle kick late */
         p[0][8] = 0;
@@ -557,7 +592,7 @@ static void make_drums(t_dcs_composer *x, float d, float brk, float (*p)[16])
         p[1][ghost[rnd(x, 5)]] = 0.3f;
     int hats = 4 + (int)(8 * d + 0.5f), rot = hats == 4 && rnd(x, 3) == 0 ? 2 : 0;   /* (4 hats: sometimes off the beat) */
     for (int i = 0; i < 16; i++)
-        if (euclid(i, hats, rot))
+        if (euclid(i, hats, rot, 16))
             p[2][i] = i % 4 == 0 ? 0.6f : i % 2 == 0 ? 0.45f : 0.28f;
     if (d > 0.5f && rnd(x, 2))
         p[2][14] = 2.45f;                            /* an open hat before the bar comes round */
@@ -682,6 +717,93 @@ static void dcs_composer_arp(t_dcs_composer *x, t_floatarg fpace, t_floatarg fn)
     outlet_anything(x->out_pat, gensym("arp"), ARP_LEN, a);
 }
 
+/* a one-bar rhythm as onsets (1) on 16 steps; lengths are the gaps between them */
+static void make_cell(t_dcs_composer *x, float d, int dotted, int *on)
+{
+    for (int i = 0; i < 16; i++)
+        on[i] = 0;
+    if (!dotted) {
+        static const int K[5] = {1, 2, 4, 6, 8};          /* even counts on the 8ths stay straight (3 would be 3+3+2) */
+        int k = K[(int)(d * 4 + 0.5f)];
+        for (int i = 0; i < 8; i++)
+            on[2 * i] = euclid(i, k, 0, 8);
+    } else {
+        static const int K[3] = {3, 5, 7};                 /* odd counts on the 16ths: 3+3+2-like, dotted */
+        int k = K[(int)(d * 2 + 0.5f)], late = rnd(x, 4) == 0 ? 2 : 0;
+        for (int i = 0; i < 16; i++)
+            if (euclid(i, k, 0, 16) && i + late < 16)
+                on[i + late] = 1;
+    }
+    if (!on[0] && !on[2])
+        on[0] = 1;
+}
+
+static void vary_cell(t_dcs_composer *x, int dotted, int *on)
+{
+    int at[16], n = 0, grid = dotted ? 1 : 2;
+    for (int i = 0; i < 16; i++)
+        if (on[i])
+            at[n++] = i;
+    int what = rnd(x, 3);
+    if (what == 0 && n > 1) {                            /* a note (not the first) moves */
+        int i = at[1 + rnd(x, n - 1)], to = i + (rnd(x, 2) ? grid : -grid);
+        if (to > 0 && to < 16 && !on[to]) {
+            on[to] = 1;
+            on[i] = 0;
+        }
+    } else if (what == 1) {                              /* a long note splits */
+        for (int j = 0; j < n; j++) {
+            int end = j + 1 < n ? at[j + 1] : 16;
+            if (end - at[j] >= 4) {
+                on[at[j] + (end - at[j]) / 2 / grid * grid] = 1;
+                break;
+            }
+        }
+    } else if (n > 2)                                    /* two notes merge */
+        on[at[1 + rnd(x, n - 2)]] = 0;
+}
+
+static void dcs_composer_cell(t_dcs_composer *x, t_floatarg fdrive, t_floatarg fstyle)
+{
+    int k = x->kind, style = (int)fstyle;
+    float d = fdrive + KIND_DRIVE[k];
+    d = d < 0 ? 0 : d > 1 ? 1 : d;
+    int dotted = style == 2 ? 1 : style == 3 ? (x->cell_have[k] ? x->cell_style[k] == 2 : rnd(x, 2)) : 0;
+    if (!x->cell_have[k] || fabsf(d - x->cell_d[k]) > 0.2f || (style != 3 && (x->cell_style[k] == 2) != dotted)) {
+        make_cell(x, d, dotted, x->cell_base[k]);
+        x->cell_have[k] = 1;
+        x->cell_d[k] = d;
+        x->cell_style[k] = dotted ? 2 : 1;
+        x->cell_kind = -1;
+    }
+    dotted = x->cell_style[k] == 2;
+    if (x->cell_kind != k || ++x->cell_bars % 4 == 0) {
+        if (x->cell_kind != k)
+            x->cell_bars = 0;
+        x->cell_kind = k;
+        for (int i = 0; i < 16; i++)
+            x->cell_cur[i] = x->cell_base[k][i];
+    } else if (rnd(x, 10) < 6)
+        vary_cell(x, dotted, x->cell_cur);
+    t_atom a[18];
+    int count = 0, last = 0;
+    for (int i = 0; i < 16; i++) {
+        int len = 0;
+        if (x->cell_cur[i]) {
+            int j = i + 1;
+            while (j < 16 && !x->cell_cur[j])
+                j++;
+            len = j - i;
+            count++;
+            last = i;
+        }
+        SETFLOAT(a + i, len);
+    }
+    SETFLOAT(a + 16, count);
+    SETFLOAT(a + 17, last);
+    outlet_anything(x->out_pat, gensym("cell"), 18, a);
+}
+
 static void dcs_composer_bar(t_dcs_composer *x)
 {
     clock_delay(x->watch, bar_ms(x) * 1.6);
@@ -689,6 +811,11 @@ static void dcs_composer_bar(t_dcs_composer *x)
         return;
     if (--x->bars_left <= 0)
         advance(x);
+    else if (x->sus_voice >= 0) {   /* a sus chord resolves */
+        x->voice[x->sus_voice] = x->sus_third;
+        x->sus_voice = -1;
+        emit(x);
+    }
 }
 
 /* no bar came: keep time from the tempo */
@@ -701,8 +828,8 @@ static void dcs_composer_watch(t_dcs_composer *x)
 static void piece(t_dcs_composer *x)   /* a new piece: forget the sections, Home first */
 {
     for (int k = 0; k < NKINDS; k++)
-        x->have[k] = x->have_motif[k] = x->drum_have[k] = x->arp_have[k] = 0;
-    x->drum_kind = x->arp_kind = -1;
+        x->have[k] = x->have_motif[k] = x->drum_have[k] = x->arp_have[k] = x->cell_have[k] = 0;
+    x->drum_kind = x->arp_kind = x->cell_kind = -1;
     x->voiced = 0;
     x->mel_kind = -1;
     x->stmt_on = 0;
@@ -733,6 +860,7 @@ static void dcs_composer_again(t_dcs_composer *x)
 }
 
 static void dcs_composer_tempo(t_dcs_composer *x, t_floatarg f) { x->bpm = f; }
+static void dcs_composer_color(t_dcs_composer *x, t_floatarg f) { x->color = f >= 0.5f; }
 static void dcs_composer_bright(t_dcs_composer *x, t_floatarg f) { x->bright = f < 0 ? 0 : f > 1 ? 1 : f; }
 static void dcs_composer_energy(t_dcs_composer *x, t_floatarg f) { x->energy = f < 0 ? 0 : f > 1 ? 1 : f; }
 
@@ -751,8 +879,10 @@ static void *dcs_composer_new(void)
     x->out_mel = outlet_new(&x->x_obj, &s_float);
     x->out_form = outlet_new(&x->x_obj, &s_list);
     x->out_pat = outlet_new(&x->x_obj, &s_list);
-    x->drum_kind = x->arp_kind = -1;
+    x->drum_kind = x->arp_kind = x->cell_kind = -1;
     x->arp_n = 0;
+    x->color = 0;
+    x->sus_voice = -1;
     x->mel_kind = -1;
     x->stmt_on = 0;
     for (int k = 0; k < NKINDS; k++)
@@ -794,7 +924,9 @@ void dcs_composer_setup(void)
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_bright, gensym("bright"), A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_energy, gensym("energy"), A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_seed, gensym("seed"), A_FLOAT, 0);
+    class_addmethod(dcs_composer_class, (t_method)dcs_composer_color, gensym("color"), A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_drums, gensym("drums"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_arp, gensym("arp"), A_FLOAT, A_FLOAT, 0);
+    class_addmethod(dcs_composer_class, (t_method)dcs_composer_cell, gensym("cell"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_note, gensym("note"), A_FLOAT, A_FLOAT, A_FLOAT, 0);
 }

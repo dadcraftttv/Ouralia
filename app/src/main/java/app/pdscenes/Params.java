@@ -188,6 +188,10 @@ final class Params {
             // Melodies that develop (Oct 21, stage 2): the chimes play a motif per section in statements, like a theme
             // and its variations (again, answered, moved, upside down, backwards, cut short, carried on), instead of a
             // random step from the last note. Works with either Music variety.
+            // Chord colours (Oct 21, with Evolving): now and then a seventh, an added ninth, or a sus chord resolving at
+            // the next bar, more in Calm, more sus in Lift. Classic's chords stay as they are.
+            new Param("chord_color", "Chord colours (sevenths, sus, added notes, with Evolving)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
             new Param("mel_dev", "Melodies that develop (a motif, repeated and changed)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
             // Patterns made by rules (Oct 21, stage 3): the walking notes and the drums get a bar made by rules each bar
