@@ -717,6 +717,12 @@ to date in the same commit when behaviour changes.
   **Pad register** (`music_pad_reg` Low/Mid/Both, default Both, noPreset; DadCraft's idea, he likes it: deep without overpowering): a bass voice (sine + 0.35 2nd + 0.15
   3rd harmonic, folded to 65-131 Hz) on the key root, moving to the chord root on 40% of chord changes; note changes dip out
   and back in (no slides); each footstep ducks it 60% while the walking beat is audible. It rides the pad level/swell.
+  **Walking notes ease in** (`walk_ease`, opt-in, Oct 21; DadCraft: chimes become "extremely loud on walking", glide
+  to where they should be): the footstep note's loudness was (0.4 + 0.6 pace) x (0.8 + 0.4 strength), up to 1.2, at
+  full from the first step (the pace is one step's interval), where the standing chimes reach ~0.6-0.8. Eased:
+  (0.25 + 0.3 pace) x (0.9 + 0.2 strength), the pace it follows moving 30% of the way to each new step's, and a walk
+  starting at 35%, full after 8 steps (both reset when the walk ends). Measured (test "walking notes ease in"): brisk
+  0.088 vs 0.156 (-5 dB), the first 2 s 0.024 vs 0.156, a stroll 0.019. Patterns and rests still use the raw pace.
   **Pace tiers:** `ARP_PATTERNS` run calm -> busy; each bar picks one near the pace (`mu_pace_f`) or a neighbour, never
   the same twice; rests 25% strolling -> 5% brisk. **Step strength:** StepDetector compares each bump's peak with the
   walk's average and sends `step_strength` (0.5 usual, one step of lag) before `step`: it opens the hi-hat (louder,

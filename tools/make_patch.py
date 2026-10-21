@@ -43,7 +43,7 @@ DEFAULTS = [
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 0),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 0), ("walk_ease", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
@@ -171,6 +171,9 @@ STOP_DIP = 0.55            # the pad and bass breathe down to this share...
 STOP_DIP_MS = 2500         # ...over this long...
 STOP_RECOVER_MS = 8000     # ...then drift back to full over this long
 STOP_RETURN_MS = 800       # walking again brings them straight back
+WALK_EASE_VEL = (0.25, 0.3)  # walk_ease: a walking note's loudness from ambling to brisk (as before 0.4 to 1.0)...
+WALK_EASE_PACE = 0.3         # ...the pace it follows moves this share of the way to each new step's...
+WALK_EASE_START, WALK_EASE_STEPS = 0.35, 8   # ...and a walk starts at this share, full after this many steps
 GROOVE_VEL = 0.45           # groove notes are this share of the arpeggio's loudness...
 GROOVE_FADE_IN_MS = 4000   # ...reached over this long
 # Harmony: a held, clearly pitched sound (humming, whistling, a bird, a horn) gets an in-key note answering it.
@@ -2485,11 +2488,27 @@ def add_music(P):
     P.c("mu_r_step", "mu_step_t")
     ex("mu_pace", "1/max($f1,0.25)", x + 1200, 660)
     ex("mu_pace_f", "min(max(($f1-1)/1.6,0),1)", x + 1200, 690)       # 0 = ambling (1 step/s), 1 = brisk (2.6+)
-    ex("mu_pace_vel", "(0.4+0.6*$f1)*(0.8+0.4*$f2)", x + 1200, 720)    # a harder step pushes the note
+    # A harder step pushes the note. Walking notes ease in (walk_ease, DadCraft Oct 21: "extremely loud on walking",
+    # glide to where they should be): at most about the standing chimes' loudness, following a pace that moves
+    # WALK_EASE_PACE of the way to each new step's, and a walk starts soft, full after WALK_EASE_STEPS steps.
+    ex("mu_pace_vel", f"if(wkease,({WALK_EASE_VEL[0]}+{WALK_EASE_VEL[1]}*$f1)*(0.9+0.2*$f2)*$f3,(0.4+0.6*$f1)*(0.8+0.4*$f2))",
+       x + 1200, 720)
     P.obj("mu_r_strength", "r step_strength", x + 1350, 660)
     P.c("mu_r_strength", "mu_pace_vel", 0, 1)
+    P.obj("mu_r_ease", "r walk_ease", x + 1450, 640); P.obj("mu_ease_v", "value wkease", x + 1450, 655)
+    P.c("mu_r_ease", "mu_ease_v")
     P.obj("mu_r_pace", "r step", x + 1200, 640)                       # the pace comes from your real steps
-    P.c("mu_r_pace", "mu_pace"); P.c("mu_pace", "mu_pace_f"); P.c("mu_pace_f", "mu_pace_vel")
+    P.obj("mu_pace_in", "t f b", x + 1200, 648); P.c("mu_r_pace", "mu_pace_in")
+    P.c("mu_pace_in", "mu_pace"); P.c("mu_pace", "mu_pace_f")
+    ex("mu_ease_p", f"if(wkease,$f2+{WALK_EASE_PACE}*($f1-$f2),$f1)", x + 1250, 700)
+    P.obj("mu_ease_pt", "t f f", x + 1250, 710)
+    P.c("mu_pace_f", "mu_ease_p"); P.c("mu_ease_p", "mu_ease_pt"); P.c("mu_ease_pt", "mu_ease_p", 1, 1)
+    P.c("mu_ease_pt", "mu_pace_vel", 0, 0)
+    # this walk's steps so far (counted before the pace, so the note reads it), back to none when the walk ends
+    P.obj("mu_ease_n", "f", x + 1400, 680); P.obj("mu_ease_inc", "+ 1", x + 1440, 680)
+    ex("mu_ease_in", f"min(1,{WALK_EASE_START}+{1 - WALK_EASE_START}*$f1/{WALK_EASE_STEPS})", x + 1400, 700)
+    P.c("mu_pace_in", "mu_ease_n", 1, 0); P.c("mu_ease_n", "mu_ease_inc"); P.c("mu_ease_inc", "mu_ease_n", 0, 1)
+    P.c("mu_ease_n", "mu_ease_in"); P.c("mu_ease_in", "mu_pace_vel", 0, 2)
     # (each arpeggio note sets its own velocity, trimmed by the Mix's walking notes, just before it plays)
     P.obj("mu_arp_pv", "value apvel", x + 1000, 700); ex("mu_arp_trim", "$f1*mixw", x + 1000, 715)
     P.obj("mu_arp_cv", "value cvel", x + 1000, 730); P.c("mu_arp_pv", "mu_arp_trim"); P.c("mu_arp_trim", "mu_arp_cv")
@@ -2556,6 +2575,8 @@ def add_music(P):
     P.obj("mu_walk_del", "del 2500", x + 1160, 930)
     P.c("mu_walk_t", "mu_still_off", 1, 0); P.c("mu_walk_t", "mu_walk_del", 0, 0)
     P.c("mu_walk_del", "mu_still_back")
+    P.msg("mu_ease_rst", "0", x + 1400, 940)                             # a new walk eases in from the start
+    P.c("mu_walk_del", "mu_ease_rst"); P.c("mu_ease_rst", "mu_ease_n", 0, 1); P.c("mu_ease_rst", "mu_ease_p", 0, 1)
     # Chime slots: every footstep, and halfway to the next one. Walking ends -> anything waiting plays.
     # (with the beat synced, chimes wait for the clock's next 8th walking or standing: see "sync" below)
     P.msg("mu_q_walk", "1", x + 200, 660); P.msg("mu_q_stop", "0", x + 200, 630)

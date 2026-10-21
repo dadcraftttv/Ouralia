@@ -1005,6 +1005,13 @@ def walk(interval, n=10, **over):
 stroll, brisk = walk(1.0), walk(0.38, n=26)
 check(rms(brisk[-SR * 3:]) > 2.0 * rms(stroll[-SR * 3:]) > 1e-4,
       "music: the arpeggio swells with pace (stroll %.4f, brisk %.4f)" % (rms(stroll[-SR * 3:]), rms(brisk[-SR * 3:])))
+# walking notes ease in (walk_ease): a brisk walk at about the standing chimes' loudness, the first steps softer still
+stroll_e, brisk_e = walk(1.0, walk_ease=1), walk(0.38, n=26, walk_ease=1)
+first, first_e = rms(brisk[:SR * 2]), rms(brisk_e[:SR * 2])
+check(0.4 * rms(brisk[-SR * 3:]) < rms(brisk_e[-SR * 3:]) < 0.75 * rms(brisk[-SR * 3:])
+      and rms(brisk_e[-SR * 3:]) > 1.5 * rms(stroll_e[-SR * 3:]) and first_e < 0.45 * first,
+      "music: walking notes ease in: brisk %.4f (as before %.4f), still above a stroll %.4f, first 2 s %.4f (as before %.4f)"
+      % (rms(brisk_e[-SR * 3:]), rms(brisk[-SR * 3:]), rms(stroll_e[-SR * 3:]), first_e, first))
 check(not off_key(spec_peaks(brisk[-SR * 3:]), 0, 0, True), "music: the walking arpeggio stays in the key (off-key %s)"
       % off_key(spec_peaks(brisk[-SR * 3:]), 0, 0, True))
 e = fresh(music_on=0, music_pad=1, music_arp=1, wet=0)

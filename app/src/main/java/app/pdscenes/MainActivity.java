@@ -701,6 +701,7 @@ public class MainActivity extends Activity {
         dialBox.addView(playerDial, new android.widget.FrameLayout.LayoutParams(dp(248), dp(248)));
         startStop = new Button(this);
         look.button(startStop, true);
+        startStop.setTypeface(look.value());   // DadCraft: the words in the slider numbers' font
         startStop.setBackground(look.pressable(look.round(look.p.primary, 52), look.p.onPrimary, 52));
         startStop.setPadding(0, dp(20), 0, dp(16));
         startStop.setCompoundDrawablePadding(dp(2));

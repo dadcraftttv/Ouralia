@@ -200,12 +200,14 @@ final class Styler {
         android.graphics.drawable.StateListDrawable icon = new android.graphics.drawable.StateListDrawable();
         icon.addState(new int[] {android.R.attr.state_checked}, closed);
         icon.addState(new int[] {}, open);
-        c.setButtonDrawable(icon);
+        // a CheckBox draws its button at the start edge, so pad the padlock out to the whole 44dp box: then the
+        // icon sits in the middle of the round press glow
+        c.setButtonDrawable(new android.graphics.drawable.InsetDrawable(icon, dp(12)));
         c.setButtonTintList(new ColorStateList(new int[][] {{android.R.attr.state_checked}, {}},
                 new int[] {p.primary, p.muted}));
         c.setText("");
         c.setGravity(android.view.Gravity.CENTER);
-        c.setPadding(dp(10), 0, 0, 0);
+        c.setPadding(0, 0, 0, 0);
         c.setBackground(pressable(null, p.text, 22));
     }
 

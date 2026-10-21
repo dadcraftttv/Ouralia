@@ -199,6 +199,10 @@ final class Params {
             // one thing, every 4th bar the section's own again, instead of picks from the short lists.
             new Param("pat_gen", "Patterns made by rules (walking notes and drums)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
+            // Walking notes ease in (Oct 21, DadCraft: the notes get "extremely loud on walking"): the footstep notes
+            // at about the standing chimes' loudness, following the pace smoothly, a walk starting soft. Off = as before.
+            new Param("walk_ease", "Walking notes ease in (softer, glide to their level)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
             new Param("music_drift", "Let the home chord drift (every few minutes, same notes)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
             new Param("music_follow", "Light, pocket and stairs move the notes higher or lower", 0f, 1f, 1f, "",
