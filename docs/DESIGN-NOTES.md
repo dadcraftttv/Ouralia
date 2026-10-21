@@ -718,7 +718,7 @@ to date in the same commit when behaviour changes.
   3rd harmonic, folded to 65-131 Hz) on the key root, moving to the chord root on 40% of chord changes; note changes dip out
   and back in (no slides); each footstep ducks it 60% while the walking beat is audible. It rides the pad level/swell.
   **Soft Steps** (`walk_ease`, Oct 21, first called "Walking notes ease in"; the default since Oct 21, DadCraft: "just be
-  the default", still "quite loud when they reach their full volume", so ~3 dB softer again; DadCraft: chimes become "extremely loud on walking", glide
+  the default", still "quite loud when they reach their full volume", so ~3 dB softer again, then "just about right"; DadCraft: chimes become "extremely loud on walking", glide
   to where they should be): the footstep note's loudness was (0.4 + 0.6 pace) x (0.8 + 0.4 strength), up to 1.2, at
   full from the first step (the pace is one step's interval), where the standing chimes reach ~0.6-0.8. Eased:
   (0.18 + 0.21 pace) x (0.9 + 0.2 strength) (first 0.25 + 0.3 pace), the pace it follows moving 30% of the way to each new step's, and a walk
