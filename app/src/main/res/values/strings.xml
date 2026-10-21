@@ -190,7 +190,7 @@
     <string name="tab_description">%s tab</string>
     <string name="pad_description">Touch pad: drag a finger to steer the sound</string>
     <string name="tab_sound">Sound</string>
-    <string name="tab_music">Music</string>
+    <string name="tab_music">The Band</string>
     <string name="tab_realms">Realms</string>
     <string name="tab_scenes">Scenes</string>
     <string name="tab_setup">Setup</string>
@@ -232,7 +232,7 @@
     <string name="walk_mic_no">The microphone isn\'t allowed yet</string>
     <string name="walk_mic_allow">Allow microphone</string>
     <string name="walk_t3">It starts quiet</string>
-    <string name="walk_b3">When you press Start you\'ll hear only the world around you through your headphones, with nothing added. Everything is switched off.\n\nThat\'s on purpose: turn one thing on, listen to what it does, then try the next. A few places to begin:\n\n• Sound tab: Echo level, then the effects below it.\n• Music tab: Rhythm (Beat level) and Music (switch it on).\n• Realms tab: Realm Hopper, which change the sound by themselves to fit where you are.\n\nClap, knock, talk, hum a note, walk around, and hear how each one answers.</string>
+    <string name="walk_b3">When you press Start you\'ll hear only the world around you through your headphones, with nothing added. Everything is switched off.\n\nThat\'s on purpose: turn one thing on, listen to what it does, then try the next. A few places to begin:\n\n• Sound tab: Echo level, then the effects below it.\n• The Band tab: Rhythm (Beat level) and Music (switch it on).\n• Realms tab: Realm Hopper, which change the sound by themselves to fit where you are.\n\nClap, knock, talk, hum a note, walk around, and hear how each one answers.</string>
     <string name="walk_t4">Let\'s look around</string>
     <string name="walk_b4">Next, a short tour on the real screen: what the small buttons do, then you\'ll switch on your first effect and hear it change your voice, live.\n\nThe screen dims while a note is showing, and only the part it points at can be touched. Tap Next to go on, or Skip tour at any time.\n\nYou can see all this again under Setup, About.</string>
     <string name="tour_counter">Tour · %1$d of %2$d</string>
@@ -261,7 +261,7 @@
     <string name="tour_tabs_t">The tabs</string>
     <string name="tour_tabs_b">Tap an icon to change tabs. The one you\'re on shows its name.</string>
     <string name="tour_tab_sound">Sound: your microphone and the effects.</string>
-    <string name="tour_tab_music">Music: rhythm, melodies and kits.</string>
+    <string name="tour_tab_music">The Band: rhythm, melodies and kits.</string>
     <string name="tour_tab_realms">Realms: sounds that change to fit where you are.</string>
     <string name="tour_tab_scenes">Scenes: other sound worlds to load.</string>
     <string name="tour_tab_setup">Setup: devices, looks, and About.</string>
@@ -276,7 +276,7 @@
     <string name="tour_try_more">Hear it? Play as long as you like, then tap Next.</string>
     <string name="tour_end_t">Now it\'s yours</string>
     <string name="tour_end_b">That\'s how every effect works: open its card, turn something up, listen.\n\nWhen you tap Done, Echo goes back to where it was before the tour, so you start from a clean slate. Try one thing at a time and hear how each one answers you.\n\nThis is a test version: please send what you liked, what sounded off and anything that broke to dadcraftstudios@gmail.com\n\nYou can take this tour again under Setup, About.</string>
-    <string name="tour_end_scene_b">A scene is playing, so the Sound, Music and Realms tabs are paused. To try the effects, choose Built-in effects on the Scenes tab.\n\nThis is a test version: please send what you liked, what sounded off and anything that broke to dadcraftstudios@gmail.com\n\nYou can take this tour again under Setup, About.</string>
+    <string name="tour_end_scene_b">A scene is playing, so the Sound, The Band and Realms tabs are paused. To try the effects, choose Built-in effects on the Scenes tab.\n\nThis is a test version: please send what you liked, what sounded off and anything that broke to dadcraftstudios@gmail.com\n\nYou can take this tour again under Setup, About.</string>
     <string name="walk_show_again">Show the walkthrough again</string>
     <string name="about_feedback">This is a test version. Please send feedback to dadcraftstudios@gmail.com</string>
     <string name="feedback_send">Send feedback</string>

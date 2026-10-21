@@ -52,7 +52,7 @@ final class Params {
             new Section("main", "Input & Output", true),
             new Section("shape", "Gate and Compressor Shape", false),
             new Section("beat", "Rhythm", false),
-            new Section("music", "The Band", true),
+            new Section("music", "Music", true),
             new Section("mix", "Mix (the level of each part)", false),
             // the effects in four families, each under its own heading on the Sound tab (DadCraft, Oct 21)
             new Section("tune", "Sing in Key", false, "Voice"),

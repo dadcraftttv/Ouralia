@@ -325,7 +325,7 @@ final class DesktopWindow {
             body.add(reset, full(body));
         });
         tabs.addTab("Sound", scroll(sound));
-        tabs.addTab("Music", scroll(music));
+        tabs.addTab("The Band", scroll(music));
         tabs.addTab("Realms", scroll(realms));
         tabs.addTab("Presets", scroll(presets));
         tabs.addTab("Setup", scroll(setup));

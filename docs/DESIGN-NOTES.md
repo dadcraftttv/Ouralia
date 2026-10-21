@@ -1144,7 +1144,8 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
 
 - **Names and families** (Oct 21, DadCraft: names should have character, "Chord Colours is great... Melodies that
   develop sounds dry"; and Title Case, "Input Gain"): he liked the music as **The Band** (a band in your pocket,
-  *Making the Band*), so Music became The Band, the kit "from" menus **Band Members** (Lead, Bassist, Keys,
+  *Making the Band*), so the Music tab became The Band (first the Music card was renamed: DadCraft meant the tab, "The
+  Band kind of encompasses all of the musical things, including Rhythm"; the card is Music again), the kit "from" menus **Band Members** (Lead, Bassist, Keys,
   Drummer, "plays like" a kit), and: Song Shape (Music variety; Classic -> Steady), Hooks That Grow (Melodies that
   develop), Living Grooves (Patterns made by rules), Soft Steps, Wandering Home (Let the home chord drift), Sway with
   the World (Light, pocket and stairs...), Slow Bloom (Calm builds), Phrasing (Melody phrases), Ear for the Room (How

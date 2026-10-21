@@ -24,15 +24,15 @@ There are two ways to use it:
 - **More cards are grouped:** **Mix** (Drums, Pad and bass, Melody, Answers), **Glitch** (Glitch cloud, Kinds of glitch, Freeze) and **Input & output** (Microphone, Pocket and handling, Output).
 - **New echo scatter** (Echo, Scatter style: New): each repeat comes from a real direction, can fly across while it plays (Throw) and can sound near or far (Near and far). Classic stays the default.
 - **The XY pad folds** like the other cards: tap its heading to hide it if you don't use it.
-- **Song Shape: Evolving** (The Band): chord progressions in sections (Home, Lift, Calm, Turn) instead of chords picked from the room's brightness, so a key and scale you like doesn't go stale. The pentatonic scales borrow the full scale's chords. Classic stays the default. See The Band.
-- **Hooks That Grow** (The Band, off by default): the chimes play a short tune and its variations instead of wandering at random. See The Band.
-- **Living Grooves** (The Band, off by default): the walking notes, the drums and Melody rhythm make each bar by rules, changing a little every bar and coming back to the section's own pattern every 4th. See The Band.
-- **New names:** many settings have friendlier names, and every name is in Title Case. The Music card is now **The Band**, and its kit "from" menus are **Band Members** (Lead, Bassist, Keys, Drummer). Also: **Song Shape** (was Music variety), **Hooks That Grow** (Melodies that develop), **Living Grooves** (Patterns made by rules), **Wandering Home** (Let the home chord drift), **Sway with the World** (Light, pocket and stairs...), **Slow Bloom** (Calm builds), **Phrasing** (Melody phrases), **Ear for the Room** (How much the music follows what it hears), **Singing Room** (Room notes) and **Stereo Space** (Spatial).
+- **Song Shape: Evolving** (Music): chord progressions in sections (Home, Lift, Calm, Turn) instead of chords picked from the room's brightness, so a key and scale you like doesn't go stale. The pentatonic scales borrow the full scale's chords. Classic stays the default. See Music.
+- **Hooks That Grow** (Music, off by default): the chimes play a short tune and its variations instead of wandering at random. See Music.
+- **Living Grooves** (Music, off by default): the walking notes, the drums and Melody rhythm make each bar by rules, changing a little every bar and coming back to the section's own pattern every 4th. See Music.
+- **New names:** many settings have friendlier names, and every name is in Title Case. The Music tab is now **The Band** (it holds Rhythm, Music, Mix and the kits), and the kit "from" menus are **Band Members** (Lead, Bassist, Keys, Drummer). Also: **Song Shape** (was Music variety), **Hooks That Grow** (Melodies that develop), **Living Grooves** (Patterns made by rules), **Wandering Home** (Let the home chord drift), **Sway with the World** (Light, pocket and stairs...), **Slow Bloom** (Calm builds), **Phrasing** (Melody phrases), **Ear for the Room** (How much the music follows what it hears), **Singing Room** (Room notes) and **Stereo Space** (Spatial).
 - **The effects are in families** (Sound tab): Voice, Grit, Motion and Time & Space, each under its own small heading.
-- **The Band Plays** (The Band, off by default): the band plays in 8-bar phrases that build up to a drum fill and then drop back, keeps playing even in a calm room, and plays more chimes when it's quiet. See The Band.
-- **Soft Steps** (The Band, off by default): the walking notes are softer, come in gently when you start walking, and glide to a new loudness when your pace changes.
+- **The Band Plays** (Music, off by default): the band plays in 8-bar phrases that build up to a drum fill and then drop back, keeps playing even in a calm room, and plays more chimes when it's quiet. See Music.
+- **Soft Steps** (Music, off by default): the walking notes are softer, come in gently when you start walking, and glide to a new loudness when your pace changes.
 - **Rounder buttons:** the play and stop icons are rounded, and Start and Stop are written in the same font as the slider numbers. The padlock's glow now sits right on the padlock.
-- **Chord Colours** (The Band, off by default, with Evolving): sevenths, added ninths and sus chords that resolve, now and then. See The Band.
+- **Chord Colours** (Music, off by default, with Evolving): sevenths, added ninths and sus chords that resolve, now and then. See Music.
 - **A new welcome and a guided tour:** the welcome pages have a new look, and end with **Show me around**: the screen dims and arrows point at the small buttons (Save, Export, Import, Randomize, Nudge, Undo, Movers, the on/off switches, the player and the tab icons) with what each one does. Then you try it: press **Start**, open **Echo**, turn it up and hear your own voice change. When you tap Done, Echo goes back to how it was. **Skip tour** (or Back) leaves at any time. See it under Setup, About, **Show the walkthrough again**.
 
 **New in rc4 (Oct 17-19):**
@@ -66,7 +66,7 @@ There are two ways to use it:
 
 - **Locks on the Mix levels:** the Kick, Bass, Chimes, Walking notes, Ring, Bells and Stems (since removed) levels now have a Lock box too, so a Realm can't change them.
 - **Melody rhythm** (Music): the walking notes and the standing-still chimes can follow real rhythms (quarters, halves, 8ths, or dotted and syncopated ones), each note ringing as long as it lasts. Off at first.
-- **Phrasing** (The Band, with Melody Rhythm on): the melody makes four-bar phrases: a line, the line again ending like an answer, something new, then the first line once more.
+- **Phrasing** (Music, with Melody Rhythm on): the melody makes four-bar phrases: a line, the line again ending like an answer, something new, then the first line once more.
 - **Breakbeat** (Rhythm): turn it up for drums with off-beat kicks, ghost snares, now and then a chopped bar, a quick snare roll or a longer fill. At 0 the beat is as before.
 - **Standing-still chimes keep an even pace with the Rhythm on:** before, they came a little too often at fast tempos and too rarely at slow ones.
 - **Stem packs** (since removed): a pack too long to hold in memory (over 4 minutes of stereo audio) is refused at import with an explanation, instead of risking a crash.
@@ -75,11 +75,11 @@ There are two ways to use it:
 
 - **Call and response** (Music): sing, hum or whistle a short phrase, pause, and the app answers it with chimes, a third away, in key.
 - **Send feedback** (Setup, About): writes an email to Dad with your phone and app details and, if you like, the app's event log.
-- **Stem packs** (Music tab; removed in rc4, the kits replace them): your own loops, playing with the built-in sound and arranged by where you are and how you move.
-- **Slow Bloom** (The Band, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
+- **Stem packs** (The Band tab; removed in rc4, the kits replace them): your own loops, playing with the built-in sound and arranged by where you are and how you move.
+- **Slow Bloom** (Music, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
 - **Scenes show their pictures and words** on the touch pad, and a few more imported scenes load completely.
 - **Reverse reverb** (Reverb section, and in the Ghost realm): sounds come back as rising swells, landing on the beat while the Rhythm plays.
-- **Mix** (Music tab): a level for every part of the music and rhythm, saved with your presets, so you can turn any part down or out.
+- **Mix** (The Band tab): a level for every part of the music and rhythm, saved with your presets, so you can turn any part down or out.
 - **Intensity** in the bottom card: calmer to the left, busier to the right, your own settings in the middle.
 - **Handling noise:** tapping, gripping or rubbing the phone no longer becomes part of the music: those sounds are turned down and never caught as found sounds (see Handling hush).
 - **Diagnostics** on the Setup tab shows which mic and headphones are really in use, how loud the mic hears the room, and whether anything overloads. If the mic itself keeps overloading, the status line at the bottom says so.
@@ -123,7 +123,7 @@ You need an Android phone or tablet with **Android 9 or newer**, and headphones 
 1. **Put on headphones first.** If the sound comes out of the phone speaker, the microphone hears it and it screeches back (feedback). The app only plays into headphones or earbuds, never the phone speaker, so it will not start until some are connected. If you unplug them while it runs, it stops by itself. Wired or Bluetooth both work; wired is better (see Audio devices below).
 2. Install the APK. If you already have an earlier copy, just install over it; your saved presets and settings stay. Only if Android refuses with "App not installed" do you need to uninstall the old copy first (see "Starting fresh with Reset" for what that erases). Android may ask you to allow installs from the app you opened it from, and Play Protect may show an "unknown developer" warning. Choose **More details > Install anyway**.
 3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone, then a short guided tour points out the small buttons and has you press **Start** (the round button in the player at the bottom of the screen) and try Echo on your own voice. You can see it all again under Setup, About.
-4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on the Music tab, Realm Hopper on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
+4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on The Band tab, Realm Hopper on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
 5. Press **Stop** when finished.
 
 Start with the volume low. Some settings can get loud.
@@ -197,7 +197,7 @@ Right at the end of the chain there is also a built-in safety limiter. It gently
 
 ### Sing in Key (Voice)
 
-Pulls your singing onto the notes of the Music key and scale (set on the Music tab, even if the music is off).
+Pulls your singing onto the notes of the Music key and scale (set on The Band tab, even if the music is off).
 
 - **Sing in key:** 0 is off. 1 puts every note right on the scale. In between nudges you part of the way.
 - **Sing in key glide:** how fast a note is pulled. 0 jumps straight there (the robotic pop-star sound). Higher is
@@ -353,7 +353,7 @@ Places the sound in your headphones.
 - **Pan:** all the way left, all the way right, or in the middle.
 - **Ear delay:** delays one ear slightly, which tricks your brain into hearing the sound as coming from the side.
 
-## The Music tab
+## The Band tab
 
 Everything that turns the room into music: the Rhythm (the beat) and the Music (notes, chords and harmony).
 
@@ -390,7 +390,7 @@ A beat that plays along with you. It used to be called "Walking beat", but it no
 - **Kick drum pitch:** how low or high the synth kick sounds.
 - **Breakbeat:** 0 (the start) leaves the beat as it was. Turn it up and the bars lean on breakbeat patterns: kicks off the beat, snares on the "and", quiet ghost snares. Now and then a bar is chopped (its pieces shuffled, the first beat kept), gets a quick snare roll, or ends in a longer fill. The higher it is, the more often. Your walking pace still sets the tempo and the hi-hats, and it works with synth and found drums alike. It is saved with presets.
 
-### The Band
+### Music
 
 This adds a soft, drifting musical layer that reacts to the world around you, in the spirit of RjDj. It is **off until you switch it on**. The notes are always in the key and scale you choose, so they always sound pleasant together, but when they play and how loud they are comes from what the app hears and how you move. Many parts can be played with sounds the app catches from your surroundings ("found sounds"); each such part has its own choice of Synth, Found sounds or Both.
 
@@ -462,7 +462,7 @@ The ones marked with an "x" (Kick, Bass, Chimes, Walking notes and the two room-
 
 ### Your Kits (sounds for the band)
 
-At the end of the Music tab. A kit is a small text file (kit.txt) that says what each part sounds like, so anyone
+At the end of The Band tab. A kit is a small text file (kit.txt) that says what each part sounds like, so anyone
 can make one, and it can bring its own recordings (WAV, MP3, OGG, FLAC and more) for the melody, the pad or each drum.
 
 - **Import kit:** pick a kit.txt, or a zip with the kit and its sounds. **Import kit folder:** pick a folder that
