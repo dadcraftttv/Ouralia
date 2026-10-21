@@ -1264,7 +1264,7 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   tracker, and the Beat's Follows, Tempo, Set tempo, Plays and Sounds) are saved in presets. None is resetWhenAbsent (a
   preset made before keeps what you have); a Realm never changes them, even one playing a preset of yours (like the
   kit; test W); built-in presets leave them out (`PresetManager.defaults`), so picking Robot doesn't stop the band. The
-  kit and Band Members were always in presets (built-in ones still hold Classic): loading one on the Sound tab left The
+  kit and Band Members were always in presets (since Oct 21 the built-in ones leave the kit, its parts, layers and blends alone too, DadCraft: "yes"): loading one on the Sound tab left The
   Band tab's menus showing the old kit (rows on a hidden tab skip refreshRows), so `showTab` now refreshes.
   Also saved since Oct 21 (DadCraft: "yes, those should go into presets"), left out of built-in presets
   (`Params.builtInsLeave`): the effects' voices `Params.STYLES` (Glitch voice, Pitch shifter, Crusher style,

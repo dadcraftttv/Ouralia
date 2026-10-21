@@ -616,9 +616,10 @@ final class Params {
     static final Set<String> STYLES = Set.of("gc_voice", "shift_voice", "crush_style", "dist_quality",
             "echo_scatter_style");
 
-    /** A built-in preset says nothing about these, so picking one leaves them as they are. */
+    /** A built-in preset says nothing about these, so picking one leaves them as they are: the kit, its parts, layers
+     *  and blends too (DadCraft, Oct 21). */
     static boolean builtInsLeave(String id) {
-        return BAND.contains(id) || STYLES.contains(id) || Intensity.ID.equals(id);
+        return id.startsWith(Kits.ID) || BAND.contains(id) || STYLES.contains(id) || Intensity.ID.equals(id);
     }
 
     /** A Realm never changes these, even playing a preset of yours: the kit (DadCraft, Oct 20), how the band plays
