@@ -888,7 +888,7 @@ to date in the same commit when behaviour changes.
   (6+5+5, 4+3+3+3+3 ..), a quarter of the time starting an 8th late; mixed: one of the two per section. The
   section's lean on the drive as for the drums; each bar 60% one change (a note but the first moves a grid step, a
   long note splits, two merge), every 4th bar the base. Melody phrases' A' still takes "A's cell": the same row,
-  now as rewritten (the two not tried together yet). Measured (24 bars): drive 0.1/0.5/0.9 -> straight 1/4/8 notes,
+  now as rewritten (DadCraft, Oct 21, with Melody phrases on: "it all sounds good"). Measured (24 bars): drive 0.1/0.5/0.9 -> straight 1/4/8 notes,
   dotted 3/5/7; 6-12 of 23 bars changed.
   **Chord colours** (`chord_color`, Music toggle, default off, noPreset, `.dcs()`; Oct 21; composer `color`; test_dcs
   "chord colours"). Evolving only. After voicing, per chord by section (percent seventh / added ninth / sus; Home
