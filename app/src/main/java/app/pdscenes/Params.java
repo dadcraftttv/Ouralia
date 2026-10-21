@@ -179,6 +179,12 @@ final class Params {
             // ---- Music ---- (a reactive synth: notes snapped to a key and scale, added after the first presets)
             new Param("music_on", "Music enabled", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("music").toggle().noPreset().resetWhenAbsent(),
+            // Music variety (Oct 21, DadCraft: with a key and scale he likes, "the band keeps playing much of the same
+            // things"): Evolving = chord progressions in sections from our dcs_composer (Home, Lift, Calm, Turn), the
+            // pentatonic scales borrowing the full scale's chords. Classic = the chord near the room's brightness.
+            new Param("music_var", "Music variety", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Classic (as before)", "Evolving (chord progressions and sections)")
+                    .inSection("music").noPreset().resetWhenAbsent().dcs(),
             new Param("music_drift", "Let the home chord drift (every few minutes, same notes)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
             new Param("music_follow", "Light, pocket and stairs move the notes higher or lower", 0f, 1f, 1f, "",

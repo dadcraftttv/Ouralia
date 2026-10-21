@@ -1336,7 +1336,7 @@ public class MainActivity extends Activity {
         SUBHEADINGS.put("gain", new int[]{R.string.sub_mic, 0});
         SUBHEADINGS.put("pocket_hush", new int[]{R.string.sub_pocket, R.string.sub_pocket_hint});
         SUBHEADINGS.put("dry", new int[]{R.string.sub_output, 0});
-        SUBHEADINGS.put("music_drift", new int[]{R.string.sub_notes, 0});
+        SUBHEADINGS.put("music_var", new int[]{R.string.sub_notes, 0});
         SUBHEADINGS.put(Kits.ID, new int[]{R.string.kits_heading, 0});
         SUBHEADINGS.put("kitp_mel", new int[]{R.string.kits_mix_heading, R.string.kits_mix_hint});
         SUBHEADINGS.put("kitl_mel", new int[]{R.string.kits_layers_heading, R.string.kits_layers_hint});

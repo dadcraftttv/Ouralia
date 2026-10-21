@@ -723,6 +723,78 @@ for typ, name, drv in ((1, "hard", 20), (0, "soft", 20), (2, "fold", 5)):
     check(a1 < a0 / 30 and (0.5 if typ == 2 else 0.85) < rms(y1) / rms(y0) < 1.15,
           f"clean, {name} at drive {drv} on 4.5 kHz: folded-back fizz {10 * np.log10(a0):.0f} -> {10 * np.log10(a1):.0f} dB of the sound, level x{rms(y1) / rms(y0):.2f}")
 
+# ---------------------------------------------------------------- dcs_composer
+print("dcs_composer:")
+cp = patch("composer", ["r cin", "dcs_composer", "s cchord", "s csect"], [(0, 0, 1, 0), (1, 0, 2, 0), (1, 1, 3, 0)])
+# the full scale each scale's chords come from (pentatonics: major / natural minor), and the chords never used
+PARENT_IV = [(0, 2, 4, 5, 7, 9, 11), (0, 2, 3, 5, 7, 8, 10), (0, 2, 4, 5, 7, 9, 11), (0, 2, 3, 5, 7, 8, 10),
+             (0, 2, 3, 5, 7, 9, 10), (0, 2, 4, 5, 7, 9, 10), (0, 2, 4, 6, 7, 9, 11), (0, 2, 4, 6, 8, 10)]
+SCALE_IV = [(0, 2, 4, 5, 7, 9, 11), (0, 2, 3, 5, 7, 8, 10), (0, 2, 4, 7, 9), (0, 3, 5, 7, 10),
+            (0, 2, 3, 5, 7, 9, 10), (0, 2, 4, 5, 7, 9, 10), (0, 2, 4, 6, 7, 9, 11), (0, 2, 4, 6, 8, 10)]
+SC_NAMES = ["major", "minor", "major pentatonic", "minor pentatonic", "dorian", "mixolydian", "lydian", "whole tone"]
+
+def compose(scale, bars, seed=5, tempo=100):
+    e = Engine(LIB, cp); e.listen("cchord", "csect")
+    for sel, v in (("seed", seed), ("tempo", tempo), ("scale", scale)):
+        e.send_msg("cin", sel, v)
+    e.send_msg("cin", "start")
+    for _ in range(bars):
+        e.send_msg("cin", "bar")
+    out = (e.lists.get("cchord", []), e.lists.get("csect", []))
+    e.close()
+    return out
+
+for sc in range(8):
+    chords, sects = compose(sc, 400)
+    bad, moves, kinds, homes = [], [], [s_[0] for s_ in sects], []
+    prev = None
+    for c in chords:
+        anchor, bass, v = int(c[0]), int(c[1]) % 12, sorted(int(n) for n in c[2:5])
+        pcs = {n % 12 for n in v}
+        if not pcs <= set(PARENT_IV[sc]) or bass not in PARENT_IV[sc] or not 0 <= anchor < len(SCALE_IV[sc]):
+            bad.append(c)
+        # a triad: some note has the others a third and a fifth above (never diminished: a perfect or, whole tone, augmented fifth)
+        ok_triad = any({(r + 3) % 12, (r + 7) % 12} <= pcs or {(r + 4) % 12, (r + 7) % 12} <= pcs
+                       or (sc == 7 and {(r + 4) % 12, (r + 8) % 12} <= pcs) for r in pcs)
+        if len(pcs) != 3 or not ok_triad or not (-6 <= v[0] and v[2] <= 31):
+            bad.append(c)
+        if prev is not None:
+            moves.append(sum(abs(a - b) for a, b in zip(v, prev)) / 3)
+        prev = v
+    distinct = len({tuple(sorted({int(n) % 12 for n in c[2:5]})) for c in chords})
+    check(not bad and len(chords) > 100 and distinct >= (2 if sc == 7 else 5),
+          f"{SC_NAMES[sc]}: {len(chords)} chords in 400 bars, {distinct} different, all from its scale's chords, none diminished (wrong {bad[:3]})")
+    check(np.mean(moves) < 4.0, f"{SC_NAMES[sc]}: each chord voiced near the last (a voice moves {np.mean(moves):.1f} semitones on average)")
+    check(len(set(kinds)) >= 3 and kinds.count(0) >= 3 and all(a != b or a == 0 for a, b in zip(kinds, kinds[1:])),
+          f"{SC_NAMES[sc]}: sections vary, Home comes back between them ({''.join('HLCT'[int(k)] for k in kinds)})")
+
+# the pentatonics really borrow: E minor pentatonic's pad plays F# and C (not in the scale) now and then
+chords, _ = compose(3, 400)
+borrowed = sum(1 for c in chords if {int(n) % 12 for n in c[2:5]} & {2, 8})
+check(0.1 * len(chords) < borrowed < 0.8 * len(chords), f"minor pentatonic borrows the minor scale's chords ({borrowed} of {len(chords)} chords have its 2nd or 6th)")
+# the same seed, the same piece; another seed, another piece
+a, b, c = compose(0, 120, seed=3)[0], compose(0, 120, seed=3)[0], compose(0, 120, seed=4)[0]
+check(a == b and a != c, "a seed gives the same piece again, another seed another one")
+# a Home phrase starts and ends on the home chord; every section starts with its first chord at once
+e = Engine(LIB, cp); e.listen("cchord", "csect"); e.send_msg("cin", "seed", 9); e.send_msg("cin", "scale", 0); e.send_msg("cin", "start")
+home, starts, sounding = [0, 4, 7], [], None
+for _ in range(600):
+    n0, s0 = len(e.lists.get("cchord", [])), len(e.lists.get("csect", []))
+    e.send_msg("cin", "bar")
+    new = [sorted({int(n) % 12 for n in c[2:5]}) for c in e.lists.get("cchord", [])[n0:]]
+    if len(e.lists.get("csect", [])) > s0 and int(e.lists["csect"][-1][0]) == 0:
+        starts.append(new[0] if new else sounding)   # struck at once, or the chord already sounding, held
+    sounding = new[-1] if new else sounding
+e.close()
+check(len(starts) >= 3 and all(st == home for st in starts), f"Home sections start on the home chord, struck or held ({starts[:8]})")
+# without bars (no clock) it keeps its own time from the tempo
+e = Engine(LIB, cp); e.listen("cchord"); e.send_msg("cin", "tempo", 120); e.send_msg("cin", "scale", 0); e.send_msg("cin", "start")
+e.send_msg("cin", "bar")
+e.run(np.zeros(SR * 40, dtype=np.float32))
+n = len(e.lists.get("cchord", []))
+e.close()
+check(4 <= n <= 14, f"no clock: chords still change by themselves ({n} in 40 s at 120 BPM)")
+
 # ---------------------------------------------------------------- dcs_loaded
 print("dcs_loaded:")
 d = patch("loaded", ["dcs_loaded", "f", "r dl_ping", "t b", "s dl_out", "r dl_bang", "t b", "dcs_loaded", "s dl_out2"],

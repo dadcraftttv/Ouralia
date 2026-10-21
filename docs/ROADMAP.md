@@ -221,6 +221,16 @@ and microphone declarations, icon, store listing, numbered pd-core release.
       (b) the first built-in kits one style at a time (each one DadCraft's ears pass before the next), (c) mix and match
       per part, (d) user kits and the format page, (e) retire stems.
 
+21. **Music that doesn't go stale (DadCraft, Oct 21: with E minor pentatonic and a kit he likes, "the band keeps
+    playing much of the same things").** Behind Music variety (Classic / Evolving), built in C (`dcs_composer`).
+    1. **Chords and sections** (built Oct 21, waiting on DadCraft's ears): progressions, Home / Lift / Calm / Turn,
+       borrowed chords for the pentatonics, the full chord set for the seven-note scales.
+    2. **Melodies that develop** (next): a motif made, then repeated, moved, turned upside down, re-rhythmed through
+       a section, instead of a fresh random walk each time; the melody's range travels.
+    3. **Rhythms made by rules** (after): arpeggios from the chord's notes, even-spread ("Euclidean") rhythms for
+       the melody and drums, each repeat keeping most of the bar and changing a little.
+    Later maybe: chord colours (sevenths, sus) now and then.
+
 20. **More kit parts (DadCraft, Oct 20: "lets plan on doing at least one and two, maybe three"; keep all four).**
     Today a kit has four parts (mel, bass, pad, drums). A kit only picks instruments for notes the band already
     writes, so a new part needs the band to write something for it too. Each costs only while it plays.

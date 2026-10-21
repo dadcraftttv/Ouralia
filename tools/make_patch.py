@@ -43,7 +43,7 @@ DEFAULTS = [
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
@@ -1957,6 +1957,68 @@ def add_phrases(P, ex, src, outlet, px, py):
     P.c("mph_pk", "mph_s")
 
 
+def add_composer(P, x, y):
+    """Music variety (music_var, Music: 0 Classic = as before, 1 Evolving; DadCraft, Oct 21: with a key and scale he
+    likes, "the band keeps playing much of the same things"): [dcs_composer] plays chord progressions in sections
+    (Home, Lift, Calm, Turn) instead of the Classic pick near the room's brightness every 7 s. Its chord comes in
+    where Classic's does (mu_pad_root_v: the anchor scale step for everything that thinks in steps, the slot flip),
+    but the four pad notes and the bass come as real notes, so the pentatonic scales can borrow the full scale's
+    chords while the melody stays pentatonic. The section moves the melody's register. Classic's picker, pad notes
+    and bass are switched off (spigots) while it plays."""
+    BSd = BS + "$"
+    P.obj("cmp", "dcs_composer", x, y + 200)
+    # Classic or Evolving: the switches, then (Evolving) the chord now or (Classic) Classic's chord now
+    P.obj("cmp_r_var", "r music_var", x, y)
+    P.obj("cmp_var_ch", "change 0", x, y + 10); P.c("cmp_r_var", "cmp_var_ch")   # (Classic at load: nothing to do)
+    P.obj("cmp_var_t", "t f f f", x, y + 20); P.c("cmp_var_ch", "cmp_var_t")
+    P.obj("cmp_is", ">= 0.5", x, y + 40); P.obj("cmp_not", "< 0.5", x + 60, y + 40)
+    P.c("cmp_var_t", "cmp_is", 2, 0); P.c("cmp_var_t", "cmp_not", 2, 0)
+    for i in range(4):
+        P.c("cmp_not", f"mu_pad{i}_hcl", 0, 1)
+    P.c("cmp_not", "ba_hcl", 0, 1); P.c("cmp_not", "mu_chord_go", 0, 1)
+    P.obj("cmp_gate", "spigot 0", x, y + 230); P.c("cmp_is", "cmp_gate", 0, 1)
+    P.obj("cmp_now", "sel 0 1", x, y + 60); P.c("cmp_var_t", "cmp_now", 0, 0)
+    P.c("cmp_now", "mu_chord_go", 0, 0)
+    P.msg("cmp_start", "start", x + 60, y + 80); P.c("cmp_now", "cmp_start", 1, 0); P.c("cmp_start", "cmp")
+    # what it listens to: the scale (after its tables), the key (the same chord, new notes), the music starting,
+    # the bars of the clock (the room's brightness first), the tempo and Intensity
+    P.obj("cmp_sc", "f", x + 140, y); P.c("mu_scale_t", "cmp_sc", 1, 1); P.c("mu_scale_t", "cmp_sc", 0, 0)
+    P.msg("cmp_sc_m", f"scale {BSd}1", x + 140, y + 20); P.c("cmp_sc", "cmp_sc_m"); P.c("cmp_sc_m", "cmp")
+    P.msg("cmp_again", "again", x + 220, y + 20); P.c("mu_key_t", "cmp_again", 0, 0); P.c("cmp_again", "cmp")
+    P.c("mu_on_t", "cmp_start", 1, 0)
+    P.obj("cmp_r_tick", "r tick16", x + 300, y); P.obj("cmp_bar_sel", "sel 0", x + 300, y + 20)
+    P.obj("cmp_bar_t", "t b b", x + 300, y + 40); P.c("cmp_r_tick", "cmp_bar_sel"); P.c("cmp_bar_sel", "cmp_bar_t")
+    P.obj("cmp_br", "value mbright", x + 360, y + 60); P.msg("cmp_br_m", f"bright {BSd}1", x + 360, y + 80)
+    P.c("cmp_bar_t", "cmp_br", 1, 0); P.c("cmp_br", "cmp_br_m"); P.c("cmp_br_m", "cmp")
+    P.msg("cmp_bar", "bar", x + 300, y + 100); P.c("cmp_bar_t", "cmp_bar", 0, 0); P.c("cmp_bar", "cmp")
+    for k, (rcv, sel) in enumerate((("tempo", "tempo"), ("intensity", "energy"), ("comp_seed", "seed"))):
+        P.obj(f"cmp_r{k}", f"r {rcv}", x + 460 + 80 * k, y); P.msg(f"cmp_m{k}", f"{sel} {BSd}1", x + 460 + 80 * k, y + 20)
+        P.c(f"cmp_r{k}", f"cmp_m{k}"); P.c(f"cmp_m{k}", "cmp")
+    # a chord: the four pad notes and the bass held first, then the anchor goes where Classic's root goes; that
+    # flips the crossfade slot and then asks for the notes (pad: outlet 0, bass: outlet 1, after the slot flip)
+    P.c("cmp", "cmp_gate", 0, 0)
+    P.obj("cmp_s_chord", "s comp_chord", x + 100, y + 250); P.c("cmp_gate", "cmp_s_chord")   # (for the tests)
+    P.obj("cmp_up", "unpack f f f f f f", x, y + 260); P.c("cmp_gate", "cmp_up")
+    P.c("cmp_up", "mu_pad_root_v", 0, 0)
+    P.obj("cmp_ask_pad", "t b", x, y + 300); P.c("mu_pad_root_v", "cmp_ask_pad", 0, 0)
+    P.obj("cmp_ask_bass", "t b", x + 60, y + 300); P.c("mu_pad_root_v", "cmp_ask_bass", 1, 0)
+    for j, (nm, dest, ask) in enumerate([("bass", "ba_fold", "cmp_ask_bass")] + [(f"v{i}", f"mu_pad{i}_hz", "cmp_ask_pad") for i in range(4)]):
+        xx = x + 120 + 70 * j
+        P.obj(f"cmp_{nm}", "f", xx, y + 320); P.c("cmp_up", f"cmp_{nm}", j + 1, 1); P.c(ask, f"cmp_{nm}")
+        P.obj(f"cmp_{nm}_k", "+ 0", xx, y + 340); P.c(f"cmp_{nm}", f"cmp_{nm}_k"); P.c("mu_key_root", f"cmp_{nm}_k", 0, 1)
+        P.obj(f"cmp_{nm}_hz", "mtof", xx, y + 360); P.c(f"cmp_{nm}_k", f"cmp_{nm}_hz")
+        P.obj(f"cmp_{nm}_g", "spigot 0", xx, y + 380); P.c("cmp_is", f"cmp_{nm}_g", 0, 1)
+        P.c(f"cmp_{nm}_hz", f"cmp_{nm}_g"); P.c(f"cmp_{nm}_g", dest)
+    # the section: its register for the melody (0 in Classic), and a report
+    P.obj("cmp_su", "unpack f f", x + 500, y + 230); P.c("cmp", "cmp_su", 1, 0)
+    P.obj("cmp_s_sect", "s comp_section", x + 600, y + 250); P.c("cmp_su", "cmp_s_sect", 0, 0)
+    P.obj("cmp_reg", "f", x + 560, y + 260); P.c("cmp_su", "cmp_reg", 1, 0)
+    P.obj("cmp_reg_on", "*", x + 560, y + 280); P.c("cmp_reg", "cmp_reg_on")
+    P.c("cmp_var_t", "cmp_reg_on", 1, 1)                              # (set before the bang below re-sends)
+    P.obj("cmp_reg_b", "t b", x + 640, y + 60); P.c("cmp_var_t", "cmp_reg_b", 0, 0); P.c("cmp_reg_b", "cmp_reg")
+    P.c("cmp_reg_on", "mu_sreg_add", 0, 1)
+
+
 def add_music(P):
     """A reactive synth that plays only notes of the chosen key and scale. It listens to the mic:
     loudness sets how busy and loud it is, the brightness of the sound (zero-crossing rate) sets the
@@ -2232,7 +2294,8 @@ def add_music(P):
     P.c("mu_pick", "mu_pick_ph"); P.c("mu_pick_ph", "mu_pick_t"); P.c("mu_pick_t", "mu_wr_last", 1, 0)
     P.obj("mu_reg_add", "+ 0", cx + 200, cy + 50)                       # register from the sensors (the app)
     P.obj("mu_reg_r", "r music_register", cx + 260, cy + 30); P.c("mu_reg_r", "mu_reg_add", 0, 1)
-    P.c("mu_reg_add", degree_in)
+    P.obj("mu_sreg_add", "+ 0", cx + 200, cy + 60)                   # ...and the Evolving section's (add_composer)
+    P.c("mu_reg_add", "mu_sreg_add"); P.c("mu_sreg_add", degree_in)
     P.c("mu_pick_t", "mu_reg_add")
     P.obj("mu_note_s", "s chime_deg", cx - 100, cy + 160)              # every note played, for the tests
     P.c("mu_pick_t", "mu_note_s")
@@ -2536,7 +2599,8 @@ def add_music(P):
     px = x + 1500
     P.obj("mu_chord_tick", "metro 7000", px, 20)
     P.c("mu_load", "mu_chord_tick")
-    P.obj("mu_chord_go", "t b b b", px, 50)
+    P.obj("mu_chord_go", "spigot 1", px, 40)                       # (closed while the Evolving music picks: add_composer)
+    P.obj("mu_chord_go_t", "t b b b", px, 50); P.c("mu_chord_go", "mu_chord_go_t")
     P.c("mu_chord_tick", "mu_chord_go")
     P.c("mu_scale_t", "mu_chord_go", 0, 0); P.c("mu_key_t", "mu_chord_go", 0, 0)
     P.obj("mu_pad_jit", "random 3", px + 80, 80)
@@ -2544,10 +2608,10 @@ def add_music(P):
     P.obj("mu_r_pool_n", "r pool_n", px + 240, 80)
     # which of the scale's main chords: brighter sound, higher chord (plus a little wander)
     ex("mu_pad_idx", "int(min(max($f1*($f3-1)+$f2*0.9,0),$f3-1)+0.5)", px, 140)
-    P.c("mu_chord_go", "mu_pad_jit", 1, 0); P.c("mu_pad_jit", "mu_pad_jit_m"); P.c("mu_pad_jit_m", "mu_pad_idx", 0, 1)
+    P.c("mu_chord_go_t", "mu_pad_jit", 1, 0); P.c("mu_pad_jit", "mu_pad_jit_m"); P.c("mu_pad_jit_m", "mu_pad_idx", 0, 1)
     P.c("mu_r_pool_n", "mu_pad_idx", 0, 2)
     P.obj("mu_rd_root", "value mbright", px + 160, 110)
-    P.c("mu_chord_go", "mu_rd_root", 0, 0); P.c("mu_rd_root", "mu_pad_idx")
+    P.c("mu_chord_go_t", "mu_rd_root", 0, 0); P.c("mu_rd_root", "mu_pad_idx")
     P.obj("mu_pad_pool", "tabread chord_pool", px, 160)
     P.c("mu_pad_idx", "mu_pad_pool")
     # key drift: the pool's chords moved by the drift (mdrift scale steps); no contrast chord while drifted
@@ -2557,7 +2621,7 @@ def add_music(P):
     P.obj("mu_dr_n", "value scale_n", px + 180, 172)
     # now and then the contrast chord instead (when the scale has one)
     P.obj("mu_pad_roll", "random 100", px + 160, 140)
-    P.c("mu_chord_go", "mu_pad_roll", 2, 0)
+    P.c("mu_chord_go_t", "mu_pad_roll", 2, 0)
     P.obj("mu_r_pool_x", "r pool_x", px + 300, 140)
     ex("mu_pad_root", f"if($f2<{CONTRAST_PCT}&&$f3>=0&&$f4==0,$f3,$f1)", px, 180)
     P.c("mu_dr_pt", "mu_pad_root", 0, 0); P.c("mu_pad_roll", "mu_pad_root", 0, 1); P.c("mu_r_pool_x", "mu_pad_root", 0, 2)
@@ -2651,8 +2715,10 @@ def add_music(P):
             P.obj(f"mu_pad{i}_deg", "expr $f1+$f2".replace("$", d), vx, 230)
             P.c("mu_pad_root_v", f"mu_pad{i}_deg", 0, 0)
             P.c("mu_r_n", f"mu_pad{i}_deg", 0, 1)
-        dg_in, dg_hz = degree_to_hz(f"mu_p{i}", vx, 260)
+        dg_in, dg_cl = degree_to_hz(f"mu_p{i}", vx, 260)
         P.c(f"mu_pad{i}_deg", dg_in)
+        P.obj(f"mu_pad{i}_hcl", "spigot 1", vx, 262); P.c(dg_cl, f"mu_pad{i}_hcl")   # Classic's note (add_composer)
+        dg_hz = P.obj(f"mu_pad{i}_hz", "t f", vx, 264); P.c(f"mu_pad{i}_hcl", dg_hz)
         P.obj(f"mu_pad{i}_kf", "f", vx + 60, 270); P.c(dg_hz, f"mu_pad{i}_kf")
         P.msg(f"mu_pad{i}_kpn", f"pnote {i} {BS}$1", vx + 60, 280); P.c(f"mu_pad{i}_kf", f"mu_pad{i}_kpn"); P.c(f"mu_pad{i}_kpn", "mu_kv_pad"); P.c(f"mu_pad{i}_kpn", "mu_kv_pad2")
         P.msg(f"mu_pad{i}_vcn", f"{BS}; voc_ctl cnote {i} {BS}$1", vx + 120, 280); P.c(dg_hz, f"mu_pad{i}_vcn")   # (the vocoder's chord)
@@ -2712,7 +2778,7 @@ def add_music(P):
     ba_deg, ba_hz = degree_to_hz("bad", bx, 290)
     P.c("ba_pick", ba_deg)
     ex("ba_fold", "if($f1/2>131,$f1/4,$f1/2)", bx, 460)
-    P.c(ba_hz, "ba_fold")
+    P.obj("ba_hcl", "spigot 1", bx, 450); P.c(ba_hz, "ba_hcl"); P.c("ba_hcl", "ba_fold")   # Classic's bass (add_composer)
     P.obj("ba_chg", "change", bx, 480)
     P.c("ba_fold", "ba_chg")
     P.obj("ba_ct", "t f b", bx, 500)
@@ -2736,6 +2802,7 @@ def add_music(P):
     P.sig2("ba_s12", "+~", "ba_o1", "ba_g2", bx, 640)
     P.sig2("ba_s", "+~", "ba_s12", "ba_g3", bx, 655)
     fp_sum, fb_out, fb_ln = add_found_pad(P, px, bx, ex)
+    add_composer(P, px + 1600, 20)
     P.obj("ba_sgain", "*~ -1", bx + 40, 662); P.c(fb_ln, "ba_sgain")
     P.obj("ba_sg1", "+~ 1", bx + 40, 664); P.c("ba_sgain", "ba_sg1")      # the synth bass gives way to the found one
     P.sig2("ba_ss", "*~", "ba_s", "ba_sg1", bx, 664)

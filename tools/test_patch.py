@@ -77,7 +77,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl", "kpad_run", "kbass_run"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl", "kpad_run", "kbass_run"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2591,6 +2591,32 @@ for i in range(30):
 ym = np.concatenate(ys)
 check(not np.isnan(ym).any() and float(np.abs(ym).max()) <= 1.0 + 1e-6, "music: loud noise, steps and all voices stay within +-1 (max %.2f)" % float(np.abs(ym).max()))
 
+# ---- 10v. music variety: Evolving plays dcs_composer's progressions and sections; Classic as before ----
+e = fresh(music_on=1, music_pad=1, music_arp=0, music_res=0, wet=0, music_key=4, music_scale=3, music_pad_reg=1)
+e.listen("comp_chord", "comp_section", "pad_chord")
+e.send("comp_seed", 11); e.send("music_var", 1)
+y = e.run(e.silence(100))[:, 0]
+chords, sects = e.lists.get("comp_chord", []), e.heard.get("comp_section", [])
+pcs, bad = set(), []
+for a in range(4, 98, 2):
+    pk = spec_peaks(y[a * SR:(a + 2) * SR], rel=0.15)
+    bad += off_key(pk, 4, 1)                                     # E natural minor: where its chords come from
+    pcs |= {int(round(69 + 12 * np.log2(f / 440))) % 12 for f in pk}
+check(len(chords) >= 8 and not bad and pcs & {6, 0},
+      "music variety Evolving, E minor pentatonic: %d chords in 100 s, the pad in E minor and borrowing its F# or C "
+      "(heard %s, off-key %s)" % (len(chords), sorted(pcs), sorted(set(bad))[:6]))
+anchors = e.heard.get("pad_chord", [])
+check(anchors and all(0 <= c <= 4 for c in anchors), "music variety: the steps it reports for the melody's parts stay in the pentatonic (%s)" % anchors[:12])
+check(len(sects) >= 2, "music variety: sections come and go (%s)" % ["HLCT"[int(k)] for k in sects])
+n = len(chords)
+e.send("music_var", 0)
+y = e.run(e.silence(20))[:, 0]
+bad = []
+for a in range(6, 20, 2):
+    bad += off_key(spec_peaks(y[a * SR:(a + 2) * SR], rel=0.15), 4, 3)
+check(len(e.lists.get("comp_chord", [])) == n and not bad,
+      "music variety back to Classic: its chords come back, only E minor pentatonic notes (off-key %s)" % sorted(set(bad))[:6])
+
 # ---- diagnostics: counting overloads once a second (in, after Input gain, at the output limiter) ----
 def clip_counts(sig, **over):
     e = fresh(**over)
@@ -2709,7 +2735,10 @@ for ph, tk, d, ch, n in e.lists.get("ph_note", []):
         bars.append((int(ph), []))
     bars[-1][1].append((int(tk), int(d), int(ch), int(n)))
 mod = lambda d, ch, n: (d - ch) % n
-bars = bars[4:]                                                      #  a little audio before it listens)
+first = next((i for i in range(1, len(bars)) if bars[i][0] == 0), len(bars))
+bars = bars[first:]                                                  #  a little audio before it listens: from the
+                                                                     #  first whole phrase; how much of the first
+                                                                     #  one is heard shifts with the patch's timing)
 order_ok = [p for p, _ in bars[:8]] == [0, 1, 2, 3, 0, 1, 2, 3]
 rep_ok, ans_ok, gen_ok, steps = True, True, True, []
 for i in range(0, len(bars) - 3, 4):
