@@ -77,7 +77,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl", "kpad_run", "kbass_run"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl", "kpad_run", "kbass_run"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -1503,6 +1503,27 @@ def int_hits(t):
     return (len(st["drum_hat"]) + len(st["drum_snare"]) + len(st["drum_kick"])) / 36
 i0, i1 = int_hits(0), int_hits(1)
 check(i1 > 1.3 * i0 and i0 <= 1.1 * hitsQ / 36 < 1.1 * i1, "rhythm: Intensity 0 calms the beat, 1 makes it busier (%.1f / %.1f / %.1f hits a second)" % (i0, hitsQ / 36, i1))
+
+# The Band Plays: in a quiet room the band keeps playing; each 8-bar phrase builds to a fill, then drops back
+def band_run(on, secs=60):
+    e = fresh(dry=0, wet=0, beat_level=1, beat_follow=1, beat_when=1, music_on=1, music_pad=0, music_arp=1, band_plays=on)
+    e.listen("drum_kick", "drum_snare", "drum_hat", "band_phase", "chime_deg")
+    per = {}   # hits by the phrase's bar (0..7)
+    ph = None
+    for _ in range(int(secs / 0.05)):
+        n = sum(len(e.heard[k]) for k in ("drum_kick", "drum_snare", "drum_hat"))
+        e.run(np.zeros(int(0.05 * SR), np.float32))
+        if e.heard["band_phase"]:
+            ph = int(e.heard["band_phase"][-1])
+        if ph is not None:
+            per[ph] = per.get(ph, 0) + sum(len(e.heard[k]) for k in ("drum_kick", "drum_snare", "drum_hat")) - n
+    return sum(len(e.heard[k]) for k in ("drum_kick", "drum_snare", "drum_hat")) / secs, per, len(e.heard["chime_deg"])
+off_h, _, off_c = band_run(0)
+on_h, per, on_c = band_run(1, secs=120)
+start, end = per.get(0, 0) + per.get(1, 0), per.get(6, 0) + per.get(7, 0)
+check(on_h > 1.15 * off_h and end > 1.5 * start and on_c > off_c + 5,
+      "music: The Band Plays: a quiet room gets %.1f hits a second (off %.1f), a phrase's last 2 bars %d hits vs its first 2 %d, "
+      "%d chimes (off %d, in half the time) %s" % (on_h, off_h, end, start, on_c, off_c, sorted(per.items())))
 
 # found sounds: sudden sounds are caught and filed as kick / snare / hat, and the patterns play them
 def fs_sounds(seed=2):

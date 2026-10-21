@@ -299,6 +299,13 @@ final class DesktopWindow {
         for (Params.Section section : Params.SECTIONS) {
             JPanel tab = "beat".equals(section.id) || "music".equals(section.id) || "mix".equals(section.id) ? music
                     : "behavior".equals(section.id) ? setup : sound;
+            if (section.group != null) {   // a family of effects (Voice, Grit...)
+                JLabel head = new JLabel(section.group);
+                head.setFont(head.getFont().deriveFont(java.awt.Font.BOLD));
+                head.setBorder(BorderFactory.createEmptyBorder(10, 4, 4, 4));
+                head.setAlignmentX(Component.LEFT_ALIGNMENT);
+                tab.add(head);
+            }
             section(tab, section.title, section.openByDefault, body -> fillSection(body, section));
         }
         fillRealms(realms);

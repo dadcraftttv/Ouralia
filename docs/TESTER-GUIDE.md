@@ -20,14 +20,19 @@ There are two ways to use it:
 - **Auto Realms is now Realm Hopper**, and the Realm change sound is now the **Warp sound** (Setup, Behavior). They work the same as before.
 - **Realms keep your kits:** a Realm no longer switches the Kit, a part's "from", its layer or its blend back to Classic. It can still change the music's levels and the Mix.
 - **The player names the Realm:** while a Realm plays, the player's line says so ("Flux Realm · Intensity 50") instead of "Built-in effects".
-- **The kit settings are easier to find:** in the Music card they now sit under their own headings: **Kit**, **Mix and match** (a part's sound from another kit) and **Layers** (each part's second kit and its blend together in a box; the blend is faded while the layer is None). The settings after them are under **How it plays**.
+- **The kit settings are easier to find:** in the Music card they now sit under their own headings: **Kit**, **Band Members** (a part's sound from another kit) and **Layers** (each part's second kit and its blend together in a box; the blend is faded while the layer is None). The settings after them are under **How it plays**.
 - **More cards are grouped:** **Mix** (Drums, Pad and bass, Melody, Answers), **Glitch** (Glitch cloud, Kinds of glitch, Freeze) and **Input & output** (Microphone, Pocket and handling, Output).
 - **New echo scatter** (Echo, Scatter style: New): each repeat comes from a real direction, can fly across while it plays (Throw) and can sound near or far (Near and far). Classic stays the default.
 - **The XY pad folds** like the other cards: tap its heading to hide it if you don't use it.
-- **Music variety: Evolving** (Music): chord progressions in sections (Home, Lift, Calm, Turn) instead of chords picked from the room's brightness, so a key and scale you like doesn't go stale. The pentatonic scales borrow the full scale's chords. Classic stays the default. See Music.
-- **Melodies that develop** (Music, off by default): the chimes play a short tune and its variations instead of wandering at random. See Music.
-- **Patterns made by rules** (Music, off by default): the walking notes, the drums and Melody rhythm make each bar by rules, changing a little every bar and coming back to the section's own pattern every 4th. See Music.
-- **Chord colours** (Music, off by default, with Evolving): sevenths, added ninths and sus chords that resolve, now and then. See Music.
+- **Song Shape: Evolving** (The Band): chord progressions in sections (Home, Lift, Calm, Turn) instead of chords picked from the room's brightness, so a key and scale you like doesn't go stale. The pentatonic scales borrow the full scale's chords. Classic stays the default. See The Band.
+- **Hooks That Grow** (The Band, off by default): the chimes play a short tune and its variations instead of wandering at random. See The Band.
+- **Living Grooves** (The Band, off by default): the walking notes, the drums and Melody rhythm make each bar by rules, changing a little every bar and coming back to the section's own pattern every 4th. See The Band.
+- **New names:** many settings have friendlier names, and every name is in Title Case. The Music card is now **The Band**, and its kit "from" menus are **Band Members** (Lead, Bassist, Keys, Drummer). Also: **Song Shape** (was Music variety), **Hooks That Grow** (Melodies that develop), **Living Grooves** (Patterns made by rules), **Wandering Home** (Let the home chord drift), **Sway with the World** (Light, pocket and stairs...), **Slow Bloom** (Calm builds), **Phrasing** (Melody phrases), **Ear for the Room** (How much the music follows what it hears), **Singing Room** (Room notes) and **Stereo Space** (Spatial).
+- **The effects are in families** (Sound tab): Voice, Grit, Motion and Time & Space, each under its own small heading.
+- **The Band Plays** (The Band, off by default): the band plays in 8-bar phrases that build up to a drum fill and then drop back, keeps playing even in a calm room, and plays more chimes when it's quiet. See The Band.
+- **Soft Steps** (The Band, off by default): the walking notes are softer, come in gently when you start walking, and glide to a new loudness when your pace changes.
+- **Rounder buttons:** the play and stop icons are rounded, and Start and Stop are written in the same font as the slider numbers. The padlock's glow now sits right on the padlock.
+- **Chord Colours** (The Band, off by default, with Evolving): sevenths, added ninths and sus chords that resolve, now and then. See The Band.
 - **A new welcome and a guided tour:** the welcome pages have a new look, and end with **Show me around**: the screen dims and arrows point at the small buttons (Save, Export, Import, Randomize, Nudge, Undo, Movers, the on/off switches, the player and the tab icons) with what each one does. Then you try it: press **Start**, open **Echo**, turn it up and hear your own voice change. When you tap Done, Echo goes back to how it was. **Skip tour** (or Back) leaves at any time. See it under Setup, About, **Show the walkthrough again**.
 
 **New in rc4 (Oct 17-19):**
@@ -61,7 +66,7 @@ There are two ways to use it:
 
 - **Locks on the Mix levels:** the Kick, Bass, Chimes, Walking notes, Ring, Bells and Stems (since removed) levels now have a Lock box too, so a Realm can't change them.
 - **Melody rhythm** (Music): the walking notes and the standing-still chimes can follow real rhythms (quarters, halves, 8ths, or dotted and syncopated ones), each note ringing as long as it lasts. Off at first.
-- **Melody phrases** (Music, with Melody rhythm on): the melody makes four-bar phrases: a line, the line again ending like an answer, something new, then the first line once more.
+- **Phrasing** (The Band, with Melody Rhythm on): the melody makes four-bar phrases: a line, the line again ending like an answer, something new, then the first line once more.
 - **Breakbeat** (Rhythm): turn it up for drums with off-beat kicks, ghost snares, now and then a chopped bar, a quick snare roll or a longer fill. At 0 the beat is as before.
 - **Standing-still chimes keep an even pace with the Rhythm on:** before, they came a little too often at fast tempos and too rarely at slow ones.
 - **Stem packs** (since removed): a pack too long to hold in memory (over 4 minutes of stereo audio) is refused at import with an explanation, instead of risking a crash.
@@ -71,7 +76,7 @@ There are two ways to use it:
 - **Call and response** (Music): sing, hum or whistle a short phrase, pause, and the app answers it with chimes, a third away, in key.
 - **Send feedback** (Setup, About): writes an email to Dad with your phone and app details and, if you like, the app's event log.
 - **Stem packs** (Music tab; removed in rc4, the kits replace them): your own loops, playing with the built-in sound and arranged by where you are and how you move.
-- **Calm builds** (Music, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
+- **Slow Bloom** (The Band, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
 - **Scenes show their pictures and words** on the touch pad, and a few more imported scenes load completely.
 - **Reverse reverb** (Reverb section, and in the Ghost realm): sounds come back as rising swells, landing on the beat while the Rhythm plays.
 - **Mix** (Music tab): a level for every part of the music and rhythm, saved with your presets, so you can turn any part down or out.
@@ -154,7 +159,7 @@ Inside a tab, settings are grouped in cards. Tap a card's heading to open or fol
 
 At the top: **Presets**, **Save**, **Export** and **Import**, then **Randomize**, **Nudge** and **Undo** (see Presets and shortcuts), and the **XY pad**, a rounded rectangle you can drag a finger around to steer sliders (see Movers). Below them are Input & output and the effects.
 
-An "effect" is a way of changing a sound. The sound flows through them in a chain, so you can use several together. Each effect lives in its own section, which you open and close by tapping its title. Each has an on/off switch, and an amount slider. The amount is usually at 0 to start, so an effect does nothing until you turn its amount up. Move one slider at a time and listen.
+An "effect" is a way of changing a sound. The sound flows through them in a chain, so you can use several together. Each effect lives in its own section, which you open and close by tapping its title. They are grouped in four families, each under a small heading: **Voice** (effects that change your voice), **Grit** (rougher and dirtier), **Motion** (sounds that sway and swirl) and **Time & Space** (echoes, freezing, rooms and where the sound sits). Each has an on/off switch, and an amount slider. The amount is usually at 0 to start, so an effect does nothing until you turn its amount up. Move one slider at a time and listen.
 
 The numbers (ms, Hz) don't matter much. Drag, listen, and decide whether you like it.
 
@@ -190,27 +195,7 @@ This section controls the sound going in, before any effect touches it.
 
 Right at the end of the chain there is also a built-in safety limiter. It gently rounds off sudden loud peaks so the sound stays smooth instead of turning fuzzy or crackly. It has no controls; it just works quietly in the background. If you still hear fuzziness, try lowering Input gain a little.
 
-### Echo
-
-Repeats what you said, like shouting in a canyon.
-
-- **Echo time:** how long before the repeat comes back. Short is a metallic ring, long is a distinct repeat.
-- **Echo follows your steps:** while you walk, the repeats lock to your step rhythm: 1 step, Half a step (the default) or a Quarter step. About 2.5 seconds after you stop, Echo time takes over again. Choose Off to always use Echo time.
-- **Echo scatter:** each repeat lands somewhere else between your ears, so a clap's echoes bounce around you. 0 keeps the echo in the middle. It starts at 0.5.
-- **Scatter style \***: **Classic** places each repeat by making it louder in one ear. **New** gives each repeat a real direction (the far ear hears it a split second later and a little darker, the way your head hears a sound from the side), and adds two sliders that only work with New (faded while Classic is chosen):
-  - **Throw:** each repeat flies across while it plays, from where it lands towards the other side. 0 = it stays put, 1 = all the way across.
-  - **Near and far:** some repeats sound farther away (quieter, darker, and with more reverb if Reverb is up). 0 = all close.
-- **Echo feedback:** how many times it repeats. Too high and it never dies away.
-- **Echo level:** how loud the repeats are. It starts at 0 on a new install (no echo); raise it to hear the echo.
-
-### Ring modulator
-
-A robotic, metallic, "Dalek" kind of sound.
-
-- **Ring-mod frequency:** the pitch of the metallic buzz. Low sounds growly, high sounds bell-like.
-- **Ring-mod amount:** how much of the effect you hear.
-
-### Sing in key
+### Sing in Key (Voice)
 
 Pulls your singing onto the notes of the Music key and scale (set on the Music tab, even if the music is off).
 
@@ -239,7 +224,7 @@ Makes your voice "sing" through a synth: the classic robot-choir sound. Your wor
 - **Vocoder synth in key:** for Your own pitch: 1 keeps the synth on the notes of the key, 0 follows you exactly.
 - **Vocoder hiss:** keeps "s", "t" and "f" sounds clear. Turn it down for a smoother, less wordy sound.
 
-### Pitch shifter
+### Pitch Shifter
 
 Makes your voice higher (chipmunk) or lower (monster).
 
@@ -249,7 +234,7 @@ Makes your voice higher (chipmunk) or lower (monster).
 - **Pitch shifter \*:** **Classic** or **New**. New keeps the tone of your voice when it moves it, so a big shift
   sounds less like a chipmunk or a robot. It also makes the Your voice harmony (Music).
 
-### Bit crusher
+### Bit Crusher (Grit)
 
 Makes the sound crunchy and lo-fi, like an old video game or a bad phone line.
 
@@ -272,6 +257,13 @@ Dirty, fuzzy, overdriven sound, like a rock guitar.
   Wavefold comes out quieter on Smooth, because much of what it made was that fizz. Smooth uses a little more
   battery. If you had the app before, it keeps whatever you had (Classic): switch it here.
 
+### Ring Modulator
+
+A robotic, metallic, "Dalek" kind of sound.
+
+- **Ring-mod frequency:** the pitch of the metallic buzz. Low sounds growly, high sounds bell-like.
+- **Ring-mod amount:** how much of the effect you hear.
+
 ### Filter
 
 Lets some sounds through and blocks others, like turning the bass or treble knob way up or down.
@@ -281,7 +273,7 @@ Lets some sounds through and blocks others, like turning the bass or treble knob
 - **Filter frequency:** where the cut happens.
 - **Filter resonance:** adds a whistling edge at the cut point. High values give a wah-wah or squeal.
 
-### Chorus
+### Chorus (Motion)
 
 Makes one voice sound like several people singing together slightly out of step.
 
@@ -307,7 +299,20 @@ Makes the volume pulse up and down rapidly, like a shaky voice or a helicopter.
 - **Tremolo depth:** how deep the pulsing is. 0 is off.
 - **Tremolo speed:** how fast it pulses.
 
-### Reverse echo
+### Echo (Time & Space)
+
+Repeats what you said, like shouting in a canyon.
+
+- **Echo time:** how long before the repeat comes back. Short is a metallic ring, long is a distinct repeat.
+- **Echo follows your steps:** while you walk, the repeats lock to your step rhythm: 1 step, Half a step (the default) or a Quarter step. About 2.5 seconds after you stop, Echo time takes over again. Choose Off to always use Echo time.
+- **Echo scatter:** each repeat lands somewhere else between your ears, so a clap's echoes bounce around you. 0 keeps the echo in the middle. It starts at 0.5.
+- **Scatter style \***: **Classic** places each repeat by making it louder in one ear. **New** gives each repeat a real direction (the far ear hears it a split second later and a little darker, the way your head hears a sound from the side), and adds two sliders that only work with New (faded while Classic is chosen):
+  - **Throw:** each repeat flies across while it plays, from where it lands towards the other side. 0 = it stays put, 1 = all the way across.
+  - **Near and far:** some repeats sound farther away (quieter, darker, and with more reverb if Reverb is up). 0 = all close.
+- **Echo feedback:** how many times it repeats. Too high and it never dies away.
+- **Echo level:** how loud the repeats are. It starts at 0 on a new install (no echo); raise it to hear the echo.
+
+### Reverse Echo
 
 Plays little chunks of what you just said, backward.
 
@@ -341,7 +346,7 @@ Makes it sound like you're in a bigger space, like a church, a bathroom, or a ca
 - **Reverb brightness:** a bright, glassy room or a soft, dark one.
 - **Reverse reverb:** a sudden sound comes back a moment later as its own echo played backwards: a ghostly swell that rises out of nothing and stops right where the sound began. While the Rhythm plays, each swell is one beat long and lands on a beat; otherwise it comes about two seconds later (longer in a bigger room). It needs the Reverb level up. 0 turns it off.
 
-### Spatial
+### Stereo Space
 
 Places the sound in your headphones.
 
@@ -385,18 +390,20 @@ A beat that plays along with you. It used to be called "Walking beat", but it no
 - **Kick drum pitch:** how low or high the synth kick sounds.
 - **Breakbeat:** 0 (the start) leaves the beat as it was. Turn it up and the bars lean on breakbeat patterns: kicks off the beat, snares on the "and", quiet ghost snares. Now and then a bar is chopped (its pieces shuffled, the first beat kept), gets a quick snare roll, or ends in a longer fill. The higher it is, the more often. Your walking pace still sets the tempo and the hi-hats, and it works with synth and found drums alike. It is saved with presets.
 
-### Music
+### The Band
 
 This adds a soft, drifting musical layer that reacts to the world around you, in the spirit of RjDj. It is **off until you switch it on**. The notes are always in the key and scale you choose, so they always sound pleasant together, but when they play and how loud they are comes from what the app hears and how you move. Many parts can be played with sounds the app catches from your surroundings ("found sounds"); each such part has its own choice of Synth, Found sounds or Both.
 
 - **Music on/off:** the switch for the whole section.
-- **Music variety:** **Classic** (the default) is the music as before: the chords follow how bright or dull the room sounds, so a steady room keeps circling the same few chords. **Evolving** plays real chord progressions instead, in sections that come and go: **Home** (starts and ends on the home chord), **Lift** (moves away, the melody a little higher, ends open), **Calm** (slower chords over the home note, the melody lower) and **Turn** (starts away from home). Home comes back between the others, and a section that returns comes back a little changed. In the pentatonic scales the pad also uses the chords of the full scale (E minor pentatonic borrows E minor's chords: Em, G, Am, Bm, C, D) while the melody stays pentatonic. Whole tone has only two chords, so there the sections do the varying. Chords change on the bar. The event log notes each section ("Music section: Lift").
-- **Melodies that develop:** off by default. Switched on, the chimes stop wandering at random and play a short tune (a motif) instead, like a theme and its variations: the motif, then again or answered (ending on the chord's home note), then changed (moved up or down, upside down, backwards, cut short or carried a note further), then the motif back. Each section of Evolving music has its own motif, and it comes back when the section does. A pause of about two seconds starts the tune over. It works with Classic or Evolving, but it's best with Evolving. The walking notes are not changed yet.
-- **Patterns made by rules:** off by default. Switched on, the walking notes and the drums stop picking from a few fixed patterns. Each bar is made by rules instead: the drums spread their hits evenly over the bar (more kicks and hats the faster you walk, the snare on 2 and 4), and the walking notes play a figure of the chord's notes. Every bar keeps most of the last one and changes one thing (a kick moves, a ghost note or a hat comes or goes, a walking note moves), and every 4th bar is the section's own pattern again; now and then the walking figure plays backwards. Fills, breakbeat, Kick drum pitch and the rest still work on top. With **Melody rhythm** on, its rhythm is made the same way: straight is halves, quarters and 8ths spread evenly, dotted is 3+3+2-like groupings, as many notes as the pace or the room asks, a little change each bar. Best with Evolving, where each section has its own patterns.
-- **Chord colours:** off by default, and only with Music variety: Evolving. Now and then a chord gets its seventh, an added ninth, or a sus chord (the middle note moved up or down a step) that resolves to the plain chord at the next bar. Calm sections are the lushest, Lift sections use the most sus chords, Home stays mostly plain. Every note is still in the key.
-- **Let the home chord drift:** every few minutes the music's home chord moves to a related one on the same notes (in C major, for example, to a D, G or A-minor feel), then often comes back home. Switching it off brings the home chord back at once. On by default.
-- **Light, pocket and stairs move the notes higher or lower:** in a bright place the chimes and walking notes sit a little higher, in a dark room a little lower and warmer, in a pocket an octave lower, and climbing stairs lifts them. The pad and bass stay put. On by default.
-- **Calm builds:** off at first. Switch it on and, when you stand still in a calm place for about half a minute, the music slowly grows on its own, one layer at a time: the pad warms up, the room notes ring a little more, a few soft chimes start to come, then harmony and reverb open up. It takes about three minutes to reach the top, holds for a minute, eases back over two, then rests for at least three minutes before the next one. Walk, or step into a loud, lively place, and it fades away within a few seconds. It only grows parts that are already on, and never moves your sliders. The Now line says "building" while it happens. It is your own setting: presets don't save or change it.
+- **Song Shape:** **Steady** (the default) is the music as before: the chords follow how bright or dull the room sounds, so a steady room keeps circling the same few chords. **Evolving** plays real chord progressions instead, in sections that come and go: **Home** (starts and ends on the home chord), **Lift** (moves away, the melody a little higher, ends open), **Calm** (slower chords over the home note, the melody lower) and **Turn** (starts away from home). Home comes back between the others, and a section that returns comes back a little changed. In the pentatonic scales the pad also uses the chords of the full scale (E minor pentatonic borrows E minor's chords: Em, G, Am, Bm, C, D) while the melody stays pentatonic. Whole tone has only two chords, so there the sections do the varying. Chords change on the bar. The event log notes each section ("Music section: Lift").
+- **Hooks That Grow:** off by default. Switched on, the chimes stop wandering at random and play a short tune (a motif) instead, like a theme and its variations: the motif, then again or answered (ending on the chord's home note), then changed (moved up or down, upside down, backwards, cut short or carried a note further), then the motif back. Each section of Evolving music has its own motif, and it comes back when the section does. A pause of about two seconds starts the tune over. It works with Classic or Evolving, but it's best with Evolving. The walking notes are not changed yet.
+- **Living Grooves:** off by default. Switched on, the walking notes and the drums stop picking from a few fixed patterns. Each bar is made by rules instead: the drums spread their hits evenly over the bar (more kicks and hats the faster you walk, the snare on 2 and 4), and the walking notes play a figure of the chord's notes. Every bar keeps most of the last one and changes one thing (a kick moves, a ghost note or a hat comes or goes, a walking note moves), and every 4th bar is the section's own pattern again; now and then the walking figure plays backwards. Fills, breakbeat, Kick drum pitch and the rest still work on top. With **Melody rhythm** on, its rhythm is made the same way: straight is halves, quarters and 8ths spread evenly, dotted is 3+3+2-like groupings, as many notes as the pace or the room asks, a little change each bar. Best with Evolving, where each section has its own patterns.
+- **Chord Colours:** off by default, and only with Song Shape: Evolving. Now and then a chord gets its seventh, an added ninth, or a sus chord (the middle note moved up or down a step) that resolves to the plain chord at the next bar. Calm sections are the lushest, Lift sections use the most sus chords, Home stays mostly plain. Every note is still in the key.
+- **Wandering Home:** every few minutes the music's home chord moves to a related one on the same notes (in C major, for example, to a D, G or A-minor feel), then often comes back home. Switching it off brings the home chord back at once. On by default.
+- **Sway with the World:** in a bright place the chimes and walking notes sit a little higher, in a dark room a little lower and warmer, in a pocket an octave lower, and climbing stairs lifts them. The pad and bass stay put. On by default.
+- **Slow Bloom:** off at first. Switch it on and, when you stand still in a calm place for about half a minute, the music slowly grows on its own, one layer at a time: the pad warms up, the room notes ring a little more, a few soft chimes start to come, then harmony and reverb open up. It takes about three minutes to reach the top, holds for a minute, eases back over two, then rests for at least three minutes before the next one. Walk, or step into a loud, lively place, and it fades away within a few seconds. It only grows parts that are already on, and never moves your sliders. The Now line says "building" while it happens. It is your own setting: presets don't save or change it.
+- **The Band Plays:** off at first. Switched on, the band plays in 8-bar phrases like a song: each phrase starts pulled back, gets busier bar by bar (more drum notes, extra kicks, longer hi-hats), ends in a drum fill, then drops back for the next one. Some phrases are a little bigger or smaller than others. Standing still, the band never gets as sparse as it can when this is off, and in a quiet room the chimes still play now and then. It changes how much the band plays, not how loud. Compare it with turning Intensity up.
+- **Soft Steps:** off at first. Switched on, the walking notes are softer (about as loud as the chimes when you stand still), come in gently over your first few steps, and glide to a new loudness when your pace changes instead of jumping.
 - **Key and Scale:** the home note and the mood. It starts in C Major. Major sounds bright, Minor sounds sad or serious, Major pentatonic and Minor pentatonic are simple and open, Dorian and Mixolydian are folky, Lydian is dreamy, and Whole tone is floaty and unresolved. Try them all.
 - **The pad:** a very soft, slow background of gentle chords. It blends smoothly from one chord into the next. It is meant to be the glue, never the star. Its level (Pad level) is in the Mix section; keep it low.
 - **Pad register:** where the pad plays. **Low** is a soft bass note under everything that stays on the key's root and only sometimes moves. **Mid** is the chords. **Both** (the default) is the two together. When the beat is playing, the bass dips briefly on each step so it doesn't clash with the kick drum.
@@ -404,13 +411,13 @@ This adds a soft, drifting musical layer that reacts to the world around you, in
 - **Bass sound:** **Synth** (the default) or **Found sounds**, which plays the bass with that same held-note snippet, pitched down. It is subtle.
 - **Notes and chimes level:** how loud the melody notes are (the chimes and the walking notes). Turn it to 0 to hear only the pad.
 - **Melody rhythm:** **Off** (the start: as before), **Straight**, **Dotted** or **Mixed**. Switched on, the melody follows one-bar rhythms in time with the beat: Straight uses whole, half, quarter and 8th notes; Dotted uses dotted and syncopated ones (like a dotted quarter then an 8th, or a 3-3-2 pattern); Mixed uses both. Each bar picks a rhythm that suits how fast you walk (or how lively the room is, standing still), and each note rings as long as it lasts: a half note rings long, an 8th is short. While you walk the walking notes follow it; standing still, the chimes that come now and then land on it. Chimes set off by a sound around you are not affected.
-- **Melody phrases (repeat and answer, needs Melody rhythm):** off at first. Switched on (with Melody rhythm on), the melody comes in four-bar phrases: bar 1 makes up a line, bar 2 repeats it but ends on the chord's home note like an answer, bar 3 goes somewhere new, and bar 4 brings the first line back. The rhythm repeats with the notes. The notes mostly move one step at a time, and the notes on beats 1 and 3 belong to the chord. Walking, it plays the walking notes; standing still, the chimes that come now and then (so you hear only some of the phrase).
+- **Phrasing (repeat and answer, needs Melody Rhythm):** off at first. Switched on (with Melody rhythm on), the melody comes in four-bar phrases: bar 1 makes up a line, bar 2 repeats it but ends on the chord's home note like an answer, bar 3 goes somewhere new, and bar 4 brings the first line back. The rhythm repeats with the notes. The notes mostly move one step at a time, and the notes on beats 1 and 3 belong to the chord. Walking, it plays the walking notes; standing still, the chimes that come now and then (so you hear only some of the phrase).
 - **Melody sounds:** **Found sounds** (the default), **Synth chimes** or **Both**. With Found sounds, the chimes and walking notes play the sounds caught for the beat, tuned to each note. Until the first catch they play synth chimes.
 - **Chime character (ring to your sound):** how the found melody sounds. Toward "ring", each note is a tuned, bell-like ring set off by your sound. Toward "your sound", each note is mostly your clap, knock or snap itself played at that pitch, short and punchy. It starts in the middle.
 - **Found note ring \*:** how a found note rings. **Resonator** (the start) rings like a bell. **String** makes
   your sound pluck a tuned string instead, clearer and more like an instrument.
-- **Room notes:** how loud the room's own notes are.
-- **Room notes sound:** **Found sounds** (the default): each sudden sound around you plays one of your caught sounds on a note of the current chord. **Ring**: the sounds around you ring the chord like a bell, in your key (a light tap gives a quick chime, talking or a passing car builds up to a long bell). **Both** plays the two.
+- **Singing Room:** how loud the room's own notes are.
+- **Singing Room Sound:** **Found sounds** (the default): each sudden sound around you plays one of your caught sounds on a note of the current chord. **Ring**: the sounds around you ring the chord like a bell, in your key (a light tap gives a quick chime, talking or a passing car builds up to a long bell). **Both** plays the two.
 - **Harmony:** hum, sing or whistle a long, steady note and an answering note from the current chord joins in, never doubling yours. It holds as long as your note does and fades when you stop. Talking, noise and short sounds are ignored. Its level is in the Mix section; 0 turns it off.
 - **Harmony sound:** **Your voice** (the default): a copy of your own voice, shifted to the chord note, sings with you. Low voices get their harmony a third or more above; from middle C up (most women's and children's voices) it sings a third or more below, so it never turns chipmunk. **Organ** is a soft organ note an octave away instead. **Both** plays the two.
 - **Pitch tracker \* (what Harmony hears):** **Classic** or **New**. New hears your note more exactly and isn't
@@ -422,13 +429,13 @@ This adds a soft, drifting musical layer that reacts to the world around you, in
   supersaws, a drum machine, and the music ducking at each kick), **Future bass** (wobbly chords and chopped
   bits of your voice), **Low end** (a sliding 808 bass, a deep pad, a sparse top), and three **Chiptune** kits:
   **NES**, **Game Boy** and **Genesis**. Your own kits join this menu too.
-- **Melody from, Bass from, Pad from, Drums from \*:** mix kits: each part can come from another kit than the
+- **Band Members: Lead, Bassist, Keys, Drummer \*:** mix kits: each part can come from another kit than the
   Kit above ("The kit" = the same as the Kit). A kit that has nothing of its own for a part says so, for example
   "Synth (Classic's drums)": that part then plays Classic's sound.
 - **Melody layer, Bass layer, Pad layer, Drums layer \*** and their **blend:** a second kit on the same part,
   playing along with the first. The blend says how much of each: 0 is only the first kit, 1 only the layer, and
   the middle both. None (the start) is off.
-- **How much the music follows what it hears:** at the right end the music responds strongly to the room. At the left it plays a calmer, steadier pattern.
+- **Ear for the Room:** at the right end the music responds strongly to the room. At the left it plays a calmer, steadier pattern.
 
 What to expect:
 
@@ -438,7 +445,7 @@ What to expect:
 - **The music stays in time with the beat.** While the Rhythm plays, chimes wait for the next half-beat (at most half a beat: about a third of a second at a walking tempo, up to half a second at the slowest set tempo) so they fall in with the drums, standing or walking. When you stop walking, the pad and bass ease down a little for a few seconds, then fill back in.
 - When a lot has been played lately, the music holds back and leaves more room, so a busy room doesn't turn into a wall of notes.
 - The music remembers the last little run of chimes. When the room goes quiet for a while and you are standing still, it may play that phrase back with a twist, like a theme returning.
-- The music passes through your other effects, so Echo, Reverb, Chorus, Spatial and the rest all shape it. The Pitch, Ring, Bit-crush, Distortion and Filter effects do not touch it.
+- The music passes through your other effects, so Echo, Reverb, Chorus, Stereo Space and the rest all shape it. The Pitch, Ring, Bit-crush, Distortion and Filter effects do not touch it.
 - In Realms, Tranquil keeps the music very soft, Flux keeps the notes light but lets the loud room ring in key, Kinetic lets the notes grow with your pace, and Pocket switches Room notes off. Realms never switch the music on or off for you.
 
 ### Mix
@@ -448,18 +455,18 @@ One place to set how loud each part of the music and rhythm is, so you can turn 
 - **Kick, Snare, Hi-hat:** each drum on its own, synth and found alike. **Glitch loops woven into the beat:** the glitch bars in the beat.
 - **Pad level:** the soft chords. **Bass:** the low note under the pad.
 - **Chimes:** the notes set off by sudden sounds, the slow standing-still pattern and remembered phrases coming back. **Walking notes:** the run of notes with your steps and the groove note.
-- **Room notes: ring** and **Room notes: found bells:** the two kinds of room notes (see Room notes sound), each on its own.
+- **Singing Room: Ring** and **Singing Room: Found Bells:** the two kinds of room notes (see Singing Room Sound), each on its own.
 - **Harmony:** the answering note.
 
 The ones marked with an "x" (Kick, Bass, Chimes, Walking notes and the two room-note levels) are new. They sit inside their group's own level: Beat level still turns all the drums up or down together, Notes and chimes level all the melody notes, Pad level the pad and bass, Room notes both room-note kinds. Each starts at 1 (as before) and goes from 0 (out) to 1.5 (half as loud again).
 
-### Your kits (sounds for the music)
+### Your Kits (sounds for the band)
 
 At the end of the Music tab. A kit is a small text file (kit.txt) that says what each part sounds like, so anyone
 can make one, and it can bring its own recordings (WAV, MP3, OGG, FLAC and more) for the melody, the pad or each drum.
 
 - **Import kit:** pick a kit.txt, or a zip with the kit and its sounds. **Import kit folder:** pick a folder that
-  holds them. The kit plays at once as the Kit, and joins every Kit and "from" menu.
+  holds them. The kit plays at once as the Kit, and joins every Kit and Band Members menu.
 - **How to make a kit:** a short explanation with examples. The full step-by-step guide is [MAKING-KITS.md](MAKING-KITS.md) (including how to use your own recordings, even sounds with no musical note, like a door squeak).
 - **Delete a kit:** removes one from this phone (any part that played it goes back to Classic). The file you
   imported it from is not touched.
@@ -589,7 +596,7 @@ Thank you for trying this. Anything you notice is useful, even "it felt weird." 
 - **Movers:** do the tilt, shake, spin, compass, light, pocket and stairs movements feel right? Does a sensor seem to be missing on your phone?
 - **Intensity:** try both ends while you walk. Is the left end calm without going dead, and the right end busy without turning into a mess? Is the middle the sound you set up?
 - **Scenes with pictures:** if you have scenes that draw on screen (Smile, Moogarina, MoonBootSynthPad, Showtime, TouchVocoder, Atsuke), do their pictures and words appear in the right places and change as you play?
-- **Calm builds:** switch it on and stand somewhere calm for five minutes or so. Does the build feel gradual and natural? Is the top too much or too little? Does it get out of the way quickly when you start walking?
+- **Slow Bloom:** switch it on and stand somewhere calm for five minutes or so. Does the build feel gradual and natural? Is the top too much or too little? Does it get out of the way quickly when you start walking?
 - **Handling:** tap, grip and rub the phone while it plays. Are those sounds quieter, and do they stay out of the beat and the chimes (Diagnostics counts the skipped ones)? Walk holding the phone: does the found-sound beat still pick up the sounds around you? Clap and knock nearby with the phone still: are those still caught?
 - **Pocket:** with the phone in a pocket, both mic end up and mic end down, how much cloth noise do you hear? Can you still hear the world around you? Which Pocket hush and Mic-down protection settings worked for you?
 - **Presets:** does Export then Import bring back the same sound?

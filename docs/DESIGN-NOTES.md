@@ -717,12 +717,24 @@ to date in the same commit when behaviour changes.
   **Pad register** (`music_pad_reg` Low/Mid/Both, default Both, noPreset; DadCraft's idea, he likes it: deep without overpowering): a bass voice (sine + 0.35 2nd + 0.15
   3rd harmonic, folded to 65-131 Hz) on the key root, moving to the chord root on 40% of chord changes; note changes dip out
   and back in (no slides); each footstep ducks it 60% while the walking beat is audible. It rides the pad level/swell.
-  **Walking notes ease in** (`walk_ease`, opt-in, Oct 21; DadCraft: chimes become "extremely loud on walking", glide
+  **Soft Steps** (`walk_ease`, opt-in, Oct 21, first called "Walking notes ease in"; DadCraft: chimes become "extremely loud on walking", glide
   to where they should be): the footstep note's loudness was (0.4 + 0.6 pace) x (0.8 + 0.4 strength), up to 1.2, at
   full from the first step (the pace is one step's interval), where the standing chimes reach ~0.6-0.8. Eased:
   (0.25 + 0.3 pace) x (0.9 + 0.2 strength), the pace it follows moving 30% of the way to each new step's, and a walk
   starting at 35%, full after 8 steps (both reset when the walk ends). Measured (test "walking notes ease in"): brisk
   0.088 vs 0.156 (-5 dB), the first 2 s 0.024 vs 0.156, a stroll 0.019. Patterns and rests still use the raw pace.
+  **The Band Plays** (`band_plays`, opt-in, Oct 21; DadCraft: the band could "dynamically get busier within measures
+  and scale back down, like a natural build and flow of a song"; he heard that on a walk, but "there could be more
+  activity while in a calm room"): 8-bar phrases on the rhythm's bar count. `rh_band` moves the drive (the one number
+  behind the drum picks, extra kicks, ghost snares, hat length, Melody rhythm cells) from -0.15 at a phrase's first
+  bar to +0.25 at its last (power 1.6), plus a per-phrase lift of -0.06/0/+0.06; the last bar ends in the snare fill
+  (`rh_bfill`, when the drive > 0.2); standing still the drive's floor is 0.3 (was 0.1 in a quiet room). The
+  standing-still chimes get `bandch` x BAND_CHIME_P (30 in 1000 per 0.25 s, x0.5 at a phrase's start to x1.5 at its
+  end). Levels untouched: busier, not louder. Two catches, found by the test: patterns are held 2 bars and picked at
+  odd bar counts, so a phrase starts on a picking bar (else bar 1 kept bar 8's busy pattern); and the pick reads the
+  drive in the same message as the bar change, so the new `rh_band` re-runs `rh_dg_i` at once (a `[value]` set by a
+  float outputs nothing: the bang comes from a trigger). Measured (test "The Band Plays", quiet room): 4.3 hits a
+  second vs 3.4; hits per phrase bar 58 51 45 43 56 61 99 104; 10 chimes in 120 s vs 1 in 60 s.
   **Pace tiers:** `ARP_PATTERNS` run calm -> busy; each bar picks one near the pace (`mu_pace_f`) or a neighbour, never
   the same twice; rests 25% strolling -> 5% brisk. **Step strength:** StepDetector compares each bump's peak with the
   walk's average and sends `step_strength` (0.5 usual, one step of lag) before `step`: it opens the hi-hat (louder,
@@ -1129,6 +1141,25 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   Mid, his pick). Only the screen order: stored values and presets are unchanged. Long lists
   scroll in the sheet (up to 72% of the screen); a drag down closes it only once the list is at its top. The
   Realms menus and Setup's device pickers are still Spinners (their own code).
+
+- **Names and families** (Oct 21, DadCraft: names should have character, "Chord Colours is great... Melodies that
+  develop sounds dry"; and Title Case, "Input Gain"): he liked the music as **The Band** (a band in your pocket,
+  *Making the Band*), so Music became The Band, the kit "from" menus **Band Members** (Lead, Bassist, Keys,
+  Drummer, "plays like" a kit), and: Song Shape (Music variety; Classic -> Steady), Hooks That Grow (Melodies that
+  develop), Living Grooves (Patterns made by rules), Soft Steps, Wandering Home (Let the home chord drift), Sway with
+  the World (Light, pocket and stairs...), Slow Bloom (Calm builds), Phrasing (Melody phrases), Ear for the Room (How
+  much the music follows what it hears), Singing Room (Room notes), Stereo Space (Spatial). Standard effect names stay
+  (musicians know them); Glitch keeps its name (it holds Freeze and Glitch cloud). Title Case on every setting name
+  and card title (the part before " (": the bracketed explanation stays as it was; small words like and/the/of/with
+  stay small); choice names, buttons and messages unchanged. Ids unchanged, so presets and stored values carry over.
+  **Effect families** (his question: alphabetical, or another order?): grouped by what they do, each family under a
+  small heading between the cards (`Section.group`, the in-card subheading's style): Voice (Sing in Key, Vocoder,
+  Pitch Shifter), Grit (Bit Crusher, Distortion, Ring Modulator, Filter), Motion (Chorus, Flanger, Phaser, Tremolo),
+  Time & Space (Echo, Reverse Echo, Glitch, Reverb, Stereo Space). Each effect keeps its own card (its switch and
+  movers). Only the screen order: the sound's chain is unchanged.
+- **Icons** (Oct 21): play and stop rounded (a round stroke on the triangle, 3-unit corners on the square), Start/Stop
+  in JetBrains Mono (DadCraft: like the numbers); the padlock is a 44 dp InsetDrawable so the press glow centres on it
+  (a CheckBox draws its button at the start edge, padding doesn't move it).
 
 ## Desktop stream mode (`desktop/`, Oct 16)
 - DadCraft wants the app on Linux as background music for his stream (no sensors, Set tempo, Realms by room level).

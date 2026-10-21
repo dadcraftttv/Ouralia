@@ -447,6 +447,9 @@ public class MainActivity extends Activity {
         for (Params.Section section : Params.SECTIONS) {
             LinearLayout tab = "beat".equals(section.id) || "music".equals(section.id) || "mix".equals(section.id) ? music
                     : "behavior".equals(section.id) ? setup : sound;
+            if (section.group != null) {
+                addGroupHeading(tab, section.group);
+            }
             addSection(tab, section.id, section.title, section.openByDefault,
                     body -> fillEffectSection(body, section), headerExtras(section));
         }
@@ -1352,6 +1355,19 @@ public class MainActivity extends Activity {
     }
 
     /** A small accent heading inside a card, with an optional hint under it and a line above it (not at the top). */
+    /** A family of cards on a tab (Voice, Grit...): the subheading's style, between the cards. */
+    private void addGroupHeading(LinearLayout tab, String title) {
+        TextView head = new TextView(this);
+        head.setText(title.toUpperCase(java.util.Locale.ROOT));
+        head.setTypeface(look.textStrong());
+        head.setTextSize(Look.TEXT_HINT);
+        head.setLetterSpacing(0.1f);
+        head.setTextColor(look.p.primaryText);
+        head.setAccessibilityHeading(true);
+        head.setPadding(dp(Look.CARD_PAD), dp(10), dp(Look.CARD_PAD), dp(8));
+        tab.addView(head);
+    }
+
     private void addSubheading(LinearLayout parent, int title, int hint) {
         if (parent.getChildCount() > 0) {
             View rule = new View(this);

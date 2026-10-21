@@ -32,37 +32,45 @@ final class Params {
         final String id;
         final String title;
         final boolean openByDefault;
+        /** A heading shown above this section, starting a family of sections (null = none). */
+        final String group;
 
         Section(String id, String title, boolean openByDefault) {
+            this(id, title, openByDefault, null);
+        }
+
+        Section(String id, String title, boolean openByDefault, String group) {
             this.id = id;
             this.title = title;
             this.openByDefault = openByDefault;
+            this.group = group;
         }
     }
 
     /** Input & output and Music start open; the rest start folded so a first look isn't a wall of sliders. */
     static final List<Section> SECTIONS = Collections.unmodifiableList(Arrays.asList(
-            new Section("main", "Input & output", true),
-            new Section("shape", "Gate and compressor shape", false),
+            new Section("main", "Input & Output", true),
+            new Section("shape", "Gate and Compressor Shape", false),
             new Section("beat", "Rhythm", false),
-            new Section("music", "Music", true),
+            new Section("music", "The Band", true),
             new Section("mix", "Mix (the level of each part)", false),
-            new Section("tune", "Sing in key", false),
+            // the effects in four families, each under its own heading on the Sound tab (DadCraft, Oct 21)
+            new Section("tune", "Sing in Key", false, "Voice"),
             new Section("voc", "Vocoder", false),
-            new Section("echo", "Echo", false),
-            new Section("ring", "Ring modulator", false),
-            new Section("pitch", "Pitch shifter", false),
-            new Section("crush", "Bit crusher", false),
+            new Section("pitch", "Pitch Shifter", false),
+            new Section("crush", "Bit Crusher", false, "Grit"),
             new Section("dist", "Distortion", false),
+            new Section("ring", "Ring Modulator", false),
             new Section("filter", "Filter", false),
-            new Section("chorus", "Chorus", false),
+            new Section("chorus", "Chorus", false, "Motion"),
             new Section("flange", "Flanger", false),
             new Section("phaser", "Phaser", false),
             new Section("tremolo", "Tremolo", false),
-            new Section("reverse", "Reverse echo", false),
+            new Section("echo", "Echo", false, "Time & Space"),
+            new Section("reverse", "Reverse Echo", false),
             new Section("glitch", "Glitch", false),
             new Section("reverb", "Reverb", false),
-            new Section("space", "Spatial", false),
+            new Section("space", "Stereo Space", false),
             new Section("behavior", "Behavior", false)
     ));
 
@@ -99,35 +107,35 @@ final class Params {
             // The user's own hand control: not in presets, not randomized, Realms leave it alone.
             new Param("intensity", "Intensity (calmer to busier, middle = as set)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent(),
-            new Param("gain", "Input gain", 0f, 10f, 1f, "x", Param.Curve.LINEAR)
+            new Param("gain", "Input Gain", 0f, 10f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("main").noRandom().noPreset(),
             // Input conditioning: depends on the room and the mic, so not part of presets/randomize.
-            new Param("gate_thresh", "Noise gate threshold (-80 = off)", -80f, -20f, -80f, " dB",
+            new Param("gate_thresh", "Noise Gate Threshold (-80 = off)", -80f, -20f, -80f, " dB",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().decimals(0),
-            new Param("comp_thresh", "Compressor threshold (0 = off)", -50f, 0f, -30f, " dB",
+            new Param("comp_thresh", "Compressor Threshold (0 = off)", -50f, 0f, -30f, " dB",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().decimals(0),
-            new Param("comp_ratio", "Compressor ratio", 1f, 20f, 4f, ":1", Param.Curve.LOG)
+            new Param("comp_ratio", "Compressor Ratio", 1f, 20f, 4f, ":1", Param.Curve.LOG)
                     .inSection("main").noRandom().noPreset().decimals(1),
-            new Param("comp_makeup", "Compressor make-up gain", 0f, 24f, 0f, " dB",
+            new Param("comp_makeup", "Compressor Make-Up Gain", 0f, 24f, 0f, " dB",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().decimals(0),
             // How the gate and compressor take hold and let go, like a mixing desk's (DadCraft). About the mic and the
             // room, so kept out of presets, the dice and movers. The defaults are the old fixed times.
-            new Param("gate_attack", "Gate attack (how fast it opens)", 0.5f, 50f, 5f, " ms", Param.Curve.LOG)
+            new Param("gate_attack", "Gate Attack (how fast it opens)", 0.5f, 50f, 5f, " ms", Param.Curve.LOG)
                     .inSection("shape").noRandom().noPreset().noMover().decimals(1),
-            new Param("gate_hold", "Gate hold (stays open at least this long)", 0f, 500f, 0f, " ms", Param.Curve.LINEAR)
+            new Param("gate_hold", "Gate Hold (stays open at least this long)", 0f, 500f, 0f, " ms", Param.Curve.LINEAR)
                     .inSection("shape").noRandom().noPreset().noMover().decimals(0),
-            new Param("gate_release", "Gate release (how fast it fades shut)", 10f, 1000f, 80f, " ms", Param.Curve.LOG)
+            new Param("gate_release", "Gate Release (how fast it fades shut)", 10f, 1000f, 80f, " ms", Param.Curve.LOG)
                     .inSection("shape").noRandom().noPreset().noMover().decimals(0),
-            new Param("comp_attack", "Compressor attack (how fast it squeezes)", 1f, 200f, 40f, " ms",
+            new Param("comp_attack", "Compressor Attack (how fast it squeezes)", 1f, 200f, 40f, " ms",
                     Param.Curve.LOG).inSection("shape").noRandom().noPreset().noMover().decimals(0),
-            new Param("comp_release", "Compressor release (how fast it lets go)", 10f, 1000f, 40f, " ms",
+            new Param("comp_release", "Compressor Release (how fast it lets go)", 10f, 1000f, 40f, " ms",
                     Param.Curve.LOG).inSection("shape").noRandom().noPreset().noMover().decimals(0),
             // In a pocket the mic hears cloth and rustle: turn it down (1 = -24 dB, default 0.5 = -12 dB) before the effects and music.
             // DadCraft found 0.9 too much: a finger snap next to the pocket got lost.
-            new Param("pocket_hush", "Pocket hush (mic quieter while in a pocket)", 0f, 1f, 0.5f, "",
+            new Param("pocket_hush", "Pocket Hush (mic quieter while in a pocket)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent(),
             // Extra help only while the phone is pocketed mic end first (more cloth on the mic). 0 = exactly as without it.
-            new Param("pocket_guard", "Mic-down protection (pocket, mic end first)", 0f, 1f, 0.6f, "",
+            new Param("pocket_guard", "Mic-Down Protection (pocket, mic end first)", 0f, 1f, 0.6f, "",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent(),
             // Pocket rustle (prototype, Oct 17): Rustle squash pulls sudden cloth noise back down to the room's own level
             // (dcs_derustle~), so the world stays while the rustle drops. Step duck dips the mic around each footfall
@@ -135,40 +143,40 @@ final class Params {
             // Sudden-sound detector (prototype, Oct 17): what starts glitches, found-sound catches and found room notes.
             // New = our own (dcs_onset~): it hears a new sound by how the spectrum jumps, so swells and vibrato don't
             // count and a clap still does in a loud room.
-            new Param("onset_mode", "Sudden-sound detector", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("onset_mode", "Sudden-Sound Detector", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (how loud)", "New (how the sound changes)")
                     .inSection("main").noPreset().resetWhenAbsent().dcs(),
-            new Param("pocket_rustle", "Rustle squash (pocket: sudden cloth noise pulled down to the room)", 0f, 1f, 0f, "",
+            new Param("pocket_rustle", "Rustle Squash (pocket: sudden cloth noise pulled down to the room)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent().dcs(),
-            new Param("pocket_steps", "Step duck (pocket, walking: the mic dips at each footfall)", 0f, 1f, 0f, "",
+            new Param("pocket_steps", "Step Duck (pocket, walking: the mic dips at each footfall)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent().dcs(),
             // Taps, grips and rubbing on the phone (the motion sensors notice them): mic down by up to 24 dB at 1 while
             // it lasts. Their sounds never start chimes or glitches and are never caught for the found sounds, at any setting.
-            new Param("handling_hush", "Handling hush (mic quieter while the phone is tapped or rubbed)", 0f, 1f, 0.5f, "",
+            new Param("handling_hush", "Handling Hush (mic quieter while the phone is tapped or rubbed)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent(),
-            new Param("dry", "Dry level (direct sound)", 0f, 1.5f, 1f, "", Param.Curve.LINEAR)
+            new Param("dry", "Dry Level (direct sound)", 0f, 1.5f, 1f, "", Param.Curve.LINEAR)
                     .inSection("main").rand(0.3f, 1.2f),
 
             // ---- Rhythm ---- (was "Walking beat": the tempo clock, patterns and found drums)
-            new Param("beat_on", "Rhythm enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("beat_on", "Rhythm Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("beat").toggle().resetWhenAbsent(),
-            new Param("beat_follow", "Beat follows", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("beat_follow", "Beat Follows", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Your steps (as before)", "Tempo clock (steadier, follows your pace)")
                     .inSection("beat").noPreset().resetWhenAbsent(),
             new Param("tempo_mode", "Tempo", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Auto (follows your steps)", "Set (your BPM, walking nudges it)")
                     .inSection("beat").noPreset().resetWhenAbsent(),
-            new Param("tempo_bpm", "Set tempo", 60f, 160f, 100f, " BPM", Param.Curve.LINEAR)
+            new Param("tempo_bpm", "Set Tempo", 60f, 160f, 100f, " BPM", Param.Curve.LINEAR)
                     .inSection("beat").noPreset().noRandom().noMover().resetWhenAbsent(),
-            new Param("beat_when", "Beat plays", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("beat_when", "Beat Plays", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Only while walking", "Always (softly when you stand still)")
                     .inSection("beat").noPreset().resetWhenAbsent(),
-            new Param("rhythm_src", "Beat sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
+            new Param("rhythm_src", "Beat Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth drums", "Found sounds (made from what the mic hears)", "Both")
                     .inSection("beat").noPreset().resetWhenAbsent(),
-            new Param("beat_level", "Beat level (0 = off)", 0f, 1f, 0f, "",
+            new Param("beat_level", "Beat Level (0 = off)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("beat").rand(0f, 0.7f).resetWhenAbsent(),
-            new Param("beat_pitch", "Kick drum pitch", 40f, 120f, 55f, " Hz", Param.Curve.LOG)
+            new Param("beat_pitch", "Kick Drum Pitch", 40f, 120f, 55f, " Hz", Param.Curve.LOG)
                     .inSection("beat").rand(45f, 90f).decimals(0).resetWhenAbsent(),
             // Breakbeat (Oct 15): 0 = the patterns as before. Higher, the bars lean on syncopated kicks and snares with
             // ghost notes, and now and then a bar is chopped (its 16ths reordered, the downbeat kept), gets a short
@@ -177,39 +185,43 @@ final class Params {
                     .inSection("beat").rand(0f, 0.6f).resetWhenAbsent(),
 
             // ---- Music ---- (a reactive synth: notes snapped to a key and scale, added after the first presets)
-            new Param("music_on", "Music enabled", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("music_on", "Music Enabled", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("music").toggle().noPreset().resetWhenAbsent(),
             // Music variety (Oct 21, DadCraft: with a key and scale he likes, "the band keeps playing much of the same
             // things"): Evolving = chord progressions in sections from our dcs_composer (Home, Lift, Calm, Turn), the
             // pentatonic scales borrowing the full scale's chords. Classic = the chord near the room's brightness.
-            new Param("music_var", "Music variety", 0f, 1f, 0f, "", Param.Curve.LINEAR)
-                    .choices("Classic (as before)", "Evolving (chord progressions and sections)")
+            new Param("music_var", "Song Shape (how the chords and sections go)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Steady (as before)", "Evolving (chord progressions and sections)")
                     .inSection("music").noPreset().resetWhenAbsent().dcs(),
             // Melodies that develop (Oct 21, stage 2): the chimes play a motif per section in statements, like a theme
             // and its variations (again, answered, moved, upside down, backwards, cut short, carried on), instead of a
             // random step from the last note. Works with either Music variety.
             // Chord colours (Oct 21, with Evolving): now and then a seventh, an added ninth, or a sus chord resolving at
             // the next bar, more in Calm, more sus in Lift. Classic's chords stay as they are.
-            new Param("chord_color", "Chord colours (sevenths, sus, added notes, with Evolving)", 0f, 1f, 0f, "",
+            new Param("chord_color", "Chord Colours (sevenths, sus, added notes, with Evolving)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
-            new Param("mel_dev", "Melodies that develop (a motif, repeated and changed)", 0f, 1f, 0f, "",
+            new Param("mel_dev", "Hooks That Grow (a motif, repeated and changed)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
             // Patterns made by rules (Oct 21, stage 3): the walking notes and the drums get a bar made by rules each bar
             // (evenly spread hits as the drive asks, a figure of the chord's tones), keeping most of it and changing
             // one thing, every 4th bar the section's own again, instead of picks from the short lists.
-            new Param("pat_gen", "Patterns made by rules (walking notes and drums)", 0f, 1f, 0f, "",
+            new Param("pat_gen", "Living Grooves (walking notes and drums made by rules)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent().dcs(),
             // Walking notes ease in (Oct 21, DadCraft: the notes get "extremely loud on walking"): the footstep notes
             // at about the standing chimes' loudness, following the pace smoothly, a walk starting soft. Off = as before.
-            new Param("walk_ease", "Walking notes ease in (softer, glide to their level)", 0f, 1f, 0f, "",
+            new Param("walk_ease", "Soft Steps (walking notes softer, gliding to their level)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
-            new Param("music_drift", "Let the home chord drift (every few minutes, same notes)", 0f, 1f, 1f, "",
+            // The Band Plays (Oct 21, DadCraft: more "build and flow", and more going on in a calm room): 8-bar phrases
+            // that build up to a fill and drop back, a band that never quite stops standing still, chimes in a quiet room.
+            new Param("band_plays", "The Band Plays (builds and drops back, busier in a calm room)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
-            new Param("music_follow", "Light, pocket and stairs move the notes higher or lower", 0f, 1f, 1f, "",
+            new Param("music_drift", "Wandering Home (the home chord drifts every few minutes, same notes)", 0f, 1f, 1f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
+            new Param("music_follow", "Sway with the World (light, pocket and stairs move the notes higher or lower)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().noPd().resetWhenAbsent(),
             // Calm builds (DadCraft, Oct 14): standing still in a calm room, the music slowly grows a layer at a time,
             // then eases back (CalmBuild.java). Off by default, the user's own (not in presets).
-            new Param("calm_build", "Calm builds (standing still, the music slowly grows)", 0f, 1f, 0f, "",
+            new Param("calm_build", "Slow Bloom (standing still, the music slowly grows)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().noPd().resetWhenAbsent(),
             new Param("music_key", "Key", 0f, 11f, 0f, "", Param.Curve.LINEAR)
                     .choices("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
@@ -219,18 +231,18 @@ final class Params {
                             "Mixolydian", "Lydian", "Whole tone")
                     .inSection("music").noPreset().resetWhenAbsent(),
             // Low = a bass voice on the root under everything, Mid = the chords as before, Both (default) = the two together.
-            new Param("music_pad_reg", "Pad register", 0f, 2f, 2f, "", Param.Curve.LINEAR)
+            new Param("music_pad_reg", "Pad Register", 0f, 2f, 2f, "", Param.Curve.LINEAR)
                     .choices("Low (bass)", "Mid", "Both")
                     .inSection("music").noPreset().resetWhenAbsent(),
-            new Param("pad_src", "Pad sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
+            new Param("pad_src", "Pad Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth", "Found sounds (a held hum or voice, stretched)", "Both")
                     .inSection("music").noPreset().resetWhenAbsent(),
-            new Param("bass_src", "Bass sound", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("bass_src", "Bass Sound", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Synth", "Found sounds (a held hum or voice, pitched down)")
                     .inSection("music").noPreset().resetWhenAbsent(),
-            new Param("music_arp", "Notes and chimes level", 0f, 1f, 0.4f, "", Param.Curve.LINEAR)
+            new Param("music_arp", "Notes and Chimes Level", 0f, 1f, 0.4f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0f, 0.8f).resetWhenAbsent(),
-            new Param("melody_src", "Melody sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
+            new Param("melody_src", "Melody Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth chimes", "Found sounds (tuned from what the mic hears)", "Both")
                     .inSection("music").noPreset().resetWhenAbsent(),
             // Kit (Oct 17): what each part of the music sounds like (Kits.java, assets/kits). Classic = as always.
@@ -247,66 +259,66 @@ final class Params {
                             "Chiptune: Genesis (FM synthesis)")
                     .inSection("music").noRandom().noPd().dcs(),
             // Mix and match (Oct 17): each part can take its sound from another kit. "The kit" = the Kit above.
-            new Param("kitp_mel", "Melody from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kitp_mel", "Lead (plays like)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_bass", "Bass from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kitp_bass", "Bassist (plays like)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_pad", "Pad from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kitp_pad", "Keys (plays like)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_drums", "Drums from", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
+            new Param("kitp_drums", "Drummer (plays like)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
                     .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
             // Layers (Oct 19): a second kit on a part, blended with the first (DadCraft: the NES pad and the Synth pad
             // together, "being able to control how much of each is present"). None = as before.
-            new Param("kitl_mel", "Melody layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
+            new Param("kitl_mel", "Lead Layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
                     Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
-            new Param("kitb_mel", "Melody blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+            new Param("kitb_mel", "Lead Blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").noRandom().dcs(),
-            new Param("kitl_bass", "Bass layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
+            new Param("kitl_bass", "Bassist Layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
                     Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
-            new Param("kitb_bass", "Bass blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+            new Param("kitb_bass", "Bassist Blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").noRandom().dcs(),
-            new Param("kitl_pad", "Pad layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
+            new Param("kitl_pad", "Keys Layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
                     Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
-            new Param("kitb_pad", "Pad blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+            new Param("kitb_pad", "Keys Blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").noRandom().dcs(),
-            new Param("kitl_drums", "Drums layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
+            new Param("kitl_drums", "Drummer Layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
                     Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
-            new Param("kitb_drums", "Drums blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+            new Param("kitb_drums", "Drummer Blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").noRandom().dcs(),
             // Melody rhythm (Oct 15): the walking notes and the standing-still chimes follow one-bar rhythm patterns
             // (whole to 8th notes, or dotted and syncopated ones), each note ringing as long as it lasts. Off = as before.
-            new Param("mel_rhythm", "Melody rhythm", 0f, 3f, 0f, "", Param.Curve.LINEAR)
+            new Param("mel_rhythm", "Melody Rhythm", 0f, 3f, 0f, "", Param.Curve.LINEAR)
                     .choices("Off (as before)", "Straight (quarters, halves, 8ths)", "Dotted (dotted and syncopated)", "Mixed")
                     .inSection("music").noPreset().resetWhenAbsent(),
             // Melody phrases (Oct 15, with Melody rhythm on): four-bar phrases, A A' B A. The melody moves mostly by
             // step, lands on chord tones on beats 1 and 3, repeats its first bar (the repeat ending on the chord's root),
             // goes somewhere new, then comes back to the first bar.
-            new Param("mel_phrase", "Melody phrases (repeat and answer, needs Melody rhythm)", 0f, 1f, 0f, "",
+            new Param("mel_phrase", "Phrasing (repeat and answer, needs Melody Rhythm)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().resetWhenAbsent(),
-            new Param("chime_char", "Chime character (ring to your sound)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+            new Param("chime_char", "Chime Character (ring to your sound)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0f, 1f).resetWhenAbsent(),
             // Found note ring (prototype, Oct 16): what a found melody note rings with. String = our own C object
             // (dcs_string~): the caught sound plucks a string tuned to the note.
-            new Param("fm_ring", "Found note ring", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("fm_ring", "Found Note Ring", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Resonator", "String (the sound plucks a string)")
                     .inSection("music").noPreset().resetWhenAbsent().dcs(),
             new Param("music_tone", "Tone (dark to bright)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0.2f, 0.9f).resetWhenAbsent(),
-            new Param("music_react", "How much the music follows what it hears", 0f, 1f, 0.8f, "",
+            new Param("music_react", "Ear for the Room (how much the music follows what it hears)", 0f, 1f, 0.8f, "",
                     Param.Curve.LINEAR).inSection("music").rand(0.3f, 1f).resetWhenAbsent(),
-            new Param("music_res", "Room notes (sounds around you ring the chord)", 0f, 1f, 0.8f, "",
+            new Param("music_res", "Singing Room (sounds around you ring the chord)", 0f, 1f, 0.8f, "",
                     Param.Curve.LINEAR).inSection("music").rand(0.2f, 1f).resetWhenAbsent(),
-            new Param("res_src", "Room notes sound", 0f, 2f, 1f, "", Param.Curve.LINEAR)
+            new Param("res_src", "Singing Room Sound", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Ring (the room rings the chord)", "Found sounds (a sound plays one of yours on the chord)", "Both")
                     .inSection("music").noPreset().resetWhenAbsent(),
             // Sing, hum or whistle a short phrase and the app answers it a moment later, a third away, in key (CallResponse.java).
-            new Param("music_answer", "Call and response (a sung phrase gets an answer)", 0f, 1f, 0.5f, "",
+            new Param("music_answer", "Call and Response (a sung phrase gets an answer)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("music").rand(0f, 1f).resetWhenAbsent(),
-            new Param("harm_src", "Harmony sound", 0f, 2f, 1f, "", Param.Curve.LINEAR)
+            new Param("harm_src", "Harmony Sound", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Organ", "Your voice (a pitch-shifted copy of you)", "Both")
                     .inSection("music").noPreset().resetWhenAbsent(),
             // Pitch tracker (prototype, Oct 17): New = our own (dcs_pitch~): exact, and hiss reads as no pitch at all.
-            new Param("harm_tracker", "Pitch tracker (what Harmony hears)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("harm_tracker", "Pitch Tracker (what Harmony hears)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic", "New (more exact, ignores hiss)")
                     .inSection("music").noPreset().resetWhenAbsent().dcs(),
 
@@ -315,263 +327,263 @@ final class Params {
             // (older presets leave them as they are), never randomized.
             new Param("mix_kick", "Kick", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("mix").noRandom(),   // synth and found kicks
-            new Param("beat_snare", "Snare level", 0f, 1f, 0.6f, "", Param.Curve.LINEAR)
+            new Param("beat_snare", "Snare Level", 0f, 1f, 0.6f, "", Param.Curve.LINEAR)
                     .inSection("mix").rand(0f, 1f).resetWhenAbsent(),
-            new Param("beat_hats", "Hi-hat level", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+            new Param("beat_hats", "Hi-Hat Level", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("mix").rand(0f, 1f).resetWhenAbsent(),
-            new Param("beat_glitch", "Glitch loops woven into the beat (needs Glitch cloud amount)", 0f, 1f, 0.4f, "",
+            new Param("beat_glitch", "Glitch Loops Woven into the Beat (needs Glitch Cloud Amount)", 0f, 1f, 0.4f, "",
                     Param.Curve.LINEAR).inSection("mix").rand(0f, 0.8f).resetWhenAbsent(),
-            new Param("music_pad", "Pad level (soft chords that drift)", 0f, 1f, 0.33f, "",
+            new Param("music_pad", "Pad Level (soft chords that drift)", 0f, 1f, 0.33f, "",
                     Param.Curve.LINEAR).inSection("mix").rand(0f, 0.6f).resetWhenAbsent(),
-            new Param("mix_bass", "Bass (inside the pad level)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
+            new Param("mix_bass", "Bass (inside Pad Level)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("mix").noRandom(),   // synth and found bass
-            new Param("mix_chimes", "Chimes (inside Notes and chimes)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
+            new Param("mix_chimes", "Chimes (inside Notes and Chimes Level)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("mix").noRandom(),   // sudden-sound chimes, the still pattern, motif replays
-            new Param("mix_walk", "Walking notes (inside Notes and chimes)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
+            new Param("mix_walk", "Walking Notes (inside Notes and Chimes Level)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("mix").noRandom(),   // footstep arpeggio and groove note
-            new Param("mix_ring", "Room notes: ring", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
+            new Param("mix_ring", "Singing Room: Ring", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("mix").noRandom(),   // the resonators
-            new Param("mix_bells", "Room notes: found bells", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
+            new Param("mix_bells", "Singing Room: Found Bells", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
                     .inSection("mix").noRandom(),   // found sounds played on the chord
             new Param("music_harm", "Harmony (a held hum or whistle gets an answering note)", 0f, 1f, 0.6f, "",
                     Param.Curve.LINEAR).inSection("mix").rand(0.2f, 1f).resetWhenAbsent(),
 
             // ---- Echo ----
-            new Param("echo_on", "Echo enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("echo_on", "Echo Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("echo").toggle(),
-            new Param("echo_time", "Echo time", 50f, 1500f, 350f, " ms", Param.Curve.LOG)
+            new Param("echo_time", "Echo Time", 50f, 1500f, 350f, " ms", Param.Curve.LOG)
                     .inSection("echo").rand(80f, 1200f),
-            new Param("echo_sync", "Echo follows your steps (while walking)", 0f, 3f, 2f, "", Param.Curve.LINEAR)
+            new Param("echo_sync", "Echo Follows Your Steps (while walking)", 0f, 3f, 2f, "", Param.Curve.LINEAR)
                     .choices("Off", "1 step", "Half a step", "Quarter step")
                     .inSection("echo").resetWhenAbsent(),
-            new Param("feedback", "Echo feedback", 0f, 0.85f, 0.4f, "", Param.Curve.LINEAR)
+            new Param("feedback", "Echo Feedback", 0f, 0.85f, 0.4f, "", Param.Curve.LINEAR)
                     .inSection("echo").rand(0f, 0.7f),
             // 0 (DadCraft, Oct 13): a new install plays only the room until the user turns things on.
-            new Param("wet", "Echo level (wet)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("wet", "Echo Level (wet)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("echo").rand(0f, 0.8f),
-            new Param("echo_scatter", "Echo scatter (each repeat lands somewhere else)", 0f, 1f, 0.5f, "",
+            new Param("echo_scatter", "Echo Scatter (each repeat lands somewhere else)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("echo").rand(0f, 1f).resetWhenAbsent(),
             // Scatter style (Oct 20, DadCraft: "throwing those sounds around"): New = dcs_scatter~: each repeat comes
             // from a direction (the far ear hears it later and darker), flies across while it plays (Throw) and sits
             // near or far (Near and far: quieter, darker, more reverb). Classic = by level only, as before.
-            new Param("echo_scatter_style", "Scatter style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("echo_scatter_style", "Scatter Style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (louder in one ear)", "New (direction, throw, near and far)")
                     .inSection("echo").noRandom().noPreset().resetWhenAbsent().dcs(),
             new Param("echo_throw", "Throw (each repeat flies across, New scatter)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("echo").rand(0f, 1f).resetWhenAbsent().dcs(),
-            new Param("echo_depth", "Near and far (some repeats farther away, New scatter)", 0f, 1f, 0.5f, "",
+            new Param("echo_depth", "Near and Far (some repeats farther away, New scatter)", 0f, 1f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("echo").rand(0f, 1f).resetWhenAbsent().dcs(),
 
             // ---- Sing in key (Oct 18) ---- dcs_shift~ moves each sung note to the nearest note of the Music key
             // and scale (the music needn't be playing). On, the voice runs 30 ms late. Older presets turn it off.
-            new Param("tune_amount", "Sing in key (0 = off, 1 = right on the note)", 0f, 1f, 0f, "",
+            new Param("tune_amount", "Sing in Key (0 = off, 1 = right on the note)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("tune").noRandom().resetWhenAbsent().dcs(),
-            new Param("tune_glide", "Sing in key glide (0 = robotic jumps)", 0f, 300f, 40f, " ms",
+            new Param("tune_glide", "Sing in Key Glide (0 = robotic jumps)", 0f, 300f, 40f, " ms",
                     Param.Curve.LINEAR).inSection("tune").noRandom().decimals(0).resetWhenAbsent().dcs(),
 
             // ---- Vocoder (Oct 18) ---- dcs_vocoder~: the voice's words on a carrier. Older presets turn it off.
-            new Param("voc_on", "Vocoder enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("voc_on", "Vocoder Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("voc").toggle().resetWhenAbsent(),
-            new Param("voc_mix", "Vocoder amount (0 = off)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("voc_mix", "Vocoder Amount (0 = off)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
-            new Param("voc_style", "Vocoder style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("voc_style", "Vocoder Style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Bands (vocoder)", "Talk box (your mouth shapes the synth)")
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
-            new Param("voc_carrier", "Vocoder sings on", 0f, 3f, 0f, "", Param.Curve.LINEAR)
+            new Param("voc_carrier", "Vocoder Sings On", 0f, 3f, 0f, "", Param.Curve.LINEAR)
                     .choices("The music's chords", "Your own pitch (a synth)", "Whisper (noise)",
                             "The music's melody (a keyboard lead)")
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
             // Chip carriers (Oct 19): the console pulse waves instead of two detuned saws, one per note
-            new Param("voc_wave", "Vocoder synth sound", 0f, 3f, 0f, "", Param.Curve.LINEAR)
+            new Param("voc_wave", "Vocoder Synth Sound", 0f, 3f, 0f, "", Param.Curve.LINEAR)
                     .choices("Saws (warm, detuned)", "Chip pulse 25% (NES lead)", "Chip pulse 12.5% (thin, nasal)",
                             "Chip square 50% (hollow, Game Boy)")
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
-            new Param("voc_octave", "Vocoder octave", -2f, 2f, 0f, "", Param.Curve.LINEAR)
+            new Param("voc_octave", "Vocoder Octave", -2f, 2f, 0f, "", Param.Curve.LINEAR)
                     .inSection("voc").noRandom().decimals(0).resetWhenAbsent().dcs(),
-            new Param("voc_snap", "Vocoder synth in key (Your own pitch)", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("voc_snap", "Vocoder Synth in Key (Your own pitch)", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
-            new Param("voc_sib", "Vocoder hiss (keeps s and t clear)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+            new Param("voc_sib", "Vocoder Hiss (keeps s and t clear)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("voc").noRandom().resetWhenAbsent().dcs(),
 
             // ---- Ring modulator ----
-            new Param("ring_on", "Ring mod enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("ring_on", "Ring Mod Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("ring").toggle(),
-            new Param("ring_freq", "Ring-mod frequency", 20f, 1000f, 80f, " Hz", Param.Curve.LOG)
+            new Param("ring_freq", "Ring-Mod Frequency", 20f, 1000f, 80f, " Hz", Param.Curve.LOG)
                     .inSection("ring").rand(30f, 800f),
-            new Param("ring_mix", "Ring-mod amount", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("ring_mix", "Ring-Mod Amount", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("ring").rand(0f, 0.7f),
 
             // ---- Pitch shifter ----
-            new Param("pitch_on", "Pitch shift enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("pitch_on", "Pitch Shift Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("pitch").toggle(),
-            new Param("pitch_semi", "Pitch shift amount (semitones)", -12f, 12f, 0f, " st",
+            new Param("pitch_semi", "Pitch Shift Amount (semitones)", -12f, 12f, 0f, " st",
                     Param.Curve.LINEAR).inSection("pitch").rand(-7f, 7f).decimals(1),
-            new Param("pitch_mix", "Pitch shift mix (0 = original only)", 0f, 1f, 0f, "",
+            new Param("pitch_mix", "Pitch Shift Mix (0 = original only)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("pitch").rand(0f, 0.8f),
-            new Param("pitch_window", "Pitch grain size", 20f, 200f, 60f, " ms", Param.Curve.LOG)
+            new Param("pitch_window", "Pitch Grain Size", 20f, 200f, 60f, " ms", Param.Curve.LOG)
                     .inSection("pitch").noRandom(),
             // Pitch shifter (prototype, Oct 17): New = our own (dcs_shift~): keeps a voice's own tone colour (no
             // chipmunk) and doesn't warble. Also used by Your voice harmony.
-            new Param("shift_voice", "Pitch shifter (also Your voice harmony)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("shift_voice", "Pitch Shifter (also Your voice harmony)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic", "New (keeps your voice's tone)")
                     .inSection("pitch").noPreset().resetWhenAbsent().dcs(),
 
             // ---- Bit crusher ---- (added after the first presets: older presets switch it off)
-            new Param("crush_on", "Bit crusher enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("crush_on", "Bit Crusher Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("crush").toggle().resetWhenAbsent(),
-            new Param("crush_mix", "Bit-crush amount (0 = clean)", 0f, 1f, 0f, "",
+            new Param("crush_mix", "Bit-Crush Amount (0 = clean)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("crush").rand(0f, 0.8f).resetWhenAbsent(),
-            new Param("crush_bits", "Bit depth (lower = grittier)", 1f, 16f, 8f, " bits",
+            new Param("crush_bits", "Bit Depth (lower = grittier)", 1f, 16f, 8f, " bits",
                     Param.Curve.LINEAR).inSection("crush").rand(3f, 12f).decimals(1)
                     .resetWhenAbsent(),
-            new Param("crush_rate", "Sample-rate reduction", 500f, 24000f, 8000f, " Hz",
+            new Param("crush_rate", "Sample-Rate Reduction", 500f, 24000f, 8000f, " Hz",
                     Param.Curve.LOG).inSection("crush").rand(1500f, 16000f).resetWhenAbsent(),
             // Style (Oct 17, DadCraft: "more accurate 8 or 16 bit sounds"): a machine's own rate, bits and filters
             // (dcs_crush~), so Bit depth and Sample rate apply to Classic only. A switch for now: Classic the default.
-            new Param("crush_style", "Crusher style", 0f, 6f, 0f, "", Param.Curve.LINEAR)
+            new Param("crush_style", "Crusher Style", 0f, 6f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (Bit depth and Sample rate below)", "8-bit sampler (11 kHz)",
                             "SP-1200 (12-bit, 26 kHz)", "NES", "Game Boy", "SNES", "Genesis / Mega Drive")
                     .inSection("crush").noPreset().resetWhenAbsent().dcs(),
 
             // ---- Spatial ---- (added after the first presets: older presets centre it)
-            new Param("space_on", "Spatial enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("space_on", "Stereo Space Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("space").toggle().resetWhenAbsent(),
             new Param("space_pan", "Pan (left to right)", -1f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("space").rand(-0.8f, 0.8f).decimals(2).resetWhenAbsent(),
-            new Param("space_shift", "Ear delay (+ = sound from the left)", -25f, 25f, 0f, " ms",
+            new Param("space_shift", "Ear Delay (+ = sound from the left)", -25f, 25f, 0f, " ms",
                     Param.Curve.LINEAR).inSection("space").rand(-15f, 15f).decimals(1)
                     .resetWhenAbsent(),
 
             // ---- Filter ---- (added after the first presets: older presets switch it off)
-            new Param("filter_on", "Filter enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("filter_on", "Filter Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("filter").toggle().resetWhenAbsent(),
-            new Param("filter_mix", "Filter amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("filter_mix", "Filter Amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("filter").rand(0f, 0.9f).resetWhenAbsent(),
-            new Param("filter_type", "Filter type", 0f, 2f, 0f, "", Param.Curve.LINEAR)
+            new Param("filter_type", "Filter Type", 0f, 2f, 0f, "", Param.Curve.LINEAR)
                     .choices("Low-pass", "High-pass", "Band-pass").inSection("filter")
                     .resetWhenAbsent(),
-            new Param("filter_freq", "Filter frequency", 80f, 12000f, 1500f, " Hz", Param.Curve.LOG)
+            new Param("filter_freq", "Filter Frequency", 80f, 12000f, 1500f, " Hz", Param.Curve.LOG)
                     .inSection("filter").rand(150f, 8000f).resetWhenAbsent(),
-            new Param("filter_q", "Filter resonance (Q)", 0.5f, 12f, 1f, "", Param.Curve.LOG)
+            new Param("filter_q", "Filter Resonance (Q)", 0.5f, 12f, 1f, "", Param.Curve.LOG)
                     .inSection("filter").rand(0.7f, 6f).decimals(1).resetWhenAbsent(),
 
             // ---- Reverb ---- (added after the first presets: older presets switch it off)
-            new Param("reverb_on", "Reverb enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("reverb_on", "Reverb Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("reverb").toggle().resetWhenAbsent(),
-            new Param("reverb_mix", "Reverb level", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("reverb_mix", "Reverb Level", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("reverb").rand(0f, 0.6f).resetWhenAbsent(),
-            new Param("reverb_size", "Room size", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
+            new Param("reverb_size", "Room Size", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("reverb").rand(0.2f, 0.9f).resetWhenAbsent(),
-            new Param("reverb_tone", "Reverb brightness", 1500f, 16000f, 6000f, " Hz",
+            new Param("reverb_tone", "Reverb Brightness", 1500f, 16000f, 6000f, " Hz",
                     Param.Curve.LOG).inSection("reverb").rand(2500f, 12000f).resetWhenAbsent(),
             // The reverb's own tail played backwards: each sound comes back as a rising swell (Ghost realm). Needs the
             // reverb. While the beat runs, each swell is two beats long and starts on the beat.
-            new Param("reverb_rev", "Reverse reverb (sounds come back as rising swells)", 0f, 1f, 0f, "",
+            new Param("reverb_rev", "Reverse Reverb (sounds come back as rising swells)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("reverb").rand(0f, 0.6f).resetWhenAbsent(),
 
             // ---- Chorus ---- (added after the first presets: older presets switch it off)
-            new Param("chorus_on", "Chorus enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("chorus_on", "Chorus Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("chorus").toggle().resetWhenAbsent(),
-            new Param("chorus_mix", "Chorus amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("chorus_mix", "Chorus Amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("chorus").rand(0f, 0.8f).resetWhenAbsent(),
-            new Param("chorus_rate", "Chorus speed", 0.05f, 5f, 0.8f, " Hz", Param.Curve.LOG)
+            new Param("chorus_rate", "Chorus Speed", 0.05f, 5f, 0.8f, " Hz", Param.Curve.LOG)
                     .inSection("chorus").rand(0.2f, 3f).decimals(2).resetWhenAbsent(),
-            new Param("chorus_depth", "Chorus depth", 0.2f, 8f, 3f, " ms", Param.Curve.LOG)
+            new Param("chorus_depth", "Chorus Depth", 0.2f, 8f, 3f, " ms", Param.Curve.LOG)
                     .inSection("chorus").rand(1f, 6f).decimals(1).resetWhenAbsent(),
 
             // ---- Tremolo ---- (added after the first presets: older presets switch it off)
-            new Param("trem_on", "Tremolo enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("trem_on", "Tremolo Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("tremolo").toggle().resetWhenAbsent(),
-            new Param("trem_depth", "Tremolo depth (0 = off)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("trem_depth", "Tremolo Depth (0 = off)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("tremolo").rand(0f, 0.8f).resetWhenAbsent(),
-            new Param("trem_rate", "Tremolo speed", 0.5f, 20f, 5f, " Hz", Param.Curve.LOG)
+            new Param("trem_rate", "Tremolo Speed", 0.5f, 20f, 5f, " Hz", Param.Curve.LOG)
                     .inSection("tremolo").rand(1f, 12f).decimals(1).resetWhenAbsent(),
 
             // ---- Distortion ---- (added after the first presets: older presets switch it off)
-            new Param("dist_on", "Distortion enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("dist_on", "Distortion Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("dist").toggle().resetWhenAbsent(),
-            new Param("dist_mix", "Distortion amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("dist_mix", "Distortion Amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("dist").rand(0f, 0.7f).resetWhenAbsent(),
-            new Param("dist_drive", "Distortion drive", 1f, 40f, 4f, "x", Param.Curve.LOG)
+            new Param("dist_drive", "Distortion Drive", 1f, 40f, 4f, "x", Param.Curve.LOG)
                     .inSection("dist").rand(1.5f, 15f).decimals(1).resetWhenAbsent(),
-            new Param("dist_type", "Distortion type", 0f, 2f, 0f, "", Param.Curve.LINEAR)
+            new Param("dist_type", "Distortion Type", 0f, 2f, 0f, "", Param.Curve.LINEAR)
                     .choices("Soft clip", "Hard clip", "Wavefold").inSection("dist")
                     .resetWhenAbsent(),
             // Distortion quality (Oct 19): Smooth = dcs_dist~ shapes at 4x the sample rate, so a hard drive's top
             // harmonics are filtered out instead of folding back as fizz. Classic = as before. Smooth is the default
             // (DadCraft, Oct 19), and installs that already stored Classic keep it.
-            new Param("dist_quality", "Distortion quality", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("dist_quality", "Distortion Quality", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Classic", "Smooth (4x oversampled: less harsh fizz)")
                     .inSection("dist").noRandom().noPreset().resetWhenAbsent().dcs(),
 
             // ---- Reverse echo ---- (added after the first presets: older presets switch it off)
-            new Param("rvs_on", "Reverse echo enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("rvs_on", "Reverse Echo Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("reverse").toggle().resetWhenAbsent(),
-            new Param("rvs_mix", "Reverse echo level", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("rvs_mix", "Reverse Echo Level", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("reverse").rand(0f, 0.7f).resetWhenAbsent(),
-            new Param("rvs_time", "Reversed chunk length", 100f, 1000f, 400f, " ms", Param.Curve.LOG)
+            new Param("rvs_time", "Reversed Chunk Length", 100f, 1000f, 400f, " ms", Param.Curve.LOG)
                     .inSection("reverse").rand(150f, 800f).resetWhenAbsent(),
 
             // ---- Glitch / freeze ---- (added after the first presets: older presets switch it off)
             // Glitch cloud: sudden sounds (and now and then a free clock) bring back bits of what was just heard,
             // mangled, around you. Kept in memory for a few seconds only, never saved.
-            new Param("gc_amount", "Glitch cloud amount (how often bits of the room come back mangled)", 0f, 1f, 0f, "",
+            new Param("gc_amount", "Glitch Cloud Amount (how often bits of the room come back mangled)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("glitch").rand(0f, 0.6f).resetWhenAbsent(),
-            new Param("gc_level", "Glitch cloud level", 0f, 1f, 0.7f, "", Param.Curve.LINEAR)
+            new Param("gc_level", "Glitch Cloud Level", 0f, 1f, 0.7f, "", Param.Curve.LINEAR)
                     .inSection("glitch").rand(0.4f, 1f).resetWhenAbsent(),
             // Glitch voice (Oct 16): New = our own C object (dcs_glitch~): several glitches at once, each starting on
             // its exact sample, and a smoother stretch. Same kinds, shares and timing as Legacy (the Pd voices). The
             // default since Oct 19 (DadCraft: New the standard, the old one kept as a fallback, renamed Legacy).
-            new Param("gc_voice", "Glitch voice", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("gc_voice", "Glitch Voice", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .choices("Legacy (the Pd voices, one at a time)", "New (several at once, smoother stretch)")
                     .inSection("glitch").noPreset().resetWhenAbsent().dcs(),
             // The glitch matrix: how each glitch is shared out. Together at most 100%, and what is left over is the chance
             // that nothing happens (DadCraft's idea). Amount says how often a glitch gets its chance.
-            new Param("gc_pct_stutter", "Stutter share (a slice repeated, on the beat while walking)", 0f, 100f, 35f, " %",
+            new Param("gc_pct_stutter", "Stutter Share (a slice repeated, on the beat while walking)", 0f, 100f, 35f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").rand(0f, 60f).resetWhenAbsent(),
-            new Param("gc_pct_reverse", "Reverse share (played backwards)", 0f, 100f, 25f, " %", Param.Curve.LINEAR)
+            new Param("gc_pct_reverse", "Reverse Share (played backwards)", 0f, 100f, 25f, " %", Param.Curve.LINEAR)
                     .inSection("glitch").budget("glitch_matrix").rand(0f, 60f).resetWhenAbsent(),
-            new Param("gc_pct_shuffle", "Shuffle share (an older moment, out of order)", 0f, 100f, 20f, " %",
+            new Param("gc_pct_shuffle", "Shuffle Share (an older moment, out of order)", 0f, 100f, 20f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").rand(0f, 60f).resetWhenAbsent(),
-            new Param("gc_pct_stretch", "Stretch share (smeared out slowly, the pitch stays)", 0f, 100f, 20f, " %",
+            new Param("gc_pct_stretch", "Stretch Share (smeared out slowly, the pitch stays)", 0f, 100f, 20f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").rand(0f, 60f).resetWhenAbsent(),
             // More kinds (Oct 19, each from 0%, kept out of the dice). DadCraft kept Pitch jump and Gate. Ratchet and
             // Spray are in the back pocket (GC_POCKET in make_patch.py): no setting, the patch still knows them.
             // Legacy plays a gate as a plain replay.
-            new Param("gc_pct_pitch", "Pitch jump share (an octave up or down, or a fifth up)", 0f, 100f, 0f, " %",
+            new Param("gc_pct_pitch", "Pitch Jump Share (an octave up or down, or a fifth up)", 0f, 100f, 0f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent(),
-            new Param("gc_pct_gate", "Gate share (chopped into fast on/off pulses)", 0f, 100f, 0f, " %",
+            new Param("gc_pct_gate", "Gate Share (chopped into fast on/off pulses)", 0f, 100f, 0f, " %",
                     Param.Curve.LINEAR).inSection("glitch").budget("glitch_matrix").noRandom().resetWhenAbsent().dcs(),
-            new Param("glitch_on", "Glitch/freeze enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("glitch_on", "Glitch/freeze Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("glitch").toggle().resetWhenAbsent(),
             new Param("glitch_hold", "Freeze (0 = live, 1 = frozen)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("glitch").noRandom().resetWhenAbsent(),
-            new Param("glitch_len", "Freeze loop length", 20f, 500f, 120f, " ms", Param.Curve.LOG)
+            new Param("glitch_len", "Freeze Loop Length", 20f, 500f, 120f, " ms", Param.Curve.LOG)
                     .inSection("glitch").rand(40f, 300f).resetWhenAbsent(),
 
             // ---- Flanger ---- (added after the first presets: older presets switch it off)
-            new Param("flange_on", "Flanger enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("flange_on", "Flanger Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("flange").toggle().resetWhenAbsent(),
-            new Param("flange_mix", "Flanger amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("flange_mix", "Flanger Amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("flange").rand(0f, 0.8f).resetWhenAbsent(),
-            new Param("flange_rate", "Flanger speed", 0.05f, 5f, 0.3f, " Hz", Param.Curve.LOG)
+            new Param("flange_rate", "Flanger Speed", 0.05f, 5f, 0.3f, " Hz", Param.Curve.LOG)
                     .inSection("flange").rand(0.1f, 2f).decimals(2).resetWhenAbsent(),
-            new Param("flange_depth", "Flanger depth", 0.5f, 8f, 4f, " ms", Param.Curve.LOG)
+            new Param("flange_depth", "Flanger Depth", 0.5f, 8f, 4f, " ms", Param.Curve.LOG)
                     .inSection("flange").rand(1f, 6f).decimals(1).resetWhenAbsent(),
-            new Param("flange_fb", "Flanger feedback (negative = hollow)", -0.9f, 0.9f, 0.5f, "",
+            new Param("flange_fb", "Flanger Feedback (negative = hollow)", -0.9f, 0.9f, 0.5f, "",
                     Param.Curve.LINEAR).inSection("flange").rand(-0.7f, 0.7f).decimals(2)
                     .resetWhenAbsent(),
 
             // ---- Phaser ---- (added after the first presets: older presets switch it off)
-            new Param("phaser_on", "Phaser enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("phaser_on", "Phaser Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("phaser").toggle().resetWhenAbsent(),
-            new Param("phaser_mix", "Phaser amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+            new Param("phaser_mix", "Phaser Amount (0 = clean)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("phaser").rand(0f, 0.8f).resetWhenAbsent(),
-            new Param("phaser_rate", "Phaser speed", 0.05f, 5f, 0.4f, " Hz", Param.Curve.LOG)
+            new Param("phaser_rate", "Phaser Speed", 0.05f, 5f, 0.4f, " Hz", Param.Curve.LOG)
                     .inSection("phaser").rand(0.1f, 2f).decimals(2).resetWhenAbsent(),
-            new Param("phaser_depth", "Phaser sweep width", 0f, 1f, 0.7f, "", Param.Curve.LINEAR)
+            new Param("phaser_depth", "Phaser Sweep Width", 0f, 1f, 0.7f, "", Param.Curve.LINEAR)
                     .inSection("phaser").rand(0.3f, 1f).decimals(2).resetWhenAbsent(),
-            new Param("phaser_fb", "Phaser feedback", 0f, 0.9f, 0.4f, "", Param.Curve.LINEAR)
+            new Param("phaser_fb", "Phaser Feedback", 0f, 0.9f, 0.4f, "", Param.Curve.LINEAR)
                     .inSection("phaser").rand(0f, 0.7f).decimals(2).resetWhenAbsent(),
 
             // ---- Behavior ----
@@ -579,10 +591,10 @@ final class Params {
             new Param("smooth", "Smoothing (change glide time)", 1f, 500f, 30f, " ms",
                     Param.Curve.LOG).inSection("behavior").noRandom().noPreset(),
             // App-only: how far Nudge moves each slider (fraction of its travel).
-            new Param("nudge_amount", "Nudge strength", 0.005f, 0.3f, 0.04f, "", Param.Curve.LOG)
+            new Param("nudge_amount", "Nudge Strength", 0.005f, 0.3f, 0.04f, "", Param.Curve.LOG)
                     .inSection("behavior").noRandom().noPreset().noPd().decimals(3),
             // A soft two-note chime when a Realm starts (rising) or your own settings come back (falling).
-            new Param("cue_sound", "Warp sound", 0f, 1f, 1f, "", Param.Curve.LINEAR)
+            new Param("cue_sound", "Warp Sound", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("behavior").toggle().noPreset());
 
     /** Everything: the sound parameters plus the settings of each mover (app-side only). */
