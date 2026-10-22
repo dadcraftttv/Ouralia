@@ -2929,6 +2929,20 @@ check(float(np.abs(y16[:, 1]).max()) < 0.6 * float(np.abs(y[:, 1]).max()),
       "stereo: Smooth distortion's 16 samples (st_extra) keep the side lined up (right ear %.5f, without %.5f)"
       % (float(np.abs(y16[:, 1]).max()), float(np.abs(y[:, 1]).max())))
 
+# a catch in stereo stands over the room's own background (the Moto's Camcorder mode reads a quiet room ~20 dB under
+# mono's, and soft sounds with it): -52 dBFS thumps over -86 hiss are kept in stereo, not in mono, nor over -60 hiss
+def st_catch(on, hiss, peak=0.0025):
+    x = (np.random.default_rng(3).standard_normal(6 * SR) * hiss).astype(np.float32)
+    k = np.arange(int(0.2 * SR)); th = (peak * np.sin(2 * np.pi * 150 * k / SR) * np.exp(-k / (0.05 * SR))).astype(np.float32)
+    for t in (3.0, 3.6, 4.2):
+        x[int(t * SR):int(t * SR) + len(th)] += th
+    e = fresh(dry=0, wet=0, beat_level=1, beat_follow=1, beat_when=1, rhythm_src=1); e.listen("fs_caught")
+    for k, v in (("st_r", 1), ("st_mid", 1), ("st_side", 1)) if on else ():   # (one channel in: the mid is it)
+        e.send(k, v)
+    e.run(x); return len(e.heard["fs_caught"])
+sc = (st_catch(False, 0.00005), st_catch(True, 0.00005), st_catch(True, 0.001))
+check(sc == (0, 3, 0), "stereo: a soft catch counts against the room's background (-52 over -86: mono %d, stereo %d; over -60: %d)" % sc)
+
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)
 rng = np.random.default_rng(1)

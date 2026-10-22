@@ -43,10 +43,9 @@ pace), or is Auto the answer (his call); a muted game (Pokemon Go) still ducks t
 is muted: skip games, or leave it); the app writes battery, temperature and its CPU into events.log every minute
 while playing (adb's logger dies unplugged; testers could send it with Send feedback).
 
-**Room in Stereo and the room's levels (Oct 22, found testing Clear Catches):** Camcorder mode's noise suppression
-reads a quiet room's background ~20 dB lower than VoiceRecognition (office: -80..-85 dB vs -55..-65), and the -15 dB
-match lowers sounds too, so fixed thresholds misjudge it: the found kit's FS_MIN_DB (a catch must reach -45 dB) and
-Realm Hopper's quiet/loud levels. Judge them against the room's own background in stereo mode (as Clear Catches does).
+**Room in Stereo and the room's levels (Oct 22):** the found kit now judges catches against the room's own
+background in stereo (BUILT Oct 22, DESIGN-NOTES "Clear Catches"; DadCraft to check catches come back with stereo
+on). Realm Hopper's levels left fixed (why: same place); does the Quiet Realm come on too readily in stereo? (his call).
 
 **Sound and music ideas (each behind a switch, the old sound the default):** dcs_listen~ (what kind of room), then
 auto-key from the room (22), dcs_dewind~, dcs_grain~ (18); a shimmer mode for the reverb (18); more drum hits, a
