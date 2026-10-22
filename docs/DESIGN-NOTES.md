@@ -1005,6 +1005,12 @@ to date in the same commit when behaviour changes.
   `StereoRoom.choose` takes the first that opened in stereo, isn't one mic on both sides (identical samples) and
   isn't partly opposite (correlation >= 0), trimmed to the reference's level (-40..+6 dB); none: "mono only" and
   the switch goes off. On the Moto (a quiet room): Camcorder, -10.6 dB (the 25 dB from the taps was rough).
+  **The background fooled it** (Oct 22): Check Again in a quieter room gave +6.0 dB (Camcorder quieter than
+  VoiceRecognition there): the Moto's Camcorder mode suppresses a quiet room's steady background, and the levels
+  compared were each mode's median window, mostly background. Now 3 s per mode while the user talks or claps
+  (the measuring line asks), each mode's level its loud tenth (`LOUD_SHARE` 0.9: the talk and claps, which the
+  phone's processing leaves mostly alone). And **Stereo Level** (+-12 dB by ear, `AudioSettings.stereoAdjust`,
+  live while it plays, back to 0 on a new measurement), since no measurement suits every phone and room.
   `AudioService.openAudio` opens 2 inputs with that preset (pd-core 1.4.2-pdscenes.2's `PdAudio.setInputPreset`)
   only for the built-in effects and the phone's own mic (`AudioDevices.isPhoneMic`: a headset or USB mic stays
   mono); if `audioRuntimeInfo("inputChannels")` isn't 2 once the sound has started it reopens in mono (event log).

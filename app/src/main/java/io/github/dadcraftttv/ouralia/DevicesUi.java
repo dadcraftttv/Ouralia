@@ -95,6 +95,9 @@ final class DevicesUi {
     private android.widget.Switch stereoSwitch;
     private TextView stereoStatus;
     private android.widget.Button stereoCheck;
+    private LinearLayout stereoLevelRow;
+    private TextView stereoLevelLabel;
+    private android.widget.SeekBar stereoLevel;
     private boolean stereoMeasuring;
 
     /** The switch, a line saying what this phone's mics gave, and Check Again (once measured). */
@@ -112,6 +115,41 @@ final class DevicesUi {
         a.look.hint(stereoStatus);
         stereoStatus.setPadding(a.dp(4), 0, 0, 0);
         body.addView(stereoStatus);
+        stereoLevelRow = new LinearLayout(a);
+        stereoLevelRow.setOrientation(LinearLayout.VERTICAL);
+        stereoLevelLabel = new TextView(a);
+        a.look.label(stereoLevelLabel);
+        stereoLevelLabel.setPadding(a.dp(4), a.dp(12), 0, 0);
+        stereoLevelRow.addView(stereoLevelLabel);
+        stereoLevel = new android.widget.SeekBar(a);
+        stereoLevel.setMax(2 * AudioSettings.STEREO_ADJUST_RANGE);
+        a.look.slider(stereoLevel);
+        stereoLevel.setMinimumHeight(a.dp(40));
+        stereoLevel.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(android.widget.SeekBar b, int progress, boolean fromUser) {
+                int db = progress - AudioSettings.STEREO_ADJUST_RANGE;
+                stereoLevelLabel.setText(a.getString(R.string.stereo_level, db));
+                stereoLevel.setContentDescription(stereoLevelLabel.getText());
+                if (fromUser) {
+                    AudioSettings.setStereoAdjust(a, db);
+                    AudioService.sendStereoLevel(a);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(android.widget.SeekBar b) { }
+
+            @Override
+            public void onStopTrackingTouch(android.widget.SeekBar b) { }
+        });
+        stereoLevelRow.addView(stereoLevel);
+        TextView levelHint = new TextView(a);
+        levelHint.setText(R.string.stereo_level_hint);
+        a.look.hint(levelHint);
+        levelHint.setPadding(a.dp(4), 0, 0, 0);
+        stereoLevelRow.addView(levelHint);
+        body.addView(stereoLevelRow);
         LinearLayout row = a.newButtonRow(body);
         stereoCheck = a.addButton(row, R.string.stereo_check_again, this::measureStereo);
         updateStereo();
@@ -175,6 +213,9 @@ final class DevicesUi {
         stereoSwitch.setEnabled(!stereoMeasuring);
         stereoCheck.setEnabled(!stereoMeasuring);
         ((View) stereoCheck.getParent()).setVisibility(choice != null && !stereoMeasuring ? View.VISIBLE : View.GONE);
+        stereoLevelRow.setVisibility(choice != null && choice.stereo() && !stereoMeasuring ? View.VISIBLE : View.GONE);
+        stereoLevel.setProgress(AudioSettings.stereoAdjust(a) + AudioSettings.STEREO_ADJUST_RANGE);
+        stereoLevelLabel.setText(a.getString(R.string.stereo_level, AudioSettings.stereoAdjust(a)));
         String text;
         if (stereoMeasuring) {
             text = a.getString(R.string.stereo_measuring);

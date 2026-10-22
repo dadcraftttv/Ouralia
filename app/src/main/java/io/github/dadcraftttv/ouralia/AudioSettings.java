@@ -20,6 +20,8 @@ final class AudioSettings {
     private static final String KEY_STEREO = "stereo_room";
     private static final String KEY_STEREO_PRESET = "stereo_preset";   // -2 not measured yet, -1 mono only
     private static final String KEY_STEREO_TRIM = "stereo_trim_db";
+    private static final String KEY_STEREO_ADJUST = "stereo_adjust_db";   // Stereo Level, by ear, on top of the trim
+    static final int STEREO_ADJUST_RANGE = 12;                             // dB either way
 
     private AudioSettings() { }
 
@@ -54,7 +56,23 @@ final class AudioSettings {
         return preset == -2 ? null : new StereoRoom.Choice(preset, prefs(context).getFloat(KEY_STEREO_TRIM, 0f));
     }
 
+    /** A new measurement is a new starting point: Stereo Level goes back to 0. */
     static void setStereoChoice(Context context, StereoRoom.Choice choice) {
-        prefs(context).edit().putInt(KEY_STEREO_PRESET, choice.preset).putFloat(KEY_STEREO_TRIM, choice.trimDb).apply();
+        prefs(context).edit().putInt(KEY_STEREO_PRESET, choice.preset).putFloat(KEY_STEREO_TRIM, choice.trimDb)
+                .putInt(KEY_STEREO_ADJUST, 0).apply();
+    }
+
+    static int stereoAdjust(Context context) {
+        return prefs(context).getInt(KEY_STEREO_ADJUST, 0);
+    }
+
+    static void setStereoAdjust(Context context, int db) {
+        prefs(context).edit().putInt(KEY_STEREO_ADJUST, db).apply();
+    }
+
+    /** The level the stereo room plays at: the measured match plus Stereo Level. */
+    static float stereoTrimDb(Context context) {
+        StereoRoom.Choice c = stereoChoice(context);
+        return (c == null ? 0f : c.trimDb) + stereoAdjust(context);
     }
 }
