@@ -82,12 +82,115 @@ final class DevicesUi {
         micHint.setPadding(a.dp(4), a.dp(8), 0, 0);
         body.addView(micHint);
         updateMicHint();
+        addStereoRow(body);
         TextView note = new TextView(a);
         note.setText(AudioService.canSelectDevices()
                 ? R.string.audio_note : R.string.audio_unsupported);
         a.look.hint(note);
         note.setPadding(a.dp(4), a.dp(12), 0, 0);
         body.addView(note);
+    }
+
+    // ---- the room in stereo (Oct 22): the phone's two mics as left and right, measured per phone ----
+    private android.widget.Switch stereoSwitch;
+    private TextView stereoStatus;
+    private android.widget.Button stereoCheck;
+    private boolean stereoMeasuring;
+
+    /** The switch, a line saying what this phone's mics gave, and Check Again (once measured). */
+    private void addStereoRow(LinearLayout body) {
+        stereoSwitch = new android.widget.Switch(a);
+        stereoSwitch.setText(R.string.stereo_room);
+        a.look.label(stereoSwitch);
+        a.look.switchTint(stereoSwitch);
+        stereoSwitch.setSwitchPadding(a.dp(16));
+        stereoSwitch.setMinHeight(a.dp(52));
+        stereoSwitch.setPadding(a.dp(4), a.dp(8), 0, 0);
+        stereoSwitch.setOnClickListener(v -> onStereoSwitch(stereoSwitch.isChecked()));
+        body.addView(stereoSwitch);
+        stereoStatus = new TextView(a);
+        a.look.hint(stereoStatus);
+        stereoStatus.setPadding(a.dp(4), 0, 0, 0);
+        body.addView(stereoStatus);
+        LinearLayout row = a.newButtonRow(body);
+        stereoCheck = a.addButton(row, R.string.stereo_check_again, this::measureStereo);
+        updateStereo();
+    }
+
+    private void onStereoSwitch(boolean on) {
+        if (on && a.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            a.toast(R.string.stereo_needs_mic);
+            updateStereo();
+            return;
+        }
+        AudioSettings.setStereoRoom(a, on);
+        if (on && AudioSettings.stereoChoice(a) == null) {
+            measureStereo();   // the first time: find out what this phone's mics give
+            return;
+        }
+        restartIfRunning();
+        updateStereo();
+    }
+
+    /**
+     * Listens to the room in each way of opening the mic (about 8 s, StereoCalibration). The mic can't be in two
+     * places, so a playing sound stops for it and starts again after.
+     */
+    private void measureStereo() {
+        if (stereoMeasuring) {
+            return;
+        }
+        stereoMeasuring = true;
+        updateStereo();
+        boolean wasRunning = AudioService.isRunning();
+        if (wasRunning) {
+            a.startService(new Intent(a, AudioService.class).setAction(AudioService.ACTION_STOP));
+        }
+        stereoStatus.postDelayed(() -> StereoCalibration.run(choice -> {
+            AudioSettings.setStereoChoice(a, choice);
+            if (!choice.stereo()) {
+                AudioSettings.setStereoRoom(a, false);
+            }
+            stereoMeasuring = false;
+            if (wasRunning) {
+                a.startAudio();
+            }
+            updateStereo();
+        }), wasRunning ? 600 : 0);   // (the stopped engine lets go of the mic first)
+    }
+
+    private void restartIfRunning() {
+        if (AudioService.isRunning()) {   // the mic is opened when the engine starts
+            a.startForegroundService(new Intent(a, AudioService.class).setAction(AudioService.ACTION_RESTART));
+        }
+    }
+
+    void updateStereo() {
+        if (stereoSwitch == null) {
+            return;
+        }
+        StereoRoom.Choice choice = AudioSettings.stereoChoice(a);
+        stereoSwitch.setChecked(AudioSettings.stereoRoom(a));
+        stereoSwitch.setEnabled(!stereoMeasuring);
+        stereoCheck.setEnabled(!stereoMeasuring);
+        ((View) stereoCheck.getParent()).setVisibility(choice != null && !stereoMeasuring ? View.VISIBLE : View.GONE);
+        String text;
+        if (stereoMeasuring) {
+            text = a.getString(R.string.stereo_measuring);
+        } else if (choice == null) {
+            text = a.getString(R.string.stereo_unmeasured);
+        } else if (!choice.stereo()) {
+            text = a.getString(R.string.stereo_mono_only);
+        } else {
+            int mode = choice.preset == StereoRoom.UNPROCESSED ? R.string.stereo_mode_unprocessed
+                    : choice.preset == StereoRoom.CAMCORDER ? R.string.stereo_mode_camcorder : R.string.stereo_mode_mic;
+            text = a.getString(R.string.stereo_found, a.getString(mode), Math.round(choice.trimDb));
+            if (AudioSettings.stereoRoom(a) && !AudioDevices.isPhoneMic(a, AudioDevices.find(a, true))) {
+                text += "\n" + a.getString(R.string.stereo_phone_mic_only);
+            }
+        }
+        stereoStatus.setText(text);
     }
 
     /** An audio device choice: a tile (its name small, the device large) that opens a list sheet of devices. */
@@ -129,6 +232,7 @@ final class DevicesUi {
                 value.setText(picker.names[i]);
                 AudioSettings.setDeviceKey(a, picker.input, key);
                 updateMicHint();
+                updateStereo();   // (the room in stereo only takes the phone's own mic)
                 if (AudioService.isRunning()) {
                     a.startForegroundService(new Intent(a, AudioService.class)
                             .setAction(AudioService.ACTION_RESTART));
@@ -144,6 +248,7 @@ final class DevicesUi {
         fillPicker(inputPicker);
         fillPicker(outputPicker);
         updateMicHint();
+        updateStereo();   // (the room in stereo only takes the phone's own mic)
     }
 
     private void fillPicker(DevicePicker picker) {
@@ -205,6 +310,9 @@ final class DevicesUi {
                 : a.getString(R.string.diag_mic_unknown, asked != null ? asked : a.getString(R.string.diag_automatic)));
         if (AudioService.callModeMic()) {
             lines.add("  " + a.getString(R.string.diag_call_mode));
+        }
+        if (AudioService.isStereo()) {
+            lines.add("  " + a.getString(R.string.diag_stereo));
         }
         int hz = AudioService.actualSampleRateHz();
         String out = AudioService.outputLabel() != null ? AudioService.outputLabel() : "?";

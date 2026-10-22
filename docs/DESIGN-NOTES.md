@@ -991,6 +991,29 @@ to date in the same commit when behaviour changes.
   1.000, 0 dB apart), at -56 and -49 dB. MIC gives two mics but in partly opposite phase (correlation -0.16, sides
   -7 to +9 dB), CAMCORDER two mics naturally (+0.38, -10 to +9 dB); both about 25 dB hotter (-31 dB: gain or AGC
   in the phone's processing). So the room in stereo needs the Camcorder preset, which pd-core can't set yet.
+- **Room in Stereo** (Oct 22, DadCraft's idea; Setup, Audio Devices; off by default, `AudioSettings`, not in presets:
+  it depends on the phone). DadCraft: "the experience should be universal", so nothing is fixed to his phone:
+  which way of opening the mic gives two mics, and how loud it is, is up to the phone maker (Android's rules pin
+  down only VoiceRecognition and Unprocessed). `StereoCalibration` measures each phone the first time the switch
+  goes on (and on Check Again): 2 s of the room per preset, mono VoiceRecognition first as the reference level,
+  then Unprocessed, Camcorder, Mic in stereo; levels and how alike the sides are, nothing stored.
+  `StereoRoom.choose` takes the first that opened in stereo, isn't one mic on both sides (identical samples) and
+  isn't partly opposite (correlation >= 0), trimmed to the reference's level (-40..+6 dB); none: "mono only" and
+  the switch goes off. On the Moto (a quiet room): Camcorder, -10.6 dB (the 25 dB from the taps was rough).
+  `AudioService.openAudio` opens 2 inputs with that preset (pd-core 1.4.2-pdscenes.2's `PdAudio.setInputPreset`)
+  only for the built-in effects and the phone's own mic (`AudioDevices.isPhoneMic`: a headset or USB mic stays
+  mono); if `audioRuntimeInfo("inputChannels")` isn't 2 it reopens in mono (event log). The patch
+  (`add_stereo_in`/`add_stereo_out`) works in mid and side: the mid (L+R)/2 x trim feeds everything as the one
+  mic did; the side (L-R)/2 x trim takes the same gain, gate, compressor, pocket hush and Dry, times
+  `stereo_plain` (the app's `StereoRoom.plain`: the product of 1 - amount over Sing in Key, vocoder, ring, pitch,
+  crusher, distortion, filter, so a reshaped room narrows to mono with them), and joins the ears after the
+  spatial stage: left + side, right - side. Delayed like the mid (1.5 ms, the spatial stage; a delay line read
+  before its write can't go under one block, so it clamps rather than adds; Smooth distortion turned up adds 16
+  samples: `st_extra`). Off: st_r 0, st_mid 1, st_side 0, so the sound is the left channel as before, sample for
+  sample. Tests: test_patch "stereo room" (off unchanged by a second mic; one mic on both sides = off; a click
+  only the left mic hears is in the left ear alone, right < 0.5e-3; the right mic's in the right; plain 0 = both
+  ears alike; trim; the gate shuts the side; Smooth's 16 samples), Java Y (the choice, the patch values, plain,
+  the delay). Diagnostics says "Room in stereo: the phone's two mics" while it plays.
 - **Calls and other audio** (DadCraft's rule): the app never requests audio focus (Start must not pause the user's music).
   `AudioService.checkForCall` reads the audio mode every 0.5 s: call/ringing/VoIP -> `computeAudio(false)` until it ends
   (MODE_IN_COMMUNICATION is ignored while our own Bluetooth mic set it). An `AudioPlaybackCallback` counts the listed players

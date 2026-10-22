@@ -77,7 +77,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl", "kpad_run", "kbass_run"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "kit_mel", "kit_bass", "kit_pad", "kit_drums", "kit_bass_new", "kit_pad_new", "kit2_mel", "kit2_bass", "kit2_pad", "kit2_drums", "kit2_bass_new", "kit2_pad_new", "drum_kick", "drum_snare", "voc_ctl", "kpad_run", "kbass_run", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2866,6 +2866,53 @@ check(all(on > 0.002 and off < 0.05 * on for on, off in res.values()),
 # ...and only that part: the walking notes' trim leaves the chimes alone
 ch_on = mix_part("mix_walk", 0, cl6, 0, music_on=1, music_arp=1, music_react=1)
 check(abs(ch_on / res["chimes"][0] - 1) < 0.25, "mix: the walking notes at 0 leave the chimes as they were (%.4f vs %.4f)" % (ch_on, res["chimes"][0]))
+
+# ---- 7z. stereo room: the phone's two mics as left and right (mid and side), off exactly as before ----
+def fresh_st(on, trim=1.0, plain=1.0, **over):
+    """An engine with the phone's two mics (in_channels=2), the switch on or off as the app sends it."""
+    e = Engine(LIB, PATCH, in_channels=2)
+    b = dict(gain=1, dry=1, echo_on=1, echo_time=350, feedback=0.4, wet=0, smooth=30, gate_thresh=-80, comp_thresh=0,
+             space_on=1, space_pan=0, space_shift=0, music_on=0, beat_level=0)
+    b.update(over)
+    for k, v in b.items():
+        e.send(k, v)
+    for k, v in (("st_r", 1 if on else 0), ("st_mid", trim / 2 if on else 1), ("st_side", trim / 2 if on else 0),
+                 ("stereo_plain", plain), ("st_extra", 0)):
+        e.send(k, v)
+    e.run(np.zeros((SR // 2, 2), np.float32))
+    return e
+
+rng = np.random.default_rng(22)
+lmic = (rng.standard_normal(SR) * 0.05).astype(np.float32)
+rmic = (rng.standard_normal(SR) * 0.05).astype(np.float32)
+y_mono = fresh_st(False).run(np.stack([lmic, np.zeros_like(lmic)], 1))
+y_off = fresh_st(False).run(np.stack([lmic, rmic], 1))
+check(np.array_equal(y_off, y_mono), "stereo: off, a second mic changes nothing, sample for sample (max diff %.2e)"
+      % float(np.abs(y_off - y_mono).max()))
+y_same = fresh_st(True).run(np.stack([lmic, lmic], 1))
+check(np.abs(y_same - y_mono).max() < 1e-6, "stereo: on with one mic on both sides (a phone that gives mono) sounds as off (max diff %.2e)"
+      % float(np.abs(y_same - y_mono).max()))
+imp = np.zeros((SR // 4, 2), np.float32); imp[1000, 0] = 0.5
+y = fresh_st(True).run(imp)
+pl, pr = float(np.abs(y[:, 0]).max()), float(np.abs(y[:, 1]).max())
+check(pl > 0.45 and pr < 0.5e-3, "stereo: a click only the left mic hears is in the left ear alone (left %.3f, right %.5f)" % (pl, pr))
+y = fresh_st(True).run(imp[:, ::-1].copy())
+pl, pr = float(np.abs(y[:, 0]).max()), float(np.abs(y[:, 1]).max())
+check(pr > 0.45 and pl < 0.5e-3, "stereo: ...and the right mic's in the right ear (left %.5f, right %.3f)" % (pl, pr))
+y = fresh_st(True, plain=0).run(imp)
+check(np.abs(y[:, 0] - y[:, 1]).max() < 1e-6, "stereo: nothing of the room left plain (effects took over): both ears alike")
+y = fresh_st(True, trim=0.1).run(imp)
+check(abs(float(np.abs(y[:, 0]).max()) - 0.05) < 0.005, "stereo: the trim scales the room (0.1: left %.4f of 0.05)" % float(np.abs(y[:, 0]).max()))
+y = fresh_st(True, gate_thresh=-20).run(np.stack([lmic * 0.01, np.zeros_like(lmic)], 1))
+check(rms(y[SR // 2:]) < 1e-5, "stereo: the gate shuts the side with the mid (rms %.2e)" % rms(y[SR // 2:]))
+# (half the room plain: the right ear keeps half the mid, 0.0125, once the side lines up; out of line, the mid's
+# 0.025 and the side's -0.0125 land 16 samples apart)
+y = fresh_st(True, plain=0.5, dist_quality=1, dist_mix=0.5, dist_drive=1).run(imp * 0.1)
+e = fresh_st(True, plain=0.5, dist_quality=1, dist_mix=0.5, dist_drive=1); e.send("st_extra", 16); e.run(np.zeros((SR // 4, 2), np.float32))
+y16 = e.run(imp * 0.1)
+check(float(np.abs(y16[:, 1]).max()) < 0.6 * float(np.abs(y[:, 1]).max()),
+      "stereo: Smooth distortion's 16 samples (st_extra) keep the side lined up (right ear %.5f, without %.5f)"
+      % (float(np.abs(y16[:, 1]).max()), float(np.abs(y[:, 1]).max())))
 
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)

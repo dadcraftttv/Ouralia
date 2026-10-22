@@ -33,15 +33,15 @@ MainActivity was.
 key (the build picks it up from ~/.gradle) and turns on Play App Signing; the Play Console forms (foreground
 services, Data safety, store listing) from the drafts there.
 
-**Phone checks waiting on DadCraft:** call pause and ducking (14), the pocket shaping (15), the found-sound rhythm
+**Phone checks waiting on DadCraft:** Room in Stereo by ear (built Oct 22, DESIGN-NOTES "Room in Stereo"); the forks'
+new commits (libpd 6bd916f, pd-for-android c5c2ec0) to push with the next push; call pause and ducking (14), the pocket shaping (15), the found-sound rhythm
 walk (16), wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt timing, the found
 bass pulled far down.
 
 **Sound and music ideas (each behind a switch, the old sound the default):** dcs_listen~ (what kind of room), then
 auto-key from the room (22), dcs_dewind~, dcs_grain~ (18); a shimmer mode for the reverb (18); more drum hits, a
 moments part, kits for Harmony and Room notes, a second melody (20); glitch phase 2's per-slice filter, lanes and a
-chance per kind (5b); the room in stereo: open the phone's built-in mic in stereo (bottom and back as left and right,
-where the phone does that) for a wider dry room, behind a switch (DadCraft, Oct 22); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps".
+chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps".
 
 **App ideas (item 22):** sleep fade, tap tempo, a home-screen widget, MIDI in (much later); a simple walk-mode
 screen (14 UI); the Bluetooth hint on the input picker itself (Diagnostics already shows call mode).

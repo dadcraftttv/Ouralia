@@ -210,6 +210,24 @@ final class AudioDevices {
         return d == null ? DEFAULT_ID : d.id;
     }
 
+    /**
+     * True when the sound will come from the phone's own mics: one of them chosen, or Automatic with no headset or
+     * USB mic plugged in (Android would pick that). The room in stereo only opens the phone's mics in stereo.
+     */
+    static boolean isPhoneMic(Context context, Device d) {
+        if (d != null) {
+            return d.type == AudioDeviceInfo.TYPE_BUILTIN_MIC;
+        }
+        for (AudioDeviceInfo i : context.getSystemService(AudioManager.class).getDevices(AudioManager.GET_DEVICES_INPUTS)) {
+            int t = i.getType();
+            if (t == AudioDeviceInfo.TYPE_WIRED_HEADSET || t == AudioDeviceInfo.TYPE_USB_HEADSET
+                    || t == AudioDeviceInfo.TYPE_USB_DEVICE || t == AudioDeviceInfo.TYPE_USB_ACCESSORY) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** True for Bluetooth hands-free/LE headsets, which need a call-mode route to deliver mic audio. */
     static boolean isBluetoothMic(Device d) {
         if (d == null) {

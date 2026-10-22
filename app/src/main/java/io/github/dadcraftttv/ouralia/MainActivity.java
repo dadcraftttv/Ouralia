@@ -1181,7 +1181,7 @@ public class MainActivity extends Activity {
         startAudio();
     }
 
-    private void startAudio() {
+    void startAudio() {
         startForegroundService(
                 new Intent(this, AudioService.class).setAction(AudioService.ACTION_START));
     }
