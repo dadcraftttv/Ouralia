@@ -25,9 +25,9 @@ Order (DadCraft, Oct 22): the reviews' release and code-health points first, Mai
 
 **Before advertising rc5 (item 22):** GitHub repo topics, maybe a short demo GIF.
 
-**Code health (item 22):** a long session on the phone (30-60 min: dropouts, CPU, battery, heat) and a cost per
-feature, so new sounds land with a known CPU price. Maybe later: split DESIGN-NOTES and make_patch.py the way
-MainActivity was.
+**Code health (item 22):** a cost per feature, so new sounds land with a known CPU price (the health line's CPU,
+a feature on and off; DadCraft's phone). (The long session: done Oct 22. DESIGN-NOTES and make_patch.py split the way
+MainActivity was: BUILT Oct 22, docs/design/ and tools/patchgen/.)
 
 **Release to Play (release prep, item 14 Release; steps and drafts in docs/RELEASING.md):** DadCraft makes the release
 key (the build picks it up from ~/.gradle) and turns on Play App Signing; the Play Console forms (foreground
