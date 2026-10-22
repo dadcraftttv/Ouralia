@@ -23,8 +23,7 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
-**Before advertising rc5 (item 22):** fresh README screenshots (all three still say "PdScenes"; after MainActivity's
-split), GitHub repo topics, maybe a short demo GIF.
+**Before advertising rc5 (item 22):** GitHub repo topics, maybe a short demo GIF.
 
 **Code health (item 22):** a long session on the phone (30-60 min: dropouts, CPU, battery, heat) and a cost per
 feature, so new sounds land with a known CPU price. Maybe later: split DESIGN-NOTES and make_patch.py the way
@@ -308,7 +307,7 @@ microphone declarations, store listing.
     - *Built (Oct 22):* PRIVACY.md and About's source link; MainActivity split into ten feature classes (3,753 ->
       1,237 lines, DESIGN-NOTES "MainActivity's split"); motif and answer notes dropped after a restart, not only
       after Stop; `tools/test_release.py` (permissions, backup, name; both test tiers); CI building the app and
-      running the quick tests (`.github/workflows/tests.yml`); CONTRIBUTING.md; an issue template.
+      running the quick tests (`.github/workflows/tests.yml`); CONTRIBUTING.md; an issue template; fresh README screenshots (Ouralia, The Band).
 
 ## Compatibility and scene findings (PdParty, rjlib PDF, composer pack)
 
