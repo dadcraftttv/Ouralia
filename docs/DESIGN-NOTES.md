@@ -1014,6 +1014,10 @@ to date in the same commit when behaviour changes.
   only the left mic hears is in the left ear alone, right < 0.5e-3; the right mic's in the right; plain 0 = both
   ears alike; trim; the gate shuts the side; Smooth's 16 samples), Java Y (the choice, the patch values, plain,
   the delay). Diagnostics says "Room in stereo: the phone's two mics" while it plays.
+  **DadCraft's verdict (Oct 22, by ear):** "i can definately hear the back mic on the left and the bottom mic on the
+  right"; effects kicking in feel more centred; the room sounds as before, just in stereo; "i like it, and it
+  should be an option for phones that support it, not default. that way the experience can remain as close to
+  universal as possible." Stays off by default.
 - **Calls and other audio** (DadCraft's rule): the app never requests audio focus (Start must not pause the user's music).
   `AudioService.checkForCall` reads the audio mode every 0.5 s: call/ringing/VoIP -> `computeAudio(false)` until it ends
   (MODE_IN_COMMUNICATION is ignored while our own Bluetooth mic set it). An `AudioPlaybackCallback` counts the listed players

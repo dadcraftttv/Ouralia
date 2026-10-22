@@ -74,7 +74,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   key, ~/Downloads/Ouralia-0.9.0-rc5.1.apk; GitHub pre-releases v0.9.0-rc5 and v0.9.0-rc5.1, not advertised until
   GitHub purges the old commits. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 15.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
-  Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
+  Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Room in Stereo (Oct 22): DadCraft likes it,
+  an option for phones that support it, never the default ("as close to universal as possible"). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
 - **Plan (DadCraft, Oct 21):** rc5 = the first public beta, renamed to Ouralia, posted under GitHub Releases but not
   advertised until GitHub purges the old commits. The rename is done (Oct 21); the found-sound rhythm section (ROADMAP 16) was
