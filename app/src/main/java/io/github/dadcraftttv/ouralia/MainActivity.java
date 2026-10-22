@@ -92,6 +92,8 @@ public class MainActivity extends Activity {
     private int currentTab = -1;
     /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
     Styler look;
+    /** The Realms tab (RealmsUi.java). */
+    final RealmsUi realmsUi = new RealmsUi(this);
     /** Pick-one settings (ChoiceUi.java). */
     private final ChoiceUi choiceUi = new ChoiceUi(this);
     /** Setup's Appearance card (AppearanceUi.java). */
@@ -105,20 +107,6 @@ public class MainActivity extends Activity {
     /** The Scenes tab (SceneUi.java). */
     private final SceneUi sceneUi = new SceneUi(this);
     LinearLayout xyPadSlot;          // where the pad sits on the Sound tab (an XY pad for the movers)
-    /** One dropdown per automatic world, and the line saying which one is playing. */
-    private final List<WorldRow> worldRows = new ArrayList<>();
-    private TextView worldStatus;
-
-    private static final class WorldRow {
-        final Worlds.World world;
-        final TextView value;   // the preset's name on the Realm's tile
-        List<String> presets = new ArrayList<>();
-
-        WorldRow(Worlds.World world, TextView value) {
-            this.world = world;
-            this.value = value;
-        }
-    }
 
     /** One on-screen control: a slider with a label, or a switch (for toggles). */
     private static final class MoverUi {
@@ -368,7 +356,7 @@ public class MainActivity extends Activity {
 
         // ---- Realms ----
         Worlds.load(this);
-        addSection(realms, "worlds", getString(R.string.section_worlds), true, this::fillWorldsSection);
+        addSection(realms, "worlds", getString(R.string.section_worlds), true, realmsUi::fillWorldsSection);
 
         // ---- the sections, each on its tab ----
         for (Params.Section section : Params.SECTIONS) {
@@ -998,12 +986,12 @@ public class MainActivity extends Activity {
         AudioService.setStateListener(this::updateUi);
         Worlds.load(this);
         Worlds.setListener(() -> {
-            updateWorldStatus();
+            realmsUi.updateWorldStatus();
             updateIntensityRow();   // the player's line names the Realm
             refreshRows();   // sliders move on their own while a world fades in
         });
-        refreshWorldRows();
-        updateWorldStatus();
+        realmsUi.refreshWorldRows();
+        realmsUi.updateWorldStatus();
         uiHandler.post(nowLineTick);
         audioManager.registerAudioDeviceCallback(deviceCallback, null);
         refreshDevicePickers();
@@ -1395,192 +1383,6 @@ public class MainActivity extends Activity {
             e.getValue().setText(u > 100 ? getString(R.string.glitch_budget_over, u)
                     : getString(R.string.glitch_budget, u, 100 - u));
         }
-    }
-
-    /** The Worlds section: an on/off switch, what is playing now, and which preset each world uses. */
-    private void fillWorldsSection(LinearLayout body) {
-        Switch auto = new Switch(this);
-        auto.setText(R.string.worlds_auto);
-        look.label(auto);
-        look.switchTint(auto);
-        auto.setSwitchPadding(dp(16));
-        auto.setMinHeight(dp(52));
-        auto.setChecked(Worlds.isEnabled());
-        auto.setOnClickListener(v -> {
-            if (!auto.isChecked()) {
-                Worlds.setEnabled(false);
-                updateWorldStatus();
-                return;
-            }
-            // DadCraft: before Realms take over, say that they change the user's own settings (the mix too)
-            auto.setChecked(false);
-            new LookDialog()
-                    .setTitle(R.string.realms_warn_title)
-                    .setMessage(R.string.realms_warn_text)
-                    .setPositiveButton(R.string.realms_warn_ok, (d, w) -> {
-                        auto.setChecked(true);
-                        Worlds.setEnabled(true);
-                        updateWorldStatus();
-                    })
-                    .setNegativeButton(android.R.string.cancel, null)
-                    .show();
-        });
-        body.addView(auto);
-
-        worldStatus = new TextView(this);
-        look.hint(worldStatus);
-        worldStatus.setPadding(0, dp(2), 0, dp(6));
-        body.addView(worldStatus);
-
-        // each Realm: its name and when it plays, its preset on a tile (a list sheet), what it changes
-        for (Worlds.World w : Worlds.ALL) {
-            LinearLayout block = new LinearLayout(this);
-            block.setOrientation(LinearLayout.VERTICAL);
-            block.setPadding(0, dp(14), 0, 0);
-            LinearLayout head = new LinearLayout(this);
-            head.setOrientation(LinearLayout.HORIZONTAL);
-            head.setGravity(Gravity.CENTER_VERTICAL);
-            head.setPadding(dp(4), 0, dp(4), dp(8));
-            TextView name = new TextView(this);
-            name.setText(w.title);
-            look.label(name);
-            head.addView(name, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-            TextView when = new TextView(this);
-            when.setText(w.when);
-            look.hint(when);
-            head.addView(when);
-            block.addView(head);
-
-            LinearLayout tile = new LinearLayout(this);
-            tile.setOrientation(LinearLayout.VERTICAL);
-            tile.setGravity(Gravity.CENTER_VERTICAL);
-            tile.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
-            tile.setMinimumHeight(dp(52));
-            tile.setPadding(dp(16), dp(8), dp(40), dp(8));
-            TextView value = new TextView(this);
-            value.setTypeface(look.heading());
-            value.setTextSize(15);
-            value.setTextColor(look.p.text);
-            value.setMaxLines(1);
-            value.setEllipsize(android.text.TextUtils.TruncateAt.END);
-            tile.addView(value);
-            tile.setContentDescription(getString(R.string.world_row, w.title, w.when));
-            WorldRow row = new WorldRow(w, value);
-            worldRows.add(row);
-            tile.setOnClickListener(v -> showRealmSheet(row));
-            block.addView(tile);
-            addRealmIngredients(block, w);
-            body.addView(block);
-        }
-        TextView note = new TextView(this);
-        note.setText(R.string.worlds_note);
-        look.hint(note);
-        note.setPadding(dp(4), dp(16), dp(4), 0);
-        body.addView(note);
-        refreshWorldRows();
-        updateWorldStatus();
-    }
-
-    /** A Realm's preset picker: Off, then every preset (built-in and yours), the chosen one ticked. */
-    private void showRealmSheet(WorldRow row) {
-        String[] names = new String[row.presets.size() + 1];
-        names[0] = getString(R.string.world_off);
-        for (int i = 0; i < row.presets.size(); i++) {
-            names[i + 1] = row.presets.get(i);
-        }
-        int chosen = row.presets.indexOf(Worlds.presetName(row.world.id)) + 1;
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.addView(sheetHeading(row.world.title, row.world.when));
-        addListRows(content, names, chosen, null, i -> {
-            Worlds.setPreset(row.world.id, i == 0 ? Worlds.NONE : row.presets.get(i - 1));
-            refreshWorldRows();
-            closeSheet();
-        });
-        openSheet(content);
-    }
-
-    /**
-     * A Realm's ingredients: "What it changes: everything" folds open to one switch per group (Rhythm, Music, Echo...).
-     * Off = the Realm leaves that group at your own settings.
-     */
-    private void addRealmIngredients(LinearLayout body, Worlds.World w) {
-        TextView summary = new TextView(this);
-        look.hint(summary);
-        summary.setGravity(Gravity.CENTER_VERTICAL);
-        summary.setMinHeight(dp(40));
-        summary.setPadding(dp(4), dp(4), dp(4), dp(4));
-        summary.setCompoundDrawablePadding(dp(6));
-        summary.setBackground(look.pressable(null, look.p.text, Look.RADIUS_TILE));
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(8), 0, 0, dp(4));
-        box.setVisibility(View.GONE);
-        Runnable update = () -> {
-            List<String> left = new ArrayList<>();
-            for (String[] g : Worlds.GROUPS) {
-                if (!Worlds.uses(w.id, g[0])) {
-                    left.add(g[1].replaceAll(" \\(.*\\)", ""));
-                }
-            }
-            String what = left.isEmpty() ? getString(R.string.realm_changes_all)
-                    : left.size() == Worlds.GROUPS.length ? getString(R.string.realm_changes_none)
-                    : getString(R.string.realm_changes_but, String.join(", ", left));
-            summary.setText(what);
-            boolean open = box.getVisibility() == View.VISIBLE;
-            android.graphics.drawable.Drawable chevron = getDrawable(open ? R.drawable.ic_chevron_up : R.drawable.ic_chevron_down).mutate();
-            chevron.setTint(look.p.muted);
-            chevron.setBounds(0, 0, dp(18), dp(18));
-            summary.setCompoundDrawablesRelative(null, null, chevron, null);
-        };
-        for (String[] g : Worlds.GROUPS) {
-            Switch c = new Switch(this);
-            c.setText(g[1]);
-            look.label(c);
-            c.setTextSize(Look.TEXT_HINT + 1);
-            look.switchTint(c);
-            c.setSwitchPadding(dp(16));
-            c.setMinHeight(dp(48));
-            c.setChecked(Worlds.uses(w.id, g[0]));
-            c.setOnCheckedChangeListener((b, on) -> {
-                Worlds.setUses(w.id, g[0], on);
-                update.run();
-            });
-            box.addView(c);
-        }
-        summary.setOnClickListener(v -> {
-            box.setVisibility(box.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
-            update.run();
-        });
-        update.run();
-        body.addView(summary);
-        body.addView(box);
-    }
-
-    /** Shows each Realm's preset on its tile (the list changes when you save or import a preset). */
-    void refreshWorldRows() {
-        List<String> presets = new ArrayList<>(PresetManager.builtInNames());
-        presets.addAll(PresetManager.userNames(this));
-        for (WorldRow row : worldRows) {
-            row.presets = presets;
-            String chosen = Worlds.presetName(row.world.id);
-            row.value.setText(presets.contains(chosen) ? chosen : getString(R.string.world_off));
-        }
-    }
-
-    private void updateWorldStatus() {
-        if (worldStatus == null) {
-            return;
-        }
-        String id = Worlds.currentWorld();
-        String name = getString(R.string.worlds_yours);
-        for (Worlds.World w : Worlds.ALL) {
-            if (w.id.equals(id)) {
-                name = w.title;
-            }
-        }
-        worldStatus.setText(!Worlds.isEnabled() ? getString(R.string.worlds_off_status)
-                : getString(R.string.worlds_now, name));
     }
 
     /** Each section header's chevron, by its title view. */
