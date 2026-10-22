@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.media.AudioManager;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -287,6 +288,9 @@ public class AudioService extends Service {
             if (now - lastXrunCheck >= XRUN_CHECK_MS) {
                 lastXrunCheck = now;
                 checkXruns();
+            }
+            if (now - lastHealthLog >= Health.EVERY_MS) {
+                logHealth(now);
             }
             lastMoverTick = now;
             handler.postDelayed(this, MOVER_INTERVAL_MS);
@@ -953,6 +957,8 @@ public class AudioService extends Service {
         xruns = 0;
         xrunsAtStart = -1;
         lastXrunCheck = 0;   // (the first check, at once, takes the count Oboe starts from)
+        lastHealthLog = 0;   // (a line at once: the battery at Start)
+        lastHealthCpuMs = -1;
         handler.postDelayed(moverTick, MOVER_INTERVAL_MS);
         notifyStateChanged();
         Log.i(TAG, "Audio started, asked for " + sampleRate + " Hz, got " + actualRate + " Hz");
@@ -963,6 +969,25 @@ public class AudioService extends Service {
     }
 
     // ---- dropouts: Oboe counts the times it couldn't keep up (an underrun is a click or gap you hear) ----
+    // ---- the health line (Health): battery, temperature, the app's CPU, once a minute while playing ----
+    private long lastHealthLog;   // uptimeMillis of the last line (0: write one at once, with the battery at Start)
+    private long lastHealthCpuMs = -1;
+
+    private void logHealth(long now) {
+        long cpu = android.os.Process.getElapsedCpuTime();
+        int cpuPct = lastHealthCpuMs < 0 ? -1 : Health.cpuPercent(cpu - lastHealthCpuMs, now - lastHealthLog);
+        lastHealthLog = now;
+        lastHealthCpuMs = cpu;
+        BatteryManager bm = getSystemService(BatteryManager.class);
+        int pct = bm != null ? bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) : -1;
+        Intent battery = registerReceiver(null, new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        boolean plugged = battery != null && battery.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0;
+        float tempC = battery != null ? battery.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) / 10f : -1;
+        String thermal = Build.VERSION.SDK_INT >= 29
+                ? Health.thermal(getSystemService(android.os.PowerManager.class).getCurrentThermalStatus()) : null;
+        logEvent(Health.line(pct, plugged, tempC, thermal, cpuPct, xruns));
+    }
+
     private static final long XRUN_CHECK_MS = 5000;
     private long lastXrunCheck;
     private static volatile int xruns;

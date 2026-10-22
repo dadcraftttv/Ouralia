@@ -40,8 +40,8 @@ bass pulled far down.
 **From the long session (Oct 22, DESIGN-NOTES Status log):** Clear Catches' verdict (DadCraft at 10.4 dB; default
 0); Tempo: should Set follow the steps more while walking (his was Set 99.8 BPM, the notes drifted against his
 pace), or is Auto the answer (his call); a muted game (Pokemon Go) still ducks the app (Android doesn't say an app
-is muted: skip games, or leave it); the app writes battery, temperature and its CPU into events.log every minute
-while playing (adb's logger dies unplugged; testers could send it with Send feedback).
+is muted: skip games, or leave it). (The app writing battery, temperature and its CPU into events.log every minute:
+BUILT Oct 22, DESIGN-NOTES "The health line".)
 
 **Room in Stereo and the room's levels (Oct 22):** the found kit now judges catches against the room's own
 background in stereo (BUILT Oct 22, DESIGN-NOTES "Clear Catches"; DadCraft to check catches come back with stereo

@@ -22,8 +22,9 @@ tracking, no crash reporting. Android's automatic backup is turned off for it to
 - **Your settings, presets, and any kits or scenes you import**, in the app's own storage. They stay on your phone
   and go only where you export them yourself.
 - **An event log** (`events.log`, at most about 128 KB, oldest lines dropped first). It holds no sound and no words:
-  only times, the room's loudness as numbers, the names of the headphones and mic in use, and what the app did
-  ("Phone went into a pocket", "Caught a snare"). It is there so problems can be found after a walk.
+  only times, the room's loudness as numbers, the names of the headphones and mic in use, what the app did
+  ("Phone went into a pocket", "Caught a snare"), and once a minute while playing the battery level, the phone's
+  temperature and how hard the app works the processor. It is there so problems can be found after a walk.
 
 Uninstalling the app deletes all of it.
 

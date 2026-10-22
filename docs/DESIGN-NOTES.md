@@ -1001,6 +1001,14 @@ to date in the same commit when behaviour changes.
   (`AudioDevices.inputInUse`, from this app's own `getActiveRecordingConfigurations`), call-mode note, output label +
   rate, mic level (after gain) with a bar and the gate, episode counts. The status line says "Mic overloading" while
   the input warning is on (only the mic's own overload: Input gain can't cause real clipping, it is applied in float).
+- **The health line** (Oct 22, from DadCraft's long session: `tools/session_log.sh` dies when the cable comes out, so
+  that session was rebuilt from batterystats): while the sound plays, AudioService writes to events.log at Start and
+  then every minute (`Health.EVERY_MS`, from the movers' tick) "Health: battery 73% unplugged, 31.2 C, thermal none,
+  app CPU 48% of a core, dropouts 0": `BatteryManager` capacity, the sticky ACTION_BATTERY_CHANGED's plugged and
+  temperature (the battery's), `PowerManager.getCurrentThermalStatus` (Android 10+), the app's whole process CPU
+  over the minute (`Process.getElapsedCpuTime`, 100 = one core; the Start line has none) and dropouts since Start.
+  No permission needed; PRIVACY.md says so. ~90 bytes a minute. Testers' Send feedback carries it. A cost per
+  feature: compare the CPU lines with a feature on and off. Test: javatests K.
   Event log: "Mic overloading", "Mic overloaded for a moment" (at most every 10 s), "Output limiter working hard".
   Dropouts (Oct 22, for the long session): every 5 s `AudioService.checkXruns` reads Oboe's count
   (`audioRuntimeInfo("xRuns")`), counted from Start; new ones go in the event log ("Audio dropouts: +N (T since
