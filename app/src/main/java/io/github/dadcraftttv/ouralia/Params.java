@@ -177,6 +177,12 @@ final class Params {
             new Param("rhythm_src", "Beat Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth drums", "Found sounds (made from what the mic hears)", "Both")
                     .inSection("beat"),
+            // Clear Catches (Oct 22, DadCraft's long session: found sounds "grainy, crackling"): a faint catch is
+            // levelled up to a drum's loudness with the room's hiss under it, so only catches this far above the room's
+            // background are kept. A slider (DadCraft: at 30 dB "a bit too well", a hello at arm's length went
+            // uncaught): 0 = off, as before. New sound: off by default until DadCraft's ears say.
+            new Param("fs_clean", "Clear Catches (how far above the room a sound must be, 0 = off)", 0f, 30f, 0f, " dB",
+                    Param.Curve.LINEAR).inSection("beat"),
             new Param("beat_level", "Beat Level (0 = off)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("beat").rand(0f, 0.7f).resetWhenAbsent(),
             new Param("beat_pitch", "Kick Drum Pitch", 40f, 120f, 55f, " Hz", Param.Curve.LOG)
@@ -608,7 +614,7 @@ final class Params {
      * the sound", so it loads exactly as meant), but a Realm never changes them, a built-in preset says nothing about
      * them, and a preset made before keeps what you have (none is resetWhenAbsent).
      */
-    static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src",
+    static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
             "music_on", "music_var", "chord_color", "mel_dev", "pat_gen", "walk_ease", "band_plays", "music_drift",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
             "melody_src", "mel_rhythm", "mel_phrase", "fm_ring", "res_src", "harm_src", "harm_tracker");

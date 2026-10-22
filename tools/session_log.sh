@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
-# A long listening session, logged on the phone itself, so it can walk unplugged (ROADMAP 22: dropouts, CPU,
-# battery, heat). No root: a shell script in /data/local/tmp samples every 30 s, and logcat keeps the app's own lines
-# (AudioService: its event log, dropouts included). Plug in again for the report.
-#   tools/session_log.sh start     start logging (plugged in), then unplug and listen
+# A long listening session, logged on the phone (ROADMAP 22: dropouts, CPU, battery, heat). No root: a shell script in
+# /data/local/tmp samples every 30 s, and logcat keeps the app's own lines (AudioService: its event log, dropouts
+# included). PLUGGED IN ONLY: Android ends adb's processes when the cable comes out (Oct 22, setsid or not); for an
+# unplugged session use `adb shell dumpsys batterystats --history` and the app's events.log (DESIGN-NOTES Diagnostics).
+#   tools/session_log.sh start     start logging
 #   tools/session_log.sh stop      stop it (plugged in again)
 #   tools/session_log.sh report    copy the logs here (tools/.session/) and summarise them
 set -euo pipefail
@@ -31,13 +32,13 @@ while true; do
   sleep 30
 done
 EOF
-    # (setsid: the script lives on after the adb session ends and the cable comes out; nohup alone didn't)
+    # (setsid: the script lives on after this adb command ends; nohup alone didn't. Not after unplugging.)
     $ADB shell "setsid sh $D/sample.sh < /dev/null > /dev/null 2>&1 &"
     for _ in 1 2 3 4 5; do
         $ADB shell "cat $D/samples.txt 2>/dev/null" && break
         sleep 1
     done
-    echo "Logging. Unplug and listen; plug in again and run: tools/session_log.sh stop, then report"
+    echo "Logging (stay plugged in: unplugging ends it). Then: tools/session_log.sh stop, then report"
     ;;
 stop)
     # (-9: the shell only takes a plain kill once its 30 s sleep ends)

@@ -385,6 +385,7 @@ A beat that plays along with you. It used to be called "Walking beat", but it no
 **Drums made from the room ("Beat sounds").**
 
 - **Beat sounds:** **Found sounds** (the default), **Synth drums** or **Both**.
+- **Clear Catches** (0 = off at first, up to 30 dB): keeps only found sounds that were at least that far above the room's own background. Try around 20. Faint catches get turned up to drum loudness, and the room's hiss comes up with them, which sounds grainy. With it on, the kit holds on to its clean catches instead; in a very quiet room it may catch less. Tell Dad which you prefer.
 - With Found sounds, each sudden sound the phone hears (a clap, a knock, a snap, a footstep, a door) is caught as a short snippet and filed as a kick (mostly low), a hat (mostly bright) or a snare (everything else). The kit keeps the latest five of each. Your very first catch already turns the whole kit into found sounds; until then a quiet synth beat keeps time.
 - Every hit is a little different: slightly higher or lower, softer or harder, sometimes with a softer start. About one hit in twenty plays backwards or at half speed, as a small surprise.
 - A snap right at the microphone can overload it into a loud low pop; those are recognized and not kept. Nothing is caught while the phone is in a pocket, so cloth rustle stays out of the kit.

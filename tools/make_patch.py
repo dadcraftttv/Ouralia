@@ -41,7 +41,7 @@ DEFAULTS = [
     ("phaser_on", 1), ("phaser_mix", 0), ("phaser_rate", 0.4), ("phaser_depth", 0.7), ("phaser_fb", 0.4),
     ("beat_on", 1), ("beat_level", 0), ("beat_hats", 0.5), ("beat_snare", 0.6), ("beat_pitch", 55),
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
-    ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
+    ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("fs_clean", 0), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
     ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 0), ("walk_ease", 1), ("band_plays", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
@@ -263,6 +263,10 @@ FP_GAIN = 0.075                    # per chord voice (the synth pad's oscillator
 FB_GAIN = 2.8                     # the found bass against the synth bass's (1 + 0.35 + 0.15) oscillators
 FS_POP_DB = 94                    # louder than this (-6 dBFS) and mostly lows: a mic pop, not kept
 FS_MIN_DB = 55                     # quieter than this (-45 dBFS at its loudest) is not worth keeping
+FS_FLOOR_RISE = 0.02               # (its floor creeps up this many dB a reading: 0.6 dB a second)
+# Clear Catches (fs_clean, dB, 0 = off): a catch is kept only that far above the room's quiet floor (fsfloor): it is
+# levelled to a drum's loudness, its background with it (Oct 22: a -40 dBFS thump over -66 dBFS hiss came out with
+# 22 dB more grain than a loud one)
 FS_RMS_TARGET = 0.3                # a slice's loudest 10 ms is brought no higher than this (a clipped snap was a boom)
 FS_LOUD_DB = 65                   # a room louder than this (-35 dBFS on average)...
 FS_ONSET_LOUD_DB = 6               # ...needs only this jump for a catch (else GC_ONSET_DB, 10)
@@ -889,7 +893,17 @@ def add_found_kit(P, x):
     # a mic pop: louder than FS_POP_DB and carried by its lows (a snap at the mic overloads it into a low thump; on
     # the phone +8 dBFS with all its weight below 150 Hz, where real knocks were -16 to -42) is not kept
     # (and a slice spoilt by handling, a jolt near its start, is dropped and reported as 4)
-    ex("fs_role", f"if($f1<{FS_MIN_DB},-1,if(fs_jv>0,-3,if($f1>{FS_POP_DB}&&$f2-$f1>-6,-2,if($f2-$f1>-6,0,if($f3-$f1>-6&&$f2-$f1<-15,2,1)))))", x + 400, y + 220)
+    P.obj("fs_clean_r", "r fs_clean", x + 560, y + 190); P.obj("fs_clean_v", "value fsclean", x + 560, y + 205)
+    P.c("fs_clean_r", "fs_clean_v")
+    # the room's background for Clear Catches: the mic level's quietest lately (down at once, up FS_FLOOR_RISE dB a
+    # reading, 30 readings a second); readings under 20 (-80 dBFS: no sound yet, as at the start) don't count, so it
+    # can't sink to nothing and let every catch through (the music's own floor, mfloor, does that for minutes)
+    P.obj("fs_bg_r", "r mic_level", x + 660, y + 160)
+    ex("fs_bg_new", f"if($f1<20,fsfloor,min($f1,fsfloor+{FS_FLOOR_RISE}))", x + 660, y + 175)
+    P.obj("fs_bg_wr", "value fsfloor", x + 660, y + 190); P.c("fs_bg_r", "fs_bg_new"); P.c("fs_bg_new", "fs_bg_wr")
+    P.obj("fs_bg_lb", "loadbang", x + 760, y + 160); P.msg("fs_bg_40", "40", x + 760, y + 175)
+    P.obj("fs_bg_init", "value fsfloor", x + 760, y + 190); P.c("fs_bg_lb", "fs_bg_40"); P.c("fs_bg_40", "fs_bg_init")
+    ex("fs_role", f"if($f1<{FS_MIN_DB}||(fsclean>0&&$f1<fsfloor+fsclean),-1,if(fs_jv>0,-3,if($f1>{FS_POP_DB}&&$f2-$f1>-6,-2,if($f2-$f1>-6,0,if($f3-$f1>-6&&$f2-$f1<-15,2,1)))))", x + 400, y + 220)
     # inlets: $f1 overall (hot, last), $f2 lows, $f3 highs
     P.c("fs_d_t", "fs_max_hi", 2, 0); P.c("fs_max_hi", "fs_role", 0, 2)
     P.c("fs_d_t", "fs_max_lo", 2, 0); P.c("fs_max_lo", "fs_role", 0, 1)

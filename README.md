@@ -65,6 +65,7 @@ assistant.
 | [Roadmap](docs/ROADMAP.md) | Ideas, planned and built |
 | [Privacy](PRIVACY.md) | What the app does with the mic and everything else |
 | [Contributing](CONTRIBUTING.md) | Reporting a problem, sending a change, the rules the app keeps |
+| [Releasing](docs/RELEASING.md) | The steps for a release, the Play key, drafts for the Play forms |
 | [RjDj notes](docs/RJDJ-NOTES.md) | The RjDj scene format and what a player must provide |
 
 ## Building

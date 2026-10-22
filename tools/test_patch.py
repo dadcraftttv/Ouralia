@@ -1550,6 +1550,21 @@ e, y, caught = fs_catch([(1.0 + 0.6 * k, "k") for k in range(5)], 5.0)
 check(len(caught) == 5, "found sounds: every thump is caught (%d), the kit keeps the latest %d of them" % (len(caught), 5))
 _, _, none = fs_catch([], 4.0)
 check(not none, "found sounds: a quiet room catches nothing (%s)" % none)
+# Clear Catches (fs_clean, Oct 22): a faint catch, levelled up to a drum, brings the room's hiss with it (DadCraft:
+# "grainy, crackling"); with the switch on only catches well above the room's own background are kept
+def clear_catch(peak, hiss, clean):
+    x = (np.random.default_rng(3).standard_normal(6 * SR) * hiss).astype(np.float32)
+    k = np.arange(int(0.2 * SR)); th = (peak * np.sin(2 * np.pi * 150 * k / SR) * np.exp(-k / (0.05 * SR))).astype(np.float32)
+    for t in (3.0, 3.6, 4.2):
+        x[int(t * SR):int(t * SR) + len(th)] += th
+    e = fresh(dry=0, wet=0, beat_level=1, beat_follow=1, beat_when=1, rhythm_src=1, fs_clean=30 * clean); e.listen("fs_caught")
+    e.run(x); return len(e.heard["fs_caught"])
+cc = {(p, h, c): clear_catch(p, h, c) for p, h, c in ((0.01, 0.0005, 0), (0.01, 0.0005, 1), (0.03, 0.0005, 1),
+                                                      (0.03, 0.003, 1), (0.1, 0.003, 1))}
+check(cc[(0.01, 0.0005, 0)] == 3 and cc[(0.01, 0.0005, 1)] == 0 and cc[(0.03, 0.0005, 1)] == 3
+      and cc[(0.03, 0.003, 1)] == 0 and cc[(0.1, 0.003, 1)] == 3,
+      "found sounds: Clear Catches at 30 dB keeps only catches well above the room (-40 dBFS over -66 hiss: off %d, on %d; "
+      "-30 over -66: %d; -30 over -50: %d; -20 over -50: %d)" % tuple(cc.values()))
 def pocketed_catch():
     thump, clap, tick = fs_sounds()
     x = (np.random.default_rng(3).standard_normal(4 * SR) * 0.0005).astype(np.float32)
