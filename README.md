@@ -64,6 +64,7 @@ assistant.
 | [Design notes](docs/DESIGN-NOTES.md) | How every feature works and why: the project's long memory |
 | [Roadmap](docs/ROADMAP.md) | Ideas, planned and built |
 | [Privacy](PRIVACY.md) | What the app does with the mic and everything else |
+| [Contributing](CONTRIBUTING.md) | Reporting a problem, sending a change, the rules the app keeps |
 | [RjDj notes](docs/RJDJ-NOTES.md) | The RjDj scene format and what a player must provide |
 
 ## Building

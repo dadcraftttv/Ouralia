@@ -9,7 +9,7 @@ Gradle file and the dependencies' manifests, and every APK already built (debug,
 import glob, os, re, subprocess, sys, zipfile
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-SDK = os.path.expanduser("~/Android/Sdk")
+SDK = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT") or os.path.expanduser("~/Android/Sdk")
 # What the app asks for, and why, is in PRIVACY.md: a new permission means updating it (and this list).
 ALLOWED = {"RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS", "POST_NOTIFICATIONS", "FOREGROUND_SERVICE",
            "FOREGROUND_SERVICE_MICROPHONE", "FOREGROUND_SERVICE_MEDIA_PLAYBACK"}

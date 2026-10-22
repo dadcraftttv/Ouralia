@@ -24,14 +24,11 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
 **Before advertising rc5 (item 22):** fresh README screenshots (all three still say "PdScenes"; after MainActivity's
-split), GitHub repo topics, maybe a short demo GIF. (`PRIVACY.md` and the About screen's source link DONE Oct 22.)
+split), GitHub repo topics, maybe a short demo GIF.
 
-**Code health (item 22):** (MainActivity's split DONE Oct 22: 3,753 -> 1,237 lines,
-DESIGN-NOTES "MainActivity's split"; maybe later: split DESIGN-NOTES and make_patch.py the same way); (DONE Oct 22: motif and
-answer notes are dropped after a restart, not only after Stop; `tools/test_release.py` guards the permissions, backup
-and the name, in both test tiers); CI running the quick tests on push,
-CONTRIBUTING.md and an issue template; a long session on the phone (30-60 min: dropouts, CPU, battery, heat) and a
-cost per feature, so new sounds land with a known CPU price.
+**Code health (item 22):** a long session on the phone (30-60 min: dropouts, CPU, battery, heat) and a cost per
+feature, so new sounds land with a known CPU price. Maybe later: split DESIGN-NOTES and make_patch.py the way
+MainActivity was.
 
 **Release to Play (release prep, item 14 Release):** a release keystore (rcs use the debug key) and Play App Signing,
 R8 on with keep rules for the `PdAudio.setDevicesId` / `audioRuntimeInfo` reflection, a real notification icon
@@ -307,6 +304,10 @@ microphone declarations, store listing.
     - *Already shot down by DadCraft, so dropped:* twist = tape stop (tape stop removed Oct 10), bringing back Ratchet
       and Spray (pocketed Oct 19). Replacing libpd or the plain Views: none of them asked for it.
     - Out of date in the reviews: Grok gave the version as rc4 (it is rc5.1).
+    - *Built (Oct 22):* PRIVACY.md and About's source link; MainActivity split into ten feature classes (3,753 ->
+      1,237 lines, DESIGN-NOTES "MainActivity's split"); motif and answer notes dropped after a restart, not only
+      after Stop; `tools/test_release.py` (permissions, backup, name; both test tiers); CI building the app and
+      running the quick tests (`.github/workflows/tests.yml`); CONTRIBUTING.md; an issue template.
 
 ## Compatibility and scene findings (PdParty, rjlib PDF, composer pack)
 
