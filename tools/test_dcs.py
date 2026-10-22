@@ -463,6 +463,51 @@ r_mid, r_end = rms(y[4 * SR:6 * SR]), rms(y[22 * SR:24 * SR])
 check(np.abs(y).max() < 1.5 * np.abs(y0).max() and r_end < 0.5 * r_mid,
       f"shimmer 1 at the biggest room can't run away: peak {np.abs(y).max():.2f} ({np.abs(y0).max():.2f} without), the tail falls ({r_mid:.2g} at 4-6 s, {r_end:.2g} at 22-24 s)")
 
+# ---------------------------------------------------------------- dcs_dewind~
+print("dcs_dewind~:")
+dwp = patch("dewind", ["adc~ 1 2", "r c", "dcs_dewind~", "dac~"],
+            [(0, 0, 2, 0), (0, 1, 2, 1), (1, 0, 2, 0), (2, 0, 3, 0), (2, 1, 3, 1)])
+def dewound(mid, side=None, amount=1.0):
+    e = Engine(LIB, dwp, in_channels=2)
+    e.send_msg("c", "amount", amount)
+    x = np.stack([mid, side if side is not None else np.zeros_like(mid)], 1).astype(np.float32)
+    y = e.run(x); e.close(); return y
+def lowpassed(noise, hz):
+    a = 1 - np.exp(-2 * np.pi * hz / SR); y = np.zeros_like(noise); v = 0.0
+    for i, s in enumerate(noise):
+        v += a * (s - v); y[i] = v
+    return y
+T = 3 * SR; t = np.arange(T) / SR
+gust = 0.6 + 0.4 * np.sin(2 * np.pi * 0.7 * t)
+wind = (lowpassed(lowpassed(rng.standard_normal(T), 100), 100) * 2 * gust).astype(np.float32)   # (wind's rumble: ~12 dB an octave)
+wind2 = (lowpassed(lowpassed(rng.standard_normal(T), 100), 100) * 2 * gust).astype(np.float32)
+voice = sum(np.sin(2 * np.pi * 140 * k * t) / k for k in range(1, 25)).astype(np.float32) * 0.02
+tone = (0.01 * np.sin(2 * np.pi * 2000 * t)).astype(np.float32)   # (a gust ~18 dB over it)
+db = lambda a, b: 20 * np.log10(rms(a) / rms(b))
+y = dewound(wind + voice, wind2, amount=0)
+check(np.array_equal(y[:, 0], wind + voice) and np.array_equal(y[:, 1], wind2), "amount 0: mid and side come out untouched, sample for sample")
+S = slice(SR // 2, T)
+check(db(dewound(wind)[S, 0], wind[S]) < -15, f"wind alone: {db(dewound(wind)[S, 0], wind[S]):.1f} dB")
+check(abs(db(dewound(voice)[S, 0], voice[S])) < 1, f"a voice alone (140 Hz, harmonics to 3.4 kHz) is left alone: {db(dewound(voice)[S, 0], voice[S]):+.2f} dB")
+y = dewound(wind + tone)[S, 0]
+def at2k(z):
+    sp = np.abs(np.fft.rfft(z * np.hanning(len(z)))) ** 2; fr = np.fft.rfftfreq(len(z), 1 / SR)
+    return float(sp[(fr > 1980) & (fr < 2020)].sum())
+tone_db = 10 * np.log10(at2k(y) / at2k(tone[S]))
+check(abs(tone_db) < 1 and db(y, (wind + tone)[S]) < -12,
+      f"wind with a 2 kHz tone: the tone keeps its level ({tone_db:+.2f} dB), the whole falls {db(y, (wind + tone)[S]):.1f} dB")
+y = dewound(wind * 0.5, wind2)
+check(db(y[S, 1], wind2[S]) < -12, f"the side (two mics: wind differs at each) gets the cut too: {db(y[S, 1], wind2[S]):.1f} dB")
+male = sum(np.sin(2 * np.pi * 100 * k * t) / k ** 1.5 for k in range(1, 30)).astype(np.float32) * 0.02
+check(db(dewound(male)[S, 0], male[S]) > -3, f"a deep voice (100 Hz, a strong fundamental) loses little: {db(dewound(male)[S, 0], male[S]):+.2f} dB")
+bassline = sum(np.sin(2 * np.pi * 55 * k * t) / k ** 2 for k in range(1, 10)).astype(np.float32) * 0.2
+check(db(dewound(bassline)[S, 0], bassline[S]) > -3, f"a bass line (55 Hz) keeps its bass: {db(dewound(bassline)[S, 0], bassline[S]):+.2f} dB")
+room = (rng.standard_normal(T) * 0.002).astype(np.float32); knock = room.copy()
+k = np.arange(int(0.03 * SR)); knock[SR:SR + len(k)] += (0.3 * np.sin(2 * np.pi * 90 * k / SR) * np.exp(-k / (0.008 * SR))).astype(np.float32)
+y = dewound(knock)[:, 0]
+W = slice(SR, SR + len(k))
+check(db(y[W], knock[W]) > -3, f"a knock (90 Hz, 30 ms) is too short to count as wind: {db(y[W], knock[W]):+.1f} dB")
+
 # ---------------------------------------------------------------- dcs_crush~ styles
 print("dcs_crush~ styles:")
 cp = patch("crush", ["adc~", "r c", "dcs_crush~", "dac~"], [(0, 0, 2, 0), (1, 0, 2, 0), (2, 0, 3, 0), (2, 0, 3, 1)])

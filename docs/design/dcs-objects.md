@@ -302,7 +302,22 @@
 - **Status (Oct 19):** DadCraft approved by ear every object above (Glitch voice New, Found note ring String, Pitch
   tracker / Pitch shifter / Sudden-sound detector New, the kits, Sing in key, Vocoder, Talk box). All stay behind
   their switches with the old sound the default (he wants them opt-in), except Glitch voice, where New became the
-  default and the old voice stays as Legacy. `dcs_derustle~` (Oct 17): see Pocket rustle. Of the Oct 17 ideas list,
+  default and the old voice stays as Legacy. `dcs_derustle~` (Oct 17): see Pocket rustle.
+  **dcs_dewind~** (Oct 22, ROADMAP 18; `wind_guard` "Wind Guard" in Input & output, 0-1, default 0, noPreset, noRandom,
+  " *"): on the mic's mid and side together (add_stereo_in: before gain, gate and compressor, so gusts can't pump them;
+  the side's chain starts from its second outlet). Detector: deep lows (two one-pole LPs at 150 Hz) over highs (two
+  HPs at 500 Hz), mean squares over 30 ms, both channels: voices -5..+3 dB, wind +20..+30 (its rumble falls ~12 dB an
+  octave). Wind = clamp((d - 6) / 10) when the lows pass -60 dBFS, times "noisy": the deep lows averaged to 1 kHz are
+  matched against themselves 5-20 ms back every 10 ms (pitches 50-200 Hz), smoothed 50 ms: a best match over 0.8 is a
+  voice's fundamental or a bass line (spared), under 0.5 noise. Cut: a crossfade toward a 4th-order Butterworth
+  high-pass at 250 Hz, down to 24 dB of the plain sound left, 20 ms in, 250 ms out. Amount 0: the input copied, sample
+  for sample. Found on the way (test_dcs): the first split (the sound minus two one-pole lows) leaked rumble through
+  its phase (-6.5 dB at most) and squeezed every sound's ratio toward 0 dB; a ratio threshold alone cut a deep voice
+  by 11.7 dB and passed wind under a strong tone: hence the steep high-pass, the separate detector bands, threshold 6
+  and the pitch check. Measured: wind alone -16.4 dB, the side -15.5, wind with a 2 kHz tone 18 dB under it -13.9
+  (the tone -0.07), a voice -0.01, a deep voice -0.13, a bass line -0.15, a knock -0.7; in the patch (test_patch
+  "Wind Guard") wind -15.8, a voice -0.01. Steady traffic rumble is noise too and is cut. Third outlet: how windy,
+  0..1 (unused yet). Of the Oct 17 ideas list,
   built: the analog-style ladder filter (dcs_voice~ engine `analog`), a lighter pitch tracker (dcs_pitch~), a dcs
   phaser (the effect ports), oversampled distortion (Oct 19, "Distortion quality", below). The crusher stays as
   it is: its Classic rate reduction aliases on purpose (that is the effect) and the console styles already model

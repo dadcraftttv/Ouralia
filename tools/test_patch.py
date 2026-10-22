@@ -413,6 +413,18 @@ y = e.run(loud); tail = e.run(e.silence(30))
 check(not np.isnan(y).any() and float(np.abs(y).max()) <= 1.0 + 1e-6 and rms(tail[-SR:]) < 1e-3,
       "loud noise into the biggest reverb with Shimmer 1: within +-1, decays (last second rms %.2e)" % rms(tail[-SR:]))
 
+# Wind Guard (Oct 22, wind_guard: dcs_dewind~ on the mic): wind rumble falls, a voice doesn't
+def guarded(sig, wg):
+    e = fresh(wet=0, dry=1, wind_guard=wg); return e.run(sig)[SR // 2:, 0]
+_n = np.random.default_rng(21).standard_normal(3 * SR); _a = 1 - np.exp(-2 * np.pi * 100 / SR); _v1 = _v2 = 0.0; _w = np.empty_like(_n)
+for _i, _x in enumerate(_n):
+    _v1 += _a * (_x - _v1); _v2 += _a * (_v1 - _v2); _w[_i] = _v2
+_w = (_w * 2).astype(np.float32)
+_t = np.arange(3 * SR) / SR
+_voice = (sum(np.sin(2 * np.pi * 140 * k * _t) / k for k in range(1, 25)) * 0.02).astype(np.float32)
+wg = (20 * np.log10(rms(guarded(_w, 1)) / rms(guarded(_w, 0))), 20 * np.log10(rms(guarded(_voice, 1)) / rms(guarded(_voice, 0))))
+check(wg[0] < -12 and abs(wg[1]) < 1, "Wind Guard 1: wind %.1f dB, a voice %+.2f dB" % wg)
+
 # ---- 7f. tremolo ----
 def envelope(y, win_ms=5):
     n = int(win_ms * SR / 1000)
