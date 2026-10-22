@@ -984,6 +984,12 @@ to date in the same commit when behaviour changes.
   else the address) to the menu and to Diagnostics' mic in use. Stored choices are keyed type:address, unchanged.
   Both at once: the built-in mic also offers stereo (channel mask 0x000c); on most phones that records two mics as
   left and right. The app opens one mono input (`initAudio(rate, 1, 2...)`, `adc~ 1`): ROADMAP "Open now".
+  **Measured (Oct 22, `StereoProbe`, debug builds: `am start ... --ez stereo_probe true`, logcat StereoProbe;
+  DadCraft tapping by each mic in turn, 20-30 s per source, nothing recorded):** VOICE_RECOGNITION (Oboe's default,
+  what our pd-core opens: OboeEngine sets no input preset) and UNPROCESSED give one mic on both sides (correlation
+  1.000, 0 dB apart), at -56 and -49 dB. MIC gives two mics but in partly opposite phase (correlation -0.16, sides
+  -7 to +9 dB), CAMCORDER two mics naturally (+0.38, -10 to +9 dB); both about 25 dB hotter (-31 dB: gain or AGC
+  in the phone's processing). So the room in stereo needs the Camcorder preset, which pd-core can't set yet.
 - **Calls and other audio** (DadCraft's rule): the app never requests audio focus (Start must not pause the user's music).
   `AudioService.checkForCall` reads the audio mode every 0.5 s: call/ringing/VoIP -> `computeAudio(false)` until it ends
   (MODE_IN_COMMUNICATION is ignored while our own Bluetooth mic set it). An `AudioPlaybackCallback` counts the listed players
