@@ -14,18 +14,23 @@ import java.util.function.Consumer;
 
 /**
  * Finds out what this phone's mics give in stereo (the room in stereo, Oct 22; DadCraft: "the experience should
- * be universal", so nothing is fixed to one phone). Each way of opening the mic listens to the room for a couple
- * of seconds: the mono VoiceRecognition the app uses today (the reference level), then the stereo candidates
- * ({@link StereoRoom#CANDIDATES}). Only levels and how alike the two sides are stay; the sound itself is dropped
- * window by window, never stored. The sound must be off (the mic is in use otherwise): the caller stops it.
+ * be universal", so nothing is fixed to one phone). Each way of opening the mic listens for a few seconds while the
+ * user talks or claps: the mono VoiceRecognition the app uses today (the reference level), then the stereo
+ * candidates ({@link StereoRoom#CANDIDATES}). Levels compare the loudest moments (LOUD_SHARE), not the background:
+ * a phone's own processing (the Moto's Camcorder mode suppresses a quiet room's steady background) moves the
+ * background, so measuring it gave -10.6 dB in one room and +6 in a quieter one (Oct 22). Only levels and how alike
+ * the two sides are stay; the sound itself is dropped window by window, never stored. The sound must be off (the mic
+ * is in use otherwise): the caller stops it.
  */
 final class StereoCalibration {
     private static final String TAG = "StereoCalibration";
-    private static final int RATE = 48000, WINDOW = 2400, SECONDS_EACH = 2;   // 50 ms windows
+    private static final int RATE = 48000, WINDOW = 2400, SECONDS_EACH = 3;   // 50 ms windows
+    /** The level of a mode: its windows at this share from the quietest (0.9: the loud tenth, the talk or claps). */
+    private static final double LOUD_SHARE = 0.9;
 
     private StereoCalibration() { }
 
-    /** Measures on a background thread (about 8 s), then hands the choice to {@code done} on the main thread. */
+    /** Measures on a background thread (about 13 s), then hands the choice to {@code done} on the main thread. */
     static void run(Consumer<StereoRoom.Choice> done) {
         Handler main = new Handler(Looper.getMainLooper());
         new Thread(() -> {
@@ -102,6 +107,6 @@ final class StereoCalibration {
         rec.release();
         Arrays.sort(levels);
         double corr = stereo ? sumLR / Math.sqrt(sumLL * sumRR + 1e-24) : 1;
-        return new StereoRoom.Measure(preset, true, identical, corr, levels[levels.length / 2]);
+        return new StereoRoom.Measure(preset, true, identical, corr, levels[(int) (levels.length * LOUD_SHARE)]);
     }
 }

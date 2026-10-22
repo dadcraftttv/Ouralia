@@ -129,8 +129,8 @@
     <string name="mic_back">back, by the camera</string>
     <string name="mic_top">top</string>
     <string name="stereo_room">Room in Stereo</string>
-    <string name="stereo_unmeasured">The phone\'s two mics as left and right, for a wider room. The first time it\'s turned on, it listens to the room for about 8 seconds to learn how this phone\'s mics work: keep the phone still.</string>
-    <string name="stereo_measuring">Listening to the mics… keep the phone still.</string>
+    <string name="stereo_unmeasured">The phone\'s two mics as left and right, for a wider room. The first time it\'s turned on, it listens for about 13 seconds to learn how this phone\'s mics work: talk or clap near the phone until it\'s done.</string>
+    <string name="stereo_measuring">Listening to the mics… talk or clap near the phone until this changes (about 13 seconds).</string>
     <string name="stereo_mono_only">This phone\'s mic records in mono only, so the room stays mono.</string>
     <string name="stereo_found">Two mics found (%1$s), level matched by %2$d\u00a0dB. Effects that reshape the room narrow it back to mono.</string>
     <string name="stereo_mode_unprocessed">Unprocessed mode</string>
@@ -138,6 +138,8 @@
     <string name="stereo_mode_mic">Mic mode</string>
     <string name="stereo_phone_mic_only">Only with the phone\'s own mic: with a headset or USB mic the room stays mono.</string>
     <string name="stereo_check_again">Check Again</string>
+    <string name="stereo_level">Stereo Level: %1$+d\u00a0dB</string>
+    <string name="stereo_level_hint">Set by ear: the room should sound about as loud as with the switch off. A new Check Again starts it from 0.</string>
     <string name="stereo_needs_mic">Allow the microphone first.</string>
     <string name="diag_dropouts">Dropouts since Start: %1$d (each a click or gap: the phone couldn\'t keep up)</string>
     <string name="diag_stereo">Room in stereo: the phone\'s two mics</string>

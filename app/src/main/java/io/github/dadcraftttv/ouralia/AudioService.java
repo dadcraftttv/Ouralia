@@ -842,7 +842,7 @@ public class AudioService extends Service {
         Kits.source = builtInKits(this);
         ParamStore.sendAllToPd();
         if (scene == null) {
-            float[] st = StereoRoom.patchValues(stereoOn, stereoOn ? stereo.trimDb : 0f);
+            float[] st = StereoRoom.patchValues(stereoOn, stereoOn ? AudioSettings.stereoTrimDb(this) : 0f);
             PdBase.sendFloat("st_r", st[0]);
             PdBase.sendFloat("st_mid", st[1]);
             PdBase.sendFloat("st_side", st[2]);
@@ -861,7 +861,8 @@ public class AudioService extends Service {
             // channels: the mic again in mono, as with the switch off.
             String channels = PdBase.audioRuntimeInfo("inputChannels");
             if ("2".equals(channels)) {
-                logEvent(String.format(java.util.Locale.US, "Room in stereo: on (preset %d, trim %.1f dB)", stereo.preset, stereo.trimDb));
+                logEvent(String.format(java.util.Locale.US, "Room in stereo: on (preset %d, trim %.1f dB, Stereo Level %+d)",
+                        stereo.preset, stereo.trimDb, AudioSettings.stereoAdjust(this)));
             } else {
                 logEvent("Room in stereo: the mics didn't open in stereo (" + channels + " channels), playing in mono");
                 stereoOn = false;
@@ -958,6 +959,15 @@ public class AudioService extends Service {
 
     static boolean isStereo() {
         return stereoOn;
+    }
+
+    /** Stereo Level moved: the patch hears the new level at once (only while the stereo room plays). */
+    static void sendStereoLevel(android.content.Context context) {
+        if (stereoOn) {
+            float[] st = StereoRoom.patchValues(true, AudioSettings.stereoTrimDb(context));
+            PdBase.sendFloat("st_mid", st[1]);
+            PdBase.sendFloat("st_side", st[2]);
+        }
     }
 
     /**
