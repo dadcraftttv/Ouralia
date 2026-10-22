@@ -52,8 +52,8 @@ auto-key from the room (22), dcs_dewind~, dcs_grain~ (18); a shimmer mode for th
 moments part, kits for Harmony and Room notes, a second melody (20); glitch phase 2's per-slice filter, lanes and a
 chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps".
 
-**App ideas (item 22):** a home-screen widget, MIDI in (much later); a simple walk-mode
-screen (14 UI). (Tap tempo and the Bluetooth hint in the input list: BUILT Oct 22.)
+**App ideas (item 22):** a home-screen widget, MIDI in (much later). (A simple walk-mode screen (14 UI): SET ASIDE
+Oct 22, back pocket: DadCraft, "if users report wanting something like that".) (Tap tempo and the Bluetooth hint in the input list: BUILT Oct 22.)
 
 **Scenes:** location (`#loc`) input, unported scene objects, `rj_zcr~` if a scene needs it (11). Also a beat-offset slider if drift returns (11), and his desktop "<Part> from" report.
 
