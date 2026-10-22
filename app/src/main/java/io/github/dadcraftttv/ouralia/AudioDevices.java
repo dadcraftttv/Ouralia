@@ -49,15 +49,35 @@ final class AudioDevices {
                 continue;   // the phone speaker and earpiece are never offered as outputs
             }
             String key = d.getType() + ":" + d.getAddress();
-            result.add(new Device(key, label(name, d), d.getId(), d.getType()));
+            result.add(new Device(key, label(context, name, d), d.getId(), d.getType()));
         }
         return result;
     }
 
-    /** Same-type devices (two USB headsets) are told apart by their product name. */
-    private static String label(String name, AudioDeviceInfo d) {
+    /**
+     * Same-type devices (two USB headsets) are told apart by their product name, the phone's own mics by where they
+     * sit (the Moto G Stylus lists "bottom" and "back" as two Phone microphones; DadCraft, Oct 22).
+     */
+    private static String label(Context context, String name, AudioDeviceInfo d) {
+        if (d.getType() == AudioDeviceInfo.TYPE_BUILTIN_MIC && !d.getAddress().isEmpty()) {
+            return name + " (" + micPosition(context, d.getAddress()) + ")";
+        }
         String detail = d.getProductName() != null ? d.getProductName().toString() : "";
         return detail.isEmpty() || detail.equals(Build.MODEL) ? name : name + " (" + detail + ")";
+    }
+
+    /** A built-in mic's address in words: Android's usual ones, or the address itself. */
+    private static String micPosition(Context context, String address) {
+        switch (address.toLowerCase(java.util.Locale.ROOT)) {
+            case "bottom":
+                return context.getString(R.string.mic_bottom);
+            case "back":
+                return context.getString(R.string.mic_back);
+            case "top":
+                return context.getString(R.string.mic_top);
+            default:
+                return address;
+        }
     }
 
     /**
@@ -70,7 +90,7 @@ final class AudioDevices {
             AudioDeviceInfo d = c.getAudioDevice();   // only this app's own recordings are listed
             if (d != null) {
                 String name = typeName(context, d.getType());
-                return label(name != null ? name : context.getString(R.string.dev_other_input), d);
+                return label(context, name != null ? name : context.getString(R.string.dev_other_input), d);
             }
         }
         return null;
