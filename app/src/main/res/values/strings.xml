@@ -153,6 +153,11 @@
     <string name="stereo_level_hint">Set by ear: the room should sound about as loud as with the switch off. A new Check Again starts it from 0.</string>
     <string name="stereo_needs_mic">Allow the microphone first.</string>
     <string name="diag_dropouts">Dropouts since Start: %1$d (each a click or gap: the phone couldn\'t keep up)</string>
+    <string name="hears_talking">talking nearby</string>
+    <string name="hears_music">music nearby</string>
+    <string name="hears_traffic">traffic</string>
+    <string name="hears_wind">wind</string>
+    <string name="diag_room">Room listener (only listens for now): talking %1$.2f · music %2$.2f · traffic %3$.2f · wind %4$.2f</string>
     <string name="diag_stereo">World in Stereo: the phone\'s two mics</string>
     <string name="dev_speaker">Phone speaker</string>
     <string name="dev_earpiece">Phone earpiece</string>

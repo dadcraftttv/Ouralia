@@ -12,6 +12,7 @@ void dcs_glitch_tilde_setup(void);
 void dcs_string_tilde_setup(void);
 void dcs_derustle_tilde_setup(void);
 void dcs_dewind_tilde_setup(void);
+void dcs_listen_tilde_setup(void);
 void dcs_pitch_tilde_setup(void);
 void dcs_shift_tilde_setup(void);
 void dcs_onset_tilde_setup(void);
@@ -85,6 +86,7 @@ void dcs_setup(void)
     dcs_string_tilde_setup();
     dcs_derustle_tilde_setup();
     dcs_dewind_tilde_setup();
+    dcs_listen_tilde_setup();
     dcs_pitch_tilde_setup();
     dcs_shift_tilde_setup();
     dcs_onset_tilde_setup();
@@ -105,5 +107,5 @@ void dcs_setup(void)
     dcs_phaser_tilde_setup();
     dcs_taps_tilde_setup();
     dcs_composer_setup();
-    post("dcs %s: dcs_loaded dcs_glitch~ dcs_string~ dcs_derustle~ dcs_dewind~ dcs_pitch~ dcs_shift~ dcs_onset~ dcs_reverb~ dcs_voice~ dcs_ring~ dcs_trem~ dcs_crush~ dcs_dist~ dcs_filter~ dcs_echo~ dcs_freeze~ dcs_space~ dcs_chorus~ dcs_flanger~ dcs_phaser~ dcs_taps~ dcs_vocoder~ dcs_composer", DCS_VERSION);
+    post("dcs %s: dcs_loaded dcs_glitch~ dcs_string~ dcs_derustle~ dcs_dewind~ dcs_listen~ dcs_pitch~ dcs_shift~ dcs_onset~ dcs_reverb~ dcs_voice~ dcs_ring~ dcs_trem~ dcs_crush~ dcs_dist~ dcs_filter~ dcs_echo~ dcs_freeze~ dcs_space~ dcs_chorus~ dcs_flanger~ dcs_phaser~ dcs_taps~ dcs_vocoder~ dcs_composer", DCS_VERSION);
 }

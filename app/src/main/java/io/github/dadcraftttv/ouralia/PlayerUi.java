@@ -304,6 +304,11 @@ final class PlayerUi {
                 : Worlds.roomLoud() ? (Worlds.roomLively() ? R.string.why_room_lively : R.string.why_room_steady)
                 : R.string.why_room_middle;
         why.add(a.getString(room, Math.round(Worlds.roomLevelDb())));
+        int heard = AudioService.roomKind();   // the room listener (only listens for now)
+        if (heard >= 0) {
+            why.add(a.getString(new int[]{R.string.hears_talking, R.string.hears_music, R.string.hears_traffic,
+                    R.string.hears_wind}[heard]));
+        }
         if (ParamStore.get("beat_level") > 0 && ParamStore.get("beat_follow") >= 0.5f && ParamStore.get("rhythm_src") >= 0.5f) {
             int[] kit = AudioService.kit();
             why.add(a.getString(R.string.why_kit, kit[0], kit[1], kit[2], kit[3]));

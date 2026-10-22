@@ -508,6 +508,50 @@ y = dewound(knock)[:, 0]
 W = slice(SR, SR + len(k))
 check(db(y[W], knock[W]) > -3, f"a knock (90 Hz, 30 ms) is too short to count as wind: {db(y[W], knock[W]):+.1f} dB")
 
+# ---------------------------------------------------------------- dcs_listen~
+print("dcs_listen~:")
+lsp = patch("listen", ["adc~ 1 2", "dcs_listen~", "s lst"], [(0, 0, 1, 0), (0, 1, 1, 1), (1, 0, 2, 0)])
+def heard(sig, windy=0.0):
+    e = Engine(LIB, lsp, in_channels=2); e.listen("lst")
+    x = np.stack([sig, np.full_like(sig, windy)], 1).astype(np.float32)
+    e.run(x); got = e.lists.get("lst", []); e.close()
+    return np.array(got[-4:]).mean(axis=0) if len(got) >= 4 else np.zeros(4)   # (the last 2 s of judgements)
+L = 8 * SR; tt = np.arange(L) / SR; r2 = np.random.default_rng(42)
+def harmonic(f0, t, n=20, tilt=1.0):
+    ph = 2 * np.pi * np.cumsum(f0) / SR if np.ndim(f0) else 2 * np.pi * f0 * t
+    return sum(np.sin(k * ph) / k ** tilt for k in range(1, n))
+# speech-like: syllables 120-250 ms with a gliding pitch, short gaps, a consonant hiss now and then, pauses
+talk = np.zeros(L); i = 0
+while i < L - SR // 2:
+    d = int(r2.uniform(0.12, 0.25) * SR); f = np.linspace(r2.uniform(110, 160), r2.uniform(130, 200), d)
+    env = np.sin(np.pi * np.arange(d) / d) ** 0.7
+    talk[i:i + d] += 0.05 * harmonic(f, None, 25) * env
+    i += d
+    g = int(r2.uniform(0.04, 0.12) * SR); talk[i:i + g // 2] += r2.standard_normal(len(talk[i:i + g // 2])) * 0.004
+    i += g + (int(0.4 * SR) if r2.random() < 0.15 else 0)
+talk += r2.standard_normal(L) * 0.0005
+# music-like: held chords (0.5 s each), a bass note, a hat tick each beat
+music = np.zeros(L); roots = [220, 196, 247, 165]
+for b in range(int(8 / 0.5)):
+    a, z = int(b * 0.5 * SR), int((b + 1) * 0.5 * SR); r = roots[b % 4]; t0 = np.arange(z - a) / SR
+    music[a:z] += 0.03 * (harmonic(r, t0, 8) + harmonic(r * 1.26, t0, 8) + harmonic(r * 1.5, t0, 8)) + 0.05 * harmonic(r / 4, t0, 6, 2)
+    h = int(0.02 * SR); music[a:a + h] += r2.standard_normal(h) * 0.02 * np.exp(-np.arange(h) / (0.005 * SR))
+def lp1(x, hz):
+    a = 1 - np.exp(-2 * np.pi * hz / SR); y = np.empty_like(x); v = 0.0
+    for k_, s_ in enumerate(x): v += a * (s_ - v); y[k_] = v
+    return y
+traffic = lp1(lp1(r2.standard_normal(L), 200), 200) * 1.5 * (0.8 + 0.2 * np.sin(2 * np.pi * 0.1 * tt)) + r2.standard_normal(L) * 0.002
+windn = lp1(lp1(r2.standard_normal(L), 100), 100) * 2
+quiet = r2.standard_normal(L) * 0.0003
+H = {k: heard(v.astype(np.float32), w) for k, v, w in (("talk", talk, 0), ("music", music, 0), ("traffic", traffic, 0),
+                                                       ("wind", windn, 0.8), ("quiet", quiet, 0))}
+names = ["talking", "music", "traffic", "wind"]
+fmt = lambda v: " ".join(f"{n} {x:.2f}" for n, x in zip(names, v))
+for k, want in (("talk", 0), ("music", 1), ("traffic", 2), ("wind", 3)):
+    v = H[k]
+    check(v[want] > 0.5 and all(v[j] < 0.3 for j in range(4) if j != want), f"{k}-like sound heard as {names[want]}: {fmt(v)}")
+check(H["quiet"].max() == 0, f"a quiet room is none of them: {fmt(H['quiet'])}")
+
 # ---------------------------------------------------------------- dcs_crush~ styles
 print("dcs_crush~ styles:")
 cp = patch("crush", ["adc~", "r c", "dcs_crush~", "dac~"], [(0, 0, 2, 0), (1, 0, 2, 0), (2, 0, 3, 0), (2, 0, 3, 1)])
