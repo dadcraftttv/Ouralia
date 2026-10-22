@@ -307,7 +307,7 @@ final class PlayerUi {
         int heard = AudioService.roomKind();   // the room listener (only listens for now)
         if (heard >= 0) {
             why.add(a.getString(new int[]{R.string.hears_talking, R.string.hears_music, R.string.hears_traffic,
-                    R.string.hears_wind}[heard]));
+                    R.string.hears_wind, R.string.hears_crowd}[heard]));
         }
         if (ParamStore.get("beat_level") > 0 && ParamStore.get("beat_follow") >= 0.5f && ParamStore.get("rhythm_src") >= 0.5f) {
             int[] kit = AudioService.kit();

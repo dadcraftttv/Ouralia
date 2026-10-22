@@ -28,6 +28,7 @@ def add_stereo_in(P):
     # wind, twice a second to the app (room_kind), from the mic as it comes in and the dewinder's windiness
     P.obj("ls", "dcs_listen~", 20, 75); P.c("st_mid", "ls", 0, 0); P.c("dw", "ls", 2, 1)
     P.obj("ls_s", "s room_kind", 20, 90); P.c("ls", "ls_s")
+    P.obj("ls_f", "s room_feat", 120, 90); P.c("ls", "ls_f", 1, 0)   # (the measures, for tuning on real places)
     return "dw"
 
 def add_stereo_out(P, gain, dry):

@@ -379,7 +379,7 @@ final class DevicesUi {
         diagLevel.setProgress(level + 80);
         if (SceneSettings.current(a) == null) {   // (the built-in patch's room listener; scenes have none)
             float[] r = AudioService.roomScores();
-            lines.add(a.getString(R.string.diag_room, r[0], r[1], r[2], r[3]));
+            lines.add(a.getString(R.string.diag_room, r[0], r[1], r[2], r[3], r[4]));
         }
         ClipWatch c = AudioService.clips();
         if (!c.hasReports()) {
