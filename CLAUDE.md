@@ -14,7 +14,8 @@ behaviour changes, or tell DadCraft it needs one).
 
 ## How we work
 - Build and install yourself: `./gradlew assembleDebug`, then `~/Android/Sdk/platform-tools/adb -s ZD222T44PP install -r
-  app/build/outputs/apk/debug/app-debug.apk`. Crashes: `adb logcat`. Event log: `adb shell run-as io.github.dadcraftttv.ouralia cat files/events.log`.
+  app/build/outputs/apk/debug/app-debug.apk`. Crashes: `adb logcat`. Event log: `adb shell run-as io.github.dadcraftttv.ouralia cat files/events.log`. A long
+  session (works unplugged): `tools/session_log.sh start`, later `stop` and `report`.
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
 - New sound ideas go in behind a switch (old sound the default) so he can compare, until he says otherwise.
   A setting that uses our C objects gets `.dcs()` in Params.java (shown with " *").

@@ -311,6 +311,9 @@ final class DevicesUi {
         if (AudioService.callModeMic()) {
             lines.add("  " + a.getString(R.string.diag_call_mode));
         }
+        if (AudioService.dropouts() > 0) {
+            lines.add(a.getString(R.string.diag_dropouts, AudioService.dropouts()));
+        }
         if (AudioService.isStereo()) {
             lines.add("  " + a.getString(R.string.diag_stereo));
         }
