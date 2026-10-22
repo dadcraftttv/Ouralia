@@ -258,8 +258,11 @@ def main():
     words = [w.lower() for w in args[1:]] if quick else []
     workers = os.cpu_count() or 4
     t0 = time.time()
-    env = dict(os.environ, JAVA_HOME=os.path.expanduser("~/.jdks/jbr-21.0.11"))
-    env["PATH"] = env["JAVA_HOME"] + "/bin:" + env["PATH"]
+    env = dict(os.environ)
+    jbr = os.path.expanduser("~/.jdks/jbr-21.0.11")
+    if os.path.isdir(jbr):   # DadCraft's machine; elsewhere (CI) the JAVA_HOME already set
+        env["JAVA_HOME"] = jbr
+        env["PATH"] = jbr + "/bin:" + env["PATH"]
     code, text = sh(["python3", "tools/make_patch.py"])
     if code:
         print("FAIL: make_patch.py\n" + text)
