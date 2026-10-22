@@ -303,6 +303,11 @@ public class MainActivity extends Activity {
         aboutUi.addAboutSection(setup);
         look.fonts(root);
         showTab(UiSettings.tab(this));
+        if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0
+                && getIntent().getBooleanExtra("stereo_probe", false) && !AudioService.isRunning()
+                && checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+            StereoProbe.run();   // debug builds only: is the mic's stereo two mics? (logcat StereoProbe)
+        }
         if (FirstRun.showWalkthrough(UiSettings.walkthroughSeen(this), installTimes()[0], installTimes()[1])) {
             showWalkthrough();
         }
