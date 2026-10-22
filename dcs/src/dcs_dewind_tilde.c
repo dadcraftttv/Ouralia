@@ -32,6 +32,7 @@
 #define RELEASE_MS 250.         /* ...and lets go this slowly */
 #define MIN_LOW 1e-6            /* lows quieter than this (-60 dBFS, mean square) are never wind */
 #define SPAN_DB 10.             /* from `above` to fully windy */
+#define JUDGE_EVERY 32          /* the wind is judged every this many samples (the logarithm costs) */
 #define DET_LO_HZ 150.          /* the detector's deep lows... */
 #define DET_HI_HZ 500.          /* ...and highs */
 #define DEC_HZ 1000.            /* the periodicity check runs on the deep lows at this rate... */
@@ -61,6 +62,7 @@ typedef struct _dcs_dewind
     double x_dacc; int x_dcount, x_dn;   /* averaging the deep lows down to DEC_HZ */
     double x_pbuf[PBUF]; int x_pw, x_pcount;
     double x_per, x_pers;       /* the last periodicity, and smoothed */
+    int x_jcount;               /* samples since the wind was last judged */
 } t_dcs_dewind;
 
 static void dcs_dewind_coefs(t_dcs_dewind *x, double sr)
@@ -93,12 +95,16 @@ static t_int *dcs_dewind_perform(t_int *w)
     if (x->x_dn < 1) x->x_dn = 1;
     double amount = x->x_amount, floor = pow(10, -x->x_depth / 20), above = x->x_above;
     double el = x->x_el, eh = x->x_eh, g = x->x_gain, wind = x->x_wind;
+    int nc = 1;                                 /* (one mic: the side is silence, so only the mid is worked on) */
+    for (i = 0; i < n; i++)
+        if (in[1][i] != 0) { nc = 2; break; }
     for (i = 0; i < n; i++)
     {
-        double lo[2], hi[2], sv[2] = { in[0][i], in[1][i] }, ls = 0, hs = 0, target;   /* (read first: outs may share memory) */
-        for (c = 0; c < 2; c++)
+        double sv[2] = { in[0][i], in[1][i] }, lo[2] = { sv[0], sv[1] }, hi[2] = { sv[0], sv[1] }, ls = 0, hs = 0, target;   /* (read first: outs may share memory) */
+        for (c = 0; c < nc; c++)
         {
             double s = sv[c];
+            if (amount > 0 || g < 1 - 1e-9)       /* (off and let go: the high-pass rests) */
             {
                 double v = s;
                 int k;
@@ -151,7 +157,8 @@ static t_int *dcs_dewind_perform(t_int *w)
         x->x_pers += kp * (x->x_per - x->x_pers);
         el += ke * (ls - el);
         eh += ke * (hs - eh);
-        if (el > MIN_LOW)
+        if (++x->x_jcount < JUDGE_EVERY) ;    /* (wind as last judged) */
+        else if (x->x_jcount = 0, el > MIN_LOW)
         {
             double d = 10 * log10(el / (eh + 1e-12));
             double noisy = (PER_SPARE - x->x_pers) / (PER_SPARE - PER_WIND);
@@ -170,7 +177,7 @@ static t_int *dcs_dewind_perform(t_int *w)
         }
         else
             for (c = 0; c < 2; c++)
-                out[c][i] = (t_sample)(hi[c] + g * (lo[c] - hi[c]));   /* (g 1: the sound; floor: mostly high-passed) */
+                out[c][i] = (t_sample)(hi[c] + g * (lo[c] - hi[c]));   /* (a silent side: hi = lo = 0) */   /* (g 1: the sound; floor: mostly high-passed) */
         windout[i] = (t_sample)wind;
     }
     for (c = 0; c < 2; c++)

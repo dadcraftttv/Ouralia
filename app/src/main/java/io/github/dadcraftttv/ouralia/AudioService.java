@@ -118,6 +118,24 @@ public class AudioService extends Service {
 
     /** A scene's [rj_image] and [rj_text] objects report here (scene_lib), drawn by ScenePad. */
     private static final String SCENE_GFX = "rj_gfx";
+    /** The room listener's judgements (dcs_listen~): talking, music, traffic, wind, twice a second. */
+    private static final String ROOM_KIND = "room_kind";
+    private static final RoomListener room = new RoomListener();
+    static final String[] ROOM_KIND_NAMES = {"talking", "music", "traffic", "wind"};
+
+    /** What the room listener hears now (RoomListener.TALKING..WIND, -1: none of them, or not running). */
+    static int roomKind() {
+        synchronized (room) {
+            return running ? room.kind() : -1;
+        }
+    }
+
+    /** Its last four numbers (talking, music, traffic, wind). */
+    static float[] roomScores() {
+        synchronized (room) {
+            return room.scores();
+        }
+    }
     /** Overload counts from the patch, once a second (diagnostics): the mic as it arrives, after Input gain, output. */
     private static final String CLIP_IN = "diag_clip_in", CLIP_GAIN = "diag_clip_gain", CLIP_OUT = "diag_clip_out";
     private static final ClipWatch clips = new ClipWatch();
@@ -770,6 +788,25 @@ public class AudioService extends Service {
 
             @Override
             public void receiveList(String source, Object... args) {
+                if (ROOM_KIND.equals(source) && args.length == 4) {
+                    float[] v = new float[4];
+                    for (int i = 0; i < 4; i++) {
+                        v[i] = ((Number) args[i]).floatValue();
+                    }
+                    boolean changed;
+                    int k;
+                    synchronized (room) {
+                        changed = room.judge(v);
+                        k = room.kind();
+                    }
+                    if (changed) {
+                        String what = k < 0 ? "none of them" : ROOM_KIND_NAMES[k];
+                        handler.post(() -> logEvent(String.format(Locale.US,
+                                "Room listener: %s (talking %.2f, music %.2f, traffic %.2f, wind %.2f)",
+                                what, v[0], v[1], v[2], v[3])));
+                    }
+                    return;
+                }
                 if (SceneState.SAVED.equals(source)) {
                     keepSceneState(args);
                     return;
@@ -814,6 +851,10 @@ public class AudioService extends Service {
         PdBase.subscribe(TEMPO);
         PdBase.subscribe(FS_CAUGHT);
         PdBase.subscribe(FS_LEVELS);
+        PdBase.subscribe(ROOM_KIND);
+        synchronized (room) {
+            room.reset();
+        }
         PdBase.subscribe(FPAD_CAUGHT);
         PdBase.subscribe(SCENE_GFX);
         PdBase.subscribe(HEARD_DEG);

@@ -317,7 +317,24 @@
   and the pitch check. Measured: wind alone -16.4 dB, the side -15.5, wind with a 2 kHz tone 18 dB under it -13.9
   (the tone -0.07), a voice -0.01, a deep voice -0.13, a bass line -0.15, a knock -0.7; in the patch (test_patch
   "Wind Guard") wind -15.8, a voice -0.01. Steady traffic rumble is noise too and is cut. Third outlet: how windy,
-  0..1 (unused yet). Of the Oct 17 ideas list,
+  0..1, feeds the room listener (below). Cost (desktop, 20 s of quiet noise, best of 3): 0.0124 s alone (an empty
+  patch 0.0033): off, the high-pass rests and the wind is judged every 32 samples (the logarithm per sample cost more);
+  with one mic the silent side is skipped.
+  **dcs_listen~** (Oct 22, ROADMAP 18; DadCraft: "show it first", so it only listens): the room listener. From
+  add_stereo_in: the mic's mid as it comes in, and dcs_dewind~'s windiness; twice a second `room_kind` <talking>
+  <music> <traffic> <wind> (0..1) to the app. Over the last 2 s (10 ms frames): voicing (the sound low-passed at
+  900 Hz, averaged to 2 kHz, matched against itself at 50-400 Hz lags every 40 ms: voiced over 0.6), syllable swing
+  (the 300 Hz - 3 kHz band's level less its 250 ms average, its spread in dB), gaps (frames 15 dB under the window's
+  loudest), pitch steadiness (consecutive voiced frames within a lag of each other), lows (under 150 Hz over the
+  voice band), wind (the windiness averaged). Talking = voicing 0.15-0.95, swing 3-6 dB, gaps 4-12%; music = voicing
+  over 0.5-0.75, steady 0.4-0.7, few gaps; traffic = little voicing, little swing, heavy lows, not wind; quiet (the
+  loudest under -55 dBFS) = none. `RoomListener` (test A) turns judgements into a kind: leading over 0.5 twice in a
+  row, let go after 4 under 0.3. Shown on the Now line ("music nearby"), in Diagnostics (the four numbers), and each
+  change goes to the event log ("Room listener: music (talking 0.00, music 0.90, ...)"). Tests: test_dcs
+  "dcs_listen~" on synthetic places (talk 0.90, music 0.80, traffic 1.00, wind 1.00, quiet none; talk also scores
+  music 0.29); by hand, once, a real recording (a game soundtrack from DadCraft's Downloads, not kept): music 0.90.
+  Cost 0.0106 s per 20 s alone. Next, once his walks show how often it is right: what it drives (Realm Hopper:
+  Flux for music and voices, not traffic or wind; auto-key from the room; a beat locked to music nearby). Of the Oct 17 ideas list,
   built: the analog-style ladder filter (dcs_voice~ engine `analog`), a lighter pitch tracker (dcs_pitch~), a dcs
   phaser (the effect ports), oversampled distortion (Oct 19, "Distortion quality", below). The crusher stays as
   it is: its Classic rate reduction aliases on purpose (that is the effect) and the console styles already model

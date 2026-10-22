@@ -377,6 +377,10 @@ final class DevicesUi {
         int gate = Math.round(ParamStore.get("gate_thresh"));
         lines.add(gate > -80 ? a.getString(R.string.diag_level_gate, level, gate) : a.getString(R.string.diag_level, level));
         diagLevel.setProgress(level + 80);
+        if (SceneSettings.current(a) == null) {   // (the built-in patch's room listener; scenes have none)
+            float[] r = AudioService.roomScores();
+            lines.add(a.getString(R.string.diag_room, r[0], r[1], r[2], r[3]));
+        }
         ClipWatch c = AudioService.clips();
         if (!c.hasReports()) {
             lines.add(a.getString(R.string.diag_scene));

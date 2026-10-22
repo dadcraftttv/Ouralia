@@ -24,6 +24,10 @@ def add_stereo_in(P):
     P.obj("dw", "dcs_dewind~", 20, 60); P.c("st_mid", "dw", 0, 0); P.c("st_side0", "dw", 0, 1)
     P.obj("dw_r", "r wind_guard", 140, 45); P.msg("dw_amt", f"amount {BS}$1", 140, 55)
     P.c("dw_r", "dw_amt"); P.c("dw_amt", "dw")
+    # the room listener (Oct 22, dcs_listen~; only listens for now, DadCraft: "show it first"): talking, music, traffic,
+    # wind, twice a second to the app (room_kind), from the mic as it comes in and the dewinder's windiness
+    P.obj("ls", "dcs_listen~", 20, 75); P.c("st_mid", "ls", 0, 0); P.c("dw", "ls", 2, 1)
+    P.obj("ls_s", "s room_kind", 20, 90); P.c("ls", "ls_s")
     return "dw"
 
 def add_stereo_out(P, gain, dry):
