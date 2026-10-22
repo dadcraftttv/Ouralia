@@ -53,6 +53,8 @@ final class PlayerUi {
 
     private Button snapButton;
 
+    private Button sleepButton;
+
     /** The docked player: the small dial with Start inside, the status line, and Save sound. */
     View buildPlayer() {
         LinearLayout card = new LinearLayout(a);
@@ -171,6 +173,26 @@ final class PlayerUi {
             updateNowLine();
         });
         snapButton = a.addButton(row, R.string.snapshot, a.presetUi::saveSnapshot);
+        sleepButton = a.addButton(a.newButtonRow(playerContent), R.string.sleep_timer, this::showSleepSheet);
+    }
+
+    /** The sleep timer's choices: Off and SleepTimer.MINUTES, the one running ticked. */
+    private void showSleepSheet() {
+        LinearLayout content = new LinearLayout(a);
+        content.setOrientation(LinearLayout.VERTICAL);
+        content.addView(a.sheetHeading(a.getString(R.string.sleep_timer), a.getString(R.string.sleep_hint)));
+        String[] names = new String[SleepTimer.MINUTES.length];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = SleepTimer.MINUTES[i] == 0 ? a.getString(R.string.sleep_off)
+                    : a.getString(R.string.sleep_minutes, SleepTimer.MINUTES[i]);
+        }
+        int chosen = AudioService.sleepLeftMs() > 0 ? -1 : 0;
+        a.addListRows(content, names, chosen, null, i -> {
+            AudioService.setSleep(SleepTimer.MINUTES[i]);
+            updateNowLine();
+            openPlayer();   // (back to the player: the sheet swaps its content)
+        });
+        a.openSheet(content);
     }
 
     private void openPlayer() {
@@ -235,6 +257,13 @@ final class PlayerUi {
         holdButton.setVisibility(worlds ? View.VISIBLE : View.GONE);
         holdButton.setText(Worlds.isHeld() ? R.string.holding_world : R.string.hold_world);
         snapButton.setVisibility(SceneSettings.current(a) == null ? View.VISIBLE : View.GONE);
+        long sleepLeft = AudioService.sleepLeftMs();
+        sleepButton.setVisibility(AudioService.isRunning() ? View.VISIBLE : View.GONE);
+        if (sleepLeft > 0) {
+            sleepButton.setText(a.getString(R.string.sleep_in, SleepTimer.minutesLeft(sleepLeft)));
+        } else {
+            sleepButton.setText(R.string.sleep_timer);
+        }
         miniSave.setVisibility(snapButton.getVisibility());
         if (!worlds) {
             nowLine.setVisibility(View.GONE);

@@ -148,6 +148,7 @@ The full player shows:
 - **The Intensity dial:** slide your finger around the ring. You feel a light tick every 5 steps.
 - **The status line**, including the audio rate your phone is using. Under it a **Now:** line shows the Realm playing and why (see The Realms tab), and while the Rhythm plays, the tempo ("walking 112 BPM") and the found-sound kit ("kit K2 S1 H3 · 24 caught": how many kicks, snares and hats it holds, and how many sounds it has caught in all).
 - **Save sound** and **Hold Realm** (appears when Realm Hopper is on).
+- **Sleep Timer** (while the sound plays): pick 15, 30, 45, 60 or 90 minutes. The sound plays on, fades out slowly over the last 5 minutes (the room and the music together), then stops by itself. The button counts down ("Sleep in 23 min"); pick Off to cancel. Stop also cancels it.
 
 What **Intensity** does: one dial for how much is going on. In the middle (50) everything plays exactly as you set it. Slide left for calmer: fewer glitches and chimes, less echo and reverb, quieter and simpler drums, lighter effects. Slide right for busier: more of all of those and busier drum patterns. It only turns up what is already on (an effect you set to 0 stays off), it never changes your sliders, and presets and Realms leave it alone. The same setting is a slider at the top of Input & output, where you can also give it a mover (for example Shake = higher). While a scene plays the ring stays empty: scenes have no Intensity.
 

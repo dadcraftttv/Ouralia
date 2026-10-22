@@ -11,6 +11,11 @@
     <string name="hold_world">Hold Realm</string>
     <string name="holding_world">Let go</string>
     <string name="snapshot">Save sound</string>
+    <string name="sleep_timer">Sleep Timer</string>
+    <string name="sleep_in">Sleep in %1$d min</string>
+    <string name="sleep_hint">The sound fades out slowly over the last 5 minutes, then stops.</string>
+    <string name="sleep_off">Off</string>
+    <string name="sleep_minutes">%1$d minutes</string>
     <string name="now_line">Now: %1$s \u00b7 %2$s</string>
     <string name="sub_mic">Microphone</string>
     <string name="sub_pocket">Pocket and handling</string>

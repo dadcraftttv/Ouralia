@@ -189,6 +189,9 @@ public class AudioService extends Service {
             if (now - lastCallCheck >= CALL_CHECK_MS) {
                 lastCallCheck = now;
                 checkForCall();
+                if (followSleep()) {
+                    return;   // (the time was up: the sound has stopped)
+                }
             }
             if (autoWorlds) {
                 boolean pocket = PhoneContext.inPocket();
@@ -397,8 +400,43 @@ public class AudioService extends Service {
         sendDuck();
     }
 
+    // ---- sleep fade (SleepTimer): the time the sound stops, kept here so it runs with the app closed ----
+    private static volatile long sleepAtMs;   // SystemClock.elapsedRealtime() then (0: no timer)
+    private float sleepGain = 1f;             // the fade's gain, as last sent
+
+    /** Starts the sleep timer for this many minutes from now (0: none, back to full level). */
+    static void setSleep(int minutes) {
+        sleepAtMs = minutes > 0 ? SystemClock.elapsedRealtime() + minutes * 60_000L : 0;
+    }
+
+    /** How long until the sleep timer stops the sound (0: no timer). */
+    static long sleepLeftMs() {
+        long at = sleepAtMs;
+        return at == 0 ? 0 : Math.max(1, at - SystemClock.elapsedRealtime());
+    }
+
+    /** From the movers' tick: follows the fade (a quarter dB at a time) and stops when the time is up. */
+    private boolean followSleep() {
+        long at = sleepAtMs;
+        long left = at == 0 ? Long.MAX_VALUE : at - SystemClock.elapsedRealtime();
+        if (left <= 0) {
+            logEvent("Sleep timer: stopped");
+            shutDown();
+            return true;
+        }
+        float g = SleepTimer.gain(left);
+        if (g == 1f ? sleepGain != 1f : Math.abs(20 * Math.log10(g / sleepGain)) >= 0.25) {
+            if (sleepGain == 1f) {
+                logEvent("Sleep timer: fading out");
+            }
+            sleepGain = g;
+            sendDuck();
+        }
+        return false;
+    }
+
     private void sendDuck() {
-        float cut = otherPlayers > 0 ? OTHER_AUDIO_DUCK : 0f;
+        float cut = 1f - (1f - (otherPlayers > 0 ? OTHER_AUDIO_DUCK : 0f)) * sleepGain;
         if (sceneRunning) {
             PdBase.sendMessage("#volume", "set", SceneSettings.volume(this) * (1f - cut));
         } else {
@@ -889,6 +927,7 @@ public class AudioService extends Service {
         pausedForCall = false;
         lastCallCheck = 0;
         otherPlayers = 0;
+        sleepGain = 1f;   // (a reloaded patch starts at full level: the tick sends the fade again)
         am.registerAudioPlaybackCallback(playbackWatcher, handler);
         updateOtherAudio(am.getActivePlaybackConfigurations());
         Modulation.reset();
@@ -1195,6 +1234,7 @@ public class AudioService extends Service {
     }
 
     private void shutDown() {
+        sleepAtMs = 0;   // (Stop ends the timer; a restart for a new device or scene keeps it)
         stopEngine();
         stopForeground(STOP_FOREGROUND_REMOVE);
         stopSelf();
@@ -1203,6 +1243,7 @@ public class AudioService extends Service {
 
     @Override
     public void onDestroy() {
+        sleepAtMs = 0;
         stopEngine();
         logWriter.shutdown();   // lines already queued are still written
         super.onDestroy();

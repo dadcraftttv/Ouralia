@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Runs the plain-Java logic tests (no Android needed). Usage: tools/javatests/run.sh [M N W R C P P2 T S E X D H I F B G L Q V Y]
+# Runs the plain-Java logic tests (no Android needed). Usage: tools/javatests/run.sh [M N W R C P P2 T S E X D H I F B G L Q V Y Z]
 # Android classes are replaced by tiny stubs in stubs/ and stubs2/.
 set -e
 export JAVA_TOOL_OPTIONS=
 H="$(cd "$(dirname "$0")" && pwd)"; SRC="$H/../../app/src/main/java/io/github/dadcraftttv/ouralia"
 CORE="$SRC/Param.java $SRC/Params.java $SRC/ParamStore.java $SRC/PresetManager.java $SRC/Modulation.java $SRC/PhoneContext.java $SRC/Intensity.java $SRC/CalmBuild.java $SRC/Kits.java"
-for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V Y}"; do for x in $t; do
+for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V Y Z}"; do for x in $t; do
   extra=""; [ "$x" = W -o "$x" = X ] && extra="$SRC/StepDetector.java $SRC/WorldSelector.java $SRC/Worlds.java $SRC/MotifMemory.java $SRC/NoteRegister.java"
   [ "$x" = E ] && extra="$SRC/SceneEvents.java"
   [ "$x" = C ] && extra="$SRC/SensorInput.java $SRC/StepDetector.java $SRC/HandlingDetector.java"
@@ -16,6 +16,7 @@ for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V Y}"; do for x in $t; do
   [ "$x" = F ] && extra="$SRC/FirstRun.java"
   [ "$x" = V ] && extra="$SRC/Look.java"
   [ "$x" = Y ] && extra="$SRC/StereoRoom.java"
+  [ "$x" = Z ] && extra="$SRC/SleepTimer.java"
   [ "$x" = G ] && extra="$SRC/SceneGraphics.java"
   [ "$x" = L ] && extra="$SRC/CallResponse.java $SRC/MotifMemory.java"
   [ "$x" = X ] && extra="$extra $H/test/M.java"
