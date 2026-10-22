@@ -1011,6 +1011,8 @@ to date in the same commit when behaviour changes.
   (the measuring line asks), each mode's level its loud tenth (`LOUD_SHARE` 0.9: the talk and claps, which the
   phone's processing leaves mostly alone). And **Stereo Level** (+-12 dB by ear, `AudioSettings.stereoAdjust`,
   live while it plays, back to 0 on a new measurement), since no measurement suits every phone and room.
+  Measured so on the Moto (DadCraft talking and clapping): Camcorder -15.0 dB (reference -29.0, Camcorder -14.0;
+  Mic correlation -0.79, rightly skipped). DadCraft: "sounds about the same", Stereo Level left at 0.
   `AudioService.openAudio` opens 2 inputs with that preset (pd-core 1.4.2-pdscenes.2's `PdAudio.setInputPreset`)
   only for the built-in effects and the phone's own mic (`AudioDevices.isPhoneMic`: a headset or USB mic stays
   mono); if `audioRuntimeInfo("inputChannels")` isn't 2 once the sound has started it reopens in mono (event log).
