@@ -120,7 +120,7 @@ final class PresetUi {
                 .setTitle(a.getString(R.string.delete_title, name))
                 .setPositiveButton(R.string.delete, (d, w) -> {
                     PresetManager.delete(a, name);
-                    a.refreshWorldRows();
+                    a.realmsUi.refreshWorldRows();
                     a.toast(R.string.toast_deleted);
                 })
                 .setNegativeButton(R.string.cancel, null)
@@ -140,7 +140,7 @@ final class PresetUi {
                         String used = PresetManager.save(
                                 a, input.getText().toString(), ParamStore.snapshot());
                         a.toast(R.string.toast_saved, used);
-                        a.refreshWorldRows();
+                        a.realmsUi.refreshWorldRows();
                     } catch (IOException e) {
                         Toast.makeText(a, e.getMessage(), Toast.LENGTH_SHORT).show();
                     }
@@ -202,7 +202,7 @@ final class PresetUi {
             ParamStore.applyPreset(preset.values);
             a.refreshRows();
             a.toast(R.string.toast_imported, used);
-            a.refreshWorldRows();
+            a.realmsUi.refreshWorldRows();
         } catch (IOException | JSONException | RuntimeException e) {
             a.toast(R.string.toast_import_failed, e.getMessage());
         }
@@ -219,7 +219,7 @@ final class PresetUi {
         try {
             String used = PresetManager.save(a, name, ParamStore.snapshot());
             a.toast(R.string.toast_saved, used);
-            a.refreshWorldRows();
+            a.realmsUi.refreshWorldRows();
         } catch (IOException e) {
             a.toast(R.string.toast_save_failed, e.getMessage());
         }
