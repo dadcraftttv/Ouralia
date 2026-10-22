@@ -1303,16 +1303,10 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   100). The renames, effect families and rounded icons: good. rc5 is to be the first public beta, renamed to Ouralia,
   posted under GitHub Releases but not advertised until GitHub purges the old commits (still found Oct 21). Before rc5:
   the rename and the found-sound rhythm section (ROADMAP 16); everything else after rc5's feedback.
-- **Ideas queue with details: `docs/ROADMAP.md`.** Its numbered items are built, removed or set aside by DadCraft
-  (Oct 19); still open there: the small items in 11 (location input, unported scene objects, `rj_zcr~` if a scene
-  needs it, a beat-offset slider if drift returns).
-- The Oct 17 list of our own objects is done (Oct 19: Pitch jump and Gate kept, Ratchet and Spray pocketed, Smooth
-  distortion the default).
-- Untested on the phone: wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt
-  timing, the found bass pulled far down.
-- Release prep: final name + applicationId, `source_url` in strings.xml, privacy policy, Play foreground-service + microphone declarations, icon, store listing.
-- Ideas, not requested: beat-offset slider if drift returns,
-  location (`#loc`) scene input, unported scene objects.
+- **What is open lives in one place: ROADMAP "Open now"** (Oct 22, after the ChatGPT / Grok / Kimi reviews kept
+  suggesting things already built and showed the docs disagreeing: this section said the Oct 17 objects list was
+  done, but dcs_listen~, dcs_dewind~, dcs_grain~ and the shimmer reverb were never built). The commit that builds,
+  removes or sets aside something updates "Open now" and marks the ROADMAP item. This section keeps only notes.
 - The Beta Tester Guide lives in this repo: `docs/TESTER-GUIDE.md` (tester-facing: "Dad"/"DadCraft", plain words; moved
   from DadCraft's Claude Docs on Oct 12, where an older Oct 10 copy remains). When behavior changes, update it in the
   same commit or tell DadCraft it needs an update.

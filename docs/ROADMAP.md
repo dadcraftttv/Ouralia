@@ -12,7 +12,47 @@ Steps 1-6 done by Oct 10 (Unstable and the scratch were built and then set aside
 
 **Next order (DadCraft, 2026-10-12):** (A) mic input shaping (item 15), (B) tempo clock (item 16, part 1), (C) found-sound
 rhythm section (item 16, parts 2-6), (D) tabs and Realms, replacing the old step-7 screen polish (item 17), (E) release prep.
-Plan first, agreed with DadCraft, then build; test on the phone after every step. None of these are started yet.
+Plan first, agreed with DadCraft, then build; test on the phone after every step. A-D built Oct 12-19; E is open (below).
+
+**Keeping track (DadCraft, Oct 22: the outside reviews kept suggesting things already built).** "Open now" below is
+the one list of what is not done, checked against the code. In the same commit that builds, removes or sets aside
+something: take it off "Open now", and mark its item (BUILT / REMOVED / SET ASIDE, the date, where it lives). A new
+idea goes into its item and into "Open now". Every item below keeps its history; "Open now" is the only to-do list.
+
+## Open now (checked against the code, 2026-10-22)
+
+Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
+
+**Before advertising rc5 (item 22):** fresh README screenshots (all three still say "PdScenes"), `PRIVACY.md` (the
+mic, live only, no recordings, no analytics, what `events.log` holds and what a feedback report sends), `source_url`
+in strings.xml (empty: About shows no link to the source), GitHub repo topics, maybe a short demo GIF.
+
+**Code health (item 22):** split MainActivity (3,753 lines) one piece at a time, no behaviour change; check that a
+delayed music callback (motif, call and response) can't send to Pd after Stop or during a restart; a test that the
+built manifest has no INTERNET permission and the applicationId no "RjDj"; CI running the quick tests on push,
+CONTRIBUTING.md and an issue template; a long session on the phone (30-60 min: dropouts, CPU, battery, heat) and a
+cost per feature, so new sounds land with a known CPU price. Maybe later: split DESIGN-NOTES and make_patch.py.
+
+**Release to Play (release prep, item 14 Release):** a release keystore (rcs use the debug key) and Play App Signing,
+R8 on with keep rules for the `PdAudio.setDevicesId` / `audioRuntimeInfo` reflection, a real notification icon
+(today `android.R.drawable.ic_btn_speak_now`), Play foreground-service + microphone declarations, Data safety form,
+store listing, a release checklist with each APK's SHA-256.
+
+**Phone checks waiting on DadCraft:** call pause and ducking (14), the pocket shaping (15), the found-sound rhythm
+walk (16), wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt timing, the found
+bass pulled far down.
+
+**Sound and music ideas (each behind a switch, the old sound the default):** dcs_listen~ (what kind of room), then
+auto-key from the room (22), dcs_dewind~, dcs_grain~ (18); a shimmer mode for the reverb (18); more drum hits, a
+moments part, kits for Harmony and Room notes, a second melody (20); glitch phase 2's per-slice filter, lanes and a
+chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps".
+
+**App ideas (item 22):** sleep fade, tap tempo, a home-screen widget, MIDI in (much later); a simple walk-mode
+screen (14 UI); the Bluetooth hint on the input picker itself (Diagnostics already shows call mode).
+
+**Scenes:** location (`#loc`) input, unported scene objects, `rj_zcr~` if a scene needs it (11); the `index.rdf`
+fallback for older packs; check whether rjlib's state saving (`sssad`, `RJ_SCENE_SAVE`) persists in the app
+(Compatibility, below). Also a beat-offset slider if drift returns (11), and his desktop "<Part> from" report.
 
 1. **(BUILT 2026-10-08 as "Room notes", `music_res`; needs tuning by ear) The room plays the notes (Dimensions "Flux").** Run the mic through resonators/filterbank tuned to the chosen
    key and scale; filter frequencies move with pitch changes and onsets, so sounds around you ring notes in key.
@@ -21,14 +61,14 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
 2. **(BUILT 2026-10-09 as the Harmony slider) Pitch-following harmony (Dimensions "Travelling Dream", RjDj "Eargasm").** Track the pitch of what the mic hears
    (rjlib `analysepitch` / the fiddle external, already in `scene_lib` and the native libs) and answer with in-key notes or
    harmony. Needs a confidence gate so noise does not produce random notes.
-3. **(BUILT 2026-10-09 as the Stretch glitch kind, on in the Ghost world; reverse reverb not done) Ghost: capture and stretch.** On a detected onset, record the moment and replay it granularly stretched in time,
+3. **(BUILT 2026-10-09 as the Stretch glitch kind, on in the Ghost world; reverse reverb BUILT 2026-10-13, Reverb section) Ghost: capture and stretch.** On a detected onset, record the moment and replay it granularly stretched in time,
    with reverse reverb; optionally a very short randomized mic delay for atonal pitched noise. Extends the Ghost world
    (which today only has reverse echo).
 4. **(BUILT 2026-10-09 with step strength and the cadence groove) Kinetic pattern tiers.** Dimensions switches among five patterns by accelerometer level, with random variation. Ours
-   now has five 8-step patterns picked at random each bar, with rests (2026-10-08); still to do: tie the pattern to pace tiers. Stopping must still drop the drums immediately.
+   now has five 8-step patterns picked at random each bar, with rests (2026-10-08); pace tiers BUILT (DESIGN-NOTES "Pace tiers"). Stopping must still drop the drums immediately.
 5. **(BUILT 2026-10-09: shake the phone, at once, 5 s hold; off by default, DadCraft found it adds little) Unstable world.** Jolt-triggered stack of many ordinary effects on the mic at once (glitch, pitch shift, ring mod,
    crush, delay), glitchy by design. We have all the effects; it needs a trigger and a preset.
-5b. **(PHASE 1 BUILT 2026-10-09: buffer, stutter/reverse/tape stop/shuffle, sound trigger + free clock + step lock, Amount) DadCraft's idea (Oct 9): "glitch cloud" — Ableton warp + the Glitch VST (v1.3).** Random bits of what the mic hears
+5b. **(PHASE 1 BUILT 2026-10-09: buffer, stutter/reverse/tape stop/shuffle, sound trigger + free clock + step lock, Amount. Phase 2: stretch, Gate and Unstable BUILT, tape stop REMOVED Oct 10 (DadCraft), Ratchet and Spray in the back pocket Oct 19; open: per-slice filter, lanes, chance per kind) DadCraft's idea (Oct 9): "glitch cloud" — Ableton warp + the Glitch VST (v1.3).** Random bits of what the mic hears
    are grabbed into a RAM-only ring buffer (never to disk) and played back around the listener: extreme time-stretch
    (granular, like Ableton's warp pushed very far), tape stop (playback rate falling to 0), stutter/retrigger (a
    slice repeated at step-synced divisions, getting shorter), reverse slices, pitch drops, scattered across the
@@ -83,7 +123,7 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
     detected after the strike, and walking rustle is continuous, so likely weak alone) and a rustle detector (spectral
     flatness / zero crossings) that tightens a high-pass only while the sound looks like cloth.
 
-14. **Outside reviews (Gemini and Grok, 2026-10-09), checked against the code.** Accepted, not built yet:
+14. **Outside reviews (Gemini and Grok, 2026-10-09), checked against the code.** Accepted then; built as marked:
     - *Hardening pass* (BUILT 2026-10-09, needs a phone check of call pause and ducking): audio focus (other audio -> duck the app only slightly so its
       effects still come through; a phone call -> always pause/stop), event log on a background thread with one date
       format, `PhoneContext.inPocket()` under the lock, no per-event `float[3]` in `SensorInput.toScene`, no per-tick
@@ -102,7 +142,9 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
       (overlaps item 5), cadence groove reward, an Intensity macro, step strength (harder step opens the hat), a
       2-3 s thin-out of pad and chimes when you stop, a wind/handling detector that ducks only the reactive voices
       (overlaps item 13).
-    - *Release*: R8 keep rules for the `PdAudio.setDevicesId` and `audioRuntimeInfo` reflection when minify is on,
+    - *UI leftovers*: the mover dot and the Warp Sound earcon BUILT; content descriptions on most controls; open: walk mode,
+      the Bluetooth hint on the input picker.
+    - *Release* (OPEN, see "Open now"): R8 keep rules for the `PdAudio.setDevicesId` and `audioRuntimeInfo` reflection when minify is on,
       a real notification icon, Data safety form (mic used on-device, not collected), mention `events.log` in the privacy policy.
     - Rejected: pocket hush before the compressor (the compressor would undo it), head tracking from the phone's
       rotation (the phone isn't on the head), GPS/weather. Already done: low cut in a pocket (mic-down protection),
@@ -129,7 +171,7 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
       complements pocket hush and mic-down protection, and the mic-up pocket sound DadCraft likes must not get worse)
       and earbud mics (15-20 dB quieter than the phone's).
 
-16. **Found-sound rhythm section (DadCraft, Oct 12; steps B and C).** The walking beat is "neat but not my favorite"
+16. **(BUILT 2026-10-12, parts 1-6; DadCraft's walk test open) Found-sound rhythm section (DadCraft, Oct 12; steps B and C).** The walking beat is "neat but not my favorite"
     (SETTLED: it was the pattern, which was very same-y, DadCraft confirmed Oct 19; fixed by the pattern engine's
     calming and the per-hit variation, see DESIGN-NOTES "pattern engine" and "Found-sound kit"). The idea: the room supplies the drum sounds and the walking pace sets a tempo, the
     RjDj premise itself. Today there is no BPM or grid: drums fire on each detected step, chimes wait for the next step
@@ -153,7 +195,7 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
     room means an empty kit (fall back to soft synth drums or silence); slice choice and shaping decide musical vs
     messy; measure phone CPU (Music on is ~39% of a core).
 
-17. **Tabs and Realms (DadCraft, Oct 12; step D, replaces the step-7 screen polish).** The one long scroll has outgrown
+17. **(BUILT: tabs, Realms, Realm ingredients `Worlds.GROUPS`, the rename; accelerometer 100 Hz tried and put back to 200 on Oct 13) Tabs and Realms (DadCraft, Oct 12; step D, replaces the step-7 screen polish).** The one long scroll has outgrown
     itself. Tabs, roughly Sound, Music, Scenes, Realms, Setup (devices, appearance, reset, about); five at most. The
     bottom bar (status, Start/Stop, Hold, Save) stays on every tab. A tab that does nothing right now says so ("Realms
     are paused while a scene is playing"). Plain Views, no new libraries: a tab strip switching containers.
@@ -168,13 +210,16 @@ Plan first, agreed with DadCraft, then build; test on the phone after every step
     - Build in stages, each checked on the phone: split screens with no behaviour change, then tabs, then ingredient
       switches, then the rename. The tester guide gets rewritten once, after this lands.
 
-Release prep (separate list): final name + applicationId (not "RjDj"), `source_url`, privacy policy, Play foreground-service
-and microphone declarations, icon, store listing, numbered pd-core release.
+Release prep (separate list): final name + applicationId (DONE Oct 21: Ouralia), icon (DONE Oct 19-21), numbered pd-core
+release (DONE: 1.4.2-pdscenes.1); open, see "Open now": `source_url`, privacy policy, Play foreground-service and
+microphone declarations, store listing.
 
 18. **Our own objects (`dcs/`), the queue (DadCraft, Oct 17: "i'd like to do all of this").** Each one behind a switch,
     with its own tests (tools/test_dcs.py), the old sound the default until DadCraft's ears say otherwise. Built so far:
     dcs_string~, dcs_glitch~, dcs_derustle~, dcs_pitch~, dcs_shift~, dcs_onset~ (Oct 17; dcs_pitch~ turned out an
-    accuracy win, not a battery one: sigmund~ at the patch's hop already costs ~0.1% of real time).
+    accuracy win, not a battery one: sigmund~ at the patch's hop already costs ~0.1% of real time); then dcs_voice~
+    (engines incl. analog's ladder and modal), dcs_freeze~, dcs_dist~ (Smooth), dcs_reverb~ and dcs_phaser~ (the effect
+    ports; all added Oct 17, Smooth distortion Oct 19). NOT BUILT (checked Oct 22): dcs_listen~, dcs_dewind~, dcs_grain~, the reverb's shimmer mode, deken.
     - Voices: **dcs_shift~** (clean pitch shifter for Pitch and "Your voice" harmony, keeping the voice's own tone
       colour: no chipmunk, no warble). **dcs_pitch~** (a light pitch tracker to replace sigmund~, about half of Harmony's
       cost: battery).
@@ -239,14 +284,29 @@ and microphone declarations, icon, store listing, numbered pd-core release.
 20. **More kit parts (DadCraft, Oct 20: "lets plan on doing at least one and two, maybe three"; keep all four).**
     Today a kit has four parts (mel, bass, pad, drums). A kit only picks instruments for notes the band already
     writes, so a new part needs the band to write something for it too. Each costs only while it plays.
-    1. **More drum hits** (planned): clap, tom, shaker, crash, rim beside kick, snare and hat, with the beat writing
+    1. **More drum hits** (open): clap, tom, shaker, crash, rim beside kick, snare and hat, with the beat writing
        patterns for them. Recorded drums play as recorded, so each house sound gets its own role in the beat.
-    2. **A "moments" part** (planned): one-shot sounds at moments, not on notes: a Realm change, the start of a phrase,
+    2. **A "moments" part** (open): one-shot sounds at moments, not on notes: a Realm change, the start of a phrase,
        a sudden sound in the room, now and then while standing still. The best home for sounds with no note (a door
        chime, a squeak).
     3. **Kits for the parts the band already plays** (maybe): Harmony (the note answering a hum) and the Room notes'
        found bells. The easiest: their notes already exist.
     4. **A second melody** (later): an arpeggio or counter-melody around the main one; needs new music-writing rules.
+
+22. **Outside reviews (ChatGPT, Grok, Kimi, 2026-10-22, from the public repo), checked against the code.** Accepted
+    (all open, listed in "Open now"):
+    - *All three:* a privacy policy; the release key and R8 before Play; MainActivity is too big (DadCraft's first pick).
+    - *One or two:* README screenshots still say PdScenes (Kimi); no CI, CONTRIBUTING or issue template (Kimi, Grok);
+      repo topics and F-Droid (Grok, Kimi); a demo GIF (Grok); a manifest check for INTERNET and the name (ChatGPT);
+      delayed music callbacks after Stop, a long-session phone check, a release checklist with checksums (ChatGPT);
+      a cost per feature (Kimi); sleep fade, tap tempo, a widget, MIDI in, auto-key from the room (Kimi).
+    - *Already done, so dropped:* the first-run walkthrough (Walkthrough, Tour), step-synced echo, the tempo clock and
+      found-sound rhythm (16), glitch stretch and gate (5b), the Realm warp sound, the per-Realm rules (Realms and
+      their ingredients, 17), 16 KB alignment. Threads: PdBase's send methods are `synchronized`, so the sensor and
+      mover threads can't collide (only the after-Stop callbacks are worth checking).
+    - *Already shot down by DadCraft, so dropped:* twist = tape stop (tape stop removed Oct 10), bringing back Ratchet
+      and Spray (pocketed Oct 19). Replacing libpd or the plain Views: none of them asked for it.
+    - Out of date in the reviews: Grok gave the version as rc4 (it is rc5.1).
 
 ## Compatibility and scene findings (PdParty, rjlib PDF, composer pack)
 
@@ -259,7 +319,7 @@ and microphone declarations, icon, store listing, numbered pd-core release.
 - **Licences decide what we may bundle.** Safe (GPLv3 text and "or later" in the patch): **Boomerang** (voice echo, 283 ms, by Luke
   Loeffler and Dan Wilcox), **ApolloVoice** (touch plays Quindar tones, Dan Wilcox) and **Atsuke** (Frank Barknecht, built on the RjDj
   template). No licence given, so do not bundle: Eargasm (Damian Stewart), CanOfBeats (Chris McCormick), bouncy (Georg Bosch).
-- **Player-provided wrappers (DONE: ported `closebang`, `rj_time`, `rj_compass`, `rj_loc`, `rj_text`, `rjdj`; still open: draw `rj_text`/`rj_image` on screen, and `rj_loc` needs `#loc`).** PdParty supplies `rj_text`, `rj_time`, `rj_compass`, `rj_loc`, `rjdj` and `closebang`
+- **Player-provided wrappers (DONE: ported `closebang`, `rj_time`, `rj_compass`, `rj_loc`, `rj_text`, `rjdj`; drawing `rj_text`/`rj_image` on screen BUILT Oct 14 as scene graphics; still open: `rj_loc` needs `#loc`).** PdParty supplies `rj_text`, `rj_time`, `rj_compass`, `rj_loc`, `rjdj` and `closebang`
   (`res/patches/lib/pdparty`, BSD). Scenes that rely on the player to provide them would fail in our app. Port the missing ones
   (rj_time from `#time`, rj_compass from `#compass`, rj_text as a no-op or an on-screen caption, rj_loc once `#loc` exists).
 - **Older scene packs may use `index.rdf`** for their name and author instead of `Info.plist` (rjlib PDF). Add a fallback reader.
@@ -276,8 +336,10 @@ and microphone declarations, icon, store listing, numbered pd-core release.
 
 ## Research batch (ChatGPT/Gemini/PDF notes)
 Mostly confirmation of the Designing Sound / CDM material. New small ideas:
-- Compass trick: sound "behind" the listener gets low-passed (cheap spatial cue, needs `#compass`).
-- Granular playback of one captured table, scaled by a control value (proximity-style), for Ghost/Collective.
+- Compass trick: sound "behind" the listener gets low-passed (cheap spatial cue, needs `#compass`). Rejected with head
+  tracking in item 14: the phone isn't on the head.
+- Granular playback of one captured table, scaled by a control value (proximity-style), for Ghost/Collective. Built as
+  the Stretch glitch kind (item 3).
 - More Android sensors worth considering: step counter, rotation vector, proximity, light, barometer.
 - Mic conditioning check: high-pass the mic before analysis; duck or gate it before long feedback delays.
 - Keep one obvious reactive behavior per layer (the Dimensions lesson).
