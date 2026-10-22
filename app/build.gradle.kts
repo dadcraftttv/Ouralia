@@ -17,7 +17,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 shrinks and renames the code (ROADMAP 22); app/proguard-rules.pro keeps libpd and its callbacks.
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Release candidates are signed with the debug key, as rc3 and rc4 were (those were app.pdscenes, the working
             // name: Ouralia is a new app beside them). A real release key comes with Play release prep.
             signingConfig = signingConfigs.getByName("debug")
