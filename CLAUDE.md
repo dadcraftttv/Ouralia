@@ -15,7 +15,8 @@ behaviour changes, or tell DadCraft it needs one).
 ## How we work
 - Build and install yourself: `./gradlew assembleDebug`, then `~/Android/Sdk/platform-tools/adb -s ZD222T44PP install -r
   app/build/outputs/apk/debug/app-debug.apk`. Crashes: `adb logcat`. Event log: `adb shell run-as io.github.dadcraftttv.ouralia cat files/events.log`. A long
-  session (works unplugged): `tools/session_log.sh start`, later `stop` and `report`.
+  session plugged in: `tools/session_log.sh start`, `stop`, `report` (it dies unplugged: then `dumpsys batterystats
+  --history` and events.log, DESIGN-NOTES "Diagnostics").
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
 - New sound ideas go in behind a switch (old sound the default) so he can compare, until he says otherwise.
   A setting that uses our C objects gets `.dcs()` in Params.java (shown with " *").
@@ -76,7 +77,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   GitHub purges the old commits. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 15.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Room in Stereo (Oct 22): DadCraft likes it,
-  an option for phones that support it, never the default ("as close to universal as possible"). Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
+  an option for phones that support it, never the default ("as close to universal as possible"). Clear Catches
+  (`fs_clean`, 0-30 dB, Oct 22): default 0 (off); DadCraft at 10.4 dB, verdict pending. Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in make_patch.py).
 - **Plan (DadCraft, Oct 21):** rc5 = the first public beta, renamed to Ouralia, posted under GitHub Releases but not
   advertised until GitHub purges the old commits. The rename is done (Oct 21); the found-sound rhythm section (ROADMAP 16) was
@@ -84,7 +86,10 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **DadCraft's verdicts (Oct 21):** Evolving stays opt-in (not the default). Hooks That Grow (`mel_dev`), Living
   Grooves (`pat_gen`), Chord Colours (`chord_color`): "all good". The Band Plays good with Intensity 50 (he is
   comparing it off with Intensity 100). Renames, effect families, rounded icons: good.
-- **Open:** see ROADMAP "Open now". Next (DadCraft, Oct 22): the outside reviews' points (ROADMAP 22); MainActivity's split done Oct 22.
+- **Oct 22:** the reviews' points built (ROADMAP 22), MainActivity split, Room in Stereo, pd-core 1.4.2-pdscenes.2,
+  a long session (DESIGN-NOTES Status log). All pushed, forks included.
+- **Open:** see ROADMAP "Open now". Next, from the long session: Room in Stereo vs fixed level thresholds, Clear
+  Catches' verdict, Tempo Set following steps?, ducking for a muted game, the app logging battery and CPU itself.
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
   mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.

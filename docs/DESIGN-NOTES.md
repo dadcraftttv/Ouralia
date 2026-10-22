@@ -674,6 +674,20 @@ to date in the same commit when behaviour changes.
   like the glitch cloud's, which is unchanged). Its audio is switched (`fsound`,
   on while rhythm_src x beat_level > 0). Reports `fs_caught <role>`: the Now line shows "kit K2 S1 H3", the event
   log each catch with "kit K3 S2 H1 · 24 caught" (the slots fill to 3, the total keeps counting). Pd lessons again: a running max needs its own output fed back; a stored decay never banged was 0.
+- **Clear Catches** (Oct 22, `fs_clean`, Rhythm, 0-30 dB, 0 = off by default, in presets with The Band). DadCraft's long session:
+  found sounds "grainy, crackling", synth drums clean (his A/B). The log: 663 kicks caught in 41 minutes, half under
+  -30 dB, many at the -45 dB floor (FS_MIN_DB). Every catch is levelled to the same drum loudness (its peak to 0.5,
+  then FS_MAKEUP into the soft limit), so a faint one brings the room's hiss up with it: a -40 dBFS thump over -66
+  dBFS hiss came out with 22 dB more energy above 2 kHz (a 150 Hz thump has none of its own) than a loud one. On,
+  only catches at least that many dB above the room's background are kept (first a 30 dB switch; DadCraft: "maybe a
+  bit too well", a hello at arm's length went uncaught, so a slider); the background is the kit's own floor
+  (`fsfloor`: the mic level's quietest lately, down at once, up 0.6 dB a second, readings under -80 dBFS ignored;
+  the music's `mfloor` sinks to nothing at the start, before the mic hears anything, and takes minutes to climb
+  back, so it let everything through). Measured: -40 over -66 hiss skipped, -30 kept; over -50 hiss -30 skipped,
+  -20 kept. Test: test_patch "Clear Catches". DadCraft (Oct 22): at 30 "maybe a bit too well"; with Room in Stereo
+  on nothing was caught (its background reads ~20 dB low and sounds arrive 15 dB lower, so FS_MIN_DB blocked them:
+  ROADMAP Open now); with it off, "working"; left at 10.4 dB. A sung "ahhh" is never a catch: catches are sudden
+  sounds (it was heard: the call and response answered it).
 - **Found melody** (DadCraft, Oct 12: "can we use the found sound for melodies"; `add_found_note`, `melody_src` "Melody
   sounds" in Music, noPreset, 0 synth / 1 found (default) / 2 both): every melodic note (chimes, arpeggio, groove,
   motif) goes through the 4 chime voices; each has a found twin `fm<k>_*`. A note plays a caught slice (snares/hats
@@ -980,9 +994,10 @@ to date in the same commit when behaviour changes.
   Event log: "Mic overloading", "Mic overloaded for a moment" (at most every 10 s), "Output limiter working hard".
   Dropouts (Oct 22, for the long session): every 5 s `AudioService.checkXruns` reads Oboe's count
   (`audioRuntimeInfo("xRuns")`), counted from Start; new ones go in the event log ("Audio dropouts: +N (T since
-  Start)"), and Diagnostics shows the total once there is one. `tools/session_log.sh` logs a session on the phone
-  itself (unplugged: setsid; battery, temperature, thermal status, the app's CPU every 30 s, and its log) and
-  reports it.
+  Start)"), and Diagnostics shows the total once there is one. `tools/session_log.sh` logs a session over USB
+  (battery, temperature, thermal status, the app's CPU every 30 s, and its log) and reports it. Plugged in only:
+  unplugging ends it (Android ends adb's processes). Unplugged sessions: `dumpsys batterystats --history` (level
+  and temperature by time) and the app's events.log (ROADMAP: the app logging battery and CPU itself).
   Scenes send no counts (the section says so).
 - **The phone's mics by position** (Oct 22, DadCraft saw "Phone microphone" twice): Android lists each built-in
   mic as TYPE_BUILTIN_MIC with an address (the Moto G Stylus: "bottom" and "back"; the audio policy also has them
@@ -1357,6 +1372,22 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   (`Context.moveFromWorkingName`); its output is now "Ouralia" (pick it again in OBS); re-run install-launcher.sh.
   Kept: the libpd forks' `pdscenes` branches and the `1.4.2-pdscenes.1` pd-core version (they name branches in other
   public repos), and the repo folder name until DadCraft moves it.
+- **Oct 22: the outside reviews and a long session.** ChatGPT, Grok and Kimi reviewed the public repo (ROADMAP 22:
+  what was accepted, built, dropped). ROADMAP got "Open now", the one list of what isn't done (the reviews kept
+  suggesting built things). Built: PRIVACY.md and About's source link; MainActivity split into ten classes;
+  motif notes dropped after a restart; test_release.py; CI, CONTRIBUTING, an issue template; fresh screenshots; the
+  notification icon; R8 on release builds; docs/RELEASING.md and tools/release_apk.sh; the phone's mics named by
+  position; Room in Stereo (pd-core 1.4.2-pdscenes.2, StereoCalibration, an option, never the default); dropouts
+  counted. DadCraft's long session (12:18-12:59, release R8 build, walking with the phone in a pocket and Pokemon
+  Go, then the office): no dropouts, no crash, battery 79 -> 73% in 38 min unplugged (the whole phone, Pokemon Go
+  included), 31 C at most, the app about half a core. Found: the found-sound kit "grainy, crackling" (faint catches
+  levelled up: Clear Catches, his setting 10.4 dB, verdict pending); the walking notes not with his pace (his Tempo
+  was Set, 99.8 BPM: everything on one grid, but not his); a muted Pokemon Go still ducked the app (6.5 min);
+  Room in Stereo had played mono (the channel check ran before the streams opened, fixed); and with stereo on the
+  room's background reads ~20 dB low, which misleads fixed level thresholds (ROADMAP Open now).
+  `tools/session_log.sh` died when the cable came out (Android ends adb's processes on unplug, setsid or not): the
+  session was rebuilt from `dumpsys batterystats --history` and the app's events.log (the debug build installed
+  over the release keeps its data and allows run-as).
 
 ## Open / next
 - **Flaky test, settled (DadCraft, Oct 21: the machine was busy both times):** test_patch "scatter New: cost" (the New echo scatter must cost
