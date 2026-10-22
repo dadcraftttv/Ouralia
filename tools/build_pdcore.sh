@@ -13,7 +13,7 @@
 # pd-for-android commit and version here (also in the fork's build.gradle files), run this, update the app's
 # dependency, commit third_party/maven. Needs git, JDK 21 (~/.jdks/jbr-21.0.11), the Android SDK and NDK 29.0.14206865.
 set -e
-COMMIT=c5c2ec0d21a580921686898e65f14451301f28e5
+COMMIT=12cf65bfb3d781095783d0395fc5132a6184d1f1
 VERSION=1.4.2-pdscenes.2
 REPO=https://github.com/dadcraftttv/pd-for-android.git
 H="$(cd "$(dirname "$0")" && pwd)"
