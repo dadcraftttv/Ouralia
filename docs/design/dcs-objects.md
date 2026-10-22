@@ -145,6 +145,18 @@
   compares: worst 1.3e-6), ~55-60% of its cost (the maths is the same; the saving is per-object overhead: Pd's own
   objects are already tight C). Reverb at DadCraft's settings 0.069 -> 0.039 s. Still always on: 338 small signal
   objects (117 *~, 84 line~ smoothers, 62 +~...), ~0.9% of a desktop core idle.
+  **Shimmer** (Oct 22, ROADMAP 18's "shimmer mode"; `reverb_shimmer` "Shimmer" in Reverb, 0-1, default 0, noRandom,
+  in presets, " *"): inside dcs_reverb~ (`shimmer <0..1>`, gliding ~0.7 s). The two ears' output, halved, goes through
+  an octave-up shifter (two 80 ms grains read at 2x, Hann-crossfaded from a 1024-point table), a 200 Hz - 5 kHz band
+  (one-poles) and back into the combs' input the next block, times 0.28 sqrt(1 - feedback^2) (how the patch scales
+  the input) x SHGAIN 0.5 x the amount, through tanh. Each trip adds an octave, quieter; the damping takes the top.
+  Off, the shifter only copies into its line (nothing read: the output identical to before, the cost as before:
+  test_dcs's sample-for-sample match and cost checks still pass). SHGAIN measured in the patch at the worst case
+  (size 1, brightness 16000, shimmer 1, loud noise, 30 s after): gain 1 never died (rms 0.47, held by the tanh), 0.7
+  lingered (3e-4 at 30 s), 0.5 dies (2e-5 at 20 s) with the octaves still twice the note's energy in the tail; 0.35
+  0.9x. Tests: test_dcs (660+1320 Hz over 330 Hz in the tail: 67 vs 0.0002 off; no runaway at feedback 0.98),
+  test_patch "reverb Shimmer" (octaves, and the biggest room with Shimmer 1 within +-1 and decaying). Phone only
+  (the desktop gets the slider with the shared Params).
 - **Kits** (Oct 17, roadmap 19 step a+b; DadCraft: kits for acoustic / synth / EDM / future bass / low end, mix and
   match, loadable, to replace the stems player; first new style: Acoustic). The music brain is untouched; a kit says
   what each part sounds like. **Classic = today's Pd voices**, nothing ported: a part's kit engine 0 leaves it as it

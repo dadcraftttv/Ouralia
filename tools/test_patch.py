@@ -399,6 +399,19 @@ tail = e.run(e.silence(30))
 check(rms(tail[-SR:]) < 1e-3, "biggest reverb decays to silence (last second rms %.2e)" % rms(tail[-SR:]))
 e = fresh(wet=0, reverb_mix=1, reverb_size=1)
 check(rms(e.run(e.silence(1.0))) < 1e-6, "reverb adds no noise on silent input")
+# Shimmer (Oct 22, reverb_shimmer): the tail rises in octaves; the biggest room with it loud still decays
+def octave_share(sh):
+    e = fresh(wet=0, dry=1, reverb_mix=1, reverb_size=0.8, reverb_shimmer=sh)
+    e.run(sine(330, 0.1, 0.5)); y = e.run(e.silence(2.0))[int(0.3 * SR):, 0]
+    spec = np.abs(np.fft.rfft(y * np.hanning(len(y)))) ** 2; fr = np.fft.rfftfreq(len(y), 1 / SR)
+    b = lambda f0: float(spec[(fr > f0 * 0.94) & (fr < f0 * 1.06)].sum())
+    return (b(660) + b(1320)) / max(b(330), 1e-20)
+osh = (octave_share(0), octave_share(1))
+check(osh[1] > 20 * osh[0], "reverb Shimmer 1: the tail an octave and two up (%.3g of the note's energy, %.3g without)" % (osh[1], osh[0]))
+e = fresh(wet=0, dry=1, reverb_mix=1, reverb_size=1, reverb_tone=16000, reverb_shimmer=1, gain=10)
+y = e.run(loud); tail = e.run(e.silence(30))
+check(not np.isnan(y).any() and float(np.abs(y).max()) <= 1.0 + 1e-6 and rms(tail[-SR:]) < 1e-3,
+      "loud noise into the biggest reverb with Shimmer 1: within +-1, decays (last second rms %.2e)" % rms(tail[-SR:]))
 
 # ---- 7f. tremolo ----
 def envelope(y, win_ms=5):

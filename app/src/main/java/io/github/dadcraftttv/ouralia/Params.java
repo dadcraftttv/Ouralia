@@ -491,6 +491,10 @@ final class Params {
             // reverb. While the beat runs, each swell is two beats long and starts on the beat.
             new Param("reverb_rev", "Reverse Reverb (sounds come back as rising swells)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("reverb").rand(0f, 0.6f).resetWhenAbsent(),
+            // Shimmer (Oct 22, ROADMAP 18): the tail rises in octaves (dcs_reverb~). New sound, so 0 and kept out of
+            // Randomize until DadCraft has heard it.
+            new Param("reverb_shimmer", "Shimmer (the tail rises in octaves, 0 = off)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("reverb").noRandom().resetWhenAbsent().dcs(),
 
             // ---- Chorus ---- (added after the first presets: older presets switch it off)
             new Param("chorus_on", "Chorus Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
