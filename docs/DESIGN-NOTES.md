@@ -688,6 +688,16 @@ to date in the same commit when behaviour changes.
   on nothing was caught (its background reads ~20 dB low and sounds arrive 15 dB lower, so FS_MIN_DB blocked them:
   ROADMAP Open now); with it off, "working"; left at 10.4 dB. A sung "ahhh" is never a catch: catches are sudden
   sounds (it was heard: the call and response answered it).
+  **In stereo, the room's own background** (Oct 22, after that): with Room in Stereo on (the patch knows from
+  `st_side` > 0) a catch's least loudness, in both the kit's Classic onset detector (`fs_det`, mono's GC_MIN_DB) and
+  its keep test (`fs_role`, FS_MIN_DB), is `fsfloor` + FS_ST_ABOVE_DB (15: mono's -45 sits ~15 dB over an office's
+  -60), never above mono's -45 nor under FS_ST_MIN_DB (-65 dBFS); `make_patch.fs_min`. `fsfloor` now ignores only
+  readings under -90 dBFS (FS_FLOOR_CUT; was -80, where the Moto's stereo background sits). Mono is unchanged; the
+  glitch detector (`gc_det`) keeps its fixed -45. Test: test_patch "a catch in stereo" (-52 dBFS thumps over -86
+  hiss: mono 0, stereo 3; over -60 hiss: 0). Realm Hopper's quiet/loud levels left as they are: a quiet room is
+  judged by its background, which is just what the Camcorder mode hides, and no single offset fits (calibration's
+  background differences were -4 and -21 dB in two rooms after the trim); the loud levels are talk, which the trim
+  matches. In stereo the Quiet Realm may come on in rooms with a steady hum (but the hum is gone from what you hear too).
 - **Found melody** (DadCraft, Oct 12: "can we use the found sound for melodies"; `add_found_note`, `melody_src` "Melody
   sounds" in Music, noPreset, 0 synth / 1 found (default) / 2 both): every melodic note (chimes, arpeggio, groove,
   motif) goes through the 4 chime voices; each has a found twin `fm<k>_*`. A note plays a caught slice (snares/hats

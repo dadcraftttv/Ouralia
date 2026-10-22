@@ -264,6 +264,18 @@ FB_GAIN = 2.8                     # the found bass against the synth bass's (1 +
 FS_POP_DB = 94                    # louder than this (-6 dBFS) and mostly lows: a mic pop, not kept
 FS_MIN_DB = 55                     # quieter than this (-45 dBFS at its loudest) is not worth keeping
 FS_FLOOR_RISE = 0.02               # (its floor creeps up this many dB a reading: 0.6 dB a second)
+# Room in Stereo (Oct 22): the Camcorder mode of some phones (the Moto) hides a quiet room's steady background, ~20 dB
+# under the mono mic's, and the trim that matches talk and claps lowers soft sounds with it: a fixed -45 dBFS misjudges
+# it. In stereo a catch must instead stand FS_ST_ABOVE_DB over the room's own background (fsfloor), never needing
+# more than FS_MIN_DB (mono's) nor less than FS_ST_MIN_DB
+FS_ST_ABOVE_DB = 15                # (mono's -45 is ~15 dB over an office's -60)
+FS_ST_MIN_DB = 35                  # (-65 dBFS)
+FS_FLOOR_CUT = 10                  # mic readings under this (-90 dBFS) are no sound yet, not a room
+
+
+def fs_min(mono_db):
+    """The found kit's least loudness (dB, 100 = full scale) as an expr: mono_db, or in stereo the room's own."""
+    return f"if(fsstereo>0,max({FS_ST_MIN_DB},min({mono_db},fsfloor+{FS_ST_ABOVE_DB})),{mono_db})"
 # Clear Catches (fs_clean, dB, 0 = off): a catch is kept only that far above the room's quiet floor (fsfloor): it is
 # levelled to a drum's loudness, its background with it (Oct 22: a -40 dBFS thump over -66 dBFS hiss came out with
 # 22 dB more grain than a loud one)
@@ -896,14 +908,17 @@ def add_found_kit(P, x):
     P.obj("fs_clean_r", "r fs_clean", x + 560, y + 190); P.obj("fs_clean_v", "value fsclean", x + 560, y + 205)
     P.c("fs_clean_r", "fs_clean_v")
     # the room's background for Clear Catches: the mic level's quietest lately (down at once, up FS_FLOOR_RISE dB a
-    # reading, 30 readings a second); readings under 20 (-80 dBFS: no sound yet, as at the start) don't count, so it
-    # can't sink to nothing and let every catch through (the music's own floor, mfloor, does that for minutes)
+    # reading, 30 readings a second); readings under FS_FLOOR_CUT (no sound yet, as at the start) don't count, so it
+    # can't sink to nothing and let every catch through (the music's own floor, mfloor, does that for minutes; the
+    # cut was -80 dBFS until Oct 22, but a stereo room's background reads -80..-85 on the Moto)
     P.obj("fs_bg_r", "r mic_level", x + 660, y + 160)
-    ex("fs_bg_new", f"if($f1<20,fsfloor,min($f1,fsfloor+{FS_FLOOR_RISE}))", x + 660, y + 175)
+    ex("fs_bg_new", f"if($f1<{FS_FLOOR_CUT},fsfloor,min($f1,fsfloor+{FS_FLOOR_RISE}))", x + 660, y + 175)
     P.obj("fs_bg_wr", "value fsfloor", x + 660, y + 190); P.c("fs_bg_r", "fs_bg_new"); P.c("fs_bg_new", "fs_bg_wr")
     P.obj("fs_bg_lb", "loadbang", x + 760, y + 160); P.msg("fs_bg_40", "40", x + 760, y + 175)
     P.obj("fs_bg_init", "value fsfloor", x + 760, y + 190); P.c("fs_bg_lb", "fs_bg_40"); P.c("fs_bg_40", "fs_bg_init")
-    ex("fs_role", f"if($f1<{FS_MIN_DB}||(fsclean>0&&$f1<fsfloor+fsclean),-1,if(fs_jv>0,-3,if($f1>{FS_POP_DB}&&$f2-$f1>-6,-2,if($f2-$f1>-6,0,if($f3-$f1>-6&&$f2-$f1<-15,2,1)))))", x + 400, y + 220)
+    P.obj("fs_st_r", "r st_side", x + 860, y + 160); P.obj("fs_st_v", "value fsstereo", x + 860, y + 175)
+    P.c("fs_st_r", "fs_st_v")   # (st_side: above 0 with the room in stereo)
+    ex("fs_role", f"if($f1<{fs_min(FS_MIN_DB)}||(fsclean>0&&$f1<fsfloor+fsclean),-1,if(fs_jv>0,-3,if($f1>{FS_POP_DB}&&$f2-$f1>-6,-2,if($f2-$f1>-6,0,if($f3-$f1>-6&&$f2-$f1<-15,2,1)))))", x + 400, y + 220)
     # inlets: $f1 overall (hot, last), $f2 lows, $f3 highs
     P.c("fs_d_t", "fs_max_hi", 2, 0); P.c("fs_max_hi", "fs_role", 0, 2)
     P.c("fs_d_t", "fs_max_lo", 2, 0); P.c("fs_max_lo", "fs_role", 0, 1)
@@ -3344,8 +3359,9 @@ def add_glitch_cloud(P):
     # ---- sudden sounds: the 5 ms level against its own recent average ----
     P.obj("gc_m_t", "t f f f", x, y + 80)
     P.c("meter", "gc_m_t")
-    # the found-sound catcher's own detector: the same jump, but in a loud room (a steady roar) a smaller one counts
-    ex("fs_det", f"($f1-$f2>if($f2>{FS_LOUD_DB},{FS_ONSET_LOUD_DB},{GC_ONSET_DB}))*($f1>{GC_MIN_DB})", x + 250, y + 110)
+    # the found-sound catcher's own detector: the same jump, but in a loud room (a steady roar) a smaller one counts,
+    # and with the room in stereo its least loudness is the room's own (fs_min)
+    ex("fs_det", f"($f1-$f2>if($f2>{FS_LOUD_DB},{FS_ONSET_LOUD_DB},{GC_ONSET_DB}))*($f1>{fs_min(GC_MIN_DB)})", x + 250, y + 110)
     P.obj("fs_det_chg", "change", x + 250, y + 140); P.obj("fs_det_sel", "sel 1", x + 250, y + 170)
     P.c("gc_m_t", "fs_det", 2, 0); P.c("fs_det", "fs_det_chg"); P.c("fs_det_chg", "fs_det_sel")
     ex("gc_det", f"($f1-$f2>{GC_ONSET_DB})*($f1>{GC_MIN_DB})", x, y + 110)
