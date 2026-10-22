@@ -132,7 +132,7 @@ final class PlayerUi {
             ParamStore.set(Intensity.ID, v);
             updateIntensityRow();
             if (done) {
-                a.refreshRows();   // the slider in Input & output follows
+                a.settingRows.refreshRows();   // the slider in Input & output follows
             }
         });
         dialBox.addView(playerDial, new android.widget.FrameLayout.LayoutParams(a.dp(248), a.dp(248)));
@@ -209,7 +209,7 @@ final class PlayerUi {
         }
         if (scene == null) {
             sub += " · " + a.getString(R.string.intensity_card_value, Math.round(v * 100))
-                    + (Modulation.isMoving(Intensity.ID) ? MainActivity.MOVER_DOT : "");
+                    + (Modulation.isMoving(Intensity.ID) ? SettingRows.MOVER_DOT : "");
         }
         miniSub.setText(sub);
     }

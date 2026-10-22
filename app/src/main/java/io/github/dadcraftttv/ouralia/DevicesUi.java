@@ -67,7 +67,7 @@ final class DevicesUi {
     }
 
     void addAudioSection(LinearLayout parent) {
-        LinearLayout body = a.addSection(parent, "audio", a.getString(R.string.section_audio), false);
+        LinearLayout body = a.settingRows.addSection(parent, "audio", a.getString(R.string.section_audio), false);
         inputPicker = addDevicePicker(body, R.string.audio_input, true);
         outputPicker = addDevicePicker(body, R.string.audio_output, false);
 
@@ -171,7 +171,7 @@ final class DevicesUi {
 
     /** Setup's Diagnostics: the mic and headphones really in use, the mic level and overloads in the last minute. */
     void addDiagnosticsSection(LinearLayout parent) {
-        a.addSection(parent, "diagnostics", a.getString(R.string.section_diag), false, body -> {
+        a.settingRows.addSection(parent, "diagnostics", a.getString(R.string.section_diag), false, body -> {
             diagText = new TextView(a);
             diagText.setTextSize(14);
             diagText.setPadding(0, a.dp(4), 0, a.dp(4));

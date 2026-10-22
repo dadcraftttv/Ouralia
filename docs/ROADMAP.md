@@ -26,12 +26,12 @@ Order (DadCraft, Oct 22): the reviews' release and code-health points first, Mai
 **Before advertising rc5 (item 22):** fresh README screenshots (all three still say "PdScenes"; after MainActivity's
 split), GitHub repo topics, maybe a short demo GIF. (`PRIVACY.md` and the About screen's source link DONE Oct 22.)
 
-**Code health (item 22):** split MainActivity (3,753 lines) one piece at a time, no behaviour change (SceneUi done Oct 22; the
-plan in DESIGN-NOTES "MainActivity's split"); check that a
+**Code health (item 22):** (MainActivity's split DONE Oct 22: 3,753 -> 1,237 lines,
+DESIGN-NOTES "MainActivity's split"; maybe later: split DESIGN-NOTES and make_patch.py the same way); check that a
 delayed music callback (motif, call and response) can't send to Pd after Stop or during a restart; a test that the
 built manifest has no INTERNET permission and the applicationId no "RjDj"; CI running the quick tests on push,
 CONTRIBUTING.md and an issue template; a long session on the phone (30-60 min: dropouts, CPU, battery, heat) and a
-cost per feature, so new sounds land with a known CPU price. Maybe later: split DESIGN-NOTES and make_patch.py.
+cost per feature, so new sounds land with a known CPU price.
 
 **Release to Play (release prep, item 14 Release):** a release keystore (rcs use the debug key) and Play App Signing,
 R8 on with keep rules for the `PdAudio.setDevicesId` / `audioRuntimeInfo` reflection, a real notification icon

@@ -73,7 +73,7 @@ final class KitUi {
                             Kits.refreshChoices();
                             ParamStore.kitDeleted(index);
                             updateKitStatus();
-                            a.refreshRows();
+                            a.settingRows.refreshRows();
                         }).setNegativeButton(android.R.string.cancel, null).show())
                 .setNegativeButton(android.R.string.cancel, null).show();
     }
@@ -124,7 +124,7 @@ final class KitUi {
                     Kits.refreshChoices();
                     ParamStore.set(Kits.ID, index);
                     updateKitStatus();
-                    a.refreshRows();
+                    a.settingRows.refreshRows();
                     String title = Params.byId(Kits.ID).choices[index];
                     String msg = a.getString(R.string.kit_imported, title);
                     if (!problems.isEmpty()) {

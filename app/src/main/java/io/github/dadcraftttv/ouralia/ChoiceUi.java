@@ -59,9 +59,9 @@ final class ChoiceUi {
         value.setText(p.choices[choiceIndex(p, ParamStore.get(p.id))]);
         tile.addView(value);
         tile.setOnClickListener(v -> open.run());
-        MainActivity.Row row = new MainActivity.Row(p, null, null, null);
+        SettingRows.Row row = new SettingRows.Row(p, null, null, null);
         row.tile = value;
-        a.rows.add(row);
+        a.settingRows.rows.add(row);
         return tile;
     }
 
@@ -148,8 +148,8 @@ final class ChoiceUi {
     /** A pick made in a sheet: stored, every row follows, the sheet closes. */
     private void pickChoice(Param p, int i) {
         ParamStore.set(p.id, i);
-        a.updateMoverUi();
-        a.refreshRows();
+        a.settingRows.updateMoverUi();
+        a.settingRows.refreshRows();
         a.closeSheet();
     }
 
@@ -212,7 +212,7 @@ final class ChoiceUi {
     }
 
     private void addSegmentRow(LinearLayout parent, Param p, boolean compact) {
-        View label = a.nameAndHint(p, compact);
+        View label = a.settingRows.nameAndHint(p, compact);
         label.setPadding(0, a.dp(compact ? 6 : 14), 0, a.dp(8));   // (in line with the slider names)
         parent.addView(label);
         LinearLayout bar = new LinearLayout(a);
@@ -224,7 +224,7 @@ final class ChoiceUi {
         divider.setColor(a.look.p.line);
         divider.setSize(a.dp(1), 1);
         bar.setDividerDrawable(divider);
-        MainActivity.Row row = new MainActivity.Row(p, null, null, null);
+        SettingRows.Row row = new SettingRows.Row(p, null, null, null);
         row.segment = new TextView[p.choices.length];
         for (int i : displayOrder(p.choices)) {
             TextView b = new TextView(a);
@@ -241,8 +241,8 @@ final class ChoiceUi {
                 v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
                 if (pick != choiceIndex(p, ParamStore.get(p.id))) {
                     ParamStore.set(p.id, pick);
-                    a.updateMoverUi();
-                    a.refreshRows();
+                    a.settingRows.updateMoverUi();
+                    a.settingRows.refreshRows();
                 }
             });
             bar.addView(b, new LinearLayout.LayoutParams(0, a.dp(compact ? 40 : 44), 1f));
@@ -254,12 +254,12 @@ final class ChoiceUi {
         a.look.hint(row.segmentHint);
         row.segmentHint.setPadding(0, a.dp(6), 0, 0);
         parent.addView(row.segmentHint);
-        a.rows.add(row);
+        a.settingRows.rows.add(row);
         showSegment(row, choiceIndex(p, ParamStore.get(p.id)));
     }
 
     /** The chosen button filled; its explanation (if it has one) underneath. */
-    void showSegment(MainActivity.Row r, int chosen) {
+    void showSegment(SettingRows.Row r, int chosen) {
         for (int i = 0; i < r.segment.length; i++) {
             styleSegment(r.segment[i], i == chosen);
         }

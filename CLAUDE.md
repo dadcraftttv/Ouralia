@@ -36,6 +36,8 @@ behaviour changes, or tell DadCraft it needs one).
 
 ## Layout
 - `app/src/main/java/io/github/dadcraftttv/ouralia/` — Java, plain Views (no Compose; do not rewrite). Params.java = every setting.
+  The screen: MainActivity coordinates; each part is its own class (`SettingRows`, `PlayerUi`, `PresetUi`... see
+  DESIGN-NOTES "MainActivity's split"). Edit the part's class, not MainActivity.
 - `app/src/main/assets/patches/test_scene.pd` — the built-in patch. **Generated:** edit `tools/make_patch.py`, run
   `python3 tools/make_patch.py`. Never hand-edit the .pd.
 - `app/src/main/assets/scene_lib` (rjlib + our scene helpers), `builtin_scenes/` (4 official RjDj scenes).
@@ -78,7 +80,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **DadCraft's verdicts (Oct 21):** Evolving stays opt-in (not the default). Hooks That Grow (`mel_dev`), Living
   Grooves (`pat_gen`), Chord Colours (`chord_color`): "all good". The Band Plays good with Intensity 50 (he is
   comparing it off with Intensity 100). Renames, effect families, rounded icons: good.
-- **Open:** see ROADMAP "Open now". Next (DadCraft, Oct 22): the outside reviews' points (ROADMAP 22), MainActivity's split first.
+- **Open:** see ROADMAP "Open now". Next (DadCraft, Oct 22): the outside reviews' points (ROADMAP 22); MainActivity's split done Oct 22.
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
   mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.
