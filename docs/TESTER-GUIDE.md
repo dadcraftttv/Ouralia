@@ -599,7 +599,7 @@ Thank you for trying this. Anything you notice is useful, even "it felt weird." 
 - **Your phone and Android version.** For example, "Pixel 8, Android 15."
 - **Sound problems:** crackling, dropouts, silence, a squeal, or delay between making a sound and hearing it. Say which effects were on. Crackling or stuttering with many things switched on can mean your phone is working too hard; tell me which ones.
 - **Does it keep running** when you lock the screen or switch to another app?
-- **Battery and heat:** does your phone get warm, or does the battery drain fast?
+- **Battery and heat:** does your phone get warm, or does the battery drain fast? (The event log notes the battery, temperature and how hard the app works the processor once a minute while it plays, so ticking the log in Send feedback tells Dad the numbers.)
 - **Anything confusing** on screen, such as a label or button you didn't understand. Are the player and the tab bar easy to reach while walking, are the sheets easy to close, and does the Now: line make sense? Is everything on the tab you expected?
 - **Crashes or freezes:** what you were doing just before.
 - **Call and response:** does the answer come at a natural moment after you stop singing, and does it sound like your phrase?

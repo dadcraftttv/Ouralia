@@ -16,7 +16,8 @@ behaviour changes, or tell DadCraft it needs one).
 - Build and install yourself: `./gradlew assembleDebug`, then `~/Android/Sdk/platform-tools/adb -s ZD222T44PP install -r
   app/build/outputs/apk/debug/app-debug.apk`. Crashes: `adb logcat`. Event log: `adb shell run-as io.github.dadcraftttv.ouralia cat files/events.log`. A long
   session plugged in: `tools/session_log.sh start`, `stop`, `report` (it dies unplugged: then `dumpsys batterystats
-  --history` and events.log, DESIGN-NOTES "Diagnostics").
+  --history` and events.log, whose "Health:" lines give battery, temperature and the app's CPU each minute;
+  DESIGN-NOTES "Diagnostics").
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
 - New sound ideas go in behind a switch (old sound the default) so he can compare, until he says otherwise.
   A setting that uses our C objects gets `.dcs()` in Params.java (shown with " *").
@@ -89,7 +90,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **Oct 22:** the reviews' points built (ROADMAP 22), MainActivity split, Room in Stereo, pd-core 1.4.2-pdscenes.2,
   a long session (DESIGN-NOTES Status log). All pushed, forks included.
 - **Open:** see ROADMAP "Open now". Next, from the long session: Room in Stereo vs fixed level thresholds, Clear
-  Catches' verdict, Tempo Set following steps?, ducking for a muted game, the app logging battery and CPU itself.
+  Catches' verdict, Tempo Set following steps?, ducking for a muted game.
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
   mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.
