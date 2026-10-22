@@ -278,6 +278,9 @@ public class AudioService extends Service {
                     }
                 }
             }
+            if (!sceneRunning) {
+                sendStereoShape();
+            }
             lastMoverTick = now;
             handler.postDelayed(this, MOVER_INTERVAL_MS);
         }
@@ -814,9 +817,21 @@ public class AudioService extends Service {
         // next (the phone speaker). We never want that: we choose the next headphones ourselves (headphonesLost).
         // In our own pd-core build (libpd #428, pd-for-android #198, see CLAUDE.md "Dependencies").
         PdAudio.setAutoReopen(false);
-        // 1 input channel (mic), 2 output channels. The ticks-per-buffer argument is
-        // ignored by the Oboe backend; Oboe picks the device's low-latency burst size.
-        PdAudio.initAudio(sampleRate, 1, 2, 8, true);
+        // 1 input channel (mic), 2 output channels; 2 inputs for the room in stereo, opened the way this phone's
+        // measurement found gives two mics (StereoCalibration). The ticks-per-buffer argument is ignored by the
+        // Oboe backend; Oboe picks the device's low-latency burst size.
+        StereoRoom.Choice stereo = AudioSettings.stereoChoice(this);
+        stereoOn = scene == null && AudioSettings.stereoRoom(this) && stereo != null && stereo.stereo()
+                && AudioDevices.isPhoneMic(this, in);
+        PdAudio.setInputPreset(stereoOn ? stereo.preset : -1);
+        PdAudio.initAudio(sampleRate, stereoOn ? 2 : 1, 2, 8, true);
+        if (stereoOn && !"2".equals(PdBase.audioRuntimeInfo("inputChannels"))) {
+            logEvent("Room in stereo: the mics didn't open in stereo (" + PdBase.audioRuntimeInfo("inputChannels")
+                    + " channels), playing in mono");
+            stereoOn = false;
+            PdAudio.setInputPreset(-1);
+            PdAudio.initAudio(sampleRate, 1, 2, 8, true);
+        }
         try {
             dcsOk = false;
             dcsMissing = false;
@@ -829,6 +844,18 @@ public class AudioService extends Service {
 
         Kits.source = builtInKits(this);
         ParamStore.sendAllToPd();
+        if (scene == null) {
+            float[] st = StereoRoom.patchValues(stereoOn, stereoOn ? stereo.trimDb : 0f);
+            PdBase.sendFloat("st_r", st[0]);
+            PdBase.sendFloat("st_mid", st[1]);
+            PdBase.sendFloat("st_side", st[2]);
+            stereoPlainSent = -1f;
+            stereoExtraSent = -1;
+            sendStereoShape();
+            if (stereoOn) {
+                logEvent(String.format(java.util.Locale.US, "Room in stereo: on (preset %d, trim %.1f dB)", stereo.preset, stereo.trimDb));
+            }
+        }
         sceneRunning = scene != null;
         if (scene != null) {
             sendSceneLevels(this);
@@ -875,6 +902,43 @@ public class AudioService extends Service {
         logEvent(scene == null ? "Audio started (built-in effects)" : "Audio started (scene)");
         if (scene == null) {   // (scenes don't use our objects)
             handler.postDelayed(dcsCheck, 1000);
+        }
+    }
+
+    /** True while the built-in patch hears the phone's two mics as left and right (the room in stereo). */
+    private static volatile boolean stereoOn;
+    private float stereoPlainSent = -1f;
+    private int stereoExtraSent = -1;
+
+    static boolean isStereo() {
+        return stereoOn;
+    }
+
+    /**
+     * How much of the room is still plain (the stereo width narrows as effects reshape the room), and the side's
+     * extra delay (Smooth distortion's), when they change: at the start and on every mover tick.
+     */
+    private void sendStereoShape() {
+        if (!stereoOn) {
+            if (stereoPlainSent != 0f) {
+                PdBase.sendFloat("stereo_plain", 0f);
+                stereoPlainSent = 0f;
+            }
+            return;
+        }
+        java.util.function.ToDoubleFunction<String> value = id -> {
+            Param p = Params.byId(id);
+            return p == null ? 0 : Modulation.output(p, ParamStore.get(id));
+        };
+        float plain = StereoRoom.plain(value);
+        if (Math.abs(plain - stereoPlainSent) > 0.005f) {
+            PdBase.sendFloat("stereo_plain", plain);
+            stereoPlainSent = plain;
+        }
+        int extra = StereoRoom.extraDelay(value);
+        if (extra != stereoExtraSent) {
+            PdBase.sendFloat("st_extra", extra);
+            stereoExtraSent = extra;
         }
     }
 
@@ -960,6 +1024,7 @@ public class AudioService extends Service {
             return;
         }
         running = false;
+        stereoOn = false;
         outputLost = false;
         SceneGraphics.SCENE.clear();
         handler.removeCallbacks(afterHeadphonesLost);

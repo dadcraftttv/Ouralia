@@ -20,10 +20,11 @@ DCS = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dcs", "bui
 class Engine:
     _current = None   # libpd is one global instance: only one patch may be open at a time
 
-    def __init__(self, lib_path, patch_path, sr=SR, search_path=()):
+    def __init__(self, lib_path, patch_path, sr=SR, search_path=(), in_channels=1):
         if Engine._current is not None:
             Engine._current.close()
         self.sr = sr
+        self.in_channels = in_channels   # 2: the phone's two mics (the room in stereo)
         self.handle = None
         L = self.lib = ctypes.CDLL(lib_path, mode=ctypes.RTLD_GLOBAL)   # compiled externals need libpd's symbols
         L.libpd_init.restype = ctypes.c_int
@@ -43,7 +44,7 @@ class Engine:
         L.libpd_set_printhook.argtypes = [PRINT]
         L.libpd_set_printhook(self._hook)
         L.libpd_init()
-        L.libpd_init_audio(1, 2, sr)
+        L.libpd_init_audio(in_channels, 2, sr)
         L.libpd_start_message(1)
         L.libpd_add_float(1.0)
         L.libpd_finish_message(b"pd", b"dsp")
@@ -137,8 +138,11 @@ class Engine:
         L.libpd_finish_message(name.encode(), selector.encode())
 
     def run(self, mic):
-        """mic: 1-D float32 array; length is rounded down to whole 64-sample blocks."""
+        """mic: 1-D float32 array (or n x 2, left and right, for an engine with in_channels=2); length is rounded
+        down to whole 64-sample blocks."""
         n = (len(mic) // BLOCK) * BLOCK
+        if self.in_channels == 2 and np.ndim(mic) == 1:
+            mic = np.stack([mic, np.zeros_like(mic)], axis=1)
         mic = np.ascontiguousarray(mic[:n], dtype=np.float32)
         out = np.zeros(n * 2, dtype=np.float32)
         ticks = n // BLOCK
