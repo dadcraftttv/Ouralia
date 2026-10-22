@@ -88,7 +88,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.
 - **GitHub:** the repo is dadcraftttv/Ouralia since Oct 21 (renamed from PdScenes; old links redirect). DadCraft asked Support to purge the old commits that held his name. When they answer, check that
   `gh api repos/dadcraftttv/Ouralia/commits/c193786cad2b75e94f01912ec5b3c7b4a1dd26e0` no longer finds it.
-- Push only when DadCraft asks (`git log origin/main..HEAD` shows what is unpushed).
+- Push only when DadCraft asks (`git log origin/main..HEAD` shows what is unpushed). Releases: `docs/RELEASING.md`
+  (`tools/release_apk.sh` builds one).
 
 ## Pd gotchas
 - In message boxes write commas as space + `\,`. `[t b b f]` fires right to left; a `[t]` outlet feeding two objects
