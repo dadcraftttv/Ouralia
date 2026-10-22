@@ -27,9 +27,9 @@ public class V {
     Look.Palette grey=Look.palette(Look.DARK,200,0f);
     int r=(grey.s1>>16)&0xFF,g=(grey.s1>>8)&0xFF,b=grey.s1&0xFF;
     check(r==g&&g==b,"colourfulness 0 gives plain greys");
-    // the Scale sheet's dots: the same notes the patch plays (make_patch.py SCALES)
+    // the Scale sheet's dots: the same notes the patch plays (SCALES in tools/patchgen/constants.py)
     try {
-      String py=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(System.getProperty("repo","."),"tools","make_patch.py")));
+      String py=new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(System.getProperty("repo","."),"tools","patchgen","constants.py")));
       String block=py.substring(py.indexOf("SCALES = ["),py.indexOf("]",py.indexOf("SCALES = [")+10));
       java.util.regex.Matcher m=java.util.regex.Pattern.compile("\\(([0-9, ]+)\\)").matcher(block);
       java.util.List<String> fromPy=new java.util.ArrayList<>();

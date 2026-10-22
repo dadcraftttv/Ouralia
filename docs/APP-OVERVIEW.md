@@ -96,7 +96,7 @@ The code for all of this is in `MainActivity.java`, about 1,300 lines.
 
 - **Audio engine:** libpd `pd-core` 1.4.2-SNAPSHOT (Pd 0.55.2) on Oboe, at 48 kHz (or 22.05 kHz with "RjDj timing" for
   scenes). The built-in effects are one Pd patch, `test_scene.pd`. **That patch is generated** by
-  `tools/make_patch.py` (about 1,500 lines of Python that writes Pd objects and connections). Review the Python, not the
+  `tools/make_patch.py` and `tools/patchgen/` (about 5,000 lines of Python, in parts, that write Pd objects and connections). Review the Python, not the
   `.pd` file.
 - **Java side**, `app/src/main/java/io/github/dadcraftttv/ouralia/`, about 5,000 lines:
   - `AudioService`: the foreground service. It starts and stops libpd, picks devices, watches for headphones being
