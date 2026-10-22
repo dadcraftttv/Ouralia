@@ -16,7 +16,7 @@ it can also play the original RjDj scenes. It will be free on Google Play. (Its 
 <p align="center">
 <img src="docs/screenshots/player.png" width="260" alt="The player: the Intensity dial around the Start button">
 &nbsp;
-<img src="docs/screenshots/music.png" width="260" alt="The Music tab: key, scale, pad and melody sounds">
+<img src="docs/screenshots/music.png" width="260" alt="The Band tab: the song shape and the switches that keep the music changing">
 &nbsp;
 <img src="docs/screenshots/realms.png" width="260" alt="The Realms tab: Realm Hopper and the Realms it picks from">
 </p>
