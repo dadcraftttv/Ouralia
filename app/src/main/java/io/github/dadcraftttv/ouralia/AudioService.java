@@ -829,13 +829,6 @@ public class AudioService extends Service {
                 && AudioDevices.isPhoneMic(this, in);
         PdAudio.setInputPreset(stereoOn ? stereo.preset : -1);
         PdAudio.initAudio(sampleRate, stereoOn ? 2 : 1, 2, 8, true);
-        if (stereoOn && !"2".equals(PdBase.audioRuntimeInfo("inputChannels"))) {
-            logEvent("Room in stereo: the mics didn't open in stereo (" + PdBase.audioRuntimeInfo("inputChannels")
-                    + " channels), playing in mono");
-            stereoOn = false;
-            PdAudio.setInputPreset(-1);
-            PdAudio.initAudio(sampleRate, 1, 2, 8, true);
-        }
         try {
             dcsOk = false;
             dcsMissing = false;
@@ -856,9 +849,6 @@ public class AudioService extends Service {
             stereoPlainSent = -1f;
             stereoExtraSent = -1;
             sendStereoShape();
-            if (stereoOn) {
-                logEvent(String.format(java.util.Locale.US, "Room in stereo: on (preset %d, trim %.1f dB)", stereo.preset, stereo.trimDb));
-            }
         }
         sceneRunning = scene != null;
         if (scene != null) {
@@ -866,6 +856,26 @@ public class AudioService extends Service {
         }
 
         PdAudio.startAudio(this);
+        if (stereoOn) {
+            // The streams open on start (not in initAudio): only now can Oboe say what the mic gave. Not two
+            // channels: the mic again in mono, as with the switch off.
+            String channels = PdBase.audioRuntimeInfo("inputChannels");
+            if ("2".equals(channels)) {
+                logEvent(String.format(java.util.Locale.US, "Room in stereo: on (preset %d, trim %.1f dB)", stereo.preset, stereo.trimDb));
+            } else {
+                logEvent("Room in stereo: the mics didn't open in stereo (" + channels + " channels), playing in mono");
+                stereoOn = false;
+                PdAudio.stopAudio();
+                PdAudio.setInputPreset(-1);
+                PdAudio.initAudio(sampleRate, 1, 2, 8, true);
+                float[] st = StereoRoom.patchValues(false, 0f);
+                PdBase.sendFloat("st_r", st[0]);
+                PdBase.sendFloat("st_mid", st[1]);
+                PdBase.sendFloat("st_side", st[2]);
+                sendStereoShape();
+                PdAudio.startAudio(this);
+            }
+        }
         // Scenes read the sensors as Pd messages; the built-in effects' movers read them directly.
         sensors = new SensorInput(this, scene != null);
         if (!sensors.start()) {

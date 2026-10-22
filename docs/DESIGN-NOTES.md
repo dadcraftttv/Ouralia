@@ -1007,7 +1007,10 @@ to date in the same commit when behaviour changes.
   the switch goes off. On the Moto (a quiet room): Camcorder, -10.6 dB (the 25 dB from the taps was rough).
   `AudioService.openAudio` opens 2 inputs with that preset (pd-core 1.4.2-pdscenes.2's `PdAudio.setInputPreset`)
   only for the built-in effects and the phone's own mic (`AudioDevices.isPhoneMic`: a headset or USB mic stays
-  mono); if `audioRuntimeInfo("inputChannels")` isn't 2 it reopens in mono (event log). The patch
+  mono); if `audioRuntimeInfo("inputChannels")` isn't 2 once the sound has started it reopens in mono (event log).
+  (Oct 22, found in DadCraft's long session on the R8 build: the check first ran before the start, but Oboe opens
+  the streams on start, and the count was an unset int, 2 by chance on the debug build, 0 on release: stereo
+  fell back to mono. Now asked after the start, and the fork's count starts at 0.) The patch
   (`add_stereo_in`/`add_stereo_out`) works in mid and side: the mid (L+R)/2 x trim feeds everything as the one
   mic did; the side (L-R)/2 x trim takes the same gain, gate, compressor, pocket hush and Dry, times
   `stereo_plain` (the app's `StereoRoom.plain`: the product of 1 - amount over Sing in Key, vocoder, ring, pitch,
