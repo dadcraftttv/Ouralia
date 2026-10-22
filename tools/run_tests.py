@@ -265,7 +265,8 @@ def main():
         print("FAIL: make_patch.py\n" + text)
         return 1
     sh(["make", "-s", "-C", "dcs"])
-    jobs = {"java": lambda: sh(["tools/javatests/run.sh"], env=env)}
+    jobs = {"java": lambda: sh(["tools/javatests/run.sh"], env=env),
+            "test_release.py": lambda: sh(["python3", "tools/test_release.py"])}   # (cheap: also in quick)
     if not quick:
         jobs["desktop"] = lambda: sh(["desktop/test.sh"], env=env)
         for t in OTHER_PD:
