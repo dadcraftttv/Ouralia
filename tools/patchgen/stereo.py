@@ -19,7 +19,12 @@ def add_stereo_in(P):
     P.obj("st_diff", "-~", 200, 40); P.c("adc", "st_diff", 0, 0); P.c("adc", "st_diff", 1, 1)
     P.obj("st_side0", "*~ 0", 200, 50); P.c("st_diff", "st_side0")
     P.obj("st_side_r", "r st_side", 260, 30); P.c("st_side_r", "st_side0", 0, 1)
-    return "st_mid"
+    # Wind Guard (Oct 22, `wind_guard`, 0 = off: mid and side pass untouched): dcs_dewind~ pulls wind rumble down in
+    # both, judged together, before the gate and compressor so gusts can't pump them
+    P.obj("dw", "dcs_dewind~", 20, 60); P.c("st_mid", "dw", 0, 0); P.c("st_side0", "dw", 0, 1)
+    P.obj("dw_r", "r wind_guard", 140, 45); P.msg("dw_amt", f"amount {BS}$1", 140, 55)
+    P.c("dw_r", "dw_amt"); P.c("dw_amt", "dw")
+    return "dw"
 
 def add_stereo_out(P, gain, dry):
     """The side joins the ears: left = mid + side, right = mid - side. It takes the gains the mid takes on its way
@@ -28,9 +33,11 @@ def add_stereo_out(P, gain, dry):
     would sound wrong). Delayed like the mid (the spatial stage's EAR_BASE_MS, over the one 64-sample block a delay
     line read before its write can't go under; Smooth distortion turned up adds 16 samples, sent by the app as st_extra),
     so the two cancel in the far ear: a sound only the left mic heard stays in the left ear (test_patch "stereo")."""
-    chain = "st_side0"
+    chain = "dw"   # (dcs_dewind~'s second outlet: the side, wind pulled down like the mid's)
     for k, g in enumerate((gain, "ln_gate", "ln_comp", "hush_ln", dry)):
         chain = P.sig2(f"st_side{k + 1}", "*~", chain, g, 200, 400 + 15 * k)
+        if k == 0:
+            P.conns[-2] = ("dw", 1, f"st_side1", 0)
     P.obj("st_plain_r", "r stereo_plain", 300, 380)
     P.obj("st_plain_pk", "pack f 50", 300, 395); P.c("st_plain_r", "st_plain_pk")
     P.obj("st_plain", "line~", 300, 410); P.c("st_plain_pk", "st_plain")

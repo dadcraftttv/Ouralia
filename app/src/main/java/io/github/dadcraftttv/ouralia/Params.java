@@ -149,6 +149,10 @@ final class Params {
             new Param("onset_mode", "Sudden-Sound Detector", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (how loud)", "New (how the sound changes)")
                     .inSection("main").noPreset().resetWhenAbsent().dcs(),
+            // Wind Guard (Oct 22, ROADMAP 18 dcs_dewind~): wind rumble on the mic pulled down, voices and bass lines
+            // (their lows repeat at a pitch) left alone. A place thing, like the rest of the mic's settings.
+            new Param("wind_guard", "Wind Guard (outdoors: wind rumble on the mic pulled down)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent().dcs(),
             new Param("pocket_rustle", "Rustle Squash (pocket: sudden cloth noise pulled down to the room)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("main").noRandom().noPreset().resetWhenAbsent().dcs(),
             new Param("pocket_steps", "Step Duck (pocket, walking: the mic dips at each footfall)", 0f, 1f, 0f, "",

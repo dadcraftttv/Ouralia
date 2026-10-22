@@ -193,6 +193,7 @@ This section controls the sound going in, before any effect touches it.
 - **Rustle squash \*** and **Step duck \*** (both at 0 to start, pocket only): if cloth noise still gets through
   in a pocket, Rustle squash pulls sudden rustle down to the level of the room, and Step duck dips the mic for a
   moment at each footfall while you walk. Leave them at 0 unless you need them.
+- **Wind Guard \*** (new, 0 = off at first): outdoors, wind blowing on the mic makes a deep rumble that swamps everything. Turn this up and the rumble is pulled down while it blows (it comes back within a quarter second when the wind stops). Voices, and music with a bass line, are left alone. Steady traffic rumble counts as wind and is pulled down too. Try 1 on a windy day and tell Dad how it does.
 - **Dry level:** how much of your original, untouched sound you hear alongside the effects. Lower it to hear mostly effects. It only changes your microphone's sound: the music keeps its own levels, and the echo keeps repeating your sound even with Dry all the way down.
 
 **Gate and compressor shape** (its own folded section) fine-tunes how the noise gate and compressor react. The defaults open the gate within a few milliseconds of a sound and let it fade smoothly, so you don't need to touch these.
