@@ -32,7 +32,7 @@ final class AppearanceUi {
      * playing. Neither is part of presets.
      */
     void addAppearanceSection(LinearLayout parent) {
-        LinearLayout body = a.addSection(parent, "appearance", a.getString(R.string.section_appearance), false);
+        LinearLayout body = a.settingRows.addSection(parent, "appearance", a.getString(R.string.section_appearance), false);
         int[] themes = {UiSettings.THEME_PHONE, UiSettings.THEME_LIGHT, UiSettings.THEME_DARK, UiSettings.THEME_AMOLED};
         String[] names = {a.getString(R.string.theme_phone), a.getString(R.string.theme_light),
                 a.getString(R.string.theme_dark), a.getString(R.string.theme_amoled)};

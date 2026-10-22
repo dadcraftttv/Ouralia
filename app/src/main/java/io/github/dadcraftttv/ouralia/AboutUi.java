@@ -29,7 +29,7 @@ final class AboutUi {
     }
 
     void addAboutSection(LinearLayout parent) {
-        LinearLayout body = a.addSection(parent, "about", a.getString(R.string.section_about), false);
+        LinearLayout body = a.settingRows.addSection(parent, "about", a.getString(R.string.section_about), false);
         TextView text = new TextView(a);
         text.setTextSize(14);
         String source = a.getString(R.string.source_url);

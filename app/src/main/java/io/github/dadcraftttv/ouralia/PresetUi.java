@@ -89,7 +89,7 @@ final class PresetUi {
             return;
         }
         ParamStore.applyPreset(values);
-        a.refreshRows();
+        a.settingRows.refreshRows();
         a.toast(R.string.toast_loaded, name);
     }
 
@@ -200,7 +200,7 @@ final class PresetUi {
                     ? a.getString(R.string.imported_name, preset.name) : preset.name;
             String used = PresetManager.save(a, PresetManager.uniqueName(a, name), preset.values);
             ParamStore.applyPreset(preset.values);
-            a.refreshRows();
+            a.settingRows.refreshRows();
             a.toast(R.string.toast_imported, used);
             a.realmsUi.refreshWorldRows();
         } catch (IOException | JSONException | RuntimeException e) {

@@ -14,10 +14,17 @@ to date in the same commit when behaviour changes.
 - `app/src/main/java/io/github/dadcraftttv/ouralia/` — Java, plain Views (no Compose; do not rewrite).
   Param/Params/ParamStore/PresetManager/Modulation (slider registry, presets, movers), Worlds/WorldSelector (Auto Worlds),
   StepDetector (walking beat), AudioService/AudioDevices/AudioSettings (audio engine and devices), SceneSettings, MainActivity.
-  **MainActivity's split** (Oct 22, ROADMAP 22, DadCraft's pick from the outside reviews): one class per feature,
-  each holding the activity (`a`) and using its shared helpers (`look`, `dp`, `addButton`, `openSheet`, `toast`,
-  `LookDialog`...: package-private, not private); MainActivity stays the coordinator. Done: SceneUi (the Scenes
-  tab and the shared pad), AboutUi (Setup's About card, feedback, licences), PresetUi (presets, Save, snapshot, export/import, Reset everything), KitUi (the Music tab's Your Kits card, kit import/delete), AppearanceUi (theme, accent swatches, the colour ring), ChoiceUi (Key/Scale tiles and sheets, segment buttons, choice sheets), RealmsUi (the Realms tab, Realm sheets, ingredients), DevicesUi (Audio Devices pickers, the mic hint, Diagnostics), PlayerUi (the docked player, its sheet content, the status and Realm lines). Planned, in order: SettingRows. No behaviour change in any step.
+  **MainActivity's split** (Oct 22, ROADMAP 22, DadCraft's pick from the outside reviews; 3,753 -> 1,237 lines, no
+  behaviour change, each step checked on the phone): one class per feature, each holding the activity (`a`) and
+  using its shared pieces (`look`, `dp`, `addButton`, `chip`, `openSheet`/`closeSheet`, `sheetHeading`,
+  `addListRows`, `segmentBar`, `toast`, `LookDialog`: package-private, not private). MainActivity keeps startup,
+  the tabs, the bottom sheet's frame, Start/Stop, permissions, the walkthrough and tour, and the lifecycle.
+  SettingRows (the cards and setting rows, movers, budget lines, faded rows, refreshRows), PlayerUi (the docked
+  player, its sheet content, the status and Realm lines), ChoiceUi (Key/Scale tiles and sheets, segment buttons,
+  choice sheets), RealmsUi (the Realms tab, Realm sheets, ingredients), DevicesUi (Audio Devices pickers, the mic
+  hint, Diagnostics), AppearanceUi (theme, accent swatches, the colour ring), PresetUi (presets, Save, snapshot,
+  export/import, Reset everything), KitUi (Your Kits card, kit import/delete), SceneUi (the Scenes tab and the
+  shared pad), AboutUi (About, feedback, licences). A new screen part gets its own class the same way.
 - `app/src/main/assets/patches/test_scene.pd` — the built-in effects patch. **Generated.** Edit `tools/make_patch.py`, then run
   `python3 tools/make_patch.py`. Never hand-edit the .pd.
 - `app/src/main/assets/scene_lib` — bundled rjlib. `docs/RJDJ-NOTES.md` — notes on the original format.

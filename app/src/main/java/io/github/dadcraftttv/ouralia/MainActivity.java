@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Typeface;
 import android.media.AudioDeviceCallback;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
@@ -17,12 +16,10 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -46,20 +43,15 @@ public class MainActivity extends Activity {
     static final int REQ_IMPORT_KIT = 23;
     static final int REQ_IMPORT_KIT_FOLDER = 24;
 
-    final List<Row> rows = new ArrayList<>();
-    /** The mover controls under each slider, greyed out while their section's movers are off. */
-    private final List<MoverUi> moverUis = new ArrayList<>();
     private AudioManager audioManager;
 
-    private final Map<String, TextView> budgetLines = new HashMap<>();   // budget name -> its "used / left" line
-    private final Map<View, String> fadedUnless = new HashMap<>();   // a row -> the setting it needs on (faded while off)
     private final android.os.Handler uiHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private static final long NOW_LINE_MS = 1000;
     private final Runnable nowLineTick = new Runnable() {
         @Override
         public void run() {
             playerUi.updateNowLine();
-            updateMoverDots();
+            settingRows.updateMoverDots();
             playerUi.updateIntensityRow();
             playerUi.updateStatus();
             if (walkthrough != null) {
@@ -70,7 +62,7 @@ public class MainActivity extends Activity {
         }
     };
     private TextView warning;
-    private Button undoButton;
+    Button undoButton;
     /** Presets, randomize and the effect sections: hidden while an imported scene is selected. */
     // ---- tabs: Sound, Music, Realms, Scenes, Setup (the one long list had outgrown itself) ----
     static final int TAB_SOUND = 0, TAB_MUSIC = 1, TAB_REALMS = 2, TAB_SCENES = 3, TAB_SETUP = 4;
@@ -86,18 +78,20 @@ public class MainActivity extends Activity {
     private int currentTab = -1;
     /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
     Styler look;
+    /** The settings as cards and rows (SettingRows.java). */
+    final SettingRows settingRows = new SettingRows(this);
     /** The docked player and its sheet (PlayerUi.java). */
-    private final PlayerUi playerUi = new PlayerUi(this);
+    final PlayerUi playerUi = new PlayerUi(this);
     /** Setup's Audio Devices and Diagnostics cards (DevicesUi.java). */
     private final DevicesUi devicesUi = new DevicesUi(this);
     /** The Realms tab (RealmsUi.java). */
     final RealmsUi realmsUi = new RealmsUi(this);
     /** Pick-one settings (ChoiceUi.java). */
-    private final ChoiceUi choiceUi = new ChoiceUi(this);
+    final ChoiceUi choiceUi = new ChoiceUi(this);
     /** Setup's Appearance card (AppearanceUi.java). */
     private final AppearanceUi appearanceUi = new AppearanceUi(this);
     /** The Music tab's Kits card (KitUi.java). */
-    private final KitUi kitUi = new KitUi(this);
+    final KitUi kitUi = new KitUi(this);
     /** Presets (PresetUi.java). */
     final PresetUi presetUi = new PresetUi(this);
     /** Setup's About card (AboutUi.java). */
@@ -105,40 +99,6 @@ public class MainActivity extends Activity {
     /** The Scenes tab (SceneUi.java). */
     private final SceneUi sceneUi = new SceneUi(this);
     LinearLayout xyPadSlot;          // where the pad sits on the Sound tab (an XY pad for the movers)
-
-    /** One on-screen control: a slider with a label, or a switch (for toggles). */
-    private static final class MoverUi {
-        final String sectionId;
-        final String paramId;
-        final View box;        // everything: the movement dropdown and the details
-        final View details;    // speed and depth, shown only while a movement is chosen
-
-        MoverUi(String sectionId, String paramId, View box, View details) {
-            this.sectionId = sectionId;
-            this.paramId = paramId;
-            this.box = box;
-            this.details = details;
-        }
-    }
-
-    static final class Row {
-        final Param param;
-        final TextView label;     // slider rows only
-        final SeekBar slider;     // slider rows only
-        final android.widget.CompoundButton switchView;  // toggle rows (a switch, or a card header's Movers pill)
-        String[] choicesShown;    // the names last shown (the Kit lists change when user kits come and go)
-        TextView tile;            // pick-one rows shown as a tile that opens a sheet: its value
-        TextView[] segment;       // pick-one rows shown as side-by-side buttons
-        TextView segmentHint;     // ...and the chosen one's explanation under them
-
-        Row(Param param, TextView label, SeekBar slider, android.widget.CompoundButton switchView) {
-            this.param = param;
-            this.label = label;
-            this.slider = slider;
-            this.switchView = switchView;
-            this.choicesShown = param.choices;
-        }
-    }
 
     /** Re-checks for headphones when something is plugged in or removed. */
     private final AudioDeviceCallback deviceCallback = new AudioDeviceCallback() {
@@ -296,39 +256,39 @@ public class MainActivity extends Activity {
         randomRow.setPadding(0, dp(2), 0, dp(4));
         randomizeChip = chip(randomRow, R.drawable.ic_shuffle, R.string.randomize, () -> {
             ParamStore.randomize();
-            refreshRows();
+            settingRows.refreshRows();
             uiHandler.removeCallbacks(morphFollow);
             uiHandler.post(morphFollow);   // the sliders follow the glide on screen
         });
         nudgeChip = chip(randomRow, R.drawable.ic_wave, R.string.nudge, () -> {
             ParamStore.nudge(ParamStore.get("nudge_amount"));
-            refreshRows();
+            settingRows.refreshRows();
         });
         undoButton = chip(randomRow, R.drawable.ic_undo, R.string.undo, () -> {
             ParamStore.undo();
-            refreshRows();
+            settingRows.refreshRows();
         });
         // the XY pad and its hint on a card that folds like the sections (DadCraft: hide it if you don't use it)
         View gap = new View(this);
         sound.addView(gap, new LinearLayout.LayoutParams(0, dp(6)));
-        xyPadSlot = addSection(sound, "xy_pad", getString(R.string.xy_pad_title), true);
+        xyPadSlot = settingRows.addSection(sound, "xy_pad", getString(R.string.xy_pad_title), true);
 
         // ---- Realms ----
         Worlds.load(this);
-        addSection(realms, "worlds", getString(R.string.section_worlds), true, realmsUi::fillWorldsSection);
+        settingRows.addSection(realms, "worlds", getString(R.string.section_worlds), true, realmsUi::fillWorldsSection);
 
         // ---- the sections, each on its tab ----
         for (Params.Section section : Params.SECTIONS) {
             LinearLayout tab = "beat".equals(section.id) || "music".equals(section.id) || "mix".equals(section.id) ? music
                     : "behavior".equals(section.id) ? setup : sound;
             if (section.group != null) {
-                addGroupHeading(tab, section.group);
+                settingRows.addGroupHeading(tab, section.group);
             }
-            addSection(tab, section.id, section.title, section.openByDefault,
-                    body -> fillEffectSection(body, section), headerExtras(section));
+            settingRows.addSection(tab, section.id, section.title, section.openByDefault,
+                    body -> settingRows.fillEffectSection(body, section), settingRows.headerExtras(section));
         }
 
-        addSection(music, "kits", getString(R.string.section_kits), false, kitUi::fillKitsSection);
+        settingRows.addSection(music, "kits", getString(R.string.section_kits), false, kitUi::fillKitsSection);
 
         // ---- Setup ----
         devicesUi.addAudioSection(setup);
@@ -414,7 +374,7 @@ public class MainActivity extends Activity {
         }
         currentTab = tab;
         UiSettings.setTab(this, tab);
-        refreshRows();   // rows on a hidden tab skip every refresh (a preset loaded on Sound left The Band's kit menus stale)
+        settingRows.refreshRows();   // rows on a hidden tab skip every refresh (a preset loaded on Sound left The Band's kit menus stale)
         if (mainScroll != null) {
             final int y = tabScroll[tab];
             mainScroll.post(() -> mainScroll.scrollTo(0, y));
@@ -656,7 +616,7 @@ public class MainActivity extends Activity {
     private final Runnable morphFollow = new Runnable() {
         @Override
         public void run() {
-            refreshRows();
+            settingRows.refreshRows();
             if (ParamStore.isMorphing()) {
                 uiHandler.postDelayed(this, 120);
             }
@@ -712,7 +672,7 @@ public class MainActivity extends Activity {
         Worlds.setListener(() -> {
             realmsUi.updateWorldStatus();
             playerUi.updateIntensityRow();   // the player's line names the Realm
-            refreshRows();   // sliders move on their own while a world fades in
+            settingRows.refreshRows();   // sliders move on their own while a world fades in
         });
         realmsUi.refreshWorldRows();
         realmsUi.updateWorldStatus();
@@ -810,320 +770,6 @@ public class MainActivity extends Activity {
         return b;
     }
 
-    /** A tappable header that shows or hides the returned container. State is remembered. */
-    LinearLayout addSection(LinearLayout parent, String id, String title,
-                                    boolean openByDefault) {
-        return addSection(parent, id, title, openByDefault, null);
-    }
-
-    /**
-     * A foldable section. {@code fill} (may be null) builds the rows the first time the section is shown, so
-     * folded sections cost nothing at startup.
-     */
-    LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
-                                    java.util.function.Consumer<LinearLayout> fill) {
-        return addSection(parent, id, title, openByDefault, fill, new ArrayList<>());
-    }
-
-    /**
-     * A foldable section card: a full-width tappable header (title, {@code extras} such as the Movers pill and the
-     * section's on/off switch, a chevron), the rows inside. {@code fill} (may be null) builds the rows the first time
-     * the section opens, so folded sections cost nothing at startup.
-     */
-    LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
-                                    java.util.function.Consumer<LinearLayout> fill, List<View> extras) {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.VERTICAL);
-        look.card(card);
-        LinearLayout headRow = new LinearLayout(this);
-        headRow.setOrientation(LinearLayout.HORIZONTAL);
-        headRow.setGravity(Gravity.CENTER_VERTICAL);
-        headRow.setMinimumHeight(dp(56));
-        headRow.setPadding(dp(Look.CARD_PAD), dp(6), dp(14), dp(6));
-        headRow.setBackground(look.pressable(null, look.p.text, 0));
-        LinearLayout titles = new LinearLayout(this);   // the title, and its bracketed explanation under it
-        titles.setOrientation(LinearLayout.VERTICAL);
-        TextView header = new TextView(this);
-        header.setTextSize(Look.TEXT_HEADING);
-        header.setTypeface(look.heading());
-        header.setTextColor(look.p.text);
-        titles.addView(header);
-        String subtitle = splitLabel(title)[1];
-        if (!subtitle.isEmpty()) {
-            TextView sub = new TextView(this);
-            sub.setText(subtitle);
-            look.hint(sub);
-            titles.addView(sub);
-        }
-        headRow.addView(titles, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        for (View extra : extras) {
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            lp.setMarginStart(dp(8));
-            headRow.addView(extra, lp);
-        }
-        ImageView chevron = new ImageView(this);
-        chevron.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.muted));
-        LinearLayout.LayoutParams chevronParams = new LinearLayout.LayoutParams(dp(22), dp(22));
-        chevronParams.setMarginStart(dp(10));
-        headRow.addView(chevron, chevronParams);
-        sectionChevrons.put(header, chevron);
-
-        LinearLayout body = new LinearLayout(this);
-        body.setOrientation(LinearLayout.VERTICAL);
-        body.setPadding(dp(Look.CARD_PAD), 0, dp(Look.CARD_PAD), dp(16));
-
-        boolean[] filled = {fill == null};
-        Runnable show = () -> {
-            if (!filled[0]) {
-                filled[0] = true;
-                fill.accept(body);
-                look.fonts(body);
-                refreshRows();   // the new rows start with the stored values
-            }
-        };
-        boolean open = UiSettings.isExpanded(this, id, openByDefault);
-        showSectionState(header, body, title, open);
-        if (open) {
-            show.run();
-        }
-        headRow.setOnClickListener(v -> {
-            boolean nowOpen = body.getVisibility() != View.VISIBLE;
-            UiSettings.setExpanded(this, id, nowOpen);
-            showSectionState(header, body, title, nowOpen);
-            if (nowOpen) {
-                show.run();
-                refreshRows();   // rows skipped while folded catch up
-            }
-        });
-
-        card.addView(headRow);
-        card.addView(body);
-        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        cardParams.setMargins(0, 0, 0, dp(Look.CARD_GAP));
-        parent.addView(card, cardParams);
-        sectionCards.put(id, card);
-        return body;
-    }
-
-    /** One effect section: its Movers switch, then each slider followed by its movement settings. */
-    private void fillEffectSection(LinearLayout body, Params.Section section) {
-        Param moversSwitch = Params.byId(Params.moversSwitchId(section.id));
-        Param onSwitch = Params.onSwitch(section);   // (both sit on the card's header)
-        for (Param p : Params.ALL) {
-            if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch && p != onSwitch) {
-                if (p.id.equals("music_key")) {   // Key and Scale: two tiles side by side, each opening a sheet
-                    choiceUi.addKeyScaleTiles(body);
-                    continue;
-                } else if (p.id.equals("music_scale")) {
-                    continue;
-                }
-                int[] heading = SUBHEADINGS.get(p.id);
-                if (heading != null) {
-                    addSubheading(body, heading[0], heading[1]);
-                }
-                if (p.id.startsWith("kitl_")) {
-                    addLayerPanel(body, p, Params.byId("kitb_" + p.id.substring(5)));
-                    continue;
-                } else if (p.id.startsWith("kitb_")) {
-                    continue;   // (inside its layer's panel)
-                } else if (p.id.equals("echo_throw") || p.id.equals("echo_depth")) {
-                    LinearLayout box = new LinearLayout(this);   // (only the New scatter style uses them)
-                    box.setOrientation(LinearLayout.VERTICAL);
-                    addRow(box, p);
-                    body.addView(box);
-                    fadedUnless.put(box, "echo_scatter_style");
-                    continue;
-                }
-                addRow(body, p);
-                if (Params.byId(Params.moverId(p.id, "mv")) != null) {
-                    addMoverRows(body, section.id, p);
-                }
-                if (p.budget != null && lastOfBudget(p)) {   // the glitch matrix: how much of it is in use
-                    TextView line = new TextView(this);
-                    line.setTextSize(14);
-                    line.setTypeface(Typeface.DEFAULT_BOLD);
-                    line.setPadding(0, dp(10), 0, dp(4));
-                    body.addView(line);
-                    budgetLines.put(p.budget, line);
-                }
-            }
-        }
-        updateBudgetLines();
-    }
-
-    /**
-     * The groups inside a long card (DadCraft, Oct 20: the kit menus "almost kind of run together"): a heading, and
-     * a hint or 0, before the setting that starts each group.
-     */
-    private static final Map<String, int[]> SUBHEADINGS = new HashMap<>();
-    static {
-        SUBHEADINGS.put("gain", new int[]{R.string.sub_mic, 0});
-        SUBHEADINGS.put("pocket_hush", new int[]{R.string.sub_pocket, R.string.sub_pocket_hint});
-        SUBHEADINGS.put("dry", new int[]{R.string.sub_output, 0});
-        SUBHEADINGS.put("music_var", new int[]{R.string.sub_notes, 0});
-        SUBHEADINGS.put(Kits.ID, new int[]{R.string.kits_heading, 0});
-        SUBHEADINGS.put("kitp_mel", new int[]{R.string.kits_mix_heading, R.string.kits_mix_hint});
-        SUBHEADINGS.put("kitl_mel", new int[]{R.string.kits_layers_heading, R.string.kits_layers_hint});
-        SUBHEADINGS.put("mel_rhythm", new int[]{R.string.music_more_heading, 0});
-        SUBHEADINGS.put("mix_kick", new int[]{R.string.sub_drums, 0});
-        SUBHEADINGS.put("music_pad", new int[]{R.string.sub_pad_bass, 0});
-        SUBHEADINGS.put("music_arp", new int[]{R.string.sub_melody, 0});
-        SUBHEADINGS.put("mix_ring", new int[]{R.string.sub_answers, R.string.sub_answers_hint});
-        SUBHEADINGS.put("gc_amount", new int[]{R.string.sub_cloud, 0});
-        SUBHEADINGS.put("gc_pct_stutter", new int[]{R.string.sub_kinds, R.string.sub_kinds_hint});
-        SUBHEADINGS.put("glitch_hold", new int[]{R.string.sub_freeze, 0});
-    }
-
-    /** A small accent heading inside a card, with an optional hint under it and a line above it (not at the top). */
-    /** A family of cards on a tab (Voice, Grit...): the subheading's style, between the cards. */
-    private void addGroupHeading(LinearLayout tab, String title) {
-        TextView head = new TextView(this);
-        head.setText(title.toUpperCase(java.util.Locale.ROOT));
-        head.setTypeface(look.textStrong());
-        head.setTextSize(Look.TEXT_HINT);
-        head.setLetterSpacing(0.1f);
-        head.setTextColor(look.p.primaryText);
-        head.setAccessibilityHeading(true);
-        head.setPadding(dp(Look.CARD_PAD), dp(10), dp(Look.CARD_PAD), dp(8));
-        tab.addView(head);
-    }
-
-    private void addSubheading(LinearLayout parent, int title, int hint) {
-        if (parent.getChildCount() > 0) {
-            View rule = new View(this);
-            rule.setBackgroundColor(look.p.line);
-            LinearLayout.LayoutParams ruleParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, dp(1));
-            ruleParams.setMargins(0, dp(24), 0, dp(14));
-            parent.addView(rule, ruleParams);
-        } else {
-            parent.addView(new View(this), new LinearLayout.LayoutParams(0, dp(8)));
-        }
-        TextView head = new TextView(this);
-        head.setText(getString(title).toUpperCase(java.util.Locale.ROOT));
-        head.setTypeface(look.textStrong());
-        head.setTextSize(Look.TEXT_HINT);
-        head.setLetterSpacing(0.1f);
-        head.setTextColor(look.p.primaryText);
-        head.setAccessibilityHeading(true);
-        parent.addView(head);
-        if (hint != 0) {
-            TextView line = new TextView(this);
-            line.setText(hint);
-            look.hint(line);
-            line.setPadding(0, dp(2), 0, 0);
-            parent.addView(line);
-        }
-    }
-
-    /** A part's layer and its blend in one outlined panel; the blend fades while the layer is None. */
-    private void addLayerPanel(LinearLayout parent, Param layer, Param blend) {
-        LinearLayout panel = new LinearLayout(this);
-        panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setBackground(look.outline(look.p.line, Look.RADIUS_TILE));
-        panel.setPadding(dp(12), 0, dp(12), dp(12));
-        addRow(panel, layer, false);
-        LinearLayout blendBox = new LinearLayout(this);
-        blendBox.setOrientation(LinearLayout.VERTICAL);
-        addRow(blendBox, blend, false);
-        panel.addView(blendBox);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, dp(12), 0, 0);
-        parent.addView(panel, lp);
-        fadedUnless.put(blendBox, layer.id);
-    }
-
-    /** Rows that do nothing while another setting is off or None (a layer's blend, the New scatter's sliders) fade. */
-    private void updateFadedRows() {
-        for (Map.Entry<View, String> e : fadedUnless.entrySet()) {
-            e.getKey().setAlpha(ParamStore.get(e.getValue()) >= 0.5f ? 1f : 0.4f);
-        }
-    }
-
-    /** A section's own on/off switch ("Echo enabled"...): shown on its card's header. Null if it has none. */
-    /**
-     * What a section's header carries: the Movers pill (automatic movement for this section, on or off) and the
-     * section's on/off switch, so both work with the card folded.
-     */
-    private List<View> headerExtras(Params.Section section) {
-        List<View> extras = new ArrayList<>();
-        Param movers = Params.byId(Params.moversSwitchId(section.id));
-        if (movers != null) {
-            android.widget.ToggleButton pill = new android.widget.ToggleButton(this);
-            pill.setTextOn(getString(R.string.movers_on));
-            pill.setTextOff(getString(R.string.movers_off));
-            look.pill(pill);
-            pill.setContentDescription(movers.label);
-            pill.setChecked(ParamStore.get(movers.id) >= 0.5f);
-            pill.setOnClickListener(v -> {
-                ParamStore.set(movers.id, pill.isChecked() ? 1f : 0f);
-                updateMoverUi();   // greys the section's mover controls in or out
-            });
-            extras.add(pill);
-            rows.add(new Row(movers, null, null, pill));
-        }
-        Param on = Params.onSwitch(section);
-        if (on != null) {
-            Switch sw = new Switch(this);
-            look.switchTint(sw);
-            sw.setContentDescription(on.label);
-            sw.setChecked(ParamStore.get(on.id) >= 0.5f);
-            sw.setOnClickListener(v -> {
-                ParamStore.set(on.id, sw.isChecked() ? 1f : 0f);
-                updateMoverUi();
-            });
-            extras.add(sw);
-            rows.add(new Row(on, null, null, sw));
-        }
-        return extras;
-    }
-
-    /** True for the last slider of its budget group (the line showing what is used goes under it). */
-    private static boolean lastOfBudget(Param p) {
-        boolean after = false;
-        for (Param q : Params.ALL) {
-            if (q == p) {
-                after = true;
-            } else if (after && p.budget.equals(q.budget)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /** "Glitch budget: 80% used, 20% left to silence" under the glitch matrix sliders. */
-    private void updateBudgetLines() {
-        for (Map.Entry<String, TextView> e : budgetLines.entrySet()) {
-            float used = 0;
-            for (Param q : Params.ALL) {
-                if (e.getKey().equals(q.budget)) {
-                    used += ParamStore.get(q.id);
-                }
-            }
-            int u = Math.round(used);
-            e.getValue().setText(u > 100 ? getString(R.string.glitch_budget_over, u)
-                    : getString(R.string.glitch_budget, u, 100 - u));
-        }
-    }
-
-    /** Each section header's chevron, by its title view. */
-    private final Map<TextView, ImageView> sectionChevrons = new HashMap<>();
-    private final Map<String, LinearLayout> sectionCards = new HashMap<>();   // by section id: header row, then body
-
-    private void showSectionState(TextView header, View body, String title, boolean open) {
-        body.setVisibility(open ? View.VISIBLE : View.GONE);
-        header.setText(splitLabel(title)[0]);
-        ImageView chevron = sectionChevrons.get(header);
-        if (chevron != null) {
-            chevron.setImageResource(open ? R.drawable.ic_chevron_up : R.drawable.ic_chevron_down);
-        }
-        ((View) header.getParent().getParent()).setContentDescription(
-                getString(open ? R.string.section_open : R.string.section_closed, title));
-    }
-
     /** When the app was first installed and last updated (ms); equal on a fresh install. */
     private long[] installTimes() {
         try {
@@ -1184,7 +830,7 @@ public class MainActivity extends Activity {
         }
         closeSheet();
         showTab(TAB_SOUND);
-        LinearLayout echoCard = sectionCards.get("echo");
+        LinearLayout echoCard = settingRows.sectionCards.get("echo");
         View echoHead = echoCard.getChildAt(0), echoBody = echoCard.getChildAt(1);
         View movers = null, onOff = null, chevron = null;
         android.view.ViewGroup head = (android.view.ViewGroup) echoHead;
@@ -1221,8 +867,8 @@ public class MainActivity extends Activity {
         if (Params.byId(echoMovers) != null) {
             ParamStore.set(echoMovers, 0f);
         }
-        refreshRows();
-        updateMoverUi();
+        settingRows.refreshRows();
+        settingRows.updateMoverUi();
 
         boolean scene = SceneSettings.current(this) != null;   // (the effects are paused: no live try)
         Runnable top = () -> mainScroll.post(() -> mainScroll.scrollTo(0, 0));
@@ -1295,8 +941,8 @@ public class MainActivity extends Activity {
             if ((echoBody.getVisibility() == View.VISIBLE) != echoWasOpen) {
                 echoHead.performClick();
             }
-            refreshRows();
-            updateMoverUi();
+            settingRows.refreshRows();
+            settingRows.updateMoverUi();
             if (Build.VERSION.SDK_INT >= 33 && backEndsTour != null) {
                 getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback((android.window.OnBackInvokedCallback) backEndsTour);
                 backEndsTour = null;
@@ -1313,7 +959,7 @@ public class MainActivity extends Activity {
 
     /** A slider row's name line, or its slider, for the tour. Null until its card has opened. */
     private View rowView(String id, boolean slider) {
-        for (Row r : rows) {
+        for (SettingRows.Row r : settingRows.rows) {
             if (r.param.id.equals(id) && r.slider != null) {
                 return slider ? r.slider : (View) r.label.getParent();
             }
@@ -1339,104 +985,6 @@ public class MainActivity extends Activity {
             tour.end();   // (puts Echo back)
         }
         super.onDestroy();
-    }
-
-    private void addRow(LinearLayout parent, Param p) {
-        addRow(parent, p, false);
-    }
-
-    /** {@code compact} makes a smaller, tighter row, for the mover settings under a slider. */
-    private void addRow(LinearLayout parent, Param p, boolean compact) {
-        if (p.toggle) {
-            // the name (its bracketed explanation on a quieter line under it) and the switch; tapping the words
-            // flips it too
-            LinearLayout line = new LinearLayout(this);
-            line.setOrientation(LinearLayout.HORIZONTAL);
-            line.setGravity(Gravity.CENTER_VERTICAL);
-            line.setMinimumHeight(dp(52));
-            line.setPadding(0, dp(6), 0, dp(6));
-            line.addView(nameAndHint(p, compact), new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-            Switch sw = new Switch(this);
-            look.switchTint(sw);
-            sw.setContentDescription(p.label);
-            sw.setChecked(ParamStore.get(p.id) >= 0.5f);   // right from the start (folded rows aren't refreshed)
-            sw.setOnClickListener(v -> {
-                ParamStore.set(p.id, sw.isChecked() ? 1f : 0f);
-                updateMoverUi();   // a section's movers switch greys its mover controls in or out
-            });
-            LinearLayout.LayoutParams swParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            swParams.setMarginStart(dp(12));
-            line.addView(sw, swParams);
-            line.setOnClickListener(v -> sw.performClick());
-            parent.addView(line);
-            rows.add(new Row(p, null, null, sw));
-            return;
-        }
-        if (p.choices != null) {
-            choiceUi.addChoiceRow(parent, p, compact);
-            return;
-        }
-
-        LinearLayout head = new LinearLayout(this);
-        head.setOrientation(LinearLayout.HORIZONTAL);
-        head.setGravity(Gravity.CENTER_VERTICAL);
-        head.setPadding(0, dp(compact ? 4 : 14), 0, 0);
-
-        // the name (and its explanation) on the left, the value on the right in the accent, then the lock
-        head.addView(nameAndHint(p, compact), new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        TextView label = new TextView(this);   // (the value: what refreshRows and the mover dot update)
-        label.setTypeface(look.value());
-        label.setTextSize(compact ? Look.TEXT_HINT : Look.TEXT_VALUE);
-        label.setTextColor(look.p.primaryText);
-        label.setPadding(dp(12), 0, 0, 0);
-        head.addView(label);
-
-        if (Params.lockable(p)) {
-            CheckBox lock = new CheckBox(this);
-            look.lock(lock, getDrawable(R.drawable.ic_lock), getDrawable(R.drawable.ic_lock_open));
-            lock.setContentDescription(getString(R.string.lock) + ": " + p.label);
-            lock.setChecked(ParamStore.isLocked(p.id));
-            lock.setOnCheckedChangeListener((b, checked) -> ParamStore.setLocked(p.id, checked));
-            LinearLayout.LayoutParams lockParams = new LinearLayout.LayoutParams(dp(44), dp(44));
-            lockParams.setMarginStart(dp(8));   // a little room between the value and its padlock
-            head.addView(lock, lockParams);
-        }
-        parent.addView(head);
-
-        SeekBar slider = new SeekBar(this);
-        slider.setMax(1000);
-        look.slider(slider);
-        slider.setMinimumHeight(dp(40));
-        slider.setContentDescription(p.label);
-        float v0 = ParamStore.get(p.id);                  // right from the start (folded rows aren't refreshed)
-        slider.setProgress(Math.round(p.toNorm(v0) * 1000f));
-        label.setText(valueText(p, v0));
-        parent.addView(slider);
-        rows.add(new Row(p, label, slider, null));
-
-        slider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar s, int progress, boolean fromUser) {
-                if (fromUser) {  // ignore changes we make ourselves in refreshRows()
-                    float value = p.toValue(progress / 1000f);
-                    float room = ParamStore.budgetRoom(p);   // the glitch matrix: the shares can't pass 100%
-                    if (value > room) {
-                        value = room;
-                        s.setProgress(Math.round(p.toNorm(value) * 1000));
-                    }
-                    ParamStore.set(p.id, value);
-                    label.setText(valueText(p, value));
-                    if (p.budget != null) {
-                        updateBudgetLines();
-                    }
-                }
-            }
-
-            @Override public void onStartTrackingTouch(SeekBar s) { }
-            @Override public void onStopTrackingTouch(SeekBar s) { }
-        });
     }
 
     /** A sheet's title and the line under it. */
@@ -1532,130 +1080,6 @@ public class MainActivity extends Activity {
             bar.addView(b, new LinearLayout.LayoutParams(0, dp(44), 1f));
         }
         return bar;
-    }
-
-    /** The movement, speed and depth controls of one slider's mover, indented under it. */
-    private void addMoverRows(LinearLayout parent, String sectionId, Param slider) {
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(16), 0, 0, dp(4));
-        addRow(box, Params.byId(Params.moverId(slider.id, "mv")), true);
-        LinearLayout details = new LinearLayout(this);
-        details.setOrientation(LinearLayout.VERTICAL);
-        addRow(details, Params.byId(Params.moverId(slider.id, "mvspeed")), true);
-        addRow(details, Params.byId(Params.moverId(slider.id, "mvdepth")), true);
-        box.addView(details);
-        parent.addView(box);
-        moverUis.add(new MoverUi(sectionId, slider.id, box, details));
-    }
-
-    /** Hides mover controls whose section has its Movers off; hides speed and depth while a mover is Off. */
-    void updateMoverUi() {
-        for (MoverUi m : moverUis) {
-            boolean on = ParamStore.get(Params.moversSwitchId(m.sectionId)) >= 0.5f;
-            boolean moving = Math.round(ParamStore.get(Params.moverId(m.paramId, "mv"))) != 0;
-            m.details.setVisibility(moving ? View.VISIBLE : View.GONE);
-            // shown only while the card's Movers are on (greyed copies under every slider were clutter)
-            m.box.setVisibility(on ? View.VISIBLE : View.GONE);
-            setTreeEnabled(m.box, on);
-        }
-    }
-
-    private static void setTreeEnabled(View view, boolean enabled) {
-        view.setEnabled(enabled);
-        if (view instanceof LinearLayout) {
-            LinearLayout group = (LinearLayout) view;
-            for (int i = 0; i < group.getChildCount(); i++) {
-                setTreeEnabled(group.getChildAt(i), enabled);
-            }
-        }
-    }
-
-    /** A slider's value as shown on its right (its name is a separate label). */
-    private String valueText(Param p, float value) {
-        return p.format(value);
-    }
-
-    /** A setting's name and its bracketed explanation, split: "Calm builds (standing still...)". " *" stays on the name. */
-    static String[] splitLabel(String shown) {
-        String star = shown.endsWith(" *") ? " *" : "";
-        String core = star.isEmpty() ? shown : shown.substring(0, shown.length() - 2);
-        String hint = ChoiceUi.detail(core);
-        String name = hint.isEmpty() ? core : ChoiceUi.shortName(core);
-        return new String[] {name + star, hint};
-    }
-
-    /** The name in the label style and, if it has one, its explanation under it in the hint style. */
-    View nameAndHint(Param p, boolean compact) {
-        String[] parts = splitLabel(p.shown());
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        TextView name = new TextView(this);
-        name.setText(parts[0]);
-        if (compact) {
-            look.hint(name);
-        } else {
-            look.label(name);
-        }
-        box.addView(name);
-        if (!parts[1].isEmpty()) {
-            TextView hint = new TextView(this);
-            hint.setText(parts[1]);
-            look.hint(hint);
-            if (compact) {
-                hint.setTextSize(12);
-            }
-            box.addView(hint);
-        }
-        return box;
-    }
-
-    /** Pull current values from the store into every control. */
-    /** A small dot after a slider's label while a mover is pushing it around (checked once a second). */
-    static final String MOVER_DOT = "  \u25CF";
-
-    private void updateMoverDots() {
-        for (Row r : rows) {
-            if (r.label == null || !r.label.isShown()) {
-                continue;
-            }
-            boolean on = AudioService.isRunning() && Modulation.isMoving(r.param.id);
-            CharSequence text = r.label.getText();
-            boolean has = text.toString().endsWith(MOVER_DOT);
-            if (on != has) {
-                r.label.setText(valueText(r.param, ParamStore.get(r.param.id)) + (on ? MOVER_DOT : ""));
-            }
-        }
-    }
-
-    void refreshRows() {
-        for (Row r : rows) {
-            View shown = r.slider != null ? r.slider : r.switchView != null ? r.switchView
-                    : r.tile != null ? r.tile : r.segment[0];
-            if (shown != null && !shown.isShown()) {
-                continue;   // folded away: refreshed when its section opens (saves work while worlds fade)
-            }
-            float v = ParamStore.get(r.param.id);
-            if (r.switchView != null) {
-                r.switchView.setChecked(v >= 0.5f);
-            } else if (r.tile != null) {
-                if (r.choicesShown != r.param.choices) {   // (a user kit came or went)
-                    r.choicesShown = r.param.choices;
-                    kitUi.updateKitStatus();
-                }
-                r.tile.setText(r.param.choices[ChoiceUi.choiceIndex(r.param, v)]);
-            } else if (r.segment != null) {
-                choiceUi.showSegment(r, ChoiceUi.choiceIndex(r.param, v));
-            } else {
-                r.slider.setProgress(Math.round(r.param.toNorm(v) * 1000f));
-                r.label.setText(valueText(r.param, v));
-            }
-        }
-        updateMoverUi();
-        updateBudgetLines();
-        updateFadedRows();
-        playerUi.updateIntensityRow();
-        undoButton.setEnabled(ParamStore.canUndo());
     }
 
     /**
