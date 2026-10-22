@@ -1193,6 +1193,15 @@ violet** (#8B6CFF, his own pick before he saw it). Built tab by tab; he judges e
   now says "Flux Realm · Intensity 50" (`mini_realm`, "(held)" when held; refreshed by the Worlds listener). Realm is
   a proper noun on screen: Hold Realm. Auto Realms renamed **Realm Hopper** and the cue **Warp sound** (DadCraft's names,
   Oct 20; ids unchanged: worlds_auto, cue_sound) (built-in preset names "Flux realm" unchanged: stored choices use them).
+- **Sleep Timer** (Oct 22, ROADMAP 22, Kimi's review; DadCraft picked it): a button under Hold Realm / Save sound in the
+  player's sheet while the sound plays, a list sheet of Off, 15, 30, 45, 60, 90 minutes (`SleepTimer.MINUTES`); the
+  button counts down ("Sleep in 23 min", rounded up). `AudioService` keeps the end time (`elapsedRealtime`, static:
+  it runs with the app closed); the movers' tick (every 500 ms, with the call check) follows the fade
+  (`SleepTimer.gain`: full until the last 5 minutes, then evenly in dB down to -48, sent a quarter dB at a time) through
+  the same dip as other apps' audio (`duck` in the patch, its 600 ms line~ smoothing the steps; a scene's `#volume`),
+  so the dry room fades with the music, then shuts down as Stop does (event log: "Sleep timer: fading out",
+  "stopped"). Stop or the notification's Stop ends the timer; a restart for a new device or scene keeps it. Not in
+  presets or settings (a moment's choice). No patch change. Test: javatests Z.
 - **Realms, Scenes, Setup** (Oct 19): each Realm is a block (name, when it plays, its preset on a tile opening a
   list sheet, "What it changes" folding open to switches); the audio Input/Output pickers are tiles with list
   sheets; the Scenes tab's scene and buttons sit on a card, the scene picker is a list sheet (press and hold to

@@ -52,7 +52,7 @@ auto-key from the room (22), dcs_dewind~, dcs_grain~ (18); a shimmer mode for th
 moments part, kits for Harmony and Room notes, a second melody (20); glitch phase 2's per-slice filter, lanes and a
 chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps".
 
-**App ideas (item 22):** sleep fade, tap tempo, a home-screen widget, MIDI in (much later); a simple walk-mode
+**App ideas (item 22):** tap tempo, a home-screen widget, MIDI in (much later); a simple walk-mode
 screen (14 UI); the Bluetooth hint on the input picker itself (Diagnostics already shows call mode).
 
 **Scenes:** location (`#loc`) input, unported scene objects, `rj_zcr~` if a scene needs it (11); the `index.rdf`
@@ -304,7 +304,7 @@ microphone declarations, store listing.
     - *One or two:* README screenshots still say PdScenes (Kimi); no CI, CONTRIBUTING or issue template (Kimi, Grok);
       repo topics and F-Droid (Grok, Kimi); a demo GIF (Grok); a manifest check for INTERNET and the name (ChatGPT);
       delayed music callbacks after Stop, a long-session phone check, a release checklist with checksums (ChatGPT);
-      a cost per feature (Kimi); sleep fade, tap tempo, a widget, MIDI in, auto-key from the room (Kimi).
+      a cost per feature (Kimi); sleep fade (BUILT 2026-10-22, the player's Sleep Timer, DESIGN-NOTES), tap tempo, a widget, MIDI in, auto-key from the room (Kimi).
     - *Already done, so dropped:* the first-run walkthrough (Walkthrough, Tour), step-synced echo, the tempo clock and
       found-sound rhythm (16), glitch stretch and gate (5b), the Realm warp sound, the per-Realm rules (Realms and
       their ingredients, 17), 16 KB alignment. Threads: PdBase's send methods are `synchronized`, so the sensor and
