@@ -806,6 +806,9 @@ def build():
     P.obj("rev_dcs", f"dcs_reverb~ {rargs}", 1600, 600)
     P.c("rev_in", "rev_dcs"); P.c("ln_rfb", "rev_dcs", 0, 1)
     P.msg("rev_tone", f"tone {BS}$1", 1900, 430); P.c("r_reverb_tone", "rev_tone"); P.c("rev_tone", "rev_dcs")
+    # Shimmer (Oct 22, `reverb_shimmer`, 0 = off): the tail rises in octaves, inside dcs_reverb~
+    P.obj("r_reverb_shimmer", "r reverb_shimmer", 2000, 560)
+    P.msg("rev_shimmer", f"shimmer {BS}$1", 2000, 580); P.c("r_reverb_shimmer", "rev_shimmer"); P.c("rev_shimmer", "rev_dcs")
     for side, extra in (("l", 0.0), ("r", RIGHT_EXTRA_MS)):
         x0 = 1600 if side == "l" else 2000
         P.obj(f"rev_{side}", "*~", x0 + 400, 1150)

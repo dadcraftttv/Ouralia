@@ -48,9 +48,10 @@ Catches" says why): does the Quiet Realm come on too readily in stereo? (his cal
 against the room's background in stereo: BUILT Oct 22, DadCraft: working.)
 
 **Sound and music ideas (each behind a switch, the old sound the default):** dcs_listen~ (what kind of room), then
-auto-key from the room (22), dcs_dewind~, dcs_grain~ (18); a shimmer mode for the reverb (18); more drum hits, a
+auto-key from the room (22), dcs_dewind~ (18); more drum hits, a
 moments part, kits for Harmony and Room notes, a second melody (20); glitch phase 2's per-slice filter, lanes and a
-chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps".
+chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps". (Reverb Shimmer: BUILT
+Oct 22, DadCraft to listen. The grain cloud, dcs_grain~: back pocket.)
 
 **App ideas (item 22):** a home-screen widget, MIDI in (much later). (A simple walk-mode screen (14 UI): SET ASIDE
 Oct 22, back pocket: DadCraft, "if users report wanting something like that".) (Tap tempo and the Bluetooth hint in the input list: BUILT Oct 22.)
@@ -222,7 +223,7 @@ microphone declarations, store listing.
     dcs_string~, dcs_glitch~, dcs_derustle~, dcs_pitch~, dcs_shift~, dcs_onset~ (Oct 17; dcs_pitch~ turned out an
     accuracy win, not a battery one: sigmund~ at the patch's hop already costs ~0.1% of real time); then dcs_voice~
     (engines incl. analog's ladder and modal), dcs_freeze~, dcs_dist~ (Smooth), dcs_reverb~ and dcs_phaser~ (the effect
-    ports; all added Oct 17, Smooth distortion Oct 19). NOT BUILT (checked Oct 22): dcs_listen~, dcs_dewind~, dcs_grain~, the reverb's shimmer mode, deken.
+    ports; all added Oct 17, Smooth distortion Oct 19). NOT BUILT (checked Oct 22): dcs_listen~, dcs_dewind~, deken. The reverb's shimmer mode: BUILT Oct 22 (Reverb, Shimmer). dcs_grain~: SET ASIDE Oct 22, back pocket (DadCraft: a continuous Spray; Spray itself is in the back pocket since Oct 19).
     - Voices: **dcs_shift~** (clean pitch shifter for Pitch and "Your voice" harmony, keeping the voice's own tone
       colour: no chipmunk, no warble). **dcs_pitch~** (a light pitch tracker to replace sigmund~, about half of Harmony's
       cost: battery).

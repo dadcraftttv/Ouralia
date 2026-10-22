@@ -439,6 +439,30 @@ diff = np.abs(outs[0] - outs[1]).max(); peak = np.abs(outs[0]).max()
 check(peak > 0.05 and diff < 1e-5 * max(peak, 1), f"matches the Pd-object reverb sample for sample (worst {diff:.1e}, peak {peak:.2f}), both ears")
 check(costs[1] < 0.75 * costs[0], f"costs {100 * costs[1] / costs[0]:.0f}% of the Pd-object version (the maths is the same: it saves the overhead of ~100 objects)")
 
+# shimmer (Oct 22): the tail rises in octaves; 0 is the reverb as before (the match above sends none)
+def shimmer_patch(fb):
+    args = " ".join(str(v) for v in [EXTRA, len(COMB)] + COMB + ALLP)
+    p = patch(f"rev_sh{int(fb * 100)}", ["adc~", f"sig~ {fb}", "r sh", "dac~", f"dcs_reverb~ {args}", "msg shimmer \\$1"],
+              [(0, 0, 4, 0), (1, 0, 4, 1), (2, 0, 5, 0), (5, 0, 4, 0), (4, 0, 3, 0), (4, 1, 3, 1)])
+    src = open(p).read().replace("#X obj 10 165 msg shimmer", "#X msg 10 165 shimmer"); open(p, "w").write(src)
+    return p
+def shimmered(amount, fb, x):
+    e = Engine(LIB, shimmer_patch(fb)); e.send("sh", amount); e.run(np.zeros(640, np.float32))
+    y = e.run(x); e.close(); return y
+def band(y, f0):
+    spec = np.abs(np.fft.rfft(y * np.hanning(len(y)))); fr = np.fft.rfftfreq(len(y), 1 / SR)
+    return float(np.sum(spec[(fr > f0 * 0.94) & (fr < f0 * 1.06)] ** 2))
+t = np.arange(4 * SR) / SR
+burst = (0.05 * np.sin(2 * np.pi * 330 * t) * (t < 0.5)).astype(np.float32)
+tails = {a: shimmered(a, 0.9, burst)[int(1.2 * SR):int(3.2 * SR)].mean(axis=1) for a in (0, 1)}
+up = {a: (band(tails[a], 660) + band(tails[a], 1320)) / band(tails[a], 330) for a in (0, 1)}
+check(up[1] > 20 * max(up[0], 1e-9), f"shimmer 1: the tail rises an octave and two (energy at 660 and 1320 Hz over 330: {up[1]:.3g} vs {up[0]:.3g} without)")
+noise = (rng.standard_normal(24 * SR) * 0.1 * (np.arange(24 * SR) < 2 * SR)).astype(np.float32)
+y = shimmered(1, 0.98, noise).mean(axis=1); y0 = shimmered(0, 0.98, noise).mean(axis=1)
+r_mid, r_end = rms(y[4 * SR:6 * SR]), rms(y[22 * SR:24 * SR])
+check(np.abs(y).max() < 1.5 * np.abs(y0).max() and r_end < 0.5 * r_mid,
+      f"shimmer 1 at the biggest room can't run away: peak {np.abs(y).max():.2f} ({np.abs(y0).max():.2f} without), the tail falls ({r_mid:.2g} at 4-6 s, {r_end:.2g} at 22-24 s)")
+
 # ---------------------------------------------------------------- dcs_crush~ styles
 print("dcs_crush~ styles:")
 cp = patch("crush", ["adc~", "r c", "dcs_crush~", "dac~"], [(0, 0, 2, 0), (1, 0, 2, 0), (2, 0, 3, 0), (2, 0, 3, 1)])
