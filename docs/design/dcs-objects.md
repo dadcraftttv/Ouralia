@@ -322,7 +322,7 @@
   with one mic the silent side is skipped.
   **dcs_listen~** (Oct 22, ROADMAP 18; DadCraft: "show it first", so it only listens): the room listener. From
   add_stereo_in: the mic's mid as it comes in, and dcs_dewind~'s windiness; twice a second `room_kind` <talking>
-  <music> <traffic> <wind> (0..1) to the app. Over the last 2 s (10 ms frames): voicing (the sound low-passed at
+  <music> <traffic> <wind> <crowd> (0..1) to the app. Over the last 2 s (10 ms frames): voicing (the sound low-passed at
   900 Hz, averaged to 2 kHz, matched against itself at 50-400 Hz lags every 40 ms: voiced over 0.6), syllable swing
   (the 300 Hz - 3 kHz band's level less its 250 ms average, its spread in dB), gaps (frames 15 dB under the window's
   loudest), pitch steadiness (consecutive voiced frames within a lag of each other), lows (under 150 Hz over the
@@ -333,6 +333,16 @@
   change goes to the event log ("Room listener: music (talking 0.00, music 0.90, ...)"). Tests: test_dcs
   "dcs_listen~" on synthetic places (talk 0.90, music 0.80, traffic 1.00, wind 1.00, quiet none; talk also scores
   music 0.29); by hand, once, a real recording (a game soundtrack from DadCraft's Downloads, not kept): music 0.90.
+  **First real place** (Oct 22, DadCraft's son's jiu jitsu dojo, kids and coaches, mats): heard as traffic (0.52-
+  0.68 at times). A second outlet now gives the measures (`room_feat`, logged to logcat, tag RoomListener, not the
+  event log); the dojo: voicing 0.02-0.16 (many voices cancel each other's pitch), swing 3-5 dB, gaps 0-0.78 (the
+  thumps), lows -1..-6 dB, i.e. the voice band over the lows: traffic's lows were judged from -6 dB. Now traffic needs
+  lows 0..+8 dB over the voice band, and a fifth kind, **crowd** = little voicing (under 0.25-0.45), the voice band
+  over the lows (lows under -1..+4), swing 2-3 dB up (under 8-12), not wind, not talking. Tested on the dojo's real
+  rows (test_dcs, 18 of them as numbers through the object's `measures` message): crowd in 18 of 18, traffic 0. A
+  synthetic crowd (eight fake talkers) came out too clean (voiced and steady: music 0.93), so it is not a test. The
+  synthetic traffic only just passes (0.53): a real road is the next place to check. One "talking 0.82" moment
+  there had swing 14-24 dB and voicing to 0.42 (likely someone talking near the phone).
   Cost 0.0106 s per 20 s alone. Next, once his walks show how often it is right: what it drives (Realm Hopper:
   Flux for music and voices, not traffic or wind; auto-key from the room; a beat locked to music nearby). Of the Oct 17 ideas list,
   built: the analog-style ladder filter (dcs_voice~ engine `analog`), a lighter pitch tracker (dcs_pitch~), a dcs

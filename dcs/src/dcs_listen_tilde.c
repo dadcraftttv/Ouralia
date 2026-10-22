@@ -1,4 +1,4 @@
-/* dcs_listen~: what kind of place it sounds like: talking, music, traffic, wind.
+/* dcs_listen~: what kind of place it sounds like: talking, music, traffic, wind, a crowd.
  *
  * Listens to the last 2 s and says, twice a second, how much it sounds like each (0..1). Cheap measures, no FFT:
  *  - voicing: the sound low-passed (900 Hz), averaged down to 2 kHz, matched against itself at pitch lags
@@ -10,11 +10,15 @@
  *  - lows: how far the deep lows (< 150 Hz) stand over the voice band (traffic's rumble);
  *  - wind: the second inlet's windiness (dcs_dewind~'s third outlet), averaged.
  * Talking = some voicing, deep syllables, pauses; music = much voicing, steady pitch, few gaps; traffic = little
- * voicing, little swing, heavy lows; wind = the windiness. A quiet place (loudest under -55 dBFS) is none of them.
+ * voicing, little swing, lows over the voice band (a road rumbles); wind = the windiness; a crowd = little voicing
+ * (many voices at once cancel each other's pitch), the voice band over the lows, some swing (DadCraft's son's jiu
+ * jitsu dojo, Oct 22: voicing 0.02-0.16, swing 3-5 dB, lows -1..-6 dB under the voice band: first heard as traffic,
+ * whose lows were judged from -6 dB). A quiet place (loudest under -55 dBFS) is none of them.
  *
  *   [dcs_listen~]
  *   inlets:  signal (the mic), signal (windiness 0..1)
- *   outlet:  list <talking> <music> <traffic> <wind>, every 0.5 s
+ *   outlets: list <talking> <music> <traffic> <wind> <crowd>, every 0.5 s; and (second) the measures behind it, list
+ *            <voicing> <swing dB> <gaps> <steadiness> <lows dB> <wind> <loudest dB>, for tuning on real places
  *
  * SPDX-License-Identifier: BSD-3-Clause
  * Copyright (c) 2026 dadcraft (DadCraft Studios)
@@ -53,7 +57,8 @@ typedef struct _dcs_listen
     double x_fmid[NFR], x_flow[NFR], x_fall[NFR], x_fwind[NFR]; int x_fw, x_filled;
     int x_voiced[NVF], x_lag[NVF]; int x_vw, x_vcount;
     int x_rcount;
-    t_float x_out[4];
+    t_float x_out[5], x_feat[7];
+    t_outlet *x_featout;
     t_clock *x_clock;
     t_outlet *x_outlet;
 } t_dcs_listen;
@@ -92,11 +97,13 @@ static void dcs_listen_voicing(t_dcs_listen *x)
     x->x_vw = (x->x_vw + 1) % NVF;
 }
 
+static void dcs_listen_score(t_dcs_listen *x, double vf, double sw, double gaps, double steady, double lows,
+    double wind, double top);
+
 static void dcs_listen_judge(t_dcs_listen *x)
 {
     int i, n = x->x_filled < NFR ? x->x_filled : NFR, nv = n / VEVERY;
     double top = -200, sw = 0, gaps = 0, lows = 0, wind = 0, vf = 0, steady = 0, pairs = 0;
-    double talk, music, traffic, windy;
     if (n < AVG_FR * 2) return;
     for (i = 0; i < n; i++)
         if (x->x_fall[i] > top) top = x->x_fall[i];
@@ -124,26 +131,40 @@ static void dcs_listen_judge(t_dcs_listen *x)
     }
     vf = nv ? vf / nv : 0;
     steady = pairs > 2 ? steady / pairs : 0;
+    dcs_listen_score(x, vf, sw, gaps, steady, lows, wind, top);
+}
+
+/* The judgement from the measures (also reachable by `measures ...`, so real places' numbers can be tested). */
+static void dcs_listen_score(t_dcs_listen *x, double vf, double sw, double gaps, double steady, double lows,
+    double wind, double top)
+{
+    double talk, music, traffic, windy, crowd;
     if (top < QUIET_DB)
-        talk = music = traffic = windy = 0;
+        talk = music = traffic = windy = crowd = 0;
     else
     {
         windy = ramp(wind, 0.2, 0.5);
         talk = ramp(vf, 0.15, 0.3) * (1 - ramp(vf, 0.8, 0.95)) * ramp(sw, 3, 6) * ramp(gaps, 0.04, 0.12);
         music = ramp(vf, 0.5, 0.75) * ramp(steady, 0.4, 0.7) * (1 - ramp(gaps, 0.25, 0.45));
-        traffic = (1 - ramp(vf, 0.1, 0.3)) * (1 - ramp(sw, 2.5, 5)) * ramp(lows, -6, 3);
+        traffic = (1 - ramp(vf, 0.1, 0.3)) * (1 - ramp(sw, 2.5, 5)) * ramp(lows, 0, 8);
         traffic *= 1 - windy;
+        crowd = (1 - ramp(vf, 0.25, 0.45)) * (1 - ramp(lows, -1, 4)) * ramp(sw, 2, 3) * (1 - ramp(sw, 8, 12));
+        crowd *= (1 - windy) * (1 - talk);
     }
-    x->x_out[0] = (t_float)talk; x->x_out[1] = (t_float)music; x->x_out[2] = (t_float)traffic; x->x_out[3] = (t_float)windy;
+    x->x_feat[0] = (t_float)vf; x->x_feat[1] = (t_float)sw; x->x_feat[2] = (t_float)gaps; x->x_feat[3] = (t_float)steady;
+    x->x_feat[4] = (t_float)lows; x->x_feat[5] = (t_float)wind; x->x_feat[6] = (t_float)top;
+    x->x_out[0] = (t_float)talk; x->x_out[1] = (t_float)music; x->x_out[2] = (t_float)traffic; x->x_out[3] = (t_float)windy; x->x_out[4] = (t_float)crowd;
     clock_delay(x->x_clock, 0);
 }
 
 static void dcs_listen_tick(t_dcs_listen *x)
 {
-    t_atom a[4];
+    t_atom a[7];
     int i;
-    for (i = 0; i < 4; i++) SETFLOAT(a + i, x->x_out[i]);
-    outlet_list(x->x_outlet, &s_list, 4, a);
+    for (i = 0; i < 7; i++) SETFLOAT(a + i, x->x_feat[i]);
+    outlet_list(x->x_featout, &s_list, 7, a);
+    for (i = 0; i < 5; i++) SETFLOAT(a + i, x->x_out[i]);
+    outlet_list(x->x_outlet, &s_list, 5, a);
 }
 
 static t_int *dcs_listen_perform(t_int *w)
@@ -211,9 +232,17 @@ static void *dcs_listen_new(void)
     t_dcs_listen *x = (t_dcs_listen *)pd_new(dcs_listen_class);
     inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal);
     x->x_outlet = outlet_new(&x->x_obj, &s_list);
+    x->x_featout = outlet_new(&x->x_obj, &s_list);
     x->x_clock = clock_new(x, (t_method)dcs_listen_tick);
     x->x_dn = 24; x->x_fn = 480;
     return (x);
+}
+
+static void dcs_listen_measures(t_dcs_listen *x, t_symbol *s, int argc, t_atom *argv)
+{
+    if (argc >= 7)
+        dcs_listen_score(x, atom_getfloat(argv), atom_getfloat(argv + 1), atom_getfloat(argv + 2),
+            atom_getfloat(argv + 3), atom_getfloat(argv + 4), atom_getfloat(argv + 5), atom_getfloat(argv + 6));
 }
 
 static void dcs_listen_free(t_dcs_listen *x)
@@ -227,4 +256,5 @@ void dcs_listen_tilde_setup(void)
         sizeof(t_dcs_listen), CLASS_DEFAULT, 0);
     CLASS_MAINSIGNALIN(dcs_listen_class, t_dcs_listen, x_f);
     class_addmethod(dcs_listen_class, (t_method)dcs_listen_dsp, gensym("dsp"), A_CANT, 0);
+    class_addmethod(dcs_listen_class, (t_method)dcs_listen_measures, gensym("measures"), A_GIMME, 0);
 }

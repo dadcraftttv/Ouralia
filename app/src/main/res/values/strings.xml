@@ -157,7 +157,8 @@
     <string name="hears_music">music nearby</string>
     <string name="hears_traffic">traffic</string>
     <string name="hears_wind">wind</string>
-    <string name="diag_room">Room listener (only listens for now): talking %1$.2f · music %2$.2f · traffic %3$.2f · wind %4$.2f</string>
+    <string name="hears_crowd">a crowd</string>
+    <string name="diag_room">Room listener (only listens for now): talking %1$.2f · music %2$.2f · traffic %3$.2f · wind %4$.2f · crowd %5$.2f</string>
     <string name="diag_stereo">World in Stereo: the phone\'s two mics</string>
     <string name="dev_speaker">Phone speaker</string>
     <string name="dev_earpiece">Phone earpiece</string>

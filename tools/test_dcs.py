@@ -515,21 +515,24 @@ def heard(sig, windy=0.0):
     e = Engine(LIB, lsp, in_channels=2); e.listen("lst")
     x = np.stack([sig, np.full_like(sig, windy)], 1).astype(np.float32)
     e.run(x); got = e.lists.get("lst", []); e.close()
-    return np.array(got[-4:]).mean(axis=0) if len(got) >= 4 else np.zeros(4)   # (the last 2 s of judgements)
+    return np.array(got[-4:]).mean(axis=0) if len(got) >= 4 else np.zeros(5)   # (the last 2 s of judgements)
 L = 8 * SR; tt = np.arange(L) / SR; r2 = np.random.default_rng(42)
 def harmonic(f0, t, n=20, tilt=1.0):
     ph = 2 * np.pi * np.cumsum(f0) / SR if np.ndim(f0) else 2 * np.pi * f0 * t
     return sum(np.sin(k * ph) / k ** tilt for k in range(1, n))
 # speech-like: syllables 120-250 ms with a gliding pitch, short gaps, a consonant hiss now and then, pauses
-talk = np.zeros(L); i = 0
-while i < L - SR // 2:
+def speech(r2, L):
+  talk = np.zeros(L); i = 0
+  while i < L - SR // 2:
     d = int(r2.uniform(0.12, 0.25) * SR); f = np.linspace(r2.uniform(110, 160), r2.uniform(130, 200), d)
     env = np.sin(np.pi * np.arange(d) / d) ** 0.7
     talk[i:i + d] += 0.05 * harmonic(f, None, 25) * env
     i += d
     g = int(r2.uniform(0.04, 0.12) * SR); talk[i:i + g // 2] += r2.standard_normal(len(talk[i:i + g // 2])) * 0.004
     i += g + (int(0.4 * SR) if r2.random() < 0.15 else 0)
-talk += r2.standard_normal(L) * 0.0005
+  return talk
+talk = speech(r2, L) + r2.standard_normal(L) * 0.0005
+
 # music-like: held chords (0.5 s each), a bass note, a hat tick each beat
 music = np.zeros(L); roots = [220, 196, 247, 165]
 for b in range(int(8 / 0.5)):
@@ -545,12 +548,29 @@ windn = lp1(lp1(r2.standard_normal(L), 100), 100) * 2
 quiet = r2.standard_normal(L) * 0.0003
 H = {k: heard(v.astype(np.float32), w) for k, v, w in (("talk", talk, 0), ("music", music, 0), ("traffic", traffic, 0),
                                                        ("wind", windn, 0.8), ("quiet", quiet, 0))}
-names = ["talking", "music", "traffic", "wind"]
+names = ["talking", "music", "traffic", "wind", "crowd"]
 fmt = lambda v: " ".join(f"{n} {x:.2f}" for n, x in zip(names, v))
 for k, want in (("talk", 0), ("music", 1), ("traffic", 2), ("wind", 3)):
     v = H[k]
-    check(v[want] > 0.5 and all(v[j] < 0.3 for j in range(4) if j != want), f"{k}-like sound heard as {names[want]}: {fmt(v)}")
+    check(v[want] > 0.5 and all(v[j] < 0.3 for j in range(5) if j != want), f"{k}-like sound heard as {names[want]}: {fmt(v)}")
 check(H["quiet"].max() == 0, f"a quiet room is none of them: {fmt(H['quiet'])}")
+# A crowd, from a real place: the measures the phone logged in DadCraft's son's jiu jitsu dojo (Oct 22; voicing,
+# swing dB, gaps, steadiness, lows dB, wind, loudest dB), first judged traffic. (Synthetic babble came out too clean:
+# eight fake talkers summed into a steady, voiced sound heard as music.)
+DOJO = [(0.00, 2.7, 0.00, 0.00, -1.8), (0.00, 3.6, 0.77, 0.00, -3.0), (0.02, 3.6, 0.52, 0.00, -5.4), (0.04, 3.0, 0.00, 0.00, -1.0),
+        (0.04, 3.3, 0.49, 0.00, -6.0), (0.04, 4.0, 0.00, 0.00, -3.1), (0.06, 2.9, 0.00, 0.00, -3.3), (0.06, 4.8, 0.57, 0.00, -2.5),
+        (0.08, 3.3, 0.78, 0.00, -2.2), (0.08, 4.6, 0.25, 0.00, -3.8), (0.10, 3.4, 0.75, 0.00, -3.0), (0.10, 3.5, 0.00, 0.00, -1.4),
+        (0.14, 4.0, 0.41, 0.00, -2.6), (0.16, 3.9, 0.00, 0.00, -5.1), (0.18, 4.1, 0.37, 0.75, -3.2), (0.20, 3.4, 0.00, 0.50, -1.4),
+        (0.22, 3.6, 0.01, 0.75, -4.0), (0.24, 3.3, 0.00, 0.75, -4.8)]
+msp = patch("listen_ms", ["adc~", "dcs_listen~", "s lst", "r ms"], [(0, 0, 1, 0), (1, 0, 2, 0), (3, 0, 1, 0)])
+e = Engine(LIB, msp); e.listen("lst"); judged = []
+for row in DOJO:
+    e.lists.pop("lst", None); e.send_msg("ms", "measures", *row, 0.0, -46.0); e.run(np.zeros(64, np.float32))
+    judged.append(e.lists["lst"][-1])
+e.close()
+judged = np.array(judged)
+check(int((judged[:, 4] > 0.5).sum()) >= len(DOJO) - 2 and judged[:, 2].max() < 0.3,
+      f"the dojo's real measures: crowd in {int((judged[:, 4] > 0.5).sum())} of {len(DOJO)}, traffic at most {judged[:, 2].max():.2f} (was up to 0.68)")
 
 # ---------------------------------------------------------------- dcs_crush~ styles
 print("dcs_crush~ styles:")

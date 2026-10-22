@@ -118,19 +118,19 @@ public class AudioService extends Service {
 
     /** A scene's [rj_image] and [rj_text] objects report here (scene_lib), drawn by ScenePad. */
     private static final String SCENE_GFX = "rj_gfx";
-    /** The room listener's judgements (dcs_listen~): talking, music, traffic, wind, twice a second. */
-    private static final String ROOM_KIND = "room_kind";
+    /** The room listener's judgements (dcs_listen~): talking, music, traffic, wind, crowd, twice a second. */
+    private static final String ROOM_KIND = "room_kind", ROOM_FEAT = "room_feat";
     private static final RoomListener room = new RoomListener();
-    static final String[] ROOM_KIND_NAMES = {"talking", "music", "traffic", "wind"};
+    static final String[] ROOM_KIND_NAMES = {"talking", "music", "traffic", "wind", "crowd"};
 
-    /** What the room listener hears now (RoomListener.TALKING..WIND, -1: none of them, or not running). */
+    /** What the room listener hears now (RoomListener.TALKING..CROWD, -1: none of them, or not running). */
     static int roomKind() {
         synchronized (room) {
             return running ? room.kind() : -1;
         }
     }
 
-    /** Its last four numbers (talking, music, traffic, wind). */
+    /** Its last numbers (talking, music, traffic, wind, crowd). */
     static float[] roomScores() {
         synchronized (room) {
             return room.scores();
@@ -788,9 +788,17 @@ public class AudioService extends Service {
 
             @Override
             public void receiveList(String source, Object... args) {
-                if (ROOM_KIND.equals(source) && args.length == 4) {
-                    float[] v = new float[4];
-                    for (int i = 0; i < 4; i++) {
+                if (ROOM_FEAT.equals(source) && args.length == 7) {   // (logcat only: tuning the listener on real places)
+                    Log.i("RoomListener", String.format(Locale.US,
+                            "voicing %.2f swing %.1f dB gaps %.2f steady %.2f lows %+.1f dB wind %.2f loudest %.0f dB",
+                            ((Number) args[0]).floatValue(), ((Number) args[1]).floatValue(), ((Number) args[2]).floatValue(),
+                            ((Number) args[3]).floatValue(), ((Number) args[4]).floatValue(), ((Number) args[5]).floatValue(),
+                            ((Number) args[6]).floatValue()));
+                    return;
+                }
+                if (ROOM_KIND.equals(source) && args.length == RoomListener.KINDS) {
+                    float[] v = new float[RoomListener.KINDS];
+                    for (int i = 0; i < v.length; i++) {
                         v[i] = ((Number) args[i]).floatValue();
                     }
                     boolean changed;
@@ -802,8 +810,8 @@ public class AudioService extends Service {
                     if (changed) {
                         String what = k < 0 ? "none of them" : ROOM_KIND_NAMES[k];
                         handler.post(() -> logEvent(String.format(Locale.US,
-                                "Room listener: %s (talking %.2f, music %.2f, traffic %.2f, wind %.2f)",
-                                what, v[0], v[1], v[2], v[3])));
+                                "Room listener: %s (talking %.2f, music %.2f, traffic %.2f, wind %.2f, crowd %.2f)",
+                                what, v[0], v[1], v[2], v[3], v[4])));
                     }
                     return;
                 }
@@ -852,6 +860,7 @@ public class AudioService extends Service {
         PdBase.subscribe(FS_CAUGHT);
         PdBase.subscribe(FS_LEVELS);
         PdBase.subscribe(ROOM_KIND);
+        PdBase.subscribe(ROOM_FEAT);
         synchronized (room) {
             room.reset();
         }
