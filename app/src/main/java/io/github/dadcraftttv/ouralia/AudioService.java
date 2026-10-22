@@ -256,9 +256,10 @@ public class AudioService extends Service {
                 if (answer != null && !answer.isEmpty()) {
                     logEvent("Answered a sung phrase: " + answer.size() + " notes");
                     float vel = CallResponse.velocity(answerLevel);
+                    int generation = startGeneration;   // a restart (device, scene) drops the rest of the phrase
                     for (MotifMemory.Note n : answer) {
                         handler.postDelayed(() -> {
-                            if (running) {
+                            if (running && generation == startGeneration) {
                                 PdBase.sendList(MOTIF_PLAY, (float) n.degree, vel);
                             }
                         }, Math.round(n.at * 1000));
@@ -267,9 +268,10 @@ public class AudioService extends Service {
                 List<MotifMemory.Note> phrase = motif.poll(nowS, StepDetector.walking(nowS));
                 if (phrase != null) {
                     logEvent("Motif comes back: " + phrase.size() + " notes");
+                    int generation = startGeneration;
                     for (MotifMemory.Note n : phrase) {
                         handler.postDelayed(() -> {
-                            if (running) {
+                            if (running && generation == startGeneration) {
                                 PdBase.sendList(MOTIF_PLAY, (float) n.degree, MotifMemory.VELOCITY);
                             }
                         }, Math.round(n.at * 1000));
@@ -401,7 +403,8 @@ public class AudioService extends Service {
     private boolean sceneRunning;
     /** True while waiting (off the main thread) for a Bluetooth headset's call link before opening the audio. */
     private boolean starting;
-    /** Bumped by every stop, so a Bluetooth wait that finishes after a stop is ignored. */
+    /** Bumped by every stop, so a Bluetooth wait that finishes after a stop is ignored, and so are motif and answer
+     *  notes still scheduled from before a restart. */
     private int startGeneration;
     private boolean bluetoothMicRouted = false;
     private SensorInput sensors;
