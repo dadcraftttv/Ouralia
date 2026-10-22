@@ -260,8 +260,20 @@ final class DevicesUi {
         tile.setOnClickListener(v -> {
             LinearLayout content = new LinearLayout(a);
             content.setOrientation(LinearLayout.VERTICAL);
-            content.addView(a.sheetHeading(a.getString(labelRes), null));
-            a.addListRows(content, picker.names, picker.selected, null, i -> {
+            // the input list warns before a Bluetooth mic is picked (the hint under the tile only says so after)
+            String[] rows = picker.names.clone();
+            boolean callMic = false;
+            for (int i = 0; picker.input && i < picker.devices.size(); i++) {
+                AudioDevices.Device d = picker.devices.get(i);
+                if (AudioDevices.isLeAudio(d)) {
+                    rows[i + 1] = a.getString(R.string.mic_row_le, rows[i + 1]);
+                } else if (AudioDevices.isBluetoothMic(d)) {
+                    rows[i + 1] = a.getString(R.string.mic_row_call, rows[i + 1]);
+                    callMic = true;
+                }
+            }
+            content.addView(a.sheetHeading(a.getString(labelRes), callMic ? a.getString(R.string.mic_sheet_call) : null));
+            a.addListRows(content, rows, picker.selected, null, i -> {
                 a.closeSheet();
                 String key = i == 0 || i > picker.devices.size()
                         ? AudioSettings.AUTOMATIC : picker.devices.get(i - 1).key;

@@ -11,6 +11,9 @@
     <string name="hold_world">Hold Realm</string>
     <string name="holding_world">Let go</string>
     <string name="snapshot">Save sound</string>
+    <string name="tap_tempo">Tap Tempo</string>
+    <string name="tap_tempo_more">Keep tapping…</string>
+    <string name="tap_tempo_bpm">Tap Tempo · %1$d BPM</string>
     <string name="sleep_timer">Sleep Timer</string>
     <string name="sleep_in">Sleep in %1$d min</string>
     <string name="sleep_hint">The sound fades out slowly over the last 5 minutes, then stops.</string>
@@ -128,6 +131,9 @@
     <string name="audio_note">Sound only ever plays to headphones; if they are unplugged the audio stops. Changing a device restarts the audio for a moment. A Bluetooth headset used as the input switches to the low-quality call mode; for the best sound use the phone or a wired mic as input and Bluetooth only for output.</string>
     <string name="mic_hint_no_wired_mic">Android sees your wired earbuds as headphones with no microphone, so their mic cannot be chosen. Unplug them and push the plug in all the way (a half-seated plug looks like plain headphones), and check that the plug has two black bands, not one. Until then, the phone\'s mic is used.</string>
     <string name="mic_hint_call">This headset\'s mic works in call mode: mono and low quality, and the sound in your ears drops to call quality too. Unless your earbuds support LE Audio, the phone\'s mic gives a much better result.</string>
+    <string name="mic_row_call">%1$s (Bluetooth call mode: low quality)</string>
+    <string name="mic_row_le">%1$s (LE Audio)</string>
+    <string name="mic_sheet_call">Most Bluetooth earbud mics only work in phone-call mode: mono and low quality, and your headphones drop to call quality too. The phone\'s mic sounds best.</string>
     <string name="mic_hint_le">LE Audio headset: its mic should sound far better than ordinary Bluetooth call mode. If it sounds thin or muffled, switch the input back to the phone\'s mic.</string>
     <string name="dev_builtin_mic">Phone microphone</string>
     <string name="mic_bottom">bottom, by the charging port</string>

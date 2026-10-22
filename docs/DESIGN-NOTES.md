@@ -430,7 +430,10 @@ to date in the same commit when behaviour changes.
   after Stop 5/5, **Bluetooth (JLab GO Pods ANC) disconnected while playing 5/5**: each stopped within ~0.5 s, no
   crash, nothing on the speaker. Not yet tried: wired + Bluetooth together (unplugging wired should carry on in BT).
 - **Bluetooth mic = call mode** (mono, poor quality). Uses MODE_IN_COMMUNICATION and `setCommunicationDevice` matched by type + address
-  (the mic and speaker are separate devices with separate ids; matching by id failed). LE Audio headsets can be better. The UI hints about it.
+  (the mic and speaker are separate devices with separate ids; matching by id failed). LE Audio headsets can be better. The UI hints about it:
+  under the Input tile for the one chosen, and (Oct 22, ROADMAP 22) in the Input list itself, before picking: each
+  Bluetooth mic marked "(Bluetooth call mode: low quality)" or "(LE Audio)" (`AudioDevices.isBluetoothMic`/`isLeAudio`),
+  and a warning under the sheet's heading when a call-mode one is listed (`mic_sheet_call`). The tile keeps the plain name.
 - **Soft limiter** at the output (`clip~` base plus cubic-eased excess, never above 1.0). Hard clipping sounded fuzzy.
 - **Defaults:** input gain 1 (was 2.5 until Oct 17: DadCraft wants a tempered start, the user can turn it up; existing installs keep theirs), compressor -30 dB 4:1. Gain, gate, compressor, smoothing, nudge and music on/key/scale are `noPreset`.
 - **Auto Worlds:** Tranquil / Flux / Kinetic / Ghost / Pocket / Unstable, priority Unstable > Ghost > Kinetic > Flux > Tranquil > Pocket.
@@ -613,6 +616,11 @@ to date in the same commit when behaviour changes.
   (`tc_Pu`); standing, the beat glides there by `TEMPO_RETURN` (0.25) per beat; walking, each step moves it
   `TEMPO_NUDGE` (0.3) toward a target `TEMPO_WALK_PULL` (0.5) of the way from your BPM to the step rate in the octave
   nearest your BPM, with no phase pull (two tempos would wobble). Measured: set 90, walking 100 steps/min -> 94.7.
+  **Tap Tempo** (Oct 22, ROADMAP 22; phone only): a button under Set Tempo (`SettingRows.addTapTempo`). Each tap, on
+  the touch down with a haptic tick, goes to `TapTempo` (test U): from the second tap the BPM is 60000 / the mean of
+  the last 5 gaps; a 2 s pause starts over, and a gap 40% off the mean starts over from it (a missed or doubled tap);
+  folded into 60-160 by octaves, whole BPM. It sets tempo_mode Set and tempo_bpm (both in presets, The Band). Tempo
+  only: the beat's phase is not lined up with the taps (the clock keeps its own downbeat).
 - **Tempo clock** (roadmap 16 part 1, step B; `add_tempo_clock`): a steady beat in Pd that follows the steps like a
   band follows its drummer: each step moves the next beat 35% of the way to it, the beat length 10% of the error plus
   15% toward the step interval; one step = one beat, folded into 80-160 BPM (an amble at 60 steps/min plays at 120).
