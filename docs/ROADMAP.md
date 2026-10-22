@@ -30,7 +30,7 @@ feature, so new sounds land with a known CPU price. Maybe later: split DESIGN-NO
 MainActivity was.
 
 **Release to Play (release prep, item 14 Release):** a release keystore (rcs use the debug key) and Play App Signing,
-R8 on with keep rules for the `PdAudio.setDevicesId` / `audioRuntimeInfo` reflection, Play foreground-service + microphone declarations, Data safety form,
+Play foreground-service + microphone declarations, Data safety form,
 store listing, a release checklist with each APK's SHA-256.
 
 **Phone checks waiting on DadCraft:** call pause and ducking (14), the pocket shaping (15), the found-sound rhythm
@@ -306,7 +306,8 @@ microphone declarations, store listing.
     - *Built (Oct 22):* PRIVACY.md and About's source link; MainActivity split into ten feature classes (3,753 ->
       1,237 lines, DESIGN-NOTES "MainActivity's split"); motif and answer notes dropped after a restart, not only
       after Stop; `tools/test_release.py` (permissions, backup, name; both test tiers); CI building the app and
-      running the quick tests (`.github/workflows/tests.yml`); CONTRIBUTING.md; an issue template; fresh README screenshots (Ouralia, The Band); the notification's own icon (`ic_notification`, from make_icon.py).
+      running the quick tests (`.github/workflows/tests.yml`); CONTRIBUTING.md; an issue template; fresh README screenshots (Ouralia, The Band); the notification's own icon (`ic_notification`, from make_icon.py); R8 on for release builds
+      (`app/proguard-rules.pro` keeps libpd, its callbacks and the two reflected methods; DadCraft's first Start checks it).
 
 ## Compatibility and scene findings (PdParty, rjlib PDF, composer pack)
 
