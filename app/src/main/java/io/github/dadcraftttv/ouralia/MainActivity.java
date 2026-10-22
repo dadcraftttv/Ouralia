@@ -31,7 +31,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import org.json.JSONException;
-import org.puredata.core.PdBase;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,8 +52,8 @@ public class MainActivity extends Activity {
     /** Name chosen in the export dialog, used once the file picker returns. */
     private String exportName = "preset";
     private static final int REQ_IMPORT = 3;
-    private static final int REQ_IMPORT_SCENE = 4;
-    private static final int REQ_IMPORT_SCENE_FOLDER = 5;
+    static final int REQ_IMPORT_SCENE = 4;
+    static final int REQ_IMPORT_SCENE_FOLDER = 5;
     private static final int REQ_IMPORT_KIT = 23;
     private static final int REQ_IMPORT_KIT_FOLDER = 24;
     private TextView kitStatus;
@@ -90,24 +89,24 @@ public class MainActivity extends Activity {
     private TextView warning;
     private Button startStop;
     private Button undoButton;
-    private TextView sceneLabel;
     /** Presets, randomize and the effect sections: hidden while an imported scene is selected. */
     // ---- tabs: Sound, Music, Realms, Scenes, Setup (the one long list had outgrown itself) ----
-    private static final int TAB_SOUND = 0, TAB_MUSIC = 1, TAB_REALMS = 2, TAB_SCENES = 3, TAB_SETUP = 4;
+    static final int TAB_SOUND = 0, TAB_MUSIC = 1, TAB_REALMS = 2, TAB_SCENES = 3, TAB_SETUP = 4;
     private static final int[] TAB_NAMES = {R.string.tab_sound, R.string.tab_music, R.string.tab_realms,
             R.string.tab_scenes, R.string.tab_setup};
     private final LinearLayout[] tabPages = new LinearLayout[TAB_NAMES.length];     // each tab's whole page
-    private final LinearLayout[] tabBodies = new LinearLayout[TAB_NAMES.length];    // its controls (hidden for a scene)
-    private final TextView[] tabNotices = new TextView[TAB_NAMES.length];           // "paused while a scene plays"
+    final LinearLayout[] tabBodies = new LinearLayout[TAB_NAMES.length];    // its controls (hidden for a scene)
+    final TextView[] tabNotices = new TextView[TAB_NAMES.length];           // "paused while a scene plays"
     private final LinearLayout[] tabViews = new LinearLayout[TAB_NAMES.length];   // the tab bar's buttons
     private final ImageView[] tabIcons = new ImageView[TAB_NAMES.length];
     private final TextView[] tabLabels = new TextView[TAB_NAMES.length];
     private final int[] tabScroll = new int[TAB_NAMES.length];
     private int currentTab = -1;
     /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
-    private Styler look;
-    private LinearLayout xyPadSlot;          // where the pad sits on the Sound tab (an XY pad for the movers)
-    private LinearLayout scenePadSlot;       // ...and on the Scenes tab (the scene's own pad)
+    Styler look;
+    /** The Scenes tab (SceneUi.java). */
+    private final SceneUi sceneUi = new SceneUi(this);
+    LinearLayout xyPadSlot;          // where the pad sits on the Sound tab (an XY pad for the movers)
     /** One dropdown per automatic world, and the line saying which one is playing. */
     private final List<WorldRow> worldRows = new ArrayList<>();
     private TextView worldStatus;
@@ -122,9 +121,6 @@ public class MainActivity extends Activity {
             this.value = value;
         }
     }
-    private ScenePad scenePad;
-    private LinearLayout sceneLevels;
-    private TextView padHint;
 
     /** One on-screen control: a slider with a label, or a switch (for toggles). */
     private static final class MoverUi {
@@ -336,74 +332,7 @@ public class MainActivity extends Activity {
         LinearLayout scenes = tabBodies[TAB_SCENES], setup = tabBodies[TAB_SETUP];
 
         // ---- Scenes ----
-        // the scene playing and its buttons, on a card
-        LinearLayout sceneCard = new LinearLayout(this);
-        sceneCard.setOrientation(LinearLayout.VERTICAL);
-        look.card(sceneCard);
-        sceneCard.setPadding(dp(Look.CARD_PAD), dp(16), dp(Look.CARD_PAD), dp(14));
-        LinearLayout.LayoutParams sceneCardParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        sceneCardParams.setMargins(0, 0, 0, dp(Look.CARD_GAP));
-        scenes.addView(sceneCard, sceneCardParams);
-        sceneLabel = new TextView(this);
-        sceneLabel.setTypeface(look.heading());
-        sceneLabel.setTextSize(Look.TEXT_HEADING);
-        sceneLabel.setTextColor(look.p.text);
-        sceneLabel.setPadding(dp(2), 0, 0, dp(8));
-        sceneCard.addView(sceneLabel);
-        // Choose scene: one wide button (the list sheet); importing: two chips under it
-        LinearLayout sceneRow = newButtonRow(sceneCard);
-        Button choose = addButton(sceneRow, R.string.choose_scene, this::showScenes);
-        choose.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
-        choose.setTextColor(look.p.text);
-        choose.setGravity(Gravity.CENTER_VERTICAL | Gravity.START);
-        choose.setPadding(dp(16), 0, dp(40), 0);
-        LinearLayout importRow = newButtonRow(sceneCard);
-        chip(importRow, R.drawable.ic_download, R.string.import_scene, this::startImportScene);
-        chip(importRow, R.drawable.ic_folder, R.string.import_scene_folder, this::startImportSceneFolder);
-        scenePadSlot = new LinearLayout(this);
-        scenePadSlot.setOrientation(LinearLayout.VERTICAL);
-        scenes.addView(scenePadSlot);
-
-        scenePad = new ScenePad(this);
-        scenePad.setContentDescription(getString(R.string.pad_description));
-        scenePad.setListener(this::sendTouch);
-        scenePad.setLook(look.p);
-        padHint = new TextView(this);
-        padHint.setText(R.string.pad_hint);
-        look.hint(padHint);
-        padHint.setPadding(dp(4), dp(8), dp(4), 0);
-
-        sceneLevels = new LinearLayout(this);
-        sceneLevels.setOrientation(LinearLayout.VERTICAL);
-        addLevelSlider(sceneLevels, R.string.scene_volume, SceneSettings.volume(this), v -> {
-            SceneSettings.setVolume(this, v);
-            sendSceneLevelsIfRunning();
-        });
-        addLevelSlider(sceneLevels, R.string.scene_mic_volume, SceneSettings.micVolume(this), v -> {
-            SceneSettings.setMicVolume(this, v);
-            sendSceneLevelsIfRunning();
-        });
-        Switch timing = new Switch(this);
-        timing.setText(R.string.scene_rjdj_timing);
-        look.label(timing);
-        look.switchTint(timing);
-        timing.setSwitchPadding(dp(16));
-        timing.setMinHeight(dp(52));
-        timing.setChecked(SceneSettings.rjdjTiming(this));
-        timing.setOnCheckedChangeListener((b, on) -> {
-            SceneSettings.setRjdjTiming(this, on);
-            if (AudioService.isRunning()) {   // the rate is chosen when the engine starts
-                startForegroundService(new Intent(this, AudioService.class).setAction(AudioService.ACTION_RESTART));
-            }
-        });
-        sceneLevels.addView(timing);
-        TextView hint = new TextView(this);
-        hint.setText(R.string.scene_headphones_hint);
-        look.hint(hint);
-        hint.setPadding(dp(4), dp(6), dp(4), 0);
-        sceneLevels.addView(hint);
-        scenes.addView(sceneLevels);
+        sceneUi.build(scenes);
 
         // ---- Sound: presets and shortcuts, the XY pad, then the input and the effects ----
         // Presets: one wide button (the list sheet), then Save, Export and Import as small icon buttons
@@ -472,7 +401,7 @@ public class MainActivity extends Activity {
         if (FirstRun.showWalkthrough(UiSettings.walkthroughSeen(this), installTimes()[0], installTimes()[1])) {
             showWalkthrough();
         }
-        updateSceneUi();
+        sceneUi.update();
     }
 
     private static final int[] TAB_ICONS = {R.drawable.ic_tab_sound, R.drawable.ic_tab_music, R.drawable.ic_tab_realms,
@@ -829,7 +758,7 @@ public class MainActivity extends Activity {
     }
 
     /** Slides the sheet up (300 ms, over a dimming screen) holding {@code content}; if it is up, swaps the content. */
-    private void openSheet(View content) {
+    void openSheet(View content) {
         if (content.getParent() != sheetBody) {
             sheetBody.removeAllViews();
             if (content.getParent() != null) {
@@ -873,7 +802,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void closeSheet() {
+    void closeSheet() {
         if (!sheetOpen) {
             return;
         }
@@ -1113,7 +1042,7 @@ public class MainActivity extends Activity {
 
     // ---- building the screen ----
 
-    private LinearLayout newButtonRow(LinearLayout parent) {
+    LinearLayout newButtonRow(LinearLayout parent) {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setBaselineAligned(false);   // a two-line button would otherwise push its one-line neighbours down
@@ -1122,7 +1051,7 @@ public class MainActivity extends Activity {
         return row;
     }
 
-    private Button addButton(LinearLayout row, int textRes, Runnable action) {
+    Button addButton(LinearLayout row, int textRes, Runnable action) {
         Button b = new Button(this);
         b.setText(textRes);
         look.button(b, false);
@@ -1152,7 +1081,7 @@ public class MainActivity extends Activity {
      * An outlined chip with an icon and a word (Randomize, Nudge, Undo); the chips of a row share its width equally
      * (DadCraft: no open pocket on the right). It greys out when disabled.
      */
-    private Button chip(LinearLayout row, int icon, int text, Runnable action) {
+    Button chip(LinearLayout row, int icon, int text, Runnable action) {
         Button b = new Button(this);
         b.setText(text);
         b.setAllCaps(false);
@@ -2566,7 +2495,7 @@ public class MainActivity extends Activity {
     }
 
     /** A sheet's title and the line under it. */
-    private View sheetHeading(String title, String hint) {
+    View sheetHeading(String title, String hint) {
         LinearLayout head = new LinearLayout(this);
         head.setOrientation(LinearLayout.VERTICAL);
         head.setPadding(dp(8), dp(4), dp(8), dp(14));
@@ -2635,7 +2564,7 @@ public class MainActivity extends Activity {
     }
 
     /** Something drawn at the end of a choice's row (the Scale sheet's dots). */
-    private interface RowExtra {
+    interface RowExtra {
         View make(int index, boolean chosen);
     }
 
@@ -2645,7 +2574,7 @@ public class MainActivity extends Activity {
     }
 
     /** One row per name: a tick on the chosen one (highlighted), the full name (wrapping), {@code extra} at the end. */
-    private void addListRows(LinearLayout content, String[] names, int chosen, RowExtra extra,
+    void addListRows(LinearLayout content, String[] names, int chosen, RowExtra extra,
                              java.util.function.IntConsumer pick) {
         for (int i = 0; i < names.length; i++) {
             boolean on = i == chosen;
@@ -3064,7 +2993,7 @@ public class MainActivity extends Activity {
      * An AlertDialog in the app's look: rounded on the sheet colour, the fonts, buttons in the accent. Every dialog
      * (confirmations, Save, the kit and feedback ones) is built with this instead of AlertDialog.Builder.
      */
-    private final class LookDialog extends AlertDialog.Builder {
+    final class LookDialog extends AlertDialog.Builder {
         LookDialog() {
             super(MainActivity.this);
         }
@@ -3205,9 +3134,9 @@ public class MainActivity extends Activity {
         } else if (requestCode == REQ_IMPORT) {
             importFrom(uri);
         } else if (requestCode == REQ_IMPORT_SCENE) {
-            importSceneFrom(uri);
+            sceneUi.importSceneFrom(uri);
         } else if (requestCode == REQ_IMPORT_SCENE_FOLDER) {
-            importSceneFolderFrom(uri);
+            sceneUi.importSceneFolderFrom(uri);
         } else if (requestCode == REQ_IMPORT_KIT || requestCode == REQ_IMPORT_KIT_FOLDER) {
             importKitFrom(uri, requestCode == REQ_IMPORT_KIT_FOLDER);
         }
@@ -3366,207 +3295,8 @@ public class MainActivity extends Activity {
         }
     }
 
-    // ---- scenes ----
-
-    private void updateSceneUi() {
-        SceneLibrary.Scene scene = SceneSettings.current(this);
-        sceneLabel.setText(getString(R.string.scene_current,
-                scene != null ? scene.name : getString(R.string.scene_built_in)));
-        // a scene replaces the built-in sound: its tabs say so instead of showing controls that do nothing
-        for (int t : new int[]{TAB_SOUND, TAB_MUSIC, TAB_REALMS}) {
-            tabBodies[t].setVisibility(scene != null ? View.GONE : View.VISIBLE);
-            tabNotices[t].setVisibility(scene != null ? View.VISIBLE : View.GONE);
-        }
-        scenePad.setScene(scene);
-        // With no scene the pad is an XY controller for the effects' movers (on the Sound tab); with one, the
-        // scene's own pad (on the Scenes tab).
-        LinearLayout slot = scene != null ? scenePadSlot : xyPadSlot;
-        if (scenePad.getParent() != slot) {
-            if (scenePad.getParent() != null) {
-                ((android.view.ViewGroup) scenePad.getParent()).removeView(scenePad);
-                ((android.view.ViewGroup) padHint.getParent()).removeView(padHint);
-            }
-            LinearLayout.LayoutParams padParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-            padParams.topMargin = dp(8);
-            slot.addView(scenePad, padParams);
-            slot.addView(padHint);
-        }
-        padHint.setVisibility(scene != null ? View.GONE : View.VISIBLE);
-        sceneLevels.setVisibility(scene != null ? View.VISIBLE : View.GONE);
-    }
-
-    private void sendSceneLevelsIfRunning() {
-        if (AudioService.isRunning() && SceneSettings.current(this) != null) {
-            AudioService.sendSceneLevels(this);
-        }
-    }
-
-    /** A 0-100% slider with a live label; {@code onChange} gets a fraction from 0 to 1. */
-    private void addLevelSlider(LinearLayout parent, int labelRes, float initial,
-                                java.util.function.Consumer<Float> onChange) {
-        TextView label = new TextView(this);
-        look.label(label);
-        label.setPadding(dp(4), dp(14), 0, 0);
-        label.setText(getString(labelRes, Math.round(initial * 100)));
-        SeekBar bar = new SeekBar(this);
-        bar.setMax(100);
-        look.slider(bar);
-        bar.setMinimumHeight(dp(40));
-        bar.setContentDescription(getString(labelRes, Math.round(initial * 100)));
-        bar.setProgress(Math.round(initial * 100));
-        bar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar b, int progress, boolean fromUser) {
-                label.setText(getString(labelRes, progress));
-                if (fromUser) {
-                    onChange.accept(progress / 100f);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar b) { }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar b) { }
-        });
-        parent.addView(label);
-        parent.addView(bar);
-    }
-
-    /** Passes a finger on the scene pad to the scene as an RjDj "#touch" message. */
-    private void sendTouch(String type, int finger, int x, int y) {
-        if (finger == 1 && !ScenePad.UP.equals(type)) {   // the first finger also drives the Pad X / Pad Y movers
-            Modulation.onPad(x / (float) ScenePad.GRID, y / (float) ScenePad.GRID);
-        }
-        if (AudioService.isRunning() && SceneSettings.current(this) != null) {
-            PdBase.sendMessage("#touch", type, (float) finger, (float) x, (float) y);
-        }
-    }
-
-    /** The scene picker: the built-in effects, then every imported scene; press and hold one to delete it. */
-    private void showScenes() {
-        List<SceneLibrary.Scene> scenes = SceneLibrary.list(SceneSettings.scenesDir(this));
-        String[] labels = new String[scenes.size() + 1];
-        labels[0] = getString(R.string.scene_built_in);
-        SceneLibrary.Scene current = SceneSettings.current(this);
-        int chosen = 0;
-        for (int i = 0; i < scenes.size(); i++) {
-            SceneLibrary.Scene sc = scenes.get(i);
-            labels[i + 1] = sc.author.isEmpty() ? sc.name
-                    : getString(R.string.scene_by_author, sc.name, sc.author);
-            if (current != null && sc.dirName.equals(current.dirName)) {
-                chosen = i + 1;
-            }
-        }
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.addView(sheetHeading(getString(R.string.scenes_title),
-                getString(scenes.isEmpty() ? R.string.scenes_none : R.string.scenes_delete_hint)));
-        addListRows(content, labels, chosen, null, i -> {
-            closeSheet();
-            selectScene(i == 0 ? SceneSettings.BUILT_IN : scenes.get(i - 1).dirName);
-        });
-        for (int i = 1; i <= scenes.size(); i++) {   // row 0 is the heading, row 1 the built-in effects
-            SceneLibrary.Scene sc = scenes.get(i - 1);
-            content.getChildAt(i + 1).setOnLongClickListener(v -> {
-                closeSheet();
-                confirmDeleteScene(sc);
-                return true;
-            });
-        }
-        openSheet(content);
-    }
-
-    private void selectScene(String dirName) {
-        if (dirName.equals(SceneSettings.selected(this))) {
-            return;
-        }
-        SceneSettings.select(this, dirName);
-        updateSceneUi();
-        if (AudioService.isRunning()) {
-            // The patch is opened when the engine starts, so swap scenes by restarting it.
-            startForegroundService(
-                    new Intent(this, AudioService.class).setAction(AudioService.ACTION_RESTART));
-        }
-    }
-
-    private void confirmDeleteScene(SceneLibrary.Scene scene) {
-        new LookDialog()
-                .setTitle(getString(R.string.delete_scene_title, scene.name))
-                .setPositiveButton(R.string.delete, (d, w) -> {
-                    boolean wasSelected = scene.dirName.equals(SceneSettings.selected(this));
-                    if (wasSelected) {
-                        selectScene(SceneSettings.BUILT_IN);   // stops using its files first
-                    }
-                    SceneLibrary.delete(scene);
-                    toast(R.string.toast_scene_deleted);
-                })
-                .setNegativeButton(R.string.cancel, null)
-                .show();
-    }
-
-    private void startImportScene() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                .addCategory(Intent.CATEGORY_OPENABLE)
-                .setType("*/*");
-        startActivityForResult(intent, REQ_IMPORT_SCENE);
-    }
-
-    private void startImportSceneFolder() {
-        startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_IMPORT_SCENE_FOLDER);
-    }
-
-    /** Copies one scene folder, or every scene inside a folder of scenes, on a background thread. */
-    private void importSceneFolderFrom(Uri tree) {
-        toast(R.string.toast_scene_folder_importing);
-        new Thread(() -> {
-            File dir = SceneSettings.scenesDir(this);
-            if (!dir.isDirectory() && !dir.mkdirs()) {
-                runOnUiThread(() -> toast(R.string.toast_scene_import_failed, "Cannot create " + dir));
-                return;
-            }
-            TreeImporter.Result r = TreeImporter.importTree(getContentResolver(), tree, dir);
-            runOnUiThread(() -> {
-                if (r.imported.isEmpty()) {
-                    toast(R.string.toast_scene_none_found);
-                } else if (r.imported.size() == 1 && r.failed.isEmpty()) {
-                    toast(R.string.toast_scene_imported, r.imported.get(0).name);
-                    selectScene(r.imported.get(0).dirName);
-                } else {
-                    // Don't guess which of many to start; the user picks from the list.
-                    toast(R.string.toast_scenes_imported, r.imported.size(), r.failed.size());
-                }
-            });
-        }, "scene-folder-import").start();
-    }
-
-    /** Unzips on a background thread (scenes can hold many samples), then offers to switch to it. */
-    private void importSceneFrom(Uri uri) {
-        String fileName = displayName(uri);
-        toast(R.string.toast_scene_importing);
-        new Thread(() -> {
-            try (InputStream in = getContentResolver().openInputStream(uri)) {
-                if (in == null) {
-                    throw new IOException(getString(R.string.err_open_file));
-                }
-                File dir = SceneSettings.scenesDir(this);
-                if (!dir.isDirectory() && !dir.mkdirs()) {
-                    throw new IOException("Cannot create " + dir);
-                }
-                SceneLibrary.Scene scene = SceneLibrary.importZip(in, fileName, dir);
-                runOnUiThread(() -> {
-                    toast(R.string.toast_scene_imported, scene.name);
-                    selectScene(scene.dirName);
-                });
-            } catch (IOException | RuntimeException e) {
-                runOnUiThread(() -> toast(R.string.toast_scene_import_failed, e.getMessage()));
-            }
-        }, "scene-import").start();
-    }
-
     /** The file name behind a picked document, e.g. "Eargasm.rj.zip"; empty if unknown. */
-    private String displayName(Uri uri) {
+    String displayName(Uri uri) {
         try (android.database.Cursor c = getContentResolver().query(
                 uri, new String[]{android.provider.OpenableColumns.DISPLAY_NAME}, null, null, null)) {
             if (c != null && c.moveToFirst() && !c.isNull(0)) {
@@ -3578,7 +3308,7 @@ public class MainActivity extends Activity {
         return "";
     }
 
-    private void toast(int messageRes, Object... args) {
+    void toast(int messageRes, Object... args) {
         Toast.makeText(this, getString(messageRes, args), Toast.LENGTH_SHORT).show();
     }
 
@@ -3747,7 +3477,7 @@ public class MainActivity extends Activity {
         return false;
     }
 
-    private int dp(int v) {
+    int dp(int v) {
         return Math.round(v * getResources().getDisplayMetrics().density);
     }
 }
