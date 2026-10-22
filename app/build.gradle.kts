@@ -15,14 +15,29 @@ android {
         versionName = "0.9.0-rc5.1"
     }
 
+    // The Play release key, when DadCraft has made one: its path and passwords live in ~/.gradle/gradle.properties
+    // (ouraliaKeystore, ouraliaKeystorePassword, ouraliaKeyAlias, ouraliaKeyPassword), never in the repo.
+    // Without them, release builds are signed with the debug key, as every rc so far (docs/RELEASING.md).
+    val releaseKey = providers.gradleProperty("ouraliaKeystore").orNull
+    signingConfigs {
+        if (releaseKey != null) {
+            create("play") {
+                storeFile = file(releaseKey)
+                storePassword = providers.gradleProperty("ouraliaKeystorePassword").get()
+                keyAlias = providers.gradleProperty("ouraliaKeyAlias").get()
+                keyPassword = providers.gradleProperty("ouraliaKeyPassword").get()
+            }
+        }
+    }
+
     buildTypes {
         release {
             // R8 shrinks and renames the code (ROADMAP 22); app/proguard-rules.pro keeps libpd and its callbacks.
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Release candidates are signed with the debug key, as rc3 and rc4 were (those were app.pdscenes, the working
-            // name: Ouralia is a new app beside them). A real release key comes with Play release prep.
-            signingConfig = signingConfigs.getByName("debug")
+            // name: Ouralia is a new app beside them). The Play key, once it exists, signs instead (see above).
+            signingConfig = signingConfigs.getByName(if (releaseKey != null) "play" else "debug")
         }
     }
 
