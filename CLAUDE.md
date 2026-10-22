@@ -63,6 +63,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **`tools/run_tests.sh quick <words>`** — while working: only the Pd test sections whose title matches (e.g.
   `quick glitch`, `quick pocket`), plus the Java tests. `tools/run_tests.sh list` shows the section titles.
 - Android build: `./gradlew assembleDebug`. Real-device check is DadCraft's.
+- `tools/test_release.py` (in both tiers) guards the permissions, backup off and the name. A new permission means
+  updating PRIVACY.md and its list.
 
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
 - **Release:** rc5.1 (0.9.0-rc5.1, versionCode 14, Oct 21; DadCraft: a hotfix of rc5, not rc6) = rc5 + presets that save
