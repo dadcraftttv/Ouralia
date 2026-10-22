@@ -19,6 +19,9 @@ behaviour changes, or tell DadCraft it needs one).
 - New sound ideas go in behind a switch (old sound the default) so he can compare, until he says otherwise.
   A setting that uses our C objects gets `.dcs()` in Params.java (shown with " *").
 - Commit small, descriptive commits. Do not push or publish anything unless asked.
+- **Keep "Open now" true** (DadCraft, Oct 22): `docs/ROADMAP.md` "Open now" is the one list of what isn't done. The
+  commit that builds, removes or sets aside something takes it off there and marks its ROADMAP item (BUILT / REMOVED /
+  SET ASIDE + date). Before suggesting or starting an idea, check it there and in DESIGN-NOTES first.
 - **Save tokens** (DadCraft asked): run the quick test tier while working, the full tier once before a push; print
   only failures and summaries; read files in parts (grep first); don't re-read what's already in context.
 
@@ -75,9 +78,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **DadCraft's verdicts (Oct 21):** Evolving stays opt-in (not the default). Hooks That Grow (`mel_dev`), Living
   Grooves (`pat_gen`), Chord Colours (`chord_color`): "all good". The Band Plays good with Intensity 50 (he is
   comparing it off with Intensity 100). Renames, effect families, rounded icons: good.
-- **Open, as time allows:** user kits with his own samples (and MP3/OGG/FLAC import), kit layers, kit drums in "Your
-  steps", wired + Bluetooth together, the Pocket Realm; his desktop "<Part> from" report (likely a kit with no part
-  of its own, now labelled "(Classic's drums)").
+- **Open:** see ROADMAP "Open now". Next (DadCraft, Oct 22): the outside reviews' points (ROADMAP 22), MainActivity's split first.
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
   mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.
