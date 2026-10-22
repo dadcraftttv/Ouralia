@@ -104,6 +104,8 @@ public class MainActivity extends Activity {
     private int currentTab = -1;
     /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
     Styler look;
+    /** Setup's About card (AboutUi.java). */
+    private final AboutUi aboutUi = new AboutUi(this);
     /** The Scenes tab (SceneUi.java). */
     private final SceneUi sceneUi = new SceneUi(this);
     LinearLayout xyPadSlot;          // where the pad sits on the Sound tab (an XY pad for the movers)
@@ -395,7 +397,7 @@ public class MainActivity extends Activity {
         // the same gap above and below it as between the cards
         ((LinearLayout.LayoutParams) reset.getLayoutParams()).setMargins(dp(3), 0, dp(3), 0);
         ((LinearLayout.LayoutParams) resetRow.getLayoutParams()).bottomMargin = dp(Look.CARD_GAP);
-        addAboutSection(setup);
+        aboutUi.addAboutSection(setup);
         look.fonts(root);
         showTab(UiSettings.tab(this));
         if (FirstRun.showWalkthrough(UiSettings.walkthroughSeen(this), installTimes()[0], installTimes()[1])) {
@@ -1118,7 +1120,7 @@ public class MainActivity extends Activity {
     }
 
     /** A tappable header that shows or hides the returned container. State is remembered. */
-    private LinearLayout addSection(LinearLayout parent, String id, String title,
+    LinearLayout addSection(LinearLayout parent, String id, String title,
                                     boolean openByDefault) {
         return addSection(parent, id, title, openByDefault, null);
     }
@@ -1127,7 +1129,7 @@ public class MainActivity extends Activity {
      * A foldable section. {@code fill} (may be null) builds the rows the first time the section is shown, so
      * folded sections cost nothing at startup.
      */
-    private LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
+    LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
                                     java.util.function.Consumer<LinearLayout> fill) {
         return addSection(parent, id, title, openByDefault, fill, new ArrayList<>());
     }
@@ -1137,7 +1139,7 @@ public class MainActivity extends Activity {
      * section's on/off switch, a chevron), the rows inside. {@code fill} (may be null) builds the rows the first time
      * the section opens, so folded sections cost nothing at startup.
      */
-    private LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
+    LinearLayout addSection(LinearLayout parent, String id, String title, boolean openByDefault,
                                     java.util.function.Consumer<LinearLayout> fill, List<View> extras) {
         LinearLayout card = new LinearLayout(this);
         card.setOrientation(LinearLayout.VERTICAL);
@@ -1720,103 +1722,6 @@ public class MainActivity extends Activity {
         picker.value.setText(picker.names[selected]);
     }
 
-    private void addAboutSection(LinearLayout parent) {
-        LinearLayout body = addSection(parent, "about", getString(R.string.section_about), false);
-        TextView text = new TextView(this);
-        text.setTextSize(14);
-        String source = getString(R.string.source_url);
-        text.setText(source.isEmpty() ? getString(R.string.about_text)
-                : getString(R.string.about_text_with_source, source));
-        text.setPadding(0, 0, 0, dp(8));
-        body.addView(text);
-        TextView sensorLine = new TextView(this);
-        sensorLine.setTextSize(12);
-        sensorLine.setText(getString(R.string.sensors_line, SensorInput.describe(this)));
-        sensorLine.setPadding(0, 0, 0, dp(8));
-        body.addView(sensorLine);
-        TextView feedback = new TextView(this);
-        feedback.setTextSize(14);
-        feedback.setAutoLinkMask(android.text.util.Linkify.EMAIL_ADDRESSES);
-        feedback.setText(R.string.about_feedback);
-        feedback.setPadding(0, 0, 0, dp(8));
-        body.addView(feedback);
-        LinearLayout row = newButtonRow(body);
-        addButton(row, R.string.show_licenses, this::showLicenses);
-        addButton(row, R.string.walk_show_again, this::showWalkthrough);
-        LinearLayout row2 = newButtonRow(body);
-        addButton(row2, R.string.feedback_send, this::sendFeedback);
-    }
-
-    /**
-     * Opens an email to DadCraft with the phone, Android and app version filled in and, if the tester agrees, the
-     * end of the event log (no audio: times, room levels, what the app did), so a report carries what's needed.
-     */
-    private void sendFeedback() {
-        CheckBox withLog = new CheckBox(this);
-        withLog.setText(R.string.feedback_with_log);
-        withLog.setChecked(true);
-        TextView note = new TextView(this);
-        note.setText(R.string.feedback_log_note);
-        note.setTextSize(13);
-        note.setPadding(0, dp(8), 0, 0);
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        box.setPadding(dp(20), dp(8), dp(20), 0);
-        box.addView(withLog);
-        box.addView(note);
-        new LookDialog().setTitle(R.string.feedback_send).setView(box)
-                .setPositiveButton(R.string.feedback_write, (d, w) -> {
-                    String version = "?";
-                    try {
-                        version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-                    } catch (PackageManager.NameNotFoundException ignored) {
-                        // keep "?"
-                    }
-                    StringBuilder body = new StringBuilder(getString(R.string.feedback_body_start)).append("\n\n\n");
-                    body.append("---\n").append(getString(R.string.feedback_device, Build.MANUFACTURER + " " + Build.MODEL,
-                            Build.VERSION.RELEASE, version)).append("\n");
-                    SceneLibrary.Scene scene = SceneSettings.current(this);
-                    body.append(getString(R.string.feedback_playing, scene != null ? scene.name
-                            : getString(R.string.scene_built_in))).append("\n");
-                    if (withLog.isChecked()) {
-                        body.append("\n").append(getString(R.string.feedback_log_heading)).append("\n").append(eventLogTail(200));
-                    }
-                    Intent mail = new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
-                            .putExtra(Intent.EXTRA_EMAIL, new String[]{getString(R.string.feedback_address)})
-                            .putExtra(Intent.EXTRA_SUBJECT, getString(R.string.feedback_subject, version))
-                            .putExtra(Intent.EXTRA_TEXT, body.toString());
-                    try {
-                        startActivity(mail);
-                    } catch (android.content.ActivityNotFoundException e) {
-                        toast(R.string.feedback_no_mail, getString(R.string.feedback_address));
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null).show();
-    }
-
-    /** The last {@code lines} lines of the event log (the older file first, if it rolled over). */
-    private String eventLogTail(int lines) {
-        java.util.ArrayDeque<String> tail = new java.util.ArrayDeque<>();
-        for (String name : new String[]{"events.log.1", "events.log"}) {
-            File f = new File(getFilesDir(), name);
-            if (!f.isFile()) {
-                continue;
-            }
-            try (java.io.BufferedReader r = new java.io.BufferedReader(new java.io.FileReader(f))) {
-                String l;
-                while ((l = r.readLine()) != null) {
-                    tail.addLast(l);
-                    if (tail.size() > lines) {
-                        tail.removeFirst();
-                    }
-                }
-            } catch (IOException ignored) {
-                // a missing or unreadable log just leaves less to send
-            }
-        }
-        return tail.isEmpty() ? getString(R.string.feedback_log_empty) : String.join("\n", tail);
-    }
-
     /** When the app was first installed and last updated (ms); equal on a fresh install. */
     private long[] installTimes() {
         try {
@@ -1827,7 +1732,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void showWalkthrough() {
+    void showWalkthrough() {
         UiSettings.setWalkthroughSeen(this);
         walkthrough = new Walkthrough(this, UiSettings.themeResource(UiSettings.effectiveTheme(this)), new Walkthrough.Host() {
             @Override
@@ -2032,56 +1937,6 @@ public class MainActivity extends Activity {
             tour.end();   // (puts Echo back)
         }
         super.onDestroy();
-    }
-
-    /** Licence texts shipped inside the app (assets/licenses), as the GPL requires. */
-    private void showLicenses() {
-        String[][] docs = {
-                {"Notice", "NOTICE.txt"},
-                {"GNU GPL v3", "GPL-3.0.txt"},
-                {"RjDj library (rjlib)", "rjlib-LICENSE.txt"},
-                {"Pure Data (BSD)", "pure-data-LICENSE.txt"},
-                {"PdParty helper objects (BSD)", "pdparty-LICENSE.txt"},
-                {"Oboe and libpd (Apache 2.0)", "Apache-2.0.txt"},
-                {"Fonts: Sora, Inter, JetBrains Mono (OFL)", "fonts-OFL.txt"},
-        };
-        String[] names = new String[docs.length];
-        for (int i = 0; i < docs.length; i++) {
-            names[i] = docs[i][0];
-        }
-        new LookDialog()
-                .setTitle(R.string.show_licenses)
-                .setItems(names, (d, which) -> showAssetText(docs[which][0], "licenses/" + docs[which][1]))
-                .setNegativeButton(R.string.close, null)
-                .show();
-    }
-
-    private void showAssetText(String title, String assetPath) {
-        String text;
-        try (InputStream in = getAssets().open(assetPath)) {
-            java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
-            byte[] buf = new byte[8192];
-            int n;
-            while ((n = in.read(buf)) > 0) {
-                bytes.write(buf, 0, n);
-            }
-            text = new String(bytes.toByteArray(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            text = getString(R.string.err_open_file);
-        }
-        TextView view = new TextView(this);
-        view.setText(text);
-        view.setTextSize(12);
-        view.setTypeface(Typeface.MONOSPACE);
-        view.setPadding(dp(16), dp(8), dp(16), dp(8));
-        view.setTextIsSelectable(true);
-        ScrollView scroll = new ScrollView(this);
-        scroll.addView(view);
-        new LookDialog()
-                .setTitle(title)
-                .setView(scroll)
-                .setPositiveButton(R.string.close, null)
-                .show();
     }
 
     /**
