@@ -51,22 +51,17 @@ public class MainActivity extends Activity {
     private final List<MoverUi> moverUis = new ArrayList<>();
     private AudioManager audioManager;
 
-    private TextView status;
-    /** The bar pinned to the bottom: what is playing and why, Start/Stop, hold the world, save this sound. */
-    private TextView nowLine;
     private final Map<String, TextView> budgetLines = new HashMap<>();   // budget name -> its "used / left" line
     private final Map<View, String> fadedUnless = new HashMap<>();   // a row -> the setting it needs on (faded while off)
-    private Button holdButton;
-    private Button snapButton;
     private final android.os.Handler uiHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private static final long NOW_LINE_MS = 1000;
     private final Runnable nowLineTick = new Runnable() {
         @Override
         public void run() {
-            updateNowLine();
+            playerUi.updateNowLine();
             updateMoverDots();
-            updateIntensityRow();
-            updateStatus();
+            playerUi.updateIntensityRow();
+            playerUi.updateStatus();
             if (walkthrough != null) {
                 walkthrough.refresh();   // headphones plugged in meanwhile
             }
@@ -75,7 +70,6 @@ public class MainActivity extends Activity {
         }
     };
     private TextView warning;
-    private Button startStop;
     private Button undoButton;
     /** Presets, randomize and the effect sections: hidden while an imported scene is selected. */
     // ---- tabs: Sound, Music, Realms, Scenes, Setup (the one long list had outgrown itself) ----
@@ -92,6 +86,8 @@ public class MainActivity extends Activity {
     private int currentTab = -1;
     /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
     Styler look;
+    /** The docked player and its sheet (PlayerUi.java). */
+    private final PlayerUi playerUi = new PlayerUi(this);
     /** Setup's Audio Devices and Diagnostics cards (DevicesUi.java). */
     private final DevicesUi devicesUi = new DevicesUi(this);
     /** The Realms tab (RealmsUi.java). */
@@ -103,7 +99,7 @@ public class MainActivity extends Activity {
     /** The Music tab's Kits card (KitUi.java). */
     private final KitUi kitUi = new KitUi(this);
     /** Presets (PresetUi.java). */
-    private final PresetUi presetUi = new PresetUi(this);
+    final PresetUi presetUi = new PresetUi(this);
     /** Setup's About card (AboutUi.java). */
     private final AboutUi aboutUi = new AboutUi(this);
     /** The Scenes tab (SceneUi.java). */
@@ -434,99 +430,28 @@ public class MainActivity extends Activity {
         bottom.setOrientation(LinearLayout.VERTICAL);
         bottom.setBackgroundColor(look.p.bg);   // the settings scroll on behind it, out of sight
         bottom.setPadding(dp(12), dp(8), dp(12), dp(12));
-        bottom.addView(buildPlayer());
+        bottom.addView(playerUi.buildPlayer());
         LinearLayout.LayoutParams navParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(64));
         navParams.setMargins(0, dp(8), 0, 0);
         bottom.addView(buildTabStrip(), navParams);
-        buildPlayerSheet();
+        buildSheet();
+        playerUi.buildPlayerContent();
         return bottom;
     }
 
-    private DialView miniDial, playerDial;
-    private TextView dialHint;
-    private ImageButton miniStart, miniSave;
-    private View playerMiddle;   // (the tour points at it)
     private ImageButton presetSave, presetExport, presetImport;
     private Button randomizeChip, nudgeChip;
     private Tour tour;                     // the spotlight tour after the walkthrough, while it shows
     private Object backEndsTour;           // its OnBackInvokedCallback on Android 13+
-    private TextView miniStatus, miniSub;
     // One bottom sheet, slid up over a dimmed screen, for whatever needs it: the player, the Key and Scale pickers.
     private View sheetScrim;
     private LinearLayout sheetBox;
     private ScrollView sheetBody;   // scrolls when the content is taller than most of the screen (the kit lists)
-    private LinearLayout playerContent;
     private boolean sheetOpen;
     private Object backClosesSheet;   // an OnBackInvokedCallback on Android 13+ (kept as Object for older ones)
 
-    /** The docked player: the small dial with Start inside, the status line, and Save sound. */
-    private View buildPlayer() {
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.HORIZONTAL);
-        card.setGravity(Gravity.CENTER_VERTICAL);
-        card.setBackground(look.round(look.p.dock, Look.RADIUS_CARD));
-        card.setElevation(dp(2));
-        card.setPadding(dp(8), dp(8), dp(6), dp(8));
-
-        android.widget.FrameLayout ringBox = new android.widget.FrameLayout(this);
-        miniDial = new DialView(this, look, false, "");
-        ringBox.addView(miniDial, new android.widget.FrameLayout.LayoutParams(dp(56), dp(56)));
-        miniStart = new ImageButton(this);
-        miniStart.setBackground(look.pressable(look.round(look.p.primary, 20), look.p.onPrimary, 20));
-        miniStart.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.onPrimary));
-        miniStart.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        miniStart.setPadding(dp(11), dp(11), dp(11), dp(11));
-        miniStart.setOnClickListener(v -> onStartStop());
-        ringBox.addView(miniStart, new android.widget.FrameLayout.LayoutParams(dp(40), dp(40), Gravity.CENTER));
-        card.addView(ringBox, new LinearLayout.LayoutParams(dp(56), dp(56)));
-
-        LinearLayout middle = new LinearLayout(this);
-        middle.setOrientation(LinearLayout.HORIZONTAL);
-        middle.setGravity(Gravity.CENTER_VERTICAL);
-        middle.setPadding(dp(10), 0, dp(6), 0);
-        middle.setBackground(look.pressable(null, look.p.text, Look.RADIUS_TILE));
-        middle.setContentDescription(getString(R.string.player_open));
-        middle.setOnClickListener(v -> openPlayer());
-        playerMiddle = middle;
-        LinearLayout texts = new LinearLayout(this);
-        texts.setOrientation(LinearLayout.VERTICAL);
-        miniStatus = new TextView(this);
-        miniStatus.setTypeface(look.heading());
-        miniStatus.setTextSize(Look.TEXT_LABEL);
-        miniStatus.setTextColor(look.p.text);
-        miniStatus.setSingleLine(true);
-        miniStatus.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        texts.addView(miniStatus);
-        miniSub = new TextView(this);
-        look.hint(miniSub);
-        miniSub.setSingleLine(true);
-        miniSub.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        texts.addView(miniSub);
-        middle.addView(texts, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        ImageView up = new ImageView(this);
-        up.setImageResource(R.drawable.ic_chevron_up);
-        up.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.muted));
-        middle.addView(up, new LinearLayout.LayoutParams(dp(20), dp(20)));
-        card.addView(middle, new LinearLayout.LayoutParams(0, dp(56), 1f));
-
-        miniSave = new ImageButton(this);
-        miniSave.setImageResource(R.drawable.ic_bookmark);
-        miniSave.setImageTintList(android.content.res.ColorStateList.valueOf(look.p.onContainer));
-        miniSave.setBackground(look.pressable(look.round(look.p.container, 22), look.p.onContainer, 22));
-        miniSave.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
-        miniSave.setPadding(dp(12), dp(12), dp(12), dp(12));
-        miniSave.setContentDescription(getString(R.string.snapshot));
-        miniSave.setOnClickListener(v -> presetUi.saveSnapshot());
-        card.addView(miniSave, new LinearLayout.LayoutParams(dp(44), dp(44)));
-        return card;
-    }
-
-    /**
-     * The bottom sheet (its content swapped in by {@link #openSheet}) and the player's content: the big Intensity
-     * dial (drag around the ring) with Start/Stop in its middle, the full status, the realm line, Hold realm and Save
-     * sound.
-     */
-    private void buildPlayerSheet() {
+    /** The bottom sheet, its content swapped in by {@link #openSheet}: the player, the pickers, the lists. */
+    private void buildSheet() {
         sheetScrim = new View(this);
         sheetScrim.setBackgroundColor(Look.alpha(0xFF000000, look.p.light ? 0.35f : 0.6f));
         sheetScrim.setAlpha(0f);
@@ -563,58 +488,6 @@ public class MainActivity extends Activity {
         sheetBody.setOverScrollMode(View.OVER_SCROLL_NEVER);
         sheetBox.addView(sheetBody, new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        playerContent = new LinearLayout(this);
-        playerContent.setOrientation(LinearLayout.VERTICAL);
-        playerContent.setGravity(Gravity.CENTER_HORIZONTAL);
-        playerContent.setPadding(dp(4), 0, dp(4), 0);
-
-        android.widget.FrameLayout dialBox = new android.widget.FrameLayout(this);
-        playerDial = new DialView(this, look, true, getString(R.string.intensity_caption));
-        playerDial.setContentDescription(getString(R.string.intensity_card));
-        playerDial.setListener((v, done) -> {
-            ParamStore.set(Intensity.ID, v);
-            updateIntensityRow();
-            if (done) {
-                refreshRows();   // the slider in Input & output follows
-            }
-        });
-        dialBox.addView(playerDial, new android.widget.FrameLayout.LayoutParams(dp(248), dp(248)));
-        startStop = new Button(this);
-        look.button(startStop, true);
-        startStop.setTypeface(look.value());   // DadCraft: the words in the slider numbers' font
-        startStop.setBackground(look.pressable(look.round(look.p.primary, 52), look.p.onPrimary, 52));
-        startStop.setPadding(0, dp(20), 0, dp(16));
-        startStop.setCompoundDrawablePadding(dp(2));
-        startStop.setOnClickListener(v -> onStartStop());
-        dialBox.addView(startStop, new android.widget.FrameLayout.LayoutParams(dp(104), dp(104), Gravity.CENTER));
-        playerContent.addView(dialBox, new LinearLayout.LayoutParams(dp(248), dp(248)));
-
-        status = new TextView(this);
-        look.hint(status);
-        status.setGravity(Gravity.CENTER);
-        status.setPadding(0, dp(6), 0, 0);
-        playerContent.addView(status);
-        dialHint = new TextView(this);   // (hidden while a scene plays: a scene has no Intensity)
-        dialHint.setText(R.string.dial_hint);
-        look.hint(dialHint);
-        dialHint.setTextSize(12);
-        dialHint.setGravity(Gravity.CENTER);
-        dialHint.setPadding(0, dp(2), 0, 0);
-        playerContent.addView(dialHint);
-        nowLine = new TextView(this);
-        look.label(nowLine);
-        nowLine.setTextSize(Look.TEXT_HINT + 1);
-        nowLine.setGravity(Gravity.CENTER);
-        nowLine.setPadding(0, dp(4), 0, 0);
-        playerContent.addView(nowLine);
-        LinearLayout row = newButtonRow(playerContent);
-        row.setPadding(0, dp(12), 0, 0);
-        holdButton = addButton(row, R.string.hold_world, () -> {
-            Worlds.setHeld(!Worlds.isHeld());
-            updateNowLine();
-        });
-        snapButton = addButton(row, R.string.snapshot, presetUi::saveSnapshot);
     }
 
     /**
@@ -702,10 +575,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void openPlayer() {
-        openSheet(playerContent);
-    }
-
     /** Slides the sheet up (300 ms, over a dimming screen) holding {@code content}; if it is up, swaps the content. */
     void openSheet(View content) {
         if (content.getParent() != sheetBody) {
@@ -778,117 +647,9 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Start's icon and words follow whether the sound is on. */
-    private void updateStartButtons(boolean on) {
-        miniStart.setImageResource(on ? R.drawable.ic_stop : R.drawable.ic_play);
-        miniStart.setContentDescription(getString(on ? R.string.stop : R.string.start));
-        startStop.setText(on ? R.string.stop : R.string.start);
-        android.graphics.drawable.Drawable icon = getDrawable(on ? R.drawable.ic_stop : R.drawable.ic_play).mutate();
-        icon.setTint(look.p.onPrimary);
-        startStop.setCompoundDrawablesRelativeWithIntrinsicBounds(null, icon, null, null);
-    }
-
-    /** The dials follow Intensity (empty while a scene plays: a scene has no Intensity), and so does the player's line. */
-    private void updateIntensityRow() {
-        if (playerDial == null) {
-            return;
-        }
-        SceneLibrary.Scene scene = SceneSettings.current(this);
-        float v = ParamStore.get(Intensity.ID);
-        playerDial.setActive(scene == null);
-        miniDial.setActive(scene == null);
-        dialHint.setVisibility(scene == null ? View.VISIBLE : View.GONE);
-        playerDial.setValue(v);
-        miniDial.setValue(v);
-        String sub = scene != null ? scene.name : getString(R.string.scene_built_in);
-        String realm = playingRealm();
-        if (scene == null && realm != null) {   // DadCraft: the bar showed Built-in effects while a Realm played
-            sub = getString(R.string.mini_realm, realm);
-            if (Worlds.isHeld()) {
-                sub = getString(R.string.now_line_held, sub);
-            }
-        }
-        if (scene == null) {
-            sub += " · " + getString(R.string.intensity_card_value, Math.round(v * 100))
-                    + (Modulation.isMoving(Intensity.ID) ? MOVER_DOT : "");
-        }
-        miniSub.setText(sub);
-    }
-    /** The title of the Realm playing now (Realm Hopper on, built-in effects running), or null. */
-    private String playingRealm() {
-        if (!AudioService.isRunning() || !Worlds.isEnabled()) {
-            return null;
-        }
-        String id = Worlds.currentWorld();
-        for (Worlds.World w : Worlds.ALL) {
-            if (w.id.equals(id)) {
-                return w.title;
-            }
-        }
-        return null;
-    }
-
     /** The accent: the palette's (Ouralia violet until Appearance offers a choice). */
     private int accentColor() {
         return look.p.primary;
-    }
-
-    /** One line: the world playing now and, in a few words, why. Refreshed once a second while visible. */
-    private void updateNowLine() {
-        boolean builtIn = AudioService.isRunning() && SceneSettings.current(this) == null;
-        boolean worlds = builtIn && Worlds.isEnabled();
-        holdButton.setVisibility(worlds ? View.VISIBLE : View.GONE);
-        holdButton.setText(Worlds.isHeld() ? R.string.holding_world : R.string.hold_world);
-        snapButton.setVisibility(SceneSettings.current(this) == null ? View.VISIBLE : View.GONE);
-        miniSave.setVisibility(snapButton.getVisibility());
-        if (!worlds) {
-            nowLine.setVisibility(View.GONE);
-            return;
-        }
-        nowLine.setVisibility(View.VISIBLE);
-        String id = Worlds.currentWorld();
-        String name = getString(R.string.worlds_yours);
-        for (Worlds.World w : Worlds.ALL) {
-            if (w.id.equals(id)) {
-                name = w.title;
-            }
-        }
-        List<String> why = new ArrayList<>();
-        int minute = Worlds.minuteOfDayNow();
-        if (minute >= WorldSelector.NIGHT_START_MINUTE && minute < WorldSelector.NIGHT_END_MINUTE) {
-            why.add(getString(R.string.why_night));
-        }
-        double nowS = android.os.SystemClock.elapsedRealtimeNanos() / 1e9;
-        if (WorldSelector.UNSTABLE.equals(id)) {
-            why.add(getString(R.string.why_shaken));
-        }
-        if (StepDetector.walking(nowS)) {
-            boolean clock = ParamStore.get("beat_follow") >= 0.5f && AudioService.tempo() > 0;
-            why.add(clock ? getString(R.string.why_walking_bpm, Math.round(AudioService.tempo()))
-                    : getString(R.string.why_walking));
-        }
-        if (PhoneContext.inPocket()) {
-            why.add(getString(R.string.why_pocket));
-        }
-        if (CalmBuild.level() > 0.02f) {
-            why.add(getString(R.string.why_building));
-        }
-        if (HandlingDetector.level() > 0.3f) {
-            why.add(getString(R.string.why_handling));
-        }
-        int room = Worlds.roomQuiet() ? R.string.why_room_quiet
-                : Worlds.roomLoud() ? (Worlds.roomLively() ? R.string.why_room_lively : R.string.why_room_steady)
-                : R.string.why_room_middle;
-        why.add(getString(room, Math.round(Worlds.roomLevelDb())));
-        if (ParamStore.get("beat_level") > 0 && ParamStore.get("beat_follow") >= 0.5f && ParamStore.get("rhythm_src") >= 0.5f) {
-            int[] kit = AudioService.kit();
-            why.add(getString(R.string.why_kit, kit[0], kit[1], kit[2], kit[3]));
-        }
-        String line = getString(R.string.now_line, name, String.join(" \u00b7 ", why));
-        if (Worlds.isHeld()) {
-            line = getString(R.string.now_line_held, line);
-        }
-        nowLine.setText(line);
     }
 
     /** While Randomize glides, redraw the sliders a few times a second so they visibly move. */
@@ -950,7 +711,7 @@ public class MainActivity extends Activity {
         Worlds.load(this);
         Worlds.setListener(() -> {
             realmsUi.updateWorldStatus();
-            updateIntensityRow();   // the player's line names the Realm
+            playerUi.updateIntensityRow();   // the player's line names the Realm
             refreshRows();   // sliders move on their own while a world fades in
         });
         realmsUi.refreshWorldRows();
@@ -1490,9 +1251,9 @@ public class MainActivity extends Activity {
         s.enter = toEcho;
         steps.add(s);
         steps.add(new Tour.Step(getString(R.string.tour_player_t), getString(R.string.tour_player_b))
-                .spot(getString(R.string.tour_start), miniStart)
-                .spot(getString(R.string.tour_middle), playerMiddle)
-                .spot(getString(R.string.tour_snapshot), miniSave));
+                .spot(getString(R.string.tour_start), playerUi.miniStart)
+                .spot(getString(R.string.tour_middle), playerUi.playerMiddle)
+                .spot(getString(R.string.tour_snapshot), playerUi.miniSave));
         s = new Tour.Step(getString(R.string.tour_tabs_t), getString(R.string.tour_tabs_b));
         int[] tabWords = {R.string.tour_tab_sound, R.string.tour_tab_music, R.string.tour_tab_realms,
                 R.string.tour_tab_scenes, R.string.tour_tab_setup};
@@ -1502,7 +1263,7 @@ public class MainActivity extends Activity {
         steps.add(s);
         if (!scene) {
             s = new Tour.Step(getString(R.string.tour_go_t), getString(R.string.tour_go_b))
-                    .spot(null, true, () -> new View[] {miniStart});
+                    .spot(null, true, () -> new View[] {playerUi.miniStart});
             s.done = AudioService::isRunning;
             s.autoNext = true;
             s.status = () -> headphonesConnected() ? "" : getString(R.string.tour_go_phones);
@@ -1851,7 +1612,7 @@ public class MainActivity extends Activity {
 
     /** Pull current values from the store into every control. */
     /** A small dot after a slider's label while a mover is pushing it around (checked once a second). */
-    private static final String MOVER_DOT = "  \u25CF";
+    static final String MOVER_DOT = "  \u25CF";
 
     private void updateMoverDots() {
         for (Row r : rows) {
@@ -1893,7 +1654,7 @@ public class MainActivity extends Activity {
         updateMoverUi();
         updateBudgetLines();
         updateFadedRows();
-        updateIntensityRow();
+        playerUi.updateIntensityRow();
         undoButton.setEnabled(ParamStore.canUndo());
     }
 
@@ -1973,7 +1734,7 @@ public class MainActivity extends Activity {
 
     // ---- engine control ----
 
-    private void onStartStop() {
+    void onStartStop() {
         if (AudioService.isRunning()) {
             startService(new Intent(this, AudioService.class).setAction(AudioService.ACTION_STOP));
             return;
@@ -2016,40 +1777,16 @@ public class MainActivity extends Activity {
                 return;
             }
         }
-        status.setText(R.string.mic_permission_required);
+        playerUi.status.setText(R.string.mic_permission_required);
     }
 
     /** Reflects engine state and headphone presence on screen. */
     private void updateUi() {
         boolean on = AudioService.isRunning();
-        updateStartButtons(on);
-        updateStatus();
+        playerUi.updateStartButtons(on);
+        playerUi.updateStatus();
         warning.setVisibility(headphonesConnected() ? View.GONE : View.VISIBLE);
-        updateNowLine();
-    }
-
-    /** The status line: stopped, running, paused for a call, an error, or the mic overloading (checked once a second). */
-    private void updateStatus() {
-        boolean on = AudioService.isRunning();
-        String error = AudioService.getLastError();
-        boolean missing = on && AudioService.objectsMissing();
-        boolean overload = on && !AudioService.isPausedForCall() && AudioService.clips().warning(ClipWatch.IN);
-        status.setTypeface(overload || missing ? look.textStrong() : look.text());
-        if (error != null && !on) {
-            status.setText(error);
-        } else if (missing) {
-            status.setText(R.string.status_objects_missing);
-        } else if (overload) {
-            status.setText(R.string.status_mic_overload);
-        } else {
-            int hz = AudioService.actualSampleRateHz();
-            status.setText(!on ? getString(R.string.status_stopped)
-                    : AudioService.isPausedForCall() ? getString(R.string.status_call)
-                    : hz > 0 ? getString(R.string.status_running_rate, hz) : getString(R.string.status_running));
-        }
-        // the docked player shows the same, on one line: warnings in the error colour so they're seen at a glance
-        miniStatus.setText(status.getText());
-        miniStatus.setTextColor(overload || missing || (error != null && !on) ? look.p.err : look.p.text);
+        playerUi.updateNowLine();
     }
 
     private boolean headphonesConnected() {
