@@ -17,8 +17,7 @@ to date in the same commit when behaviour changes.
   **MainActivity's split** (Oct 22, ROADMAP 22, DadCraft's pick from the outside reviews): one class per feature,
   each holding the activity (`a`) and using its shared helpers (`look`, `dp`, `addButton`, `openSheet`, `toast`,
   `LookDialog`...: package-private, not private); MainActivity stays the coordinator. Done: SceneUi (the Scenes
-  tab and the shared pad). Planned, in order: AboutUi, PresetUi, KitUi, AppearanceUi, ChoiceUi, RealmsUi, DevicesUi,
-  PlayerUi, SettingRows. No behaviour change in any step.
+  tab and the shared pad), AboutUi (Setup's About card, feedback, licences). Planned, in order: PresetUi, KitUi, AppearanceUi, ChoiceUi, RealmsUi, DevicesUi, PlayerUi, SettingRows. No behaviour change in any step.
 - `app/src/main/assets/patches/test_scene.pd` — the built-in effects patch. **Generated.** Edit `tools/make_patch.py`, then run
   `python3 tools/make_patch.py`. Never hand-edit the .pd.
 - `app/src/main/assets/scene_lib` — bundled rjlib. `docs/RJDJ-NOTES.md` — notes on the original format.
