@@ -30,9 +30,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,9 +45,8 @@ public class MainActivity extends Activity {
     static final int REQ_IMPORT = 3;
     static final int REQ_IMPORT_SCENE = 4;
     static final int REQ_IMPORT_SCENE_FOLDER = 5;
-    private static final int REQ_IMPORT_KIT = 23;
-    private static final int REQ_IMPORT_KIT_FOLDER = 24;
-    private TextView kitStatus;
+    static final int REQ_IMPORT_KIT = 23;
+    static final int REQ_IMPORT_KIT_FOLDER = 24;
 
     private final List<Row> rows = new ArrayList<>();
     /** The mover controls under each slider, greyed out while their section's movers are off. */
@@ -98,6 +94,8 @@ public class MainActivity extends Activity {
     private int currentTab = -1;
     /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
     Styler look;
+    /** The Music tab's Kits card (KitUi.java). */
+    private final KitUi kitUi = new KitUi(this);
     /** Presets (PresetUi.java). */
     private final PresetUi presetUi = new PresetUi(this);
     /** Setup's About card (AboutUi.java). */
@@ -381,7 +379,7 @@ public class MainActivity extends Activity {
                     body -> fillEffectSection(body, section), headerExtras(section));
         }
 
-        addSection(music, "kits", getString(R.string.section_kits), false, this::fillKitsSection);
+        addSection(music, "kits", getString(R.string.section_kits), false, kitUi::fillKitsSection);
 
         // ---- Setup ----
         addAudioSection(setup);
@@ -2756,7 +2754,7 @@ public class MainActivity extends Activity {
             } else if (r.tile != null) {
                 if (r.choicesShown != r.param.choices) {   // (a user kit came or went)
                     r.choicesShown = r.param.choices;
-                    updateKitStatus();
+                    kitUi.updateKitStatus();
                 }
                 r.tile.setText(r.param.choices[choiceIndex(r.param, v)]);
             } else if (r.segment != null) {
@@ -2826,130 +2824,8 @@ public class MainActivity extends Activity {
         } else if (requestCode == REQ_IMPORT_SCENE_FOLDER) {
             sceneUi.importSceneFolderFrom(uri);
         } else if (requestCode == REQ_IMPORT_KIT || requestCode == REQ_IMPORT_KIT_FOLDER) {
-            importKitFrom(uri, requestCode == REQ_IMPORT_KIT_FOLDER);
+            kitUi.importKitFrom(uri, requestCode == REQ_IMPORT_KIT_FOLDER);
         }
-    }
-
-    // ---- user kits ----
-
-    /** Music tab: your own kits (Kits: text files, folders or zips), imported into the Kit menus. */
-    private void fillKitsSection(LinearLayout body) {
-        kitStatus = new TextView(this);
-        kitStatus.setTextSize(15);
-        kitStatus.setPadding(0, dp(4), 0, dp(4));
-        body.addView(kitStatus);
-        LinearLayout row = newButtonRow(body);
-        addButton(row, R.string.kit_import, () -> startActivityForResult(new Intent(Intent.ACTION_OPEN_DOCUMENT)
-                .addCategory(Intent.CATEGORY_OPENABLE).setType("*/*"), REQ_IMPORT_KIT));
-        addButton(row, R.string.kit_import_folder, () -> startActivityForResult(
-                new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE), REQ_IMPORT_KIT_FOLDER));
-        LinearLayout row2 = newButtonRow(body);
-        addButton(row2, R.string.kit_howto, () -> new LookDialog().setTitle(R.string.kit_howto)
-                .setMessage(R.string.kit_howto_text).setPositiveButton(R.string.close, null).show());
-        addButton(row2, R.string.kit_delete, this::deleteKit);
-        updateKitStatus();
-    }
-
-    private void updateKitStatus() {
-        if (kitStatus == null) {
-            return;
-        }
-        List<String> titles = new ArrayList<>();
-        for (Kits.UserKit u : Kits.userKits()) {
-            titles.add(u.title);
-        }
-        kitStatus.setText(titles.isEmpty() ? getString(R.string.kit_none_status)
-                : getString(R.string.kit_status, String.join(", ", titles)));
-    }
-
-    private void deleteKit() {
-        List<Kits.UserKit> kits = Kits.userKits();
-        if (kits.isEmpty()) {
-            toast(R.string.kit_none_to_delete);
-            return;
-        }
-        String[] items = new String[kits.size()];
-        for (int i = 0; i < items.length; i++) {
-            items[i] = kits.get(i).title;
-        }
-        new LookDialog().setTitle(R.string.kit_delete).setItems(items, (d, which) ->
-                new LookDialog().setMessage(getString(R.string.kit_delete_confirm, items[which]))
-                        .setPositiveButton(R.string.kit_delete, (d2, w2) -> {
-                            int index = Kits.BUILT_IN.length + which;
-                            Kits.delete(index);
-                            Kits.refreshChoices();
-                            ParamStore.kitDeleted(index);
-                            updateKitStatus();
-                            refreshRows();
-                        }).setNegativeButton(android.R.string.cancel, null).show())
-                .setNegativeButton(android.R.string.cancel, null).show();
-    }
-
-    /** Copies a kit in (a kit.txt, a zip or a folder) off the main thread, then plays it as the Kit. */
-    private void importKitFrom(Uri uri, boolean folder) {
-        String name = folder ? "" : displayName(uri).toLowerCase(java.util.Locale.ROOT);
-        new Thread(() -> {
-            File kitsDir = Kits.userDir;
-            File staging = null;
-            try {
-                if (kitsDir == null || (!kitsDir.isDirectory() && !kitsDir.mkdirs())) {
-                    throw new IOException("Cannot create the kits folder");
-                }
-                int index;
-                if (folder) {
-                    staging = SceneLibrary.newStaging(kitsDir);
-                    TreeImporter.copyAll(getContentResolver(), uri, staging);
-                    index = Kits.installFolder(staging);
-                } else {
-                    try (InputStream in = getContentResolver().openInputStream(uri)) {
-                        if (in == null) {
-                            throw new IOException(getString(R.string.err_open_file));
-                        }
-                        if (name.endsWith(".zip")) {
-                            staging = AudioFiles.unzipToStaging(in, kitsDir);
-                            index = Kits.installFolder(staging);
-                        } else {
-                            String text = PresetManager.readAll(in);   // (a kit.txt: at most 64 KB)
-                            if (!Kits.hasParts(text)) {
-                                throw new IOException(Kits.check(text).get(0));
-                            }
-                            index = Kits.install(text);
-                        }
-                    }
-                }
-                if (index < 0) {
-                    throw new IOException("Cannot add the kit");
-                }
-                String text = Kits.text(index);
-                List<String> problems = text == null ? new ArrayList<>() : Kits.check(text);
-                if (text != null) {
-                    for (String f : Kits.missingFiles(text, Kits.dir(index))) {
-                        problems.add(getString(R.string.kit_missing_file, f));
-                    }
-                }
-                runOnUiThread(() -> {
-                    Kits.refreshChoices();
-                    ParamStore.set(Kits.ID, index);
-                    updateKitStatus();
-                    refreshRows();
-                    String title = Params.byId(Kits.ID).choices[index];
-                    String msg = getString(R.string.kit_imported, title);
-                    if (!problems.isEmpty()) {
-                        msg += "\n\n" + getString(R.string.kit_warnings) + "\n\u2022 " + String.join("\n\u2022 ", problems);
-                    }
-                    new LookDialog().setTitle(R.string.kit_import_done).setMessage(msg)
-                            .setPositiveButton(R.string.close, null).show();
-                });
-            } catch (IOException | RuntimeException e) {
-                String why = e.getMessage();
-                runOnUiThread(() -> new LookDialog().setTitle(R.string.kit_import_failed)
-                        .setMessage(why).setPositiveButton(R.string.close, null).show());
-            } finally {
-                if (staging != null) {
-                    SceneLibrary.deleteRecursively(staging);
-                }
-            }
-        }, "kit-import").start();
     }
 
     /** The file name behind a picked document, e.g. "Eargasm.rj.zip"; empty if unknown. */
