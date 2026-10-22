@@ -7,8 +7,10 @@ commit messages, tests and replies. Never write his real name anywhere (the GitH
 erased from all of its history on Oct 19).
 Test device: Moto G Stylus 2025, Android 16, no root. Build machine: Linux Mint, 12 cores.
 
-**Full design notes and history: `docs/DESIGN-NOTES.md`** (every feature: how it works, numbers measured, why, what
-DadCraft said). Don't read it whole: `grep -n` the feature you're touching and read that part. Update it in the same
+**Full design notes and history: `docs/DESIGN-NOTES.md`** (the index) **and `docs/design/*.md`** (one file per area:
+audio-io, sensing, rhythm, music, effects, app, dcs-objects, look, desktop, status-log; every feature: how it works,
+numbers measured, why, what DadCraft said). Don't read them whole: `grep -rn` the feature you're touching in
+`docs/DESIGN-NOTES.md docs/design/` and read that part. Update it in the same
 commit when behaviour changes. Ideas queue: `docs/ROADMAP.md`. Tester guide: `docs/TESTER-GUIDE.md` (update it with
 behaviour changes, or tell DadCraft it needs one).
 
@@ -41,8 +43,9 @@ behaviour changes, or tell DadCraft it needs one).
 - `app/src/main/java/io/github/dadcraftttv/ouralia/` — Java, plain Views (no Compose; do not rewrite). Params.java = every setting.
   The screen: MainActivity coordinates; each part is its own class (`SettingRows`, `PlayerUi`, `PresetUi`... see
   DESIGN-NOTES "MainActivity's split"). Edit the part's class, not MainActivity.
-- `app/src/main/assets/patches/test_scene.pd` — the built-in patch. **Generated:** edit `tools/make_patch.py`, run
-  `python3 tools/make_patch.py`. Never hand-edit the .pd.
+- `app/src/main/assets/patches/test_scene.pd` — the built-in patch. **Generated:** edit `tools/patchgen/` (constants.py
+  = every tuning number and DEFAULTS, core.py = the Patch builder, build.py = the chain, one module per area: rhythm,
+  music, found, glitch, sensing, stereo), run `python3 tools/make_patch.py`. Never hand-edit the .pd.
 - `app/src/main/assets/scene_lib` (rjlib + our scene helpers), `builtin_scenes/` (4 official RjDj scenes).
 - `dcs/` — our own Pd objects in C (prefix `dcs_`, BSD-3, loaded by `#X declare -lib dcs;`). After changing
   `dcs/src`: `make -C dcs`, `tools/build_dcs_android.sh` (commits `app/src/main/jniLibs/*/libdcs.so`), `tools/test_dcs.py`.
@@ -80,7 +83,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Room in Stereo (Oct 22): DadCraft likes it,
   an option for phones that support it, never the default ("as close to universal as possible"). Clear Catches
   (`fs_clean`, 0-30 dB, Oct 22): default 0 (off); DadCraft at 10.4 dB, verdict pending. Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
-  (`GC_POCKET` in make_patch.py).
+  (`GC_POCKET` in tools/patchgen/constants.py).
 - **Plan (DadCraft, Oct 21):** rc5 = the first public beta, renamed to Ouralia, posted under GitHub Releases but not
   advertised until GitHub purges the old commits. The rename is done (Oct 21); the found-sound rhythm section (ROADMAP 16) was
   already built (DadCraft will walk-test it). Everything else waits for wider testers' feedback.
