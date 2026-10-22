@@ -23,9 +23,8 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
-**Before advertising rc5 (item 22):** fresh README screenshots (all three still say "PdScenes"), `PRIVACY.md` (the
-mic, live only, no recordings, no analytics, what `events.log` holds and what a feedback report sends), `source_url`
-in strings.xml (empty: About shows no link to the source), GitHub repo topics, maybe a short demo GIF.
+**Before advertising rc5 (item 22):** fresh README screenshots (all three still say "PdScenes"; after MainActivity's
+split), GitHub repo topics, maybe a short demo GIF. (`PRIVACY.md` and the About screen's source link DONE Oct 22.)
 
 **Code health (item 22):** split MainActivity (3,753 lines) one piece at a time, no behaviour change; check that a
 delayed music callback (motif, call and response) can't send to Pd after Stop or during a restart; a test that the
