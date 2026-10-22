@@ -29,9 +29,9 @@ Order (DadCraft, Oct 22): the reviews' release and code-health points first, Mai
 feature, so new sounds land with a known CPU price. Maybe later: split DESIGN-NOTES and make_patch.py the way
 MainActivity was.
 
-**Release to Play (release prep, item 14 Release):** a release keystore (rcs use the debug key) and Play App Signing,
-Play foreground-service + microphone declarations, Data safety form,
-store listing, a release checklist with each APK's SHA-256.
+**Release to Play (release prep, item 14 Release; steps and drafts in docs/RELEASING.md):** DadCraft makes the release
+key (the build picks it up from ~/.gradle) and turns on Play App Signing; the Play Console forms (foreground
+services, Data safety, store listing) from the drafts there.
 
 **Phone checks waiting on DadCraft:** call pause and ducking (14), the pocket shaping (15), the found-sound rhythm
 walk (16), wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt timing, the found
@@ -307,7 +307,8 @@ microphone declarations, store listing.
       1,237 lines, DESIGN-NOTES "MainActivity's split"); motif and answer notes dropped after a restart, not only
       after Stop; `tools/test_release.py` (permissions, backup, name; both test tiers); CI building the app and
       running the quick tests (`.github/workflows/tests.yml`); CONTRIBUTING.md; an issue template; fresh README screenshots (Ouralia, The Band); the notification's own icon (`ic_notification`, from make_icon.py); R8 on for release builds
-      (`app/proguard-rules.pro` keeps libpd, its callbacks and the two reflected methods; DadCraft's first Start checks it).
+      (`app/proguard-rules.pro` keeps libpd, its callbacks and the two reflected methods; DadCraft's first Start checks it); docs/RELEASING.md and
+      `tools/release_apk.sh` (the APK by version, its SHA-256, R8's mapping; the Play key from ~/.gradle when it exists).
 
 ## Compatibility and scene findings (PdParty, rjlib PDF, composer pack)
 
