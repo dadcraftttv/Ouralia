@@ -90,5 +90,40 @@ check(e.heard.get("reqtime") == [1.0], "rj_time asks the player for the time")
 check(e.heard.get("reqcompass") == [1.0], "rj_compass asks the player for a compass reading")
 check(e.heard.get("reqloc") == [1.0], "rj_loc asks the player for a location")
 
+# state saving (SceneState in the app): the player sends "save" to RJ_SCENE_SAVE and keeps the lists the savers answer
+# on RJ_SCENE; the next time, it sends them to RJ_SCENE_LOAD. rjlib's own example saver, rjsave-ex, round trip:
+e.close()
+saver = os.path.join(scenes, "Saver.rj")
+os.makedirs(saver)
+open(os.path.join(saver, "_main.pd"), "w").write("""#N canvas 0 0 400 300 10;
+#X declare -path . -path rj -path ../pd -path ../../pd;
+#X obj 10 40 rjsave-ex one;
+#X obj 10 10 r in;
+#X connect 1 0 0 0;
+""")
+def saver_engine():
+    e = Engine(LIB, os.path.join(saver, "_main.pd"), search_path=[os.path.join(scenes, "pd"), os.path.join(scenes, "pd", "rj")])
+    e.listen("RJ_SCENE")
+    e.run(np.zeros(SR // 10, dtype=np.float32))
+    return e
+def saved(e):
+    e.lists.pop("RJ_SCENE", None)
+    e.send_msg("RJ_SCENE_SAVE", "save")
+    return [m for m in e.lists.get("RJ_SCENE", [])]
+e = saver_engine()
+bad = [m for m in e.log if "couldn't create" in m]
+e.send_msg("in", "a", 30)
+first = saved(e)
+check(not bad and ["rjsave-ex-one", "a", 30.0] in first, "a scene's saver answers \"save\" on RJ_SCENE: %s %s" % (first, bad[:2]))
+e.close()
+e = saver_engine()
+fresh = saved(e)
+for m in first:
+    e.send_list("RJ_SCENE_LOAD", *m)
+back = saved(e)
+check(["rjsave-ex-one", "a", 30.0] not in fresh and ["rjsave-ex-one", "a", 30.0] in back,
+      "...and the saved list sent to RJ_SCENE_LOAD brings the value back in a fresh copy (before %s, after %s)" % (fresh, back))
+e.close()
+
 print("ALL PASSED" if fails == 0 else "%d FAILED" % fails)
 sys.exit(1 if fails else 0)

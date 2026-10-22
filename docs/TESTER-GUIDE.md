@@ -546,7 +546,7 @@ Please tell me whether Realms change too early, too late, or not at all, and wha
 
 ## The Scenes tab
 
-A scene is a ready-made experience from the original RjDj. While a scene is playing it replaces the built-in effects, so the Sound, Music and Realms tabs are paused. Press **Choose scene** to pick one, and **Choose scene > Built-in effects** to go back. **Import zip** and **Import folder** add scenes you already have. With a scene chosen, its touch pad shows the scene's picture, and fingers on it are sent to the scene. Scenes that show their own pictures and words on screen (for example Smile, Moogarina or Showtime, if you have them) now draw them on the pad: buttons lighting up, note names, labels.
+A scene is a ready-made experience from the original RjDj. While a scene is playing it replaces the built-in effects, so the Sound, Music and Realms tabs are paused. Press **Choose scene** to pick one, and **Choose scene > Built-in effects** to go back. **Import zip** and **Import folder** add scenes you already have. With a scene chosen, its touch pad shows the scene's picture, and fingers on it are sent to the scene. Scenes that save their own settings (like Strike, if you have it) remember them now: set something in the scene, stop, start again, and it should be as you left it. Scenes that show their own pictures and words on screen (for example Smile, Moogarina or Showtime, if you have them) now draw them on the pad: buttons lighting up, note names, labels.
 
 The app includes four official example scenes made by the RjDj team (used under their open-source license):
 

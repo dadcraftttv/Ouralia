@@ -29,6 +29,9 @@ public class S {
         SceneLibrary.importZip(new ByteArrayInputStream(zip("Foo.rj/_main.pd", "#N canvas;")), "x", dir);
         check(!new File(dir, "Foo.rj/rj").exists() && SceneLibrary.find(dir, "Foo.rj").name.equals("Foo"), "re-import replaces the old copy; no plist falls back to folder name");
         check(SceneLibrary.list(dir).size() == 3 && Arrays.stream(dir.list()).noneMatch(n -> n.startsWith(".import")), "list finds 3 scenes, no staging left over");
+        SceneLibrary.Scene low = SceneLibrary.importZip(new ByteArrayInputStream(zip("Low.rj/_main.pd", "#N canvas;", "Low.rj/info.plist", PLIST)), "x", dir);
+        check(low.name.equals("Echo & Co") && low.author.equals("Jane"), "a lowercase info.plist is read too (PdParty takes it): " + low.name);
+        SceneLibrary.delete(low);
         try { SceneLibrary.importZip(new ByteArrayInputStream(zip("readme.txt", "hi")), "x", dir); check(false, "zip without _main.pd rejected"); }
         catch (IOException e) { check(e.getMessage().contains("_main.pd"), "zip without _main.pd rejected: " + e.getMessage()); }
         try { SceneLibrary.importZip(new ByteArrayInputStream(zip("../evil.txt", "x", "_main.pd", "y")), "x", dir); check(false, "zip-slip rejected"); }
@@ -39,6 +42,11 @@ public class S {
         SceneLibrary.delete(SceneLibrary.find(dir, "Foo.rj"));
         check(SceneLibrary.find(dir, "Foo.rj") == null, "delete removes the scene");
         check(SceneLibrary.folderName("a/b:c").equals("a_b_c.rj") && SceneLibrary.folderName("").equals("scene.rj") && SceneLibrary.folderName(".hid.zip").equals("scene_hid.rj"), "folderName cleans: " + SceneLibrary.folderName("a/b:c") + ", " + SceneLibrary.folderName(""));
+        java.util.List<Object[]> st = java.util.List.of(new Object[]{"rjsave-ex-one", "a", 30f}, new Object[]{"x", "1.5", -2.25f});
+        java.util.List<Object[]> back = SceneState.decode(SceneState.encode(st));
+        check(back.size() == 2 && Arrays.equals(back.get(0), st.get(0)) && Arrays.equals(back.get(1), st.get(1)),
+                "a scene's saved state survives the text (a word that looks like a number stays a word): " + SceneState.encode(st).replace("\n", " | "));
+        check(SceneState.decode("junk\ns:ok\tf:1\n").size() == 1 && SceneState.decode(null).isEmpty(), "a spoilt line is skipped");
         System.out.println(fails == 0 ? "ALL PASSED" : fails + " FAILED"); System.exit(fails == 0 ? 0 : 1);
     }
 }

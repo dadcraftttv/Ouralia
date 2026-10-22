@@ -16,6 +16,7 @@ final class SceneSettings {
     private static final String KEY_VOLUME = "volume";
     private static final String KEY_MIC_VOLUME = "mic_volume";
     private static final String KEY_RJDJ_TIMING = "rjdj_timing";
+    private static final String KEY_STATE = "state_";   // + the scene's folder: its saved state (SceneState)
 
     /** The sample rate RjDj ran its scenes at; scene timings (delays, loop lengths) assume it. */
     static final int RJDJ_SAMPLE_RATE = 22050;
@@ -29,6 +30,19 @@ final class SceneSettings {
     /** The built-in effects, scene volume, mic volume and RjDj timing back to a fresh install. */
     static void resetAll(Context context) {
         prefs(context).edit().clear().apply();
+    }
+
+    /** An imported scene's saved state, as SceneState text ("" if none). Reset everything clears it with the rest. */
+    static String sceneState(Context context, String dirName) {
+        return prefs(context).getString(KEY_STATE + dirName, "");
+    }
+
+    static void setSceneState(Context context, String dirName, String state) {
+        if (state == null || state.isEmpty()) {
+            prefs(context).edit().remove(KEY_STATE + dirName).apply();
+        } else {
+            prefs(context).edit().putString(KEY_STATE + dirName, state).apply();
+        }
     }
 
     static String selected(Context context) {

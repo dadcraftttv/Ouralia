@@ -33,6 +33,17 @@ to date in the same commit when behaviour changes.
   `scene_lib/rj/s_fplaytable.pd` carries a fix for current Pd (`[list split]` output order); keep it when refreshing rjlib.
 - Player-side helpers for scenes live in `scene_lib/`: `closebang`, `rj_time`, `rj_compass`, `rj_loc`, `rjdj` (from PdParty, BSD), our own `rj_text` and `scene_lib/rj/rj_image`,
   and stand-ins for externals some imported scenes use: `declip`, `avg~`, `aubiopitch~` (sigmund~, MIDI out) and a silent `keys`.
+  **Scene state** (Oct 22, ROADMAP Compatibility "State saving"): rjlib's saving (`sssad`, `rjloader`, `u_loader`) needs
+  the player: it sends "save" to RJ_SCENE_SAVE, keeps the lists the savers answer on RJ_SCENE ("rjsave-ex-one a 30"),
+  and sends them to RJ_SCENE_LOAD when the scene opens again (rjlib's rjsave-ex-help). The RjDj app did; PdParty never
+  did, nor did we until now (found: nothing remembered). AudioService saves at Stop (after the audio stops, before
+  closebang; libpd on Android answers in the same call) and restores after the patch opens (after its loadbangs);
+  `SceneState` is the text (one list a line, "s:"/"f:" atoms), kept per scene folder in SceneSettings' prefs, so Reset
+  everything clears it; deleting a scene drops it; a restart for a new device keeps it. Scenes that use it:
+  Strike, Echochamber (in the composer pack's rjdj_scenes). Tests: test_scene_helpers (rjsave-ex round trip), javatests S.
+  **Info.plist in any capitals** (PdParty takes "info.plist" too; Android's file names care about case). The
+  `index.rdf` fallback in early notes: SET ASIDE, never a thing (all 66 scenes in the composer pack use Info.plist, and
+  neither the template nor PdParty mentions it).
   `SceneEvents` answers their `#pdparty` requests (time); compass is streamed all the time; there is no location permission, so `rj_loc` stays quiet;
   **Scene graphics** (roadmap item 9, Oct 14; `SceneGraphics.java` test G, `tools/test_scene_graphics.py`): `rj_image`/`rj_text`
   send `rj_gfx <$0> <command> ...` (`[pdcontrol]` args for the text's words); AudioService subscribes before opening a
