@@ -26,8 +26,8 @@ How to build, and how the code is laid out, is in the [README](README.md#buildin
 
 ## Where things go
 
-- The built-in patch `app/src/main/assets/patches/test_scene.pd` is generated: edit `tools/make_patch.py` and run
-  it. Never edit the `.pd` by hand.
+- The built-in patch `app/src/main/assets/patches/test_scene.pd` is generated: edit `tools/patchgen/` (one module per
+  area; constants.py holds the numbers) and run `python3 tools/make_patch.py`. Never edit the `.pd` by hand.
 - Our own Pd objects live in `dcs/` (C, prefix `dcs_`, BSD-3-Clause). After changing `dcs/src`: `make -C dcs`,
   `tools/build_dcs_android.sh`, `tools/test_dcs.py`. Don't change a standard Pd object; add a `dcs_` one.
 - The Java is plain Android Views. Every setting is in `Params.java`; the screen is split into one class per part
