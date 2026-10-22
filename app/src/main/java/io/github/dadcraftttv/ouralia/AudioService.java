@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -449,6 +450,44 @@ public class AudioService extends Service {
     }
 
     private int patchHandle = -1;
+
+    // ---- an imported scene's saved state (SceneState: rjlib's sssad / rjloader, the player's side) ----
+    private String sceneStateDir;              // the scene playing, whose state Stop saves (null: none)
+    private List<Object[]> sceneStateSaving;   // collecting while "save" is answered (Pd calls back at once)
+
+    private void restoreSceneState(String dirName) {
+        sceneStateDir = dirName;
+        PdBase.subscribe(SceneState.SAVED);
+        List<Object[]> saved = SceneState.decode(SceneSettings.sceneState(this, dirName));
+        for (Object[] m : saved) {
+            PdBase.sendList(SceneState.LOAD, m);
+        }
+        if (!saved.isEmpty()) {
+            logEvent("Scene state restored: " + saved.size() + " values");
+        }
+    }
+
+    private void keepSceneState(Object[] m) {
+        if (sceneStateSaving != null && m.length > 0) {
+            sceneStateSaving.add(m);
+        }
+    }
+
+    /** At Stop, before the patch closes: asks the scene's savers and keeps what they answer (nothing: unchanged). */
+    private void saveSceneState() {
+        if (!sceneRunning || sceneStateDir == null) {
+            return;
+        }
+        sceneStateSaving = new ArrayList<>();
+        PdBase.sendMessage(SceneState.SAVE, "save");
+        List<Object[]> got = sceneStateSaving;
+        sceneStateSaving = null;
+        if (!got.isEmpty()) {
+            SceneSettings.setSceneState(this, sceneStateDir, SceneState.encode(got));
+            logEvent("Scene state saved: " + got.size() + " values");
+        }
+        sceneStateDir = null;
+    }
     private boolean sceneRunning;
     /** True while waiting (off the main thread) for a Bluetooth headset's call link before opening the audio. */
     private boolean starting;
@@ -731,6 +770,10 @@ public class AudioService extends Service {
 
             @Override
             public void receiveList(String source, Object... args) {
+                if (SceneState.SAVED.equals(source)) {
+                    keepSceneState(args);
+                    return;
+                }
                 if (SCENE_GFX.equals(source)) {   // a scene's on-screen image or text (rj_image, rj_text)
                     SceneGraphics.SCENE.apply(args);
                     return;
@@ -745,6 +788,13 @@ public class AudioService extends Service {
 
             @Override
             public void receiveMessage(String source, String symbol, Object... args) {
+                if (SceneState.SAVED.equals(source)) {   // (a saver's list that starts with a word)
+                    Object[] m = new Object[args.length + 1];
+                    m[0] = symbol;
+                    System.arraycopy(args, 0, m, 1, args.length);
+                    keepSceneState(m);
+                    return;
+                }
                 if (SceneEvents.REQUEST_RECEIVER.equals(source) && "time".equals(symbol)) {
                     // rj_time asked for the clock. (compass is streamed all the time; loc has no
                     // permission here, so rj_loc stays quiet.)
@@ -895,6 +945,7 @@ public class AudioService extends Service {
         sceneRunning = scene != null;
         if (scene != null) {
             sendSceneLevels(this);
+            restoreSceneState(scene.dirName);
         }
 
         PdAudio.startAudio(this);
@@ -1167,6 +1218,7 @@ public class AudioService extends Service {
         try {
             PdAudio.stopAudio();
             if (patchHandle >= 0) {
+                saveSceneState();
                 PdBase.sendBang(SceneEvents.CLOSEBANG_RECEIVER);   // lets a scene tidy up, like [closebang]
                 PdBase.closePatch(patchHandle);
                 patchHandle = -1;

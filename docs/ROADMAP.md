@@ -55,9 +55,7 @@ chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit 
 **App ideas (item 22):** tap tempo, a home-screen widget, MIDI in (much later); a simple walk-mode
 screen (14 UI); the Bluetooth hint on the input picker itself (Diagnostics already shows call mode).
 
-**Scenes:** location (`#loc`) input, unported scene objects, `rj_zcr~` if a scene needs it (11); the `index.rdf`
-fallback for older packs; check whether rjlib's state saving (`sssad`, `RJ_SCENE_SAVE`) persists in the app
-(Compatibility, below). Also a beat-offset slider if drift returns (11), and his desktop "<Part> from" report.
+**Scenes:** location (`#loc`) input, unported scene objects, `rj_zcr~` if a scene needs it (11). Also a beat-offset slider if drift returns (11), and his desktop "<Part> from" report.
 
 1. **(BUILT 2026-10-08 as "Room notes", `music_res`; needs tuning by ear) The room plays the notes (Dimensions "Flux").** Run the mic through resonators/filterbank tuned to the chosen
    key and scale; filter frequencies move with pitch changes and onsets, so sounds around you ring notes in key.
@@ -333,8 +331,8 @@ microphone declarations, store listing.
 - **Player-provided wrappers (DONE: ported `closebang`, `rj_time`, `rj_compass`, `rj_loc`, `rj_text`, `rjdj`; drawing `rj_text`/`rj_image` on screen BUILT Oct 14 as scene graphics; still open: `rj_loc` needs `#loc`).** PdParty supplies `rj_text`, `rj_time`, `rj_compass`, `rj_loc`, `rjdj` and `closebang`
   (`res/patches/lib/pdparty`, BSD). Scenes that rely on the player to provide them would fail in our app. Port the missing ones
   (rj_time from `#time`, rj_compass from `#compass`, rj_text as a no-op or an on-screen caption, rj_loc once `#loc` exists).
-- **Older scene packs may use `index.rdf`** for their name and author instead of `Info.plist` (rjlib PDF). Add a fallback reader.
-- **State saving.** rjlib scenes can save and restore parameters (`u_dispatch`, SSSAD, `u_loader`, a send to `RJ_SCENE_SAVE`). Check that
+- **(SET ASIDE 2026-10-22: no RjDj scene uses it; all 66 in the composer pack use Info.plist. Built instead: Info.plist in any capitals, as PdParty) Older scene packs may use `index.rdf`** for their name and author instead of `Info.plist` (rjlib PDF). Add a fallback reader.
+- **(BUILT 2026-10-22: it did not persist; the app now plays the player's part, DESIGN-NOTES "Scene state") State saving.** rjlib scenes can save and restore parameters (`u_dispatch`, SSSAD, `u_loader`, a send to `RJ_SCENE_SAVE`). Check that
   our copies of `rjsave-ex`, `rjloader` and `sssad` actually persist state in the app, or document that they do not.
 - **PdParty also lists `rj_zcr~`** among its externals, but no scene in its samples uses it, so keep skipping it unless one turns up.
 - **Sample rate:** the RjDj material says 22050 Hz (`u_samplebank` defaults to it). Our RjDj timing setting already does this.

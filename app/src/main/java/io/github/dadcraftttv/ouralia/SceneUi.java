@@ -240,6 +240,7 @@ final class SceneUi {
                         selectScene(SceneSettings.BUILT_IN);   // stops using its files first
                     }
                     SceneLibrary.delete(scene);
+                    SceneSettings.setSceneState(a, scene.dirName, "");   // (its saved state goes with it)
                     a.toast(R.string.toast_scene_deleted);
                 })
                 .setNegativeButton(R.string.cancel, null)

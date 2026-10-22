@@ -257,8 +257,8 @@ final class SceneLibrary {
         String name = null;
         String author = "";
         String description = "";
-        File plist = new File(dir, "Info.plist");
-        if (plist.isFile()) {
+        File plist = infoPlist(dir);
+        if (plist != null) {
             try {
                 String xml = new String(readAll(plist), StandardCharsets.UTF_8);
                 name = plistString(xml, "name");
@@ -272,6 +272,26 @@ final class SceneLibrary {
             name = stripSuffix(dir.getName());
         }
         return new Scene(dir.getName(), dir, name.trim(), author.trim(), description.trim());
+    }
+
+    /**
+     * The scene's Info.plist, in any capitals (PdParty also takes "info.plist"; Android's file names care about case),
+     * or null. Every scene in the RjDj archives uses Info.plist; the "index.rdf" in our early notes was never a thing.
+     */
+    static File infoPlist(File dir) {
+        File exact = new File(dir, "Info.plist");
+        if (exact.isFile()) {
+            return exact;
+        }
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                if (f.isFile() && f.getName().equalsIgnoreCase("Info.plist")) {
+                    return f;
+                }
+            }
+        }
+        return null;
     }
 
     /** First {@code <string>} after {@code <key>key</key>}. Info.plist is simple enough for this. */

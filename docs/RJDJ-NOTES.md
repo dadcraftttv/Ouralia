@@ -6,7 +6,7 @@ Researched from the public repos `rjdj/rjlib` (Reality Jockey's own library) and
 ## What a scene is
 A folder ending in `.rj` (often distributed zipped) containing:
 - `_main.pd`    the scene's main Pd patch (required)
-- `Info.plist`  XML plist; `info` dict with `name`, `author`, `description`, optionally `category`
+- `Info.plist`  XML plist; `info` dict with `name`, `author`, `description`, optionally `category` (PdParty also takes `info.plist`)
 - `image.jpg`   background/cover image (PdParty also accepts `thumb.jpg`)
 - audio samples (`*.wav`), and usually its own copy of the `rj/` abstraction library
 Scenes begin with `#X declare -path .; -path rj; -path ../pd; -path ../../pd`, so they find `rj/`
