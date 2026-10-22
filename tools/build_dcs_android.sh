@@ -5,7 +5,7 @@
 set -e
 H="$(cd "$(dirname "$0")" && pwd)"; ROOT="$(dirname "$H")"
 NDK="${ANDROID_NDK_HOME:-$HOME/Android/Sdk/ndk/29.0.14206865}"
-AAR="$ROOT/third_party/maven/io/github/libpd/android/pd-core/1.4.2-pdscenes.1/pd-core-1.4.2-pdscenes.1.aar"
+AAR="$ROOT/third_party/maven/io/github/libpd/android/pd-core/1.4.2-pdscenes.2/pd-core-1.4.2-pdscenes.2.aar"
 PD_SRC="$H/.libpd/src/pure-data/src"
 [ -f "$PD_SRC/m_pd.h" ] || { echo "Pd's headers are missing: run tools/build_libpd.sh first"; exit 1; }
 W="$H/.dcs-android"; rm -rf "$W"; mkdir -p "$W/aar"

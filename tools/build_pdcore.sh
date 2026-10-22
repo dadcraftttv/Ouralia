@@ -6,13 +6,15 @@
 #   dadcraftttv/pd-for-android, branch pdscenes = libpd/pd-for-android master (d3ec6c9) + #198 (setAutoReopen)
 #   dadcraftttv/libpd,          branch pdscenes = libpd 3fc60ea (Pd 0.55.2, what pd-core 1.4.2-SNAPSHOT used)
 #                                                 + #428 (the Oboe reopen/close race fix, our issue #427)
+#                                                 + the inputPreset option and inputChannels (Oct 22, the room in
+#                                                   stereo: PdAudio.setInputPreset in pd-for-android)
 #
 # Pinned by commit below (a branch can move). To change it: commit to the forks' pdscenes branches, put the new
 # pd-for-android commit and version here (also in the fork's build.gradle files), run this, update the app's
 # dependency, commit third_party/maven. Needs git, JDK 21 (~/.jdks/jbr-21.0.11), the Android SDK and NDK 29.0.14206865.
 set -e
-COMMIT=2eb5545e4d6ec0f89ae5b26da08291dc9c94b81e
-VERSION=1.4.2-pdscenes.1
+COMMIT=c5c2ec0d21a580921686898e65f14451301f28e5
+VERSION=1.4.2-pdscenes.2
 REPO=https://github.com/dadcraftttv/pd-for-android.git
 H="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(dirname "$H")"

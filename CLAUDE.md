@@ -49,7 +49,7 @@ behaviour changes, or tell DadCraft it needs one).
 - `app/src/main/res/values/strings.xml` — escape apostrophes as `\'`.
 
 ## Dependencies (details: DESIGN-NOTES "pd-core is our own build")
-- pd-core 1.4.2-pdscenes.1 from `third_party/maven` (committed), built by `tools/build_pdcore.sh` from our forks
+- pd-core 1.4.2-pdscenes.2 from `third_party/maven` (committed), built by `tools/build_pdcore.sh` from our forks
   dadcraftttv/pd-for-android and dadcraftttv/libpd (`pdscenes` branches; Pd 0.55.2 + the Oboe race fix).
   Tests/desktop libpd: `tools/build_libpd.sh`, same libpd commit. Pd 0.56 breaks StreetBeatz: move all pins together.
 - Fork rules: keep fork changes small, offer general fixes upstream; new objects go in `dcs/`, never change a
