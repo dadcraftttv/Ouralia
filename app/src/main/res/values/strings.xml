@@ -296,7 +296,7 @@
     <string name="about_text">Free software under the GNU General Public License v3 or later. It includes the RjDj library of Pd abstractions and Pure Data components under their own licences, and four example scenes from Reality Jockey Ltd.: Hello World World World (Frank Barknecht), and Onset Detection, Street Beatz and Vocoder (the RjDj team).</string>
     <string name="about_text_with_source">Free software under the GNU General Public License v3 or later. It includes the RjDj library of Pd abstractions and Pure Data components under their own licences, and four example scenes from Reality Jockey Ltd.: Hello World World World (Frank Barknecht), and Onset Detection, Street Beatz and Vocoder (the RjDj team).\n\nSource code: %s</string>
     <!-- Set to the public repository URL before publishing; leave empty to hide the line. -->
-    <string name="source_url" translatable="false"></string>
+    <string name="source_url" translatable="false">https://github.com/dadcraftttv/Ouralia</string>
     <string name="show_licenses">Show licences</string>
     <string name="scene_volume">Volume: %d%%</string>
     <string name="scene_mic_volume">Mic volume: %d%%</string>

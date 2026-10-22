@@ -63,6 +63,7 @@ assistant.
 | [Desktop stream mode](desktop/README.md) | The Linux version, for streaming |
 | [Design notes](docs/DESIGN-NOTES.md) | How every feature works and why: the project's long memory |
 | [Roadmap](docs/ROADMAP.md) | Ideas, planned and built |
+| [Privacy](PRIVACY.md) | What the app does with the mic and everything else |
 | [RjDj notes](docs/RJDJ-NOTES.md) | The RjDj scene format and what a player must provide |
 
 ## Building
