@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>io.github.libpd.android</groupId>
   <artifactId>pd-core</artifactId>
-  <version>1.4.2-pdscenes.1</version>
+  <version>1.4.2-pdscenes.2</version>
   <packaging>aar</packaging>
   <name>io.github.libpd.android:pd-core</name>
   <description>Pure Data for Android</description>

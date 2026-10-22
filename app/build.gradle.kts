@@ -59,5 +59,5 @@ dependencies {
     // Pure Data for Android (libpd + Oboe audio backend), built by tools/build_pdcore.sh from our forks: what the
     // 1.4.2 snapshot was (Pd 0.55.2, PdAudio.setDevicesId) plus the Oboe unplug fix (libpd #428, pd-for-android
     // #198). The last numbered release on Maven Central is 1.2.1-rc6 (2021, no device choice).
-    implementation("io.github.libpd.android:pd-core:1.4.2-pdscenes.1")
+    implementation("io.github.libpd.android:pd-core:1.4.2-pdscenes.2")
 }

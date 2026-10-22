@@ -45,7 +45,8 @@ to date in the same commit when behaviour changes.
 - `app/src/main/res/values/strings.xml` — escape apostrophes as `\'` (an unescaped one broke the aapt build once).
 
 ## Dependencies
-- **pd-core is our own build** (Oct 16): `io.github.libpd.android:pd-core:1.4.2-pdscenes.1` from `third_party/maven` (committed;
+- **pd-core is our own build** (Oct 16; 1.4.2-pdscenes.2 since Oct 22: `PdAudio.setInputPreset` and `inputChannels` in
+  `audioRuntimeInfo`, for the room in stereo): `io.github.libpd.android:pd-core` from `third_party/maven` (committed;
   `settings.gradle.kts` takes the libpd group only from there, exclusiveContent). `tools/build_pdcore.sh` rebuilds it from
   our public forks at a pinned commit: **dadcraftttv/pd-for-android `pdscenes`** (2eb5545 = upstream master d3ec6c9 +
   PR #198 setAutoReopen, version bumped, libpd submodule -> our fork) and **dadcraftttv/libpd `pdscenes`** (ebc0b83 = libpd
