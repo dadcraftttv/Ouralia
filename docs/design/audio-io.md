@@ -69,7 +69,7 @@
   1.000, 0 dB apart), at -56 and -49 dB. MIC gives two mics but in partly opposite phase (correlation -0.16, sides
   -7 to +9 dB), CAMCORDER two mics naturally (+0.38, -10 to +9 dB); both about 25 dB hotter (-31 dB: gain or AGC
   in the phone's processing). So the room in stereo needs the Camcorder preset, which pd-core can't set yet.
-- **Room in Stereo** (Oct 22, DadCraft's idea; Setup, Audio Devices; off by default, `AudioSettings`, not in presets:
+- **World in Stereo** (named Room in Stereo until later on Oct 22, DadCraft's rename; ids unchanged: `stereo_room`, StereoRoom; Oct 22, DadCraft's idea; Setup, Audio Devices; off by default, `AudioSettings`, not in presets:
   it depends on the phone). DadCraft: "the experience should be universal", so nothing is fixed to his phone:
   which way of opening the mic gives two mics, and how loud it is, is up to the phone maker (Android's rules pin
   down only VoiceRecognition and Unprocessed). `StereoCalibration` measures each phone the first time the switch

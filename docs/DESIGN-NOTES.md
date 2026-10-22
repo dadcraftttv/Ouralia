@@ -80,7 +80,7 @@ to date in the same commit when behaviour changes.
 This file is the index. Each feature's notes live in one of these (`grep -rn <feature> docs/DESIGN-NOTES.md docs/design/`;
 "DESIGN-NOTES \"Kits\"" and the like in code comments mean a heading or bold name in any of them):
 
-- `docs/design/audio-io.md`: **Audio in and out**: the speaker rule, Bluetooth mics, the mic's shaping, Diagnostics and the health line, the phone's mics, Room in Stereo, calls and other apps' audio, the start path.
+- `docs/design/audio-io.md`: **Audio in and out**: the speaker rule, Bluetooth mics, the mic's shaping, Diagnostics and the health line, the phone's mics, World in Stereo, calls and other apps' audio, the start path.
 - `docs/design/sensing.md`: **What the phone senses**: Realm Hopper (Auto Worlds), pockets, pocket hush and rustle, handling noise, mic-down, Flux.
 - `docs/design/rhythm.md`: **The Rhythm**: the walking beat, Tempo and the tempo clock (Tap Tempo), patterns, breakbeats, the found-sound kit, Clear Catches, the learned groove, glitch loops.
 - `docs/design/music.md`: **The Music**: Mix, Slow Bloom, call and response, the found melody, and the Music section (kits, chords, Song Shape, The Band...).

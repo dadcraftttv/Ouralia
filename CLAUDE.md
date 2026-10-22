@@ -80,7 +80,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   key, ~/Downloads/Ouralia-0.9.0-rc5.1.apk; GitHub pre-releases v0.9.0-rc5 and v0.9.0-rc5.1, not advertised until
   GitHub purges the old commits. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 15.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
-  Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). Room in Stereo (Oct 22): DadCraft likes it,
+  Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). World in Stereo (Oct 22): DadCraft likes it,
   an option for phones that support it, never the default ("as close to universal as possible"). Clear Catches
   (`fs_clean`, 0-30 dB, Oct 22): default 0 (off); DadCraft at 10.4 dB, verdict pending. Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in tools/patchgen/constants.py).
@@ -90,10 +90,11 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **DadCraft's verdicts (Oct 21):** Evolving stays opt-in (not the default). Hooks That Grow (`mel_dev`), Living
   Grooves (`pat_gen`), Chord Colours (`chord_color`): "all good". The Band Plays good with Intensity 50 (he is
   comparing it off with Intensity 100). Renames, effect families, rounded icons: good.
-- **Oct 22:** the reviews' points built (ROADMAP 22), MainActivity split, Room in Stereo, pd-core 1.4.2-pdscenes.2,
+- **Oct 22:** the reviews' points built (ROADMAP 22), MainActivity split, World in Stereo, pd-core 1.4.2-pdscenes.2,
   a long session (DESIGN-NOTES Status log). All pushed, forks included.
-- **Open:** see ROADMAP "Open now". Next, from the long session: Room in Stereo vs fixed level thresholds, Clear
-  Catches' verdict, Tempo Set following steps?, ducking for a muted game.
+- **Open:** see ROADMAP "Open now". Next, from the long session: Clear Catches' verdict, Tempo Set following steps?
+  (Tap Tempo built), ducking for a muted game. DadCraft (Oct 22): found sounds work with World in Stereo (the name
+  since Oct 22, was Room in Stereo), the Bluetooth notice shows in Audio Devices.
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
   mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.

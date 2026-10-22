@@ -139,7 +139,7 @@
     <string name="mic_bottom">bottom, by the charging port</string>
     <string name="mic_back">back, by the camera</string>
     <string name="mic_top">top</string>
-    <string name="stereo_room">Room in Stereo</string>
+    <string name="stereo_room">World in Stereo</string>
     <string name="stereo_unmeasured">The phone\'s two mics as left and right, for a wider room. The first time it\'s turned on, it listens for about 13 seconds to learn how this phone\'s mics work: talk or clap near the phone until it\'s done.</string>
     <string name="stereo_measuring">Listening to the mics… talk or clap near the phone until this changes (about 13 seconds).</string>
     <string name="stereo_mono_only">This phone\'s mic records in mono only, so the room stays mono.</string>
@@ -153,7 +153,7 @@
     <string name="stereo_level_hint">Set by ear: the room should sound about as loud as with the switch off. A new Check Again starts it from 0.</string>
     <string name="stereo_needs_mic">Allow the microphone first.</string>
     <string name="diag_dropouts">Dropouts since Start: %1$d (each a click or gap: the phone couldn\'t keep up)</string>
-    <string name="diag_stereo">Room in stereo: the phone\'s two mics</string>
+    <string name="diag_stereo">World in Stereo: the phone\'s two mics</string>
     <string name="dev_speaker">Phone speaker</string>
     <string name="dev_earpiece">Phone earpiece</string>
     <string name="dev_wired">Wired headset</string>

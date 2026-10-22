@@ -95,11 +95,11 @@
   (`fsfloor`: the mic level's quietest lately, down at once, up 0.6 dB a second, readings under -80 dBFS ignored;
   the music's `mfloor` sinks to nothing at the start, before the mic hears anything, and takes minutes to climb
   back, so it let everything through). Measured: -40 over -66 hiss skipped, -30 kept; over -50 hiss -30 skipped,
-  -20 kept. Test: test_patch "Clear Catches". DadCraft (Oct 22): at 30 "maybe a bit too well"; with Room in Stereo
+  -20 kept. Test: test_patch "Clear Catches". DadCraft (Oct 22): at 30 "maybe a bit too well"; with World in Stereo
   on nothing was caught (its background reads ~20 dB low and sounds arrive 15 dB lower, so FS_MIN_DB blocked them:
   ROADMAP Open now); with it off, "working"; left at 10.4 dB. A sung "ahhh" is never a catch: catches are sudden
   sounds (it was heard: the call and response answered it).
-  **In stereo, the room's own background** (Oct 22, after that): with Room in Stereo on (the patch knows from
+  **In stereo, the room's own background** (Oct 22, after that): with World in Stereo on (the patch knows from
   `st_side` > 0) a catch's least loudness, in both the kit's Classic onset detector (`fs_det`, mono's GC_MIN_DB) and
   its keep test (`fs_role`, FS_MIN_DB), is `fsfloor` + FS_ST_ABOVE_DB (15: mono's -45 sits ~15 dB over an office's
   -60), never above mono's -45 nor under FS_ST_MIN_DB (-65 dBFS); `make_patch.fs_min`. `fsfloor` now ignores only
