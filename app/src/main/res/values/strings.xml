@@ -125,6 +125,9 @@
     <string name="mic_hint_call">This headset\'s mic works in call mode: mono and low quality, and the sound in your ears drops to call quality too. Unless your earbuds support LE Audio, the phone\'s mic gives a much better result.</string>
     <string name="mic_hint_le">LE Audio headset: its mic should sound far better than ordinary Bluetooth call mode. If it sounds thin or muffled, switch the input back to the phone\'s mic.</string>
     <string name="dev_builtin_mic">Phone microphone</string>
+    <string name="mic_bottom">bottom, by the charging port</string>
+    <string name="mic_back">back, by the camera</string>
+    <string name="mic_top">top</string>
     <string name="dev_speaker">Phone speaker</string>
     <string name="dev_earpiece">Phone earpiece</string>
     <string name="dev_wired">Wired headset</string>

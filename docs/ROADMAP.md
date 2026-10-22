@@ -42,7 +42,8 @@ bass pulled far down.
 **Sound and music ideas (each behind a switch, the old sound the default):** dcs_listen~ (what kind of room), then
 auto-key from the room (22), dcs_dewind~, dcs_grain~ (18); a shimmer mode for the reverb (18); more drum hits, a
 moments part, kits for Harmony and Room notes, a second melody (20); glitch phase 2's per-slice filter, lanes and a
-chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps".
+chance per kind (5b); the room in stereo: open the phone's built-in mic in stereo (bottom and back as left and right,
+where the phone does that) for a wider dry room, behind a switch (DadCraft, Oct 22); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps".
 
 **App ideas (item 22):** sleep fade, tap tempo, a home-screen widget, MIDI in (much later); a simple walk-mode
 screen (14 UI); the Bluetooth hint on the input picker itself (Diagnostics already shows call mode).

@@ -978,6 +978,12 @@ to date in the same commit when behaviour changes.
   the input warning is on (only the mic's own overload: Input gain can't cause real clipping, it is applied in float).
   Event log: "Mic overloading", "Mic overloaded for a moment" (at most every 10 s), "Output limiter working hard".
   Scenes send no counts (the section says so).
+- **The phone's mics by position** (Oct 22, DadCraft saw "Phone microphone" twice): Android lists each built-in
+  mic as TYPE_BUILTIN_MIC with an address (the Moto G Stylus: "bottom" and "back"; the audio policy also has them
+  as AUDIO_DEVICE_IN_BUILTIN_MIC and _BACK_MIC). `AudioDevices.label` adds the position (bottom, back, top in words,
+  else the address) to the menu and to Diagnostics' mic in use. Stored choices are keyed type:address, unchanged.
+  Both at once: the built-in mic also offers stereo (channel mask 0x000c); on most phones that records two mics as
+  left and right. The app opens one mono input (`initAudio(rate, 1, 2...)`, `adc~ 1`): ROADMAP "Open now".
 - **Calls and other audio** (DadCraft's rule): the app never requests audio focus (Start must not pause the user's music).
   `AudioService.checkForCall` reads the audio mode every 0.5 s: call/ringing/VoIP -> `computeAudio(false)` until it ends
   (MODE_IN_COMMUNICATION is ignored while our own Bluetooth mic set it). An `AudioPlaybackCallback` counts the listed players
