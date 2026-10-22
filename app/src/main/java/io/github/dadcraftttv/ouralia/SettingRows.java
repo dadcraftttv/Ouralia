@@ -167,6 +167,30 @@ final class SettingRows {
         return body;
     }
 
+    private final TapTempo tapTempo = new TapTempo();
+
+    /** Under Set Tempo: tap along a few times and Tempo becomes Set at the taps' BPM (TapTempo). */
+    private void addTapTempo(LinearLayout body) {
+        LinearLayout row = a.newButtonRow(body);
+        android.widget.Button tap = a.addButton(row, R.string.tap_tempo, () -> { });
+        tap.setOnTouchListener((v, e) -> {   // on the touch down, not the release: taps land on the beat
+            if (e.getAction() != android.view.MotionEvent.ACTION_DOWN) {
+                return false;
+            }
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
+            float bpm = tapTempo.tap(android.os.SystemClock.uptimeMillis());
+            if (bpm > 0) {
+                ParamStore.set("tempo_mode", 1f);
+                ParamStore.set("tempo_bpm", bpm);
+                refreshRows();
+                tap.setText(a.getString(R.string.tap_tempo_bpm, Math.round(bpm)));
+            } else {
+                tap.setText(R.string.tap_tempo_more);
+            }
+            return false;
+        });
+    }
+
     /** One effect section: its Movers switch, then each slider followed by its movement settings. */
     void fillEffectSection(LinearLayout body, Params.Section section) {
         Param moversSwitch = Params.byId(Params.moversSwitchId(section.id));
@@ -197,6 +221,9 @@ final class SettingRows {
                     continue;
                 }
                 addRow(body, p);
+                if (p.id.equals("tempo_bpm")) {
+                    addTapTempo(body);
+                }
                 if (Params.byId(Params.moverId(p.id, "mv")) != null) {
                     addMoverRows(body, section.id, p);
                 }
