@@ -34,7 +34,7 @@ key (the build picks it up from ~/.gradle) and turns on Play App Signing; the Pl
 services, Data safety, store listing) from the drafts there.
 
 **Phone checks waiting on DadCraft:** the forks'
-new commits (libpd 6bd916f, pd-for-android c5c2ec0) to push with the next push; call pause and ducking (14), the pocket shaping (15), the found-sound rhythm
+new commits (libpd 8296de0, pd-for-android 12cf65b) to push with the next push; call pause and ducking (14), the pocket shaping (15), the found-sound rhythm
 walk (16), wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt timing, the found
 bass pulled far down.
 
