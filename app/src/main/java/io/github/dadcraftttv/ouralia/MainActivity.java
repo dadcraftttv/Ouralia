@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Canvas;
 import android.graphics.Typeface;
 import android.media.AudioDeviceCallback;
 import android.media.AudioDeviceInfo;
@@ -14,7 +13,6 @@ import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
 import android.view.WindowInsets;
@@ -48,7 +46,7 @@ public class MainActivity extends Activity {
     static final int REQ_IMPORT_KIT = 23;
     static final int REQ_IMPORT_KIT_FOLDER = 24;
 
-    private final List<Row> rows = new ArrayList<>();
+    final List<Row> rows = new ArrayList<>();
     /** The mover controls under each slider, greyed out while their section's movers are off. */
     private final List<MoverUi> moverUis = new ArrayList<>();
     private AudioManager audioManager;
@@ -94,6 +92,8 @@ public class MainActivity extends Activity {
     private int currentTab = -1;
     /** The Ouralia look for this screen's theme (Look.java, Styler.java). */
     Styler look;
+    /** Pick-one settings (ChoiceUi.java). */
+    private final ChoiceUi choiceUi = new ChoiceUi(this);
     /** Setup's Appearance card (AppearanceUi.java). */
     private final AppearanceUi appearanceUi = new AppearanceUi(this);
     /** The Music tab's Kits card (KitUi.java). */
@@ -135,7 +135,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    private static final class Row {
+    static final class Row {
         final Param param;
         final TextView label;     // slider rows only
         final SeekBar slider;     // slider rows only
@@ -1202,7 +1202,7 @@ public class MainActivity extends Activity {
         for (Param p : Params.ALL) {
             if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch && p != onSwitch) {
                 if (p.id.equals("music_key")) {   // Key and Scale: two tiles side by side, each opening a sheet
-                    addKeyScaleTiles(body);
+                    choiceUi.addKeyScaleTiles(body);
                     continue;
                 } else if (p.id.equals("music_scale")) {
                     continue;
@@ -1951,7 +1951,7 @@ public class MainActivity extends Activity {
             return;
         }
         if (p.choices != null) {
-            addChoiceRow(parent, p, compact);
+            choiceUi.addChoiceRow(parent, p, compact);
             return;
         }
 
@@ -2016,51 +2016,6 @@ public class MainActivity extends Activity {
         });
     }
 
-    /** Key and Scale as two big tiles (easier to see and hit than a menu); each opens its picker sheet. */
-    private void addKeyScaleTiles(LinearLayout body) {
-        LinearLayout pair = new LinearLayout(this);
-        pair.setOrientation(LinearLayout.HORIZONTAL);
-        pair.setPadding(0, dp(14), 0, dp(2));
-        Param key = Params.byId("music_key"), scale = Params.byId("music_scale");
-        pair.addView(pickTile(key, this::showKeySheet, false), tileParams(0, dp(4)));
-        pair.addView(pickTile(scale, this::showScaleSheet, false), tileParams(dp(4), 0));
-        body.addView(pair);
-    }
-
-    private static LinearLayout.LayoutParams tileParams(int left, int right) {
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        lp.setMargins(left, 0, right, 0);
-        return lp;
-    }
-
-    /** A tile: the setting's name small, its value large, a chevron; tapping it runs {@code open}. */
-    private View pickTile(Param p, Runnable open, boolean compact) {
-        LinearLayout tile = new LinearLayout(this);
-        tile.setOrientation(LinearLayout.VERTICAL);
-        tile.setGravity(Gravity.CENTER_VERTICAL);
-        tile.setBackground(look.choiceTile(getDrawable(R.drawable.ic_chevron_down).mutate()));
-        tile.setMinimumHeight(dp(compact ? 52 : 64));
-        tile.setPadding(dp(16), dp(8), dp(40), dp(8));
-        TextView name = new TextView(this);
-        name.setText(p.shown());
-        look.hint(name);
-        name.setTextSize(12);
-        tile.addView(name);
-        TextView value = new TextView(this);
-        value.setTypeface(look.heading());
-        value.setTextSize(compact ? 15 : 17);
-        value.setTextColor(look.p.text);
-        value.setMaxLines(1);   // a long name ("Minor pentatonic") shrinks to fit rather than being cut
-        value.setAutoSizeTextTypeUniformWithConfiguration(12, compact ? 15 : 17, 1, TypedValue.COMPLEX_UNIT_SP);
-        value.setText(p.choices[choiceIndex(p, ParamStore.get(p.id))]);
-        tile.addView(value);
-        tile.setOnClickListener(v -> open.run());
-        Row row = new Row(p, null, null, null);
-        row.tile = value;
-        rows.add(row);
-        return tile;
-    }
-
     /** A sheet's title and the line under it. */
     View sheetHeading(String title, String hint) {
         LinearLayout head = new LinearLayout(this);
@@ -2081,63 +2036,9 @@ public class MainActivity extends Activity {
         return head;
     }
 
-    /** The Key picker: the twelve notes as big buttons, four to a row; one tap picks and closes. */
-    private void showKeySheet() {
-        Param p = Params.byId("music_key");
-        int chosen = choiceIndex(p, ParamStore.get(p.id));
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.addView(sheetHeading(p.shown(), getString(R.string.key_sheet_hint)));
-        for (int r = 0; r < 3; r++) {
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            for (int c = 0; c < 4; c++) {
-                int i = r * 4 + c;
-                boolean on = i == chosen;
-                TextView b = new TextView(this);
-                b.setText(p.choices[i]);
-                b.setGravity(Gravity.CENTER);
-                b.setTypeface(look.heading());
-                b.setTextSize(18);
-                b.setTextColor(on ? look.p.onPrimary : p.choices[i].length() > 1 ? look.p.muted : look.p.text);
-                int bg = on ? look.p.primary : look.p.s2;
-                b.setBackground(look.pressable(look.round(bg, Look.RADIUS_TILE), on ? look.p.onPrimary : look.p.text, Look.RADIUS_TILE));
-                b.setSelected(on);
-                b.setOnClickListener(v -> {
-                    v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
-                    pickChoice(p, i);
-                });
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(60), 1f);
-                lp.setMargins(dp(4), dp(4), dp(4), dp(4));
-                row.addView(b, lp);
-            }
-            content.addView(row);
-        }
-        look.fonts(content);
-        openSheet(content);
-    }
-
-    /** The Scale picker: one row per scale with its notes as dots (filled = in the scale), the chosen one ticked. */
-    private void showScaleSheet() {
-        Param p = Params.byId("music_scale");
-        Param key = Params.byId("music_key");
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.addView(sheetHeading(p.shown(),
-                getString(R.string.scale_sheet_hint, key.choices[choiceIndex(key, ParamStore.get(key.id))])));
-        addChoiceList(content, p, (i, on) -> new ScaleDots(i < Params.SCALE_STEPS.length ? Params.SCALE_STEPS[i] : new int[0],
-                on ? look.p.onContainer : look.p.primary, look.p.line));
-        openSheet(content);
-    }
-
     /** Something drawn at the end of a choice's row (the Scale sheet's dots). */
     interface RowExtra {
         View make(int index, boolean chosen);
-    }
-
-    /** A setting's choices as list rows; a pick is stored and closes the sheet. */
-    private void addChoiceList(LinearLayout content, Param p, RowExtra extra) {
-        addListRows(content, p.choices, choiceIndex(p, ParamStore.get(p.id)), extra, i -> pickChoice(p, i));
     }
 
     /** One row per name: a tick on the chosen one (highlighted), the full name (wrapping), {@code extra} at the end. */
@@ -2177,163 +2078,6 @@ public class MainActivity extends Activity {
         }
     }
 
-    /** Twelve dots, one per semitone above the key: filled where the scale has a note. Decoration only. */
-    private final class ScaleDots extends View {
-        private final boolean[] in = new boolean[12];
-        private final android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
-        private final int onColor, offColor;
-
-        ScaleDots(int[] steps, int onColor, int offColor) {
-            super(MainActivity.this);
-            for (int s : steps) {
-                in[s % 12] = true;
-            }
-            this.onColor = onColor;
-            this.offColor = offColor;
-            setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
-        }
-
-        @Override
-        protected void onDraw(Canvas canvas) {
-            float step = getWidth() / 12f, r = Math.min(step * 0.32f, getHeight() / 2f), y = getHeight() / 2f;
-            for (int i = 0; i < 12; i++) {
-                paint.setColor(in[i] ? onColor : offColor);
-                canvas.drawCircle(step * (i + 0.5f), y, r, paint);
-            }
-        }
-    }
-
-    /** A pick made in a sheet: stored, every row follows, the sheet closes. */
-    private void pickChoice(Param p, int i) {
-        ParamStore.set(p.id, i);
-        updateMoverUi();
-        refreshRows();
-        closeSheet();
-    }
-
-    /**
-     * A pick-one setting: two or three short choices as side-by-side buttons (one tap, the chosen one's explanation
-     * underneath), longer lists as a tile that opens a list sheet.
-     */
-    private void addChoiceRow(LinearLayout parent, Param p, boolean compact) {
-        if (segmentable(p)) {
-            addSegmentRow(parent, p, compact);
-            return;
-        }
-        View tile = pickTile(p, () -> showChoiceSheet(p), compact);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, dp(compact ? 6 : 12), 0, 0);
-        parent.addView(tile, lp);
-    }
-
-    /** A choice's short name: the words before its explanation in brackets ("New (how the sound changes)" -> "New"). */
-    static String shortName(String choice) {
-        int i = choice.indexOf(" (");
-        return i > 0 ? choice.substring(0, i) : choice;
-    }
-
-    /** The explanation in brackets, or "". */
-    static String detail(String choice) {
-        int i = choice.indexOf(" (");
-        return i > 0 && choice.endsWith(")") ? choice.substring(i + 2, choice.length() - 1) : "";
-    }
-
-    /** Two choices with short names up to 18 letters, or three up to 12, fit side by side. */
-    private static boolean segmentable(Param p) {
-        int n = p.choices.length;
-        if (n < 2 || n > 3) {
-            return false;
-        }
-        for (String c : p.choices) {
-            if (shortName(c).length() > (n == 2 ? 18 : 12)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * The order the buttons show in: as stored, except that "Both" sits in the middle (DadCraft: the original on the
-     * left, Both as the unity in the middle, the other on the right). Only the screen order: stored values stay.
-     */
-    static int[] displayOrder(String[] choices) {
-        int n = choices.length;
-        if (n == 3 && shortName(choices[2]).equals("Both")) {
-            return new int[] {0, 2, 1};
-        }
-        int[] order = new int[n];
-        for (int i = 0; i < n; i++) {
-            order[i] = i;
-        }
-        return order;
-    }
-
-    private void addSegmentRow(LinearLayout parent, Param p, boolean compact) {
-        View label = nameAndHint(p, compact);
-        label.setPadding(0, dp(compact ? 6 : 14), 0, dp(8));   // (in line with the slider names)
-        parent.addView(label);
-        LinearLayout bar = new LinearLayout(this);
-        bar.setOrientation(LinearLayout.HORIZONTAL);
-        bar.setBackground(look.outline(look.p.line, 20));
-        bar.setClipToOutline(true);
-        bar.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
-        android.graphics.drawable.GradientDrawable divider = new android.graphics.drawable.GradientDrawable();
-        divider.setColor(look.p.line);
-        divider.setSize(dp(1), 1);
-        bar.setDividerDrawable(divider);
-        Row row = new Row(p, null, null, null);
-        row.segment = new TextView[p.choices.length];
-        for (int i : displayOrder(p.choices)) {
-            TextView b = new TextView(this);
-            b.setText(shortName(p.choices[i]));
-            b.setGravity(Gravity.CENTER);
-            b.setTextSize(14);
-            b.setMaxLines(1);
-            b.setAutoSizeTextTypeUniformWithConfiguration(11, 14, 1, TypedValue.COMPLEX_UNIT_SP);
-            b.setPadding(dp(6), 0, dp(6), 0);
-            String full = p.choices[i];
-            b.setContentDescription(p.label + ": " + full);
-            final int pick = i;
-            b.setOnClickListener(v -> {
-                v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
-                if (pick != choiceIndex(p, ParamStore.get(p.id))) {
-                    ParamStore.set(p.id, pick);
-                    updateMoverUi();
-                    refreshRows();
-                }
-            });
-            bar.addView(b, new LinearLayout.LayoutParams(0, dp(compact ? 40 : 44), 1f));
-            row.segment[i] = b;
-        }
-        parent.addView(bar, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-        row.segmentHint = new TextView(this);
-        look.hint(row.segmentHint);
-        row.segmentHint.setPadding(0, dp(6), 0, 0);
-        parent.addView(row.segmentHint);
-        rows.add(row);
-        showSegment(row, choiceIndex(p, ParamStore.get(p.id)));
-    }
-
-    /** The chosen button filled; its explanation (if it has one) underneath. */
-    private void showSegment(Row r, int chosen) {
-        for (int i = 0; i < r.segment.length; i++) {
-            styleSegment(r.segment[i], i == chosen);
-        }
-        String d = detail(r.param.choices[chosen]);
-        r.segmentHint.setText(d);
-        r.segmentHint.setVisibility(d.isEmpty() ? View.GONE : View.VISIBLE);
-    }
-
-    private void styleSegment(TextView b, boolean on) {
-        b.setSelected(on);
-        b.setTypeface(on ? look.textStrong() : look.text());
-        b.setTextColor(on ? look.p.onContainer : look.p.text);
-        b.setBackground(on ? new android.graphics.drawable.ColorDrawable(look.p.container)
-                : look.pressable(null, look.p.text, 0));
-    }
-
     /** Side-by-side buttons for {@code names}, {@code chosen} filled; a tap restyles them and calls {@code pick}. */
     View segmentBar(String[] names, int chosen, java.util.function.IntConsumer pick) {
         LinearLayout bar = new LinearLayout(this);
@@ -2352,12 +2096,12 @@ public class MainActivity extends Activity {
             b.setGravity(Gravity.CENTER);
             b.setTextSize(14);
             b.setMaxLines(1);
-            styleSegment(b, i == chosen);
+            choiceUi.styleSegment(b, i == chosen);
             final int index = i;
             b.setOnClickListener(v -> {
                 v.performHapticFeedback(android.view.HapticFeedbackConstants.KEYBOARD_TAP);
                 for (int k = 0; k < buttons.length; k++) {
-                    styleSegment(buttons[k], k == index);
+                    choiceUi.styleSegment(buttons[k], k == index);
                 }
                 pick.accept(index);
             });
@@ -2365,21 +2109,6 @@ public class MainActivity extends Activity {
             bar.addView(b, new LinearLayout.LayoutParams(0, dp(44), 1f));
         }
         return bar;
-    }
-
-    /** A list sheet for a pick-one setting: its choices, the chosen one ticked; one tap picks and closes. */
-    private void showChoiceSheet(Param p) {
-        LinearLayout content = new LinearLayout(this);
-        content.setOrientation(LinearLayout.VERTICAL);
-        content.addView(sheetHeading(p.shown(), null));
-        addChoiceList(content, p, null);
-        openSheet(content);
-    }
-
-    /** The entry a pick-one value shows: the first one if the value points past the list (a user kit gone). */
-    private static int choiceIndex(Param p, float v) {
-        int i = Math.round(v);
-        return i >= 0 && i < p.choices.length ? i : 0;
     }
 
     /** The movement, speed and depth controls of one slider's mover, indented under it. */
@@ -2398,7 +2127,7 @@ public class MainActivity extends Activity {
     }
 
     /** Hides mover controls whose section has its Movers off; hides speed and depth while a mover is Off. */
-    private void updateMoverUi() {
+    void updateMoverUi() {
         for (MoverUi m : moverUis) {
             boolean on = ParamStore.get(Params.moversSwitchId(m.sectionId)) >= 0.5f;
             boolean moving = Math.round(ParamStore.get(Params.moverId(m.paramId, "mv"))) != 0;
@@ -2428,13 +2157,13 @@ public class MainActivity extends Activity {
     static String[] splitLabel(String shown) {
         String star = shown.endsWith(" *") ? " *" : "";
         String core = star.isEmpty() ? shown : shown.substring(0, shown.length() - 2);
-        String hint = detail(core);
-        String name = hint.isEmpty() ? core : shortName(core);
+        String hint = ChoiceUi.detail(core);
+        String name = hint.isEmpty() ? core : ChoiceUi.shortName(core);
         return new String[] {name + star, hint};
     }
 
     /** The name in the label style and, if it has one, its explanation under it in the hint style. */
-    private View nameAndHint(Param p, boolean compact) {
+    View nameAndHint(Param p, boolean compact) {
         String[] parts = splitLabel(p.shown());
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
@@ -2491,9 +2220,9 @@ public class MainActivity extends Activity {
                     r.choicesShown = r.param.choices;
                     kitUi.updateKitStatus();
                 }
-                r.tile.setText(r.param.choices[choiceIndex(r.param, v)]);
+                r.tile.setText(r.param.choices[ChoiceUi.choiceIndex(r.param, v)]);
             } else if (r.segment != null) {
-                showSegment(r, choiceIndex(r.param, v));
+                choiceUi.showSegment(r, ChoiceUi.choiceIndex(r.param, v));
             } else {
                 r.slider.setProgress(Math.round(r.param.toNorm(v) * 1000f));
                 r.label.setText(valueText(r.param, v));
