@@ -978,6 +978,11 @@ to date in the same commit when behaviour changes.
   rate, mic level (after gain) with a bar and the gate, episode counts. The status line says "Mic overloading" while
   the input warning is on (only the mic's own overload: Input gain can't cause real clipping, it is applied in float).
   Event log: "Mic overloading", "Mic overloaded for a moment" (at most every 10 s), "Output limiter working hard".
+  Dropouts (Oct 22, for the long session): every 5 s `AudioService.checkXruns` reads Oboe's count
+  (`audioRuntimeInfo("xRuns")`), counted from Start; new ones go in the event log ("Audio dropouts: +N (T since
+  Start)"), and Diagnostics shows the total once there is one. `tools/session_log.sh` logs a session on the phone
+  itself (unplugged: setsid; battery, temperature, thermal status, the app's CPU every 30 s, and its log) and
+  reports it.
   Scenes send no counts (the section says so).
 - **The phone's mics by position** (Oct 22, DadCraft saw "Phone microphone" twice): Android lists each built-in
   mic as TYPE_BUILTIN_MIC with an address (the Moto G Stylus: "bottom" and "back"; the audio policy also has them

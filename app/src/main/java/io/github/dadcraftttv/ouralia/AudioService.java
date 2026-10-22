@@ -281,6 +281,10 @@ public class AudioService extends Service {
             if (!sceneRunning) {
                 sendStereoShape();
             }
+            if (now - lastXrunCheck >= XRUN_CHECK_MS) {
+                lastXrunCheck = now;
+                checkXruns();
+            }
             lastMoverTick = now;
             handler.postDelayed(this, MOVER_INTERVAL_MS);
         }
@@ -896,6 +900,9 @@ public class AudioService extends Service {
         micDownSent = false;
         lastClockCheck = -CLOCK_CHECK_MS;
         lastMoverTick = SystemClock.uptimeMillis();
+        xruns = 0;
+        xrunsAtStart = -1;
+        lastXrunCheck = 0;   // (the first check, at once, takes the count Oboe starts from)
         handler.postDelayed(moverTick, MOVER_INTERVAL_MS);
         notifyStateChanged();
         Log.i(TAG, "Audio started, asked for " + sampleRate + " Hz, got " + actualRate + " Hz");
@@ -903,6 +910,35 @@ public class AudioService extends Service {
         if (scene == null) {   // (scenes don't use our objects)
             handler.postDelayed(dcsCheck, 1000);
         }
+    }
+
+    // ---- dropouts: Oboe counts the times it couldn't keep up (an underrun is a click or gap you hear) ----
+    private static final long XRUN_CHECK_MS = 5000;
+    private long lastXrunCheck;
+    private static volatile int xruns;
+    private int xrunsAtStart = -1;
+
+    /** Dropouts since the sound started (-1 if the library can't say). */
+    static int dropouts() {
+        return xruns;
+    }
+
+    private void checkXruns() {
+        int total;
+        try {
+            total = Integer.parseInt(PdBase.audioRuntimeInfo("xRuns"));
+        } catch (RuntimeException e) {
+            xruns = -1;
+            return;
+        }
+        if (xrunsAtStart < 0) {
+            xrunsAtStart = total;
+        }
+        int now = total - xrunsAtStart;
+        if (now > xruns) {
+            logEvent("Audio dropouts: +" + (now - xruns) + " (" + now + " since Start)");
+        }
+        xruns = now;
     }
 
     /** True while the built-in patch hears the phone's two mics as left and right (the room in stereo). */

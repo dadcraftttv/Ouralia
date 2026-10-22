@@ -139,6 +139,7 @@
     <string name="stereo_phone_mic_only">Only with the phone\'s own mic: with a headset or USB mic the room stays mono.</string>
     <string name="stereo_check_again">Check Again</string>
     <string name="stereo_needs_mic">Allow the microphone first.</string>
+    <string name="diag_dropouts">Dropouts since Start: %1$d (each a click or gap: the phone couldn\'t keep up)</string>
     <string name="diag_stereo">Room in stereo: the phone\'s two mics</string>
     <string name="dev_speaker">Phone speaker</string>
     <string name="dev_earpiece">Phone earpiece</string>
