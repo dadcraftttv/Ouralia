@@ -400,14 +400,21 @@ check(rms(tail[-SR:]) < 1e-3, "biggest reverb decays to silence (last second rms
 e = fresh(wet=0, reverb_mix=1, reverb_size=1)
 check(rms(e.run(e.silence(1.0))) < 1e-6, "reverb adds no noise on silent input")
 # Shimmer (Oct 22, reverb_shimmer): the tail rises in octaves; the biggest room with it loud still decays
-def octave_share(sh):
-    e = fresh(wet=0, dry=1, reverb_mix=1, reverb_size=0.8, reverb_shimmer=sh)
-    e.run(sine(330, 0.1, 0.5)); y = e.run(e.silence(2.0))[int(0.3 * SR):, 0]
+def shimmer_tail(sh, style=0):
+    e = fresh(wet=0, dry=1, reverb_mix=1, reverb_size=0.8, reverb_shimmer=sh, reverb_shimmer_style=style)
+    e.run(sine(330, 0.1, 0.5)); return e.run(e.silence(2.0))[int(0.3 * SR):, 0]
+def octave_share(y):
     spec = np.abs(np.fft.rfft(y * np.hanning(len(y)))) ** 2; fr = np.fft.rfftfreq(len(y), 1 / SR)
     b = lambda f0: float(spec[(fr > f0 * 0.94) & (fr < f0 * 1.06)].sum())
     return (b(660) + b(1320)) / max(b(330), 1e-20)
-osh = (octave_share(0), octave_share(1))
+tails = {k: shimmer_tail(*k) for k in ((0, 0), (1, 0), (1, 1))}
+osh = (octave_share(tails[0, 0]), octave_share(tails[1, 0]))
 check(osh[1] > 20 * osh[0], "reverb Shimmer 1: the tail an octave and two up (%.3g of the note's energy, %.3g without)" % (osh[1], osh[0]))
+# Shimmer Style (Oct 23, reverb_shimmer_style): the patch reaches dcs_reverb~'s style, and Mist rises like Classic (at
+# first it rose 20x less here and DadCraft heard no difference on the phone)
+mist = octave_share(tails[1, 1]); dif = rms(tails[1, 1] - tails[1, 0]) / rms(tails[1, 0])
+check(dif > 0.3 and mist > 0.4 * osh[1],
+      "Shimmer Style Mist reaches the reverb (its tail differs from Classic's by %.2f of it) and rises as much (%.3g, Classic %.3g)" % (dif, mist, osh[1]))
 e = fresh(wet=0, dry=1, reverb_mix=1, reverb_size=1, reverb_tone=16000, reverb_shimmer=1, gain=10)
 y = e.run(loud); tail = e.run(e.silence(30))
 check(not np.isnan(y).any() and float(np.abs(y).max()) <= 1.0 + 1e-6 and rms(tail[-SR:]) < 1e-3,

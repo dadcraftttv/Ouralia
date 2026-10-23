@@ -500,9 +500,10 @@ final class Params {
             new Param("reverb_shimmer", "Shimmer (the tail rises in octaves, 0 = off)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("reverb").noRandom().resetWhenAbsent().dcs(),
             // Shimmer Style (Oct 23, DadCraft: Classic sounds metallic on real-world sounds, he wanted whimsical,
-            // misty, sparkly). Mist = drifting detuned grains, no ring. Sparkle = Mist with quiet glitter two octaves up.
-            new Param("reverb_shimmer_style", "Shimmer Style", 0f, 2f, 0f, "", Param.Curve.LINEAR)
-                    .choices("Classic (octaves, as before)", "Mist (soft and drifting)", "Sparkle (mist with glitter)")
+            // misty, sparkly). Mist = drifting detuned grains, no ring. (Sparkle, style 2 in dcs_reverb~, is back
+            // pocket: DadCraft "still sounds wrong".)
+            new Param("reverb_shimmer_style", "Shimmer Style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Classic (octaves, as before)", "Mist (soft and drifting, no metal ring)")
                     .inSection("reverb").noRandom().resetWhenAbsent().dcs(),
 
             // ---- Chorus ---- (added after the first presets: older presets switch it off)

@@ -22,11 +22,11 @@
  *   0 Classic: the shifter above. Fine on played notes, metallic on real-world sounds: on a voice its tail grows
  *     sharp fixed peaks (test_dcs: 81x the spectrum's local level, 4.6x without shimmer; on StreetBeatz's break 160x
  *     against 21x). Exact octaves fed back through the combs, the same in both ears.
- *   1 Mist: each ear has its own shifter of 4 grains, each 120-220 ms long, starting a little late at random, about
- *     half of them an octave up and half staying in place, every one a little off (+-12 cents up, +-20 in place:
+ *   1 Mist: each ear has its own shifter of 4 grains, each 120-220 ms long, starting a little late at random, 3 in 4
+ *     of them an octave up and the rest staying in place, every one a little off (+-12 cents up, +-20 in place:
  *     the narrower +-7 / +-12 first tried still rang a little on a voice):
  *     no fixed rate to flutter, no exact octaves to ring, the two ears different. A darker band (250 Hz - 3.5 kHz).
- *   2 Sparkle: Mist plus glitter: in each ear 4 tiny grains (15-40 ms) two octaves up (+-4 cents), each followed by
+ *   2 Sparkle (back pocket: off the menu Oct 23, DadCraft "still sounds wrong"): Mist plus glitter: in each ear 4 tiny grains (15-40 ms) two octaves up (+-4 cents), each followed by
  *     20-150 ms of silence, high-passed at 1 kHz, played quietly straight out, never into the tail (the first try,
  *     2 louder 30-80 ms grains that also went round the tail, chirped and climbed: DadCraft "really wrong").
  *   The new styles low-pass what they read at 4.5 kHz first (reading 2-4x fast would fold the top back down).
@@ -53,7 +53,10 @@ static t_sample sh_win[SHWIN + 1];
 #define NMIST 4                     /* Mist's grains per ear */
 #define NTWINK 4                    /* Sparkle's glints per ear */
 #ifndef MGAIN
-#define MGAIN 0.5                   /* Mist's loop gain at shimmer 1 (as SHGAIN) */
+#define MGAIN 1.0                   /* Mist's loop gain at shimmer 1 (0.5, as SHGAIN, rose 20x less than Classic) */
+#endif
+#ifndef MINPLACE
+#define MINPLACE 0.25               /* the share of Mist's grains that stay in place (the rest go an octave up) */
 #endif
 #define TWOUT 0.25                  /* the glints' level, straight out */
 #define MPRE_HZ 4500.
@@ -127,7 +130,7 @@ static void grain_start(t_dcs_reverb *x, t_grain *g, int twinkle)
     else
     {
         g->len = sr * (0.12 + 0.10 * dcs_rnd(x));
-        g->ratio = dcs_rnd(x) < 0.45 ? 1 : 2;              /* staying in place, or an octave up */
+        g->ratio = dcs_rnd(x) < MINPLACE ? 1 : 2;             /* staying in place, or an octave up */
         cents = (g->ratio == 1 ? 40 : 24) * (dcs_rnd(x) - 0.5);
         jit = sr * 0.03 * dcs_rnd(x);
     }

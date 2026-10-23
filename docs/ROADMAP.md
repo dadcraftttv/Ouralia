@@ -33,9 +33,11 @@ MainActivity was: BUILT Oct 22, docs/design/ and tools/patchgen/.)
 key (the build picks it up from ~/.gradle) and turns on Play App Signing; the Play Console forms (foreground
 services, Data safety, store listing) from the drafts there.
 
-**Shimmer Style (Oct 23, item 18):** DadCraft found Classic Shimmer metallic on real-world sounds. Built Mist and
-Sparkle behind a switch (Reverb, Shimmer Style; Classic stays the default). Waiting on his verdict, live on the phone
-with his voice: which style, Sparkle's glitter level and density, then whether a new style becomes the default.
+**Shimmer Style (Oct 23, item 18):** DadCraft found Classic Shimmer metallic on real-world sounds. Built Mist behind a
+switch (Reverb, Shimmer Style; Classic stays the default); Sparkle set aside (back pocket, his "still sounds wrong").
+Mist strengthened Oct 23 (the first rose 20x less than Classic: he heard no difference). Waiting on his verdict, live
+on the phone with his voice (best with Pitch, Chorus, Phaser and the Reverb Level mover off), then whether Mist
+becomes the default.
 
 **Phone checks waiting on DadCraft:** call pause and ducking (14), the pocket shaping (15), the found-sound rhythm
 walk (16), wired + Bluetooth headphones together, the Pocket Realm / climb tuning, handling's jolt timing, the found
@@ -228,7 +230,7 @@ microphone declarations, store listing.
     dcs_string~, dcs_glitch~, dcs_derustle~, dcs_pitch~, dcs_shift~, dcs_onset~ (Oct 17; dcs_pitch~ turned out an
     accuracy win, not a battery one: sigmund~ at the patch's hop already costs ~0.1% of real time); then dcs_voice~
     (engines incl. analog's ladder and modal), dcs_freeze~, dcs_dist~ (Smooth), dcs_reverb~ and dcs_phaser~ (the effect
-    ports; all added Oct 17, Smooth distortion Oct 19). NOT BUILT (checked Oct 22): deken (publishing: DadCraft's go-ahead). dcs_dewind~: BUILT Oct 22 (Wind Guard). dcs_listen~: BUILT Oct 22, listening only (DadCraft: "show it first"). The reverb's shimmer mode: BUILT Oct 22 (Reverb, Shimmer); Shimmer Style Mist / Sparkle BUILT Oct 23 (verdict open). dcs_grain~: SET ASIDE Oct 22, back pocket (DadCraft: a continuous Spray; Spray itself is in the back pocket since Oct 19).
+    ports; all added Oct 17, Smooth distortion Oct 19). NOT BUILT (checked Oct 22): deken (publishing: DadCraft's go-ahead). dcs_dewind~: BUILT Oct 22 (Wind Guard). dcs_listen~: BUILT Oct 22, listening only (DadCraft: "show it first"). The reverb's shimmer mode: BUILT Oct 22 (Reverb, Shimmer); Shimmer Style Mist BUILT Oct 23 (verdict open); Sparkle SET ASIDE Oct 23 (back pocket, style 2). dcs_grain~: SET ASIDE Oct 22, back pocket (DadCraft: a continuous Spray; Spray itself is in the back pocket since Oct 19).
     - Voices: **dcs_shift~** (clean pitch shifter for Pitch and "Your voice" harmony, keeping the voice's own tone
       colour: no chipmunk, no warble). **dcs_pitch~** (a light pitch tracker to replace sigmund~, about half of Harmony's
       cost: battery).
