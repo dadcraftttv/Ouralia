@@ -3,7 +3,7 @@
 
     tools/.venv/bin/python tools/test_dcs.py tools/.libpd/libpd.so
 """
-import ctypes, os, sys, tempfile
+import ctypes, os, re, sys, tempfile
 import numpy as np
 from pdtest import Engine, SR
 
@@ -442,12 +442,16 @@ check(costs[1] < 0.75 * costs[0], f"costs {100 * costs[1] / costs[0]:.0f}% of th
 # shimmer (Oct 22): the tail rises in octaves; 0 is the reverb as before (the match above sends none)
 def shimmer_patch(fb):
     args = " ".join(str(v) for v in [EXTRA, len(COMB)] + COMB + ALLP)
-    p = patch(f"rev_sh{int(fb * 100)}", ["adc~", f"sig~ {fb}", "r sh", "dac~", f"dcs_reverb~ {args}", "msg shimmer \\$1"],
-              [(0, 0, 4, 0), (1, 0, 4, 1), (2, 0, 5, 0), (5, 0, 4, 0), (4, 0, 3, 0), (4, 1, 3, 1)])
-    src = open(p).read().replace("#X obj 10 165 msg shimmer", "#X msg 10 165 shimmer"); open(p, "w").write(src)
+    p = patch(f"rev_sh{int(fb * 100)}", ["adc~", f"sig~ {fb}", "r sh", "dac~", f"dcs_reverb~ {args}", "msg shimmer \\$1",
+                                         "r st", "msg style \\$1"],
+              [(0, 0, 4, 0), (1, 0, 4, 1), (2, 0, 5, 0), (5, 0, 4, 0), (4, 0, 3, 0), (4, 1, 3, 1), (6, 0, 7, 0), (7, 0, 4, 0)])
+    src = open(p).read()
+    for m in ("shimmer", "style"):
+        src = re.sub(rf"#X obj (\d+ \d+) msg {m}", rf"#X msg \1 {m}", src)
+    open(p, "w").write(src)
     return p
-def shimmered(amount, fb, x):
-    e = Engine(LIB, shimmer_patch(fb)); e.send("sh", amount); e.run(np.zeros(640, np.float32))
+def shimmered(amount, fb, x, style=0):
+    e = Engine(LIB, shimmer_patch(fb)); e.send("st", style); e.send("sh", amount); e.run(np.zeros(640, np.float32))
     y = e.run(x); e.close(); return y
 def band(y, f0):
     spec = np.abs(np.fft.rfft(y * np.hanning(len(y)))); fr = np.fft.rfftfreq(len(y), 1 / SR)
@@ -462,6 +466,31 @@ y = shimmered(1, 0.98, noise).mean(axis=1); y0 = shimmered(0, 0.98, noise).mean(
 r_mid, r_end = rms(y[4 * SR:6 * SR]), rms(y[22 * SR:24 * SR])
 check(np.abs(y).max() < 1.5 * np.abs(y0).max() and r_end < 0.5 * r_mid,
       f"shimmer 1 at the biggest room can't run away: peak {np.abs(y).max():.2f} ({np.abs(y0).max():.2f} without), the tail falls ({r_mid:.2g} at 4-6 s, {r_end:.2g} at 22-24 s)")
+# styles (Oct 23): Mist and Sparkle. DadCraft heard Classic as metallic on real-world sounds: the tail's spectrum has
+# sharp fixed peaks. Measured on a voice-like buzz (on claps or wind it hardly shows; on a voice and on StreetBeatz's
+# break it does: 8.9x and 160x, against 4.9x and 21x without shimmer): the spectrum's 99th percentile over its local median
+def peaky(y):
+    m = y.mean(axis=1); k = 8192
+    P = np.mean([np.abs(np.fft.rfft(m[i:i + k] * np.hanning(k))) ** 2 for i in range(0, len(m) - k, k // 2)], 0)
+    f = np.fft.rfftfreq(k, 1 / SR); sel = np.where((f > 600) & (f < 5000))[0]
+    return float(np.percentile([P[i] / np.median(P[i - 40:i + 40]) for i in sel], 99))
+tv = np.arange(2 * SR) / SR                     # 2 s of a buzz gliding 100-180 Hz through two formants (700, 1800 Hz)
+ph = 2 * np.pi * np.cumsum(140 + 40 * np.sin(2 * np.pi * 0.7 * tv)) / SR
+V = np.fft.rfft(sum(np.sin(h * ph) / h for h in range(1, 30))); fv = np.fft.rfftfreq(len(tv), 1 / SR)
+voice = np.fft.irfft(V * (np.exp(-((fv - 700) / 250) ** 2) + 0.5 * np.exp(-((fv - 1800) / 400) ** 2)), len(tv))
+voice = np.concatenate([0.2 * voice / np.abs(voice).max() * np.sin(np.pi * tv / 2), np.zeros(3 * SR)]).astype(np.float32)
+pk = {s: peaky(shimmered(1 if s >= 0 else 0, 0.93, voice, max(s, 0))) for s in (-1, 0, 1, 2)}
+check(pk[0] > 1.4 * pk[-1], f"(the measure works: Classic on a voice is peaky, {pk[0]:.1f}x vs {pk[-1]:.1f}x without shimmer)")
+for s, name in ((1, "Mist"), (2, "Sparkle")):
+    tl = shimmered(1, 0.9, burst, s)[int(1.2 * SR):int(3.2 * SR)]; m = tl.mean(axis=1)
+    rise = (band(m, 660) + band(m, 1320)) / band(m, 330)
+    check(rise > 20 * max(up[0], 1e-9), f"{name}: the tail still rises an octave ({rise:.3g} vs {up[0]:.3g} without)")
+    check(pk[s] < 1.3 * pk[-1], f"{name}: no metallic peaks on a voice ({pk[s]:.1f}x, without shimmer {pk[-1]:.1f}x, Classic {pk[0]:.1f}x)")
+    c = np.corrcoef(tl[:, 0], tl[:, 1])[0, 1]
+    check(abs(c) < 0.3, f"{name}: the two ears differ (correlation {c:.2f})")
+    y = shimmered(1, 0.98, noise, s).mean(axis=1); r_mid, r_end = rms(y[4 * SR:6 * SR]), rms(y[22 * SR:24 * SR])
+    check(np.abs(y).max() < 1.5 * np.abs(y0).max() and r_end < 0.5 * r_mid,
+          f"{name} at the biggest room can't run away: peak {np.abs(y).max():.2f}, the tail falls ({r_mid:.2g} at 4-6 s, {r_end:.2g} at 22-24 s)")
 
 # ---------------------------------------------------------------- dcs_dewind~
 print("dcs_dewind~:")

@@ -22,6 +22,7 @@ DEFAULTS = [
     ("space_on", 1), ("space_pan", 0), ("space_shift", 0),
     ("filter_on", 1), ("filter_mix", 0), ("filter_type", 0), ("filter_freq", 1500), ("filter_q", 1),
     ("reverb_on", 1), ("reverb_mix", 0), ("reverb_size", 0.5), ("reverb_tone", 6000), ("reverb_shimmer", 0),
+    ("reverb_shimmer_style", 0),
     ("chorus_on", 1), ("chorus_mix", 0), ("chorus_rate", 0.8), ("chorus_depth", 3),
     ("trem_on", 1), ("trem_depth", 0), ("trem_rate", 5),
     ("gate_thresh", -80), ("comp_thresh", -30), ("comp_ratio", 4), ("comp_makeup", 0),

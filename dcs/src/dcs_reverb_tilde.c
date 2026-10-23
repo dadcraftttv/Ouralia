@@ -18,6 +18,19 @@
  * above, quieter, the reverb's own damping taking the highest away. At 0 nothing is added (the shifter still listens,
  * so turning it on starts from the sound, not from silence).
  *
+ * `style <0|1|2>` (Oct 23; DadCraft: the octaves sound metallic, he wants whimsical, misty, sparkly):
+ *   0 Classic: the shifter above. Fine on played notes, metallic on real-world sounds: on a voice its tail grows
+ *     sharp fixed peaks (test_dcs: 81x the spectrum's local level, 4.6x without shimmer; on StreetBeatz's break 160x
+ *     against 21x). Exact octaves fed back through the combs, the same in both ears.
+ *   1 Mist: each ear has its own shifter of 4 grains, each 120-220 ms long, starting a little late at random, about
+ *     half of them an octave up and half staying in place, every one a little off (+-12 cents up, +-20 in place:
+ *     the narrower +-7 / +-12 first tried still rang a little on a voice):
+ *     no fixed rate to flutter, no exact octaves to ring, the two ears different. A darker band (250 Hz - 3.5 kHz).
+ *   2 Sparkle: Mist plus glitter: in each ear 4 tiny grains (15-40 ms) two octaves up (+-4 cents), each followed by
+ *     20-150 ms of silence, high-passed at 1 kHz, played quietly straight out, never into the tail (the first try,
+ *     2 louder 30-80 ms grains that also went round the tail, chirped and climbed: DadCraft "really wrong").
+ *   The new styles low-pass what they read at 4.5 kHz first (reading 2-4x fast would fold the top back down).
+ *
  * SPDX-License-Identifier: BSD-3-Clause
  * Copyright (c) 2026 dadcraft (DadCraft Studios)
  */
@@ -36,6 +49,23 @@
 #endif
 #define SHWIN 1024                  /* the grains' Hann window, as a table */
 static t_sample sh_win[SHWIN + 1];
+#define MBUF 32768                  /* Mist / Sparkle: each ear's line (power of two; the longest grain at 96 kHz) */
+#define NMIST 4                     /* Mist's grains per ear */
+#define NTWINK 4                    /* Sparkle's glints per ear */
+#ifndef MGAIN
+#define MGAIN 0.5                   /* Mist's loop gain at shimmer 1 (as SHGAIN) */
+#endif
+#define TWOUT 0.25                  /* the glints' level, straight out */
+#define MPRE_HZ 4500.
+#define MLO_HZ 250.
+#define MHI_HZ 3500.
+#define TWHP_HZ 1000.
+
+typedef struct _grain
+{
+    double pos, len, ratio, d0;     /* samples into it, its length, its speed, its delay at the start */
+    int wait;                       /* (twinkles) samples of silence left before the next one; 0 = playing */
+} t_grain;
 
 static t_class *dcs_reverb_class;
 
@@ -66,7 +96,120 @@ typedef struct _dcs_reverb
     t_sample x_shamt;               /* ...and the amount now, gliding there */
     t_sample x_shnext[8192];        /* the shifted sound for the next block's input */
     int x_shn;                      /* how many of x_shnext are ready */
+    int x_style;                    /* 0 Classic, 1 Mist, 2 Sparkle */
+    unsigned int x_seed;
+    t_sample x_mbuf[2][MBUF];       /* Mist / Sparkle: each ear's sound, low-passed, for its grains */
+    int x_mw;
+    t_grain x_mg[2][NMIST], x_tw[2][NTWINK];
+    t_sample x_mpre[2][2], x_mlo[2], x_mhi[2], x_mth[2];  /* the filters' states */
+    t_sample x_mprecoef, x_mlocoef, x_mhicoef, x_mthcoef;
+    t_sample x_mnext[2][8192];      /* each ear's shimmer for its combs' next block */
+    int x_mn;
+    t_sample x_ein[8192];           /* (one ear's comb input, while Mist / Sparkle adds to it) */
 } t_dcs_reverb;
+
+static double dcs_rnd(t_dcs_reverb *x)
+{
+    x->x_seed = x->x_seed * 1664525u + 1013904223u;
+    return (x->x_seed >> 8) * (1. / 16777216.);
+}
+
+static void grain_start(t_dcs_reverb *x, t_grain *g, int twinkle)
+{
+    double sr = x->x_sr, cents, jit;
+    if (twinkle)
+    {
+        g->len = sr * (0.015 + 0.025 * dcs_rnd(x));
+        g->ratio = 4;                                      /* two octaves up */
+        cents = 8 * (dcs_rnd(x) - 0.5);
+        jit = sr * 0.01 * dcs_rnd(x);
+    }
+    else
+    {
+        g->len = sr * (0.12 + 0.10 * dcs_rnd(x));
+        g->ratio = dcs_rnd(x) < 0.45 ? 1 : 2;              /* staying in place, or an octave up */
+        cents = (g->ratio == 1 ? 40 : 24) * (dcs_rnd(x) - 0.5);
+        jit = sr * 0.03 * dcs_rnd(x);
+    }
+    g->ratio *= pow(2, cents / 1200);
+    if (g->ratio > 1 && (g->ratio - 1) * g->len + jit > MBUF - 16)
+        g->len = (MBUF - 16 - jit) / (g->ratio - 1);      /* (only at very high sample rates) */
+    g->d0 = (g->ratio > 1 ? (g->ratio - 1) * g->len : 0) + 2 + jit;  /* reading faster, it ends 2+ samples back */
+    g->pos = 0;
+    g->wait = 0;
+}
+
+static t_sample grain_read(const t_sample *buf, int wi, const t_grain *g)
+{
+    double r = wi - (g->d0 - (g->ratio - 1) * g->pos);
+    int r0;
+    t_sample frac, a, b;
+    while (r < 0) r += MBUF;
+    r0 = (int)r; frac = (t_sample)(r - r0);
+    a = buf[r0 & (MBUF - 1)]; b = buf[(r0 + 1) & (MBUF - 1)];
+    return sh_win[(int)(g->pos / g->len * SHWIN)] * (a + frac * (b - a));
+}
+
+/* Mist / Sparkle: each ear's sound into its own line; when on, its grains out of it, into the ear's combs the next
+   block (and Sparkle's glints straight into the ear's output, at the amount now). */
+static void dcs_reverb_mist(t_dcs_reverb *x, t_sample **ear, t_sample **out, int n, int on,
+    t_sample a0, t_sample astep)
+{
+    int s, i, v, wi = x->x_mw;
+    t_sample pc = x->x_mprecoef, lc = x->x_mhicoef, hc = x->x_mlocoef, tc = x->x_mthcoef;
+    for (s = 0; s < 2; s++)
+    {
+        t_sample *buf = x->x_mbuf[s], *e = ear[s], *o = out[s], *nx = x->x_mnext[s];
+        t_sample p1 = x->x_mpre[s][0], p2 = x->x_mpre[s][1], lo = x->x_mlo[s], hi = x->x_mhi[s], th = x->x_mth[s];
+        wi = x->x_mw;
+        for (i = 0; i < n; i++)
+        {
+            t_sample y = 0, tw = 0;
+            p1 += pc * (e[i] - p1);                       /* 4.5 kHz, twice: nothing left to fold down */
+            p2 += pc * (p1 - p2);
+            buf[wi] = p2;
+            if (on)
+            {
+                for (v = 0; v < NMIST; v++)
+                {
+                    t_grain *g = &x->x_mg[s][v];
+                    y += grain_read(buf, wi, g);
+                    if (++g->pos >= g->len) grain_start(x, g, 0);
+                }
+                lo += lc * (0.5f * y - lo);                 /* (4 grains overlap: about twice one) */
+                hi += hc * (lo - hi);
+                y = lo - hi;
+                if (x->x_style == 2)
+                {
+                    for (v = 0; v < NTWINK; v++)
+                    {
+                        t_grain *g = &x->x_tw[s][v];
+                        if (g->wait > 0)
+                        {
+                            if (--g->wait == 0) grain_start(x, g, 1);
+                            continue;
+                        }
+                        tw += grain_read(buf, wi, g);
+                        if (++g->pos >= g->len) g->wait = (int)(x->x_sr * (0.02 + 0.13 * dcs_rnd(x))) + 1;
+                    }
+                    th += tc * (tw - th);                   /* high-passed at 1 kHz: glints, not thumps */
+                    tw -= th;
+                    o[i] += (a0 + astep * (i + 1)) * (t_sample)TWOUT * tw;
+                }
+                nx[i] = y;
+            }
+            wi = (wi + 1) & (MBUF - 1);
+        }
+        if (PD_BIGORSMALL(p1)) p1 = 0;
+        if (PD_BIGORSMALL(p2)) p2 = 0;
+        if (PD_BIGORSMALL(lo)) lo = 0;
+        if (PD_BIGORSMALL(hi)) hi = 0;
+        if (PD_BIGORSMALL(th)) th = 0;
+        x->x_mpre[s][0] = p1; x->x_mpre[s][1] = p2; x->x_mlo[s] = lo; x->x_mhi[s] = hi; x->x_mth[s] = th;
+    }
+    x->x_mw = wi;
+    x->x_mn = on ? n : 0;
+}
 
 static void line_alloc(t_line *l, int len)
 {
@@ -102,7 +245,7 @@ static t_int *dcs_reverb_perform(t_int *w)
     if (sh1 > sh0 + 0.002f) sh1 = sh0 + 0.002f;            /* (glides: 0 to 1 in ~500 blocks, ~0.7 s) */
     else if (sh1 < sh0 - 0.002f) sh1 = sh0 - 0.002f;
     shstep = (sh1 - sh0) / n;
-    if ((sh0 > 0 || sh1 > 0) && x->x_shn == n)
+    if (!x->x_style && (sh0 > 0 || sh1 > 0) && x->x_shn == n)
         for (i = 0; i < n; i++)
         {
             t_sample f = vfb[i], k = 0.28f * sqrtf(f < 1 ? 1 - f * f : 0), a = sh0 + shstep * (i + 1);
@@ -111,6 +254,16 @@ static t_int *dcs_reverb_perform(t_int *w)
     x->x_shamt = sh1;
     for (s = 0; s < 2; s++)
     {
+        t_sample *ein = vin;
+        if (x->x_style && (sh0 > 0 || sh1 > 0) && x->x_mn == n)  /* Mist / Sparkle: each ear its own */
+        {
+            ein = x->x_ein;
+            for (i = 0; i < n; i++)
+            {
+                t_sample f = vfb[i], kk = 0.28f * sqrtf(f < 1 ? 1 - f * f : 0), a = sh0 + shstep * (i + 1);
+                ein[i] = vin[i] + tanhf(a * (t_sample)MGAIN * kk * x->x_mnext[s][i]);
+            }
+        }
         memset(acc, 0, n * sizeof(t_sample));
         for (k = 0; k < x->x_nc; k++)
         {
@@ -121,7 +274,7 @@ static t_int *dcs_reverb_perform(t_int *w)
             {
                 t_sample y = buf[wi];
                 lp = coef * y + keep * lp;
-                buf[wi] = vin[i] + vfb[i] * lp;
+                buf[wi] = ein[i] + vfb[i] * lp;
                 if (++wi >= len) wi = 0;
                 acc[i] += y;
             }
@@ -147,7 +300,13 @@ static t_int *dcs_reverb_perform(t_int *w)
     }
     /* shimmer: the ears' sound into the shifter, an octave up out of it for the next block. Off (and gliding to
        nothing), the shifter only listens: a copy into its line, nothing read. */
-    if (sh1 <= 0 && x->x_shtarget <= 0)
+    if (x->x_style)
+    {
+        t_sample *ear[2] = { left, out[1] };
+        dcs_reverb_mist(x, ear, out, n, !(sh1 <= 0 && x->x_shtarget <= 0), sh0, shstep);
+        x->x_shn = 0;
+    }
+    else if (sh1 <= 0 && x->x_shtarget <= 0)
     {
         int wi = x->x_shw;
         for (i = 0; i < n; i++)
@@ -215,6 +374,21 @@ static void dcs_reverb_dsp(t_dcs_reverb *x, t_signal **sp)
         x->x_shlocoef = (t_sample)(1 - exp(-2 * 3.14159265358979 * SHHI_HZ / x->x_sr));
         x->x_shhicoef = (t_sample)(1 - exp(-2 * 3.14159265358979 * SHLO_HZ / x->x_sr));
         x->x_shn = 0;
+        x->x_mprecoef = (t_sample)(1 - exp(-2 * 3.14159265358979 * MPRE_HZ / x->x_sr));
+        x->x_mlocoef = (t_sample)(1 - exp(-2 * 3.14159265358979 * MLO_HZ / x->x_sr));
+        x->x_mhicoef = (t_sample)(1 - exp(-2 * 3.14159265358979 * MHI_HZ / x->x_sr));
+        x->x_mthcoef = (t_sample)(1 - exp(-2 * 3.14159265358979 * TWHP_HZ / x->x_sr));
+        x->x_mn = 0;
+        for (s = 0; s < 2; s++)
+        {
+            for (k = 0; k < NMIST; k++)                     /* (staggered: each partway through its first grain) */
+            {
+                grain_start(x, &x->x_mg[s][k], 0);
+                x->x_mg[s][k].pos = (int)(dcs_rnd(x) * x->x_mg[s][k].len);
+            }
+            for (k = 0; k < NTWINK; k++)
+                x->x_tw[s][k].wait = 1 + (int)(dcs_rnd(x) * 0.15 * x->x_sr);
+        }
     }
     dsp_add(dcs_reverb_perform, 6, x, sp[0]->s_vec, sp[1]->s_vec, sp[2]->s_vec, sp[3]->s_vec, (t_int)sp[0]->s_n);
 }
@@ -230,12 +404,23 @@ static void dcs_reverb_shimmer(t_dcs_reverb *x, t_floatarg f)
     x->x_shtarget = f < 0 ? 0 : (f > 1 ? 1 : f);
 }
 
+static void dcs_reverb_style(t_dcs_reverb *x, t_floatarg f)
+{
+    int s = (int)f;
+    x->x_style = s < 0 ? 0 : (s > 2 ? 2 : s);
+    x->x_shn = x->x_mn = 0;                                 /* (the other style's next block is stale) */
+}
+
 static void dcs_reverb_clear(t_dcs_reverb *x)
 {
     int s, k;
     memset(x->x_shbuf, 0, sizeof(x->x_shbuf));
     x->x_shlo = x->x_shhi = 0;
     x->x_shn = 0;
+    memset(x->x_mbuf, 0, sizeof(x->x_mbuf));
+    memset(x->x_mpre, 0, sizeof(x->x_mpre));
+    x->x_mlo[0] = x->x_mlo[1] = x->x_mhi[0] = x->x_mhi[1] = x->x_mth[0] = x->x_mth[1] = 0;
+    x->x_mn = 0;
     for (s = 0; s < 2; s++)
     {
         for (k = 0; k < x->x_nc; k++)
@@ -264,6 +449,7 @@ static void *dcs_reverb_new(t_symbol *sel, int argc, t_atom *argv)
         pd_error(x, "dcs_reverb~: give it <right extra ms> <number of combs> <comb ms ...> <all-pass ms ...>");
     x->x_tone = 6000;
     x->x_sr = 0;
+    x->x_seed = 12345;
     inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal);
     outlet_new(&x->x_obj, &s_signal);
     x->x_outr = outlet_new(&x->x_obj, &s_signal);
@@ -297,4 +483,5 @@ void dcs_reverb_tilde_setup(void)
     class_addmethod(dcs_reverb_class, (t_method)dcs_reverb_tone, gensym("tone"), A_FLOAT, 0);
     class_addmethod(dcs_reverb_class, (t_method)dcs_reverb_clear, gensym("clear"), 0);
     class_addmethod(dcs_reverb_class, (t_method)dcs_reverb_shimmer, gensym("shimmer"), A_FLOAT, 0);
+    class_addmethod(dcs_reverb_class, (t_method)dcs_reverb_style, gensym("style"), A_FLOAT, 0);
 }
