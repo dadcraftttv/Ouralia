@@ -484,8 +484,8 @@ check(pk[0] > 1.4 * pk[-1], f"(the measure works: Classic on a voice is peaky, {
 for s, name in ((1, "Mist"), (2, "Sparkle")):
     tl = shimmered(1, 0.9, burst, s)[int(1.2 * SR):int(3.2 * SR)]; m = tl.mean(axis=1)
     rise = (band(m, 660) + band(m, 1320)) / band(m, 330)
-    check(rise > 20 * max(up[0], 1e-9), f"{name}: the tail still rises an octave ({rise:.3g} vs {up[0]:.3g} without)")
-    check(pk[s] < 1.3 * pk[-1], f"{name}: no metallic peaks on a voice ({pk[s]:.1f}x, without shimmer {pk[-1]:.1f}x, Classic {pk[0]:.1f}x)")
+    check(rise > 0.5 * up[1], f"{name}: the tail rises about as much as Classic ({rise:.3g}, Classic {up[1]:.3g}: at half its gain Mist rose 10x less and DadCraft heard no shimmer)")
+    check(pk[s] < 1.5 * pk[-1] and pk[s] < 0.15 * pk[0], f"{name}: no metallic peaks on a voice ({pk[s]:.1f}x, without shimmer {pk[-1]:.1f}x, Classic {pk[0]:.1f}x)")
     c = np.corrcoef(tl[:, 0], tl[:, 1])[0, 1]
     check(abs(c) < 0.3, f"{name}: the two ears differ (correlation {c:.2f})")
     y = shimmered(1, 0.98, noise, s).mean(axis=1); r_mid, r_end = rms(y[4 * SR:6 * SR]), rms(y[22 * SR:24 * SR])

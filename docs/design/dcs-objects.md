@@ -157,23 +157,28 @@
   0.9x. Tests: test_dcs (660+1320 Hz over 330 Hz in the tail: 67 vs 0.0002 off; no runaway at feedback 0.98),
   test_patch "reverb Shimmer" (octaves, and the biggest room with Shimmer 1 within +-1 and decaying). Phone only
   (the desktop gets the slider with the shared Params).
-  **Shimmer Style** (Oct 23; `reverb_shimmer_style` "Shimmer Style" in Reverb: Classic / Mist / Sparkle, default
+  **Shimmer Style** (Oct 23; `reverb_shimmer_style` "Shimmer Style" in Reverb: Classic / Mist, default
   Classic, noRandom, in presets, " *"; dcs_reverb~ `style <0|1|2>`). DadCraft: Classic "sounds fine on played notes",
   but on real-world sounds metallic; he wanted whimsical, misty, sparkly. Measured (no mic: a voice-like buzz gliding
   100-180 Hz through 700 / 1800 Hz formants, footsteps, a clap, a wind swell, StreetBeatz's break, through the
   reverb at feedback 0.93): the tail's long-term spectrum, its 99th percentile over the local median (sharp fixed
   peaks = metallic). Classic on the voice 81x (4.6x without shimmer), on the break 160x (21x); on claps, steps and
   wind it hardly shows (why notes and claps sound fine). **Mist**: each ear its own shifter, 4 grains of 120-220 ms,
-  random start delays (0-30 ms), ~half an octave up (+-12 cents) and half in place (+-20 cents), a 250 Hz - 3.5 kHz
-  band, into that ear's combs (MGAIN 0.5, as SHGAIN). On the voice 5.5x; with +-7 / +-12 cents it was 7.1x (still
+  random start delays (0-30 ms), 3 in 4 an octave up (+-12 cents) and the rest in place (+-20 cents), a
+  250 Hz - 3.5 kHz band, into that ear's combs at MGAIN 1.0. The first Mist (half in place, MGAIN 0.5, as SHGAIN)
+  rose 10x less than Classic (20x less in the patch: octave share 0.10 vs 2.2): on the phone DadCraft heard no
+  difference from Classic, only quieter, under his Pitch +12 at 25%, chorus, phaser, echo and a Reverb Level mover.
+  Swept: MGAIN 1.0 with 1 in 4 in place rises like Classic (6.95 vs 6.39 in test_dcs; 1.14 vs 2.2 in the patch, was
+  0.10), voice peaks 6.0x, the biggest room still dies (2e-6 at 22 s); 1.5 rises far more (43) and lingers more. On the voice 5.5x; with +-7 / +-12 cents it was 7.1x (still
   rang a little), +-15 / +-30 5.5x but the octave starts to sound out of tune. Ears' correlation ~0 (Classic feeds both
-  the same). **Sparkle**: Mist plus 4 glints per ear: 15-40 ms grains two octaves up (+-4 cents), 20-150 ms of
+  the same). **Sparkle** (style 2, back pocket: off the menu Oct 23, DadCraft "still sounds wrong... I don't know
+  that it's worth pursuing"): Mist plus 4 glints per ear: 15-40 ms grains two octaves up (+-4 cents), 20-150 ms of
   silence after each, high-passed at 1 kHz, straight out at TWOUT 0.25, never into the tail. The first Sparkle (2
   louder 30-80 ms grains, two octaves or an octave and a fifth, 0.8 out and 0.3 into the tail): DadCraft "something
   went really wrong": its highs as loud as the whole tail, chirps, and fed back they climbed. Both new styles read
   their line through a 4.5 kHz low-pass (twice; read 2-4x fast, the top would fold down). The biggest room still
   dies away for both (test_dcs). Clips for listening were rendered from these sounds (not from the mic).
-  Verdict open (ROADMAP Open now).
+  Mist's verdict open (ROADMAP Open now).
 - **Kits** (Oct 17, roadmap 19 step a+b; DadCraft: kits for acoustic / synth / EDM / future bass / low end, mix and
   match, loadable, to replace the stems player; first new style: Acoustic). The music brain is untouched; a kit says
   what each part sounds like. **Classic = today's Pd voices**, nothing ported: a part's kit engine 0 leaves it as it

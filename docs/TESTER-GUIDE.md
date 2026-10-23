@@ -356,7 +356,7 @@ Makes it sound like you're in a bigger space, like a church, a bathroom, or a ca
 - **Reverb brightness:** a bright, glassy room or a soft, dark one.
 - **Reverse reverb:** a sudden sound comes back a moment later as its own echo played backwards: a ghostly swell that rises out of nothing and stops right where the sound began. While the Rhythm plays, each swell is one beat long and lands on a beat; otherwise it comes about two seconds later (longer in a bigger room). It needs the Reverb level up. 0 turns it off.
 - **Shimmer** (new, 0 = off at first): the reverb's tail rises in octaves as it fades, bright and choir-like, the way ambient guitarists use it. It needs the Reverb level up; a long Room size and a bright reverb make it bigger. Tell Dad what you think.
-- **Shimmer Style** (new): how the Shimmer sounds. **Classic** is the octaves as before (lovely on notes, it can ring a bit metallic on voices and street sounds). **Mist** is a soft, drifting haze, wide across your ears, with no ring. **Sparkle** is Mist with quiet glitter two octaves up. Try them while talking or walking past things, and tell Dad which you like.
+- **Shimmer Style** (new): how the Shimmer sounds. **Classic** is the octaves as before (lovely on notes, it can ring a bit metallic on voices and street sounds). **Mist** is a soft, drifting haze, wide across your ears, with no ring. Try both while talking or walking past things, and tell Dad which you like.
 
 ### Stereo Space
 
