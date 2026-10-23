@@ -809,6 +809,9 @@ def build():
     # Shimmer (Oct 22, `reverb_shimmer`, 0 = off): the tail rises in octaves, inside dcs_reverb~
     P.obj("r_reverb_shimmer", "r reverb_shimmer", 2000, 560)
     P.msg("rev_shimmer", f"shimmer {BS}$1", 2000, 580); P.c("r_reverb_shimmer", "rev_shimmer"); P.c("rev_shimmer", "rev_dcs")
+    # Shimmer Style (Oct 23, `reverb_shimmer_style`): 0 Classic, 1 Mist, 2 Sparkle (dcs_reverb~'s `style`)
+    P.obj("r_reverb_shimmer_style", "r reverb_shimmer_style", 2100, 560)
+    P.msg("rev_shstyle", f"style {BS}$1", 2100, 580); P.c("r_reverb_shimmer_style", "rev_shstyle"); P.c("rev_shstyle", "rev_dcs")
     for side, extra in (("l", 0.0), ("r", RIGHT_EXTRA_MS)):
         x0 = 1600 if side == "l" else 2000
         P.obj(f"rev_{side}", "*~", x0 + 400, 1150)
