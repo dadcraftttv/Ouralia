@@ -21,6 +21,14 @@ behaviour changes, or tell DadCraft it needs one).
   --history` and events.log, whose "Health:" lines give battery, temperature and the app's CPU each minute;
   DESIGN-NOTES "Diagnostics").
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
+  Getting a sound's shape, tone and feel right takes rounds of listening: that is expected. Before his first listen,
+  check what can be measured, so his rounds go on feel and not on faults (Shimmer Style, Oct 23):
+  - Test on real-world sounds (a voice-like buzz, steps, wind, StreetBeatz's break), not only played notes. Classic
+    Shimmer measured fine on notes and was metallic on voices.
+  - Measure the new sound against the old at the same settings: level and the effect's strength. The first Mist was
+    20x weaker than Classic, so on the phone it sounded like no change.
+  - Check it in the real patch (test_patch), not only the object on its own (test_dcs).
+  - Clips for him go in `~/Downloads/<feature>-clips/`, all rendered at one level and named in listening order.
 - New sound ideas go in behind a switch (old sound the default) so he can compare, until he says otherwise.
   A setting that uses our C objects gets `.dcs()` in Params.java (shown with " *").
 - Commit small, descriptive commits. Do not push or publish anything unless asked.
