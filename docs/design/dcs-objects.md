@@ -158,7 +158,9 @@
   test_patch "reverb Shimmer" (octaves, and the biggest room with Shimmer 1 within +-1 and decaying). Phone only
   (the desktop gets the slider with the shared Params).
   **Shimmer Style** (Oct 23; `reverb_shimmer_style` "Shimmer Style" in Reverb: Classic / Mist, default
-  Classic, noRandom, in presets, " *"; dcs_reverb~ `style <0|1|2>`). DadCraft: Classic "sounds fine on played notes",
+  Classic, noRandom, in presets, " *"; dcs_reverb~ `style <0|1|2>`). The user's choice: Realms and built-in
+  presets leave it, an older preset without it doesn't reset it (Params.STYLES and realmsLeave; DadCraft Oct 23, a
+  Realm change had put it back to Classic). DadCraft: Classic "sounds fine on played notes",
   but on real-world sounds metallic; he wanted whimsical, misty, sparkly. Measured (no mic: a voice-like buzz gliding
   100-180 Hz through 700 / 1800 Hz formants, footsteps, a clap, a wind swell, StreetBeatz's break, through the
   reverb at feedback 0.93): the tail's long-term spectrum, its 99th percentile over the local median (sharp fixed
