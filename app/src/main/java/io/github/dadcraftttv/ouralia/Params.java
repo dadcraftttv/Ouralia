@@ -504,7 +504,7 @@ final class Params {
             // pocket: DadCraft "still sounds wrong".)
             new Param("reverb_shimmer_style", "Shimmer Style", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (octaves, as before)", "Mist (soft and drifting, no metal ring)")
-                    .inSection("reverb").noRandom().resetWhenAbsent().dcs(),
+                    .inSection("reverb").noRandom().dcs(),
 
             // ---- Chorus ---- (added after the first presets: older presets switch it off)
             new Param("chorus_on", "Chorus Enabled", 0f, 1f, 1f, "", Param.Curve.LINEAR)
@@ -636,7 +636,7 @@ final class Params {
     /** Which voice an effect plays with (Classic or New...): saved in presets since Oct 21 (DadCraft), left out of the
      *  built-in presets. */
     static final Set<String> STYLES = Set.of("gc_voice", "shift_voice", "crush_style", "dist_quality",
-            "echo_scatter_style");
+            "echo_scatter_style", "reverb_shimmer_style");
 
     /** A built-in preset says nothing about these, so picking one leaves them as they are: the kit, its parts, layers
      *  and blends too (DadCraft, Oct 21). */
@@ -645,9 +645,10 @@ final class Params {
     }
 
     /** A Realm never changes these, even playing a preset of yours: the kit (DadCraft, Oct 20), how the band plays
-     *  and Intensity (Oct 21). */
+     *  and Intensity (Oct 21), Shimmer Style (Oct 23: a Realm change put it back to Classic). */
     static boolean realmsLeave(String id) {
-        return id.startsWith(Kits.ID) || BAND.contains(id) || Intensity.ID.equals(id);
+        return id.startsWith(Kits.ID) || BAND.contains(id) || Intensity.ID.equals(id)
+                || "reverb_shimmer_style".equals(id);
     }
 
     static final List<Param> ALL = Collections.unmodifiableList(withMovers(CORE));
