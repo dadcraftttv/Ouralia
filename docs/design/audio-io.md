@@ -21,6 +21,10 @@
   under the Input tile for the one chosen, and (Oct 22, ROADMAP 22) in the Input list itself, before picking: each
   Bluetooth mic marked "(Bluetooth call mode: low quality)" or "(LE Audio)" (`AudioDevices.isBluetoothMic`/`isLeAudio`),
   and a warning under the sheet's heading when a call-mode one is listed (`mic_sheet_call`). The tile keeps the plain name.
+  The test phone can't use LE Audio (checked Oct 26, with DadCraft's LE earbuds, LE switched on in their app): the
+  Moto G Stylus 2025 runs no `LeAudioService` (`dumpsys bluetooth_manager`), `bluetooth.profile.bap.unicast.client.enabled`
+  is unset, so the earbuds connect as classic A2DP + call-mode headset and no "(LE Audio)" input can appear. Not
+  fixable without root. The LE path (`TYPE_BLE_HEADSET`) is still untested on a real device.
 - **Soft limiter** at the output (`clip~` base plus cubic-eased excess, never above 1.0). Hard clipping sounded fuzzy.
 - **Defaults:** input gain 1 (was 2.5 until Oct 17: DadCraft wants a tempered start, the user can turn it up; existing installs keep theirs), compressor -30 dB 4:1. Gain, gate, compressor, smoothing, nudge and music on/key/scale are `noPreset`.
 - **Mic input shaping** (roadmap 15, DadCraft Oct 12; section "Gate and compressor shape", folded, noPreset/noRandom/
