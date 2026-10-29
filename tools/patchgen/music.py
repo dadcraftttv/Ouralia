@@ -171,7 +171,7 @@ def add_composer(P, x, y):
     P.obj("cmp_br", "value mbright", x + 360, y + 60); P.msg("cmp_br_m", f"bright {BSd}1", x + 360, y + 80)
     P.c("cmp_bar_t", "cmp_br", 1, 0); P.c("cmp_br", "cmp_br_m"); P.c("cmp_br_m", "cmp")
     P.msg("cmp_bar", "bar", x + 300, y + 100); P.c("cmp_bar_t", "cmp_bar", 0, 0); P.c("cmp_bar", "cmp")
-    for k, (rcv, sel) in enumerate((("tempo", "tempo"), ("intensity", "energy"), ("comp_seed", "seed"), ("chord_color", "color"))):
+    for k, (rcv, sel) in enumerate((("tempo", "tempo"), ("intensity", "energy"), ("comp_seed", "seed"), ("chord_color", "color"), ("new_pieces", "renew"))):
         P.obj(f"cmp_r{k}", f"r {rcv}", x + 460 + 80 * k, y); P.msg(f"cmp_m{k}", f"{sel} {BSd}1", x + 460 + 80 * k, y + 20)
         P.c(f"cmp_r{k}", f"cmp_m{k}"); P.c(f"cmp_m{k}", "cmp")
     # a chord: the four pad notes and the bass held first, then the anchor goes where Classic's root goes; that

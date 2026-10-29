@@ -9,8 +9,13 @@
  *    chord favoured so Dorian stays Dorian), in phrases of four chords that end on a cadence.
  *  - Sections: Home (from and back to the home chord), Lift (starts on the mode's lifting chord, ends open, the
  *    melody a little higher), Calm (slower chords over the home note in the bass, the melody lower, open voicing)
- *    and Turn (starts away from home). Home comes back between the others. A section is remembered: when it comes
- *    back its phrase returns with a chord or two changed, and a section's second phrase is often its first again.
+ *    and Turn (starts away from home). Home comes back between most of the others. A section is remembered: when
+ *    it comes back its phrase returns with a chord or two changed, and a section's second phrase is often its first
+ *    again.
+ *  - New pieces (`renew 1`, DadCraft, Oct 29: the sessions were one piece for 18 minutes): after a few minutes the
+ *    piece hands over to a new one the way a DJ blends two songs. The outgoing section's last phrase ends open and
+ *    its drums drop to the hats; the new piece's chords come in under the old groove and melody; a phrase later the
+ *    groove (drums, walking notes, melody rhythm) is new, and a phrase after that the motif.
  *  - Chords change on the bar (`bar`, from the clock's tick 0), each lasting the bars nearest the section's pace;
  *    without bars (no clock) it keeps its own bar time from the tempo.
  *  - Voicing: each chord is voiced (inversion and octave) closest to the last one, so the pad moves smoothly.
@@ -40,7 +45,7 @@
  *
  * Messages: scale <0-7> (Major, Minor, Major pent., Minor pent., Dorian, Mixolydian, Lydian, Whole tone: a new piece,
  * home chord now), tempo <bpm>, bright <0-1>, energy <0-1> (both lean the choice of section), bar, start (the chord
- * now), again (the chord again: the key changed), seed <n>, color <0|1>.
+ * now), again (the chord again: the key changed), seed <n>, color <0|1>, renew <0|1>.
  * note <middle> <chord> <n>: the next melody note, as a scale step (middle: where the melody would sit, chord: the
  * chord's scale step, n: notes in the scale).
  * Outlets, left to right: a list per chord: anchor (the scale step that fits it best, for the parts that think in
@@ -64,6 +69,7 @@ static t_class *dcs_composer_class;
 
 #define NSCALES 8
 #define PLEN 4                     /* chords in a phrase */
+#define PIECE_BARS 64              /* a piece lasts at least this many bars (and up to half as many again) with renew */
 enum { HOME, LIFT, CALM, TURN, NKINDS };
 
 /* the scales as the patch has them (make_patch.py SCALES), and the mode each one's chords come from */
@@ -163,6 +169,8 @@ typedef struct {
     float cell_d[NKINDS];
     /* chord colours */
     int color, sus_voice, sus_third;   /* a sus chord's voice and the third it resolves to (-1: none pending) */
+    /* new pieces: bars until the next, the open ending under way, and the handover's phrases (0: none) */
+    int renew, piece_bars, leadin, handover;
 } t_dcs_composer;
 
 static int rnd(t_dcs_composer *x, int n)   /* 0..n-1 */
@@ -264,10 +272,11 @@ static void begin_section(t_dcs_composer *x, int kind)
     outlet_list(x->out_sect, &s_list, 2, a);
 }
 
-/* Home comes back between the others; which other one leans on the room (energy and brightness: Lift, quiet: Calm) */
+/* Home comes back between most of the others (with renew half the time: one journey can lead into another); which
+ * other one leans on the room (energy and brightness: Lift, quiet: Calm) */
 static int next_kind(t_dcs_composer *x)
 {
-    if (x->kind != HOME && rnd(x, 10) < 7)
+    if (x->kind != HOME && rnd(x, 10) < (x->renew ? 5 : 7))
         return HOME;
     float w[NKINDS] = {0, 1.0f + x->energy + 0.5f * x->bright, 1.0f + (1 - x->energy), 0.7f};
     w[x->kind] = 0;
@@ -413,10 +422,31 @@ static void play_pos(t_dcs_composer *x, int fresh)
     emit(x);
 }
 
+static void handover(t_dcs_composer *x);
+
+/* the last phrase of a piece: its ending open (the mode's open chord), so the new piece answers it */
+static void lead_in(t_dcs_composer *x)
+{
+    x->leadin = 1;
+    x->prog[PLEN - 1] = pick_of(x, mode(x)->open, x->prog[PLEN - 2]);
+}
+
 static void advance(t_dcs_composer *x)
 {
     if (++x->pos >= PLEN) {
-        if (--x->phrases_left > 0) {   /* the phrase again: often the same, sometimes changed */
+        if (x->handover && ++x->handover == 2) {   /* a phrase into the new piece: a new groove */
+            for (int k = 0; k < NKINDS; k++)
+                x->drum_have[k] = x->arp_have[k] = x->cell_have[k] = 0;
+            x->drum_kind = x->arp_kind = x->cell_kind = -1;
+        } else if (x->handover == 3) {             /* and a phrase later, new motifs */
+            for (int k = 0; k < NKINDS; k++)
+                x->have_motif[k] = 0;
+            x->mel_kind = -1;
+            x->handover = 0;
+        }
+        if (x->leadin)
+            handover(x);
+        else if (--x->phrases_left > 0) {   /* the phrase again: often the same, sometimes changed */
             x->pos = 0;
             if (rnd(x, 2))
                 vary_phrase(x, x->kind, x->prog);
@@ -426,6 +456,8 @@ static void advance(t_dcs_composer *x)
                 x->last_away = x->kind;
             begin_section(x, k);
         }
+        if (x->renew && !x->leadin && !x->handover && x->piece_bars <= 0 && x->phrases_left == 1)
+            lead_in(x);
     }
     play_pos(x, 0);
 }
@@ -477,7 +509,8 @@ static int chord_tone(int target, int chord, int n, int root_only)
 
 static void new_statement(t_dcs_composer *x, int middle, int chord, int n)
 {
-    if (x->mel_kind != x->kind || !x->have_motif[x->kind]) {   /* the section's own motif */
+    int carry = x->handover && x->mel_kind >= 0 && x->have_motif[x->mel_kind];   /* a handover: the old motif */
+    if (!carry && (x->mel_kind != x->kind || !x->have_motif[x->kind])) {        /* the section's own motif */
         x->mel_kind = x->kind;
         if (x->have_motif[x->kind])
             nudge_motif(x, &x->motif[x->kind]);
@@ -629,9 +662,15 @@ static void vary_drums(t_dcs_composer *x, float (*p)[16])
     }
 }
 
+/* the section whose patterns play: the old piece's for the first phrase of a handover */
+static int pat_kind(t_dcs_composer *x, int cur)
+{
+    return x->handover == 1 && cur >= 0 ? cur : x->kind;
+}
+
 static void dcs_composer_drums(t_dcs_composer *x, t_floatarg fdrive, t_floatarg fbrk)
 {
-    int k = x->kind;
+    int k = pat_kind(x, x->drum_kind);
     float d = fdrive + KIND_DRIVE[k];
     d = d < 0 ? 0 : d > 1 ? 1 : d;
     if (!x->drum_have[k] || fabsf(d - x->drum_d[k]) > 0.15f) {   /* this section's own bar (again, if the pace moved) */
@@ -653,7 +692,7 @@ static void dcs_composer_drums(t_dcs_composer *x, t_floatarg fdrive, t_floatarg 
         t_atom a[17];
         SETFLOAT(a, l);
         for (int i = 0; i < 16; i++)
-            SETFLOAT(a + 1 + i, x->drum_cur[l][i]);
+            SETFLOAT(a + 1 + i, l < 2 && x->leadin && x->pos == PLEN - 1 ? 0 : x->drum_cur[l][i]);   /* the drop */
         outlet_anything(x->out_pat, gensym("drum"), 17, a);
     }
 }
@@ -686,7 +725,7 @@ static void make_arp(t_dcs_composer *x, float pace, int n, int *p)
 
 static void dcs_composer_arp(t_dcs_composer *x, t_floatarg fpace, t_floatarg fn)
 {
-    int k = x->kind, n = fn >= 1 ? (int)fn : 7;
+    int k = pat_kind(x, x->arp_kind), n = fn >= 1 ? (int)fn : 7;
     float pace = fpace < 0 ? 0 : fpace > 1 ? 1 : fpace;
     if (!x->arp_have[k] || n != x->arp_n || fabsf(pace - x->arp_pace[k]) > 0.3f) {
         make_arp(x, pace, n, x->arp_base[k]);
@@ -765,7 +804,7 @@ static void vary_cell(t_dcs_composer *x, int dotted, int *on)
 
 static void dcs_composer_cell(t_dcs_composer *x, t_floatarg fdrive, t_floatarg fstyle)
 {
-    int k = x->kind, style = (int)fstyle;
+    int k = pat_kind(x, x->cell_kind), style = (int)fstyle;
     float d = fdrive + KIND_DRIVE[k];
     d = d < 0 ? 0 : d > 1 ? 1 : d;
     int dotted = style == 2 ? 1 : style == 3 ? (x->cell_have[k] ? x->cell_style[k] == 2 : rnd(x, 2)) : 0;
@@ -809,6 +848,7 @@ static void dcs_composer_bar(t_dcs_composer *x)
     clock_delay(x->watch, bar_ms(x) * 1.6);
     if (!x->started)
         return;
+    x->piece_bars--;
     if (--x->bars_left <= 0)
         advance(x);
     else if (x->sus_voice >= 0) {   /* a sus chord resolves */
@@ -834,7 +874,28 @@ static void piece(t_dcs_composer *x)   /* a new piece: forget the sections, Home
     x->mel_kind = -1;
     x->stmt_on = 0;
     x->last_away = CALM;
+    x->leadin = x->handover = 0;
+    x->piece_bars = PIECE_BARS;   /* (the first piece draws no random number: a seed gives the same piece) */
     begin_section(x, HOME);
+}
+
+/* the new piece takes over: its own chords and sections now, under the old groove and motif (they follow in advance) */
+static void handover(t_dcs_composer *x)
+{
+    for (int k = 0; k < NKINDS; k++)
+        x->have[k] = 0;
+    x->last_away = CALM;
+    x->leadin = 0;
+    x->handover = 1;
+    x->piece_bars = PIECE_BARS + rnd(x, PIECE_BARS / 2 + 1);
+    begin_section(x, HOME);
+}
+
+static void dcs_composer_renew(t_dcs_composer *x, t_floatarg f)
+{
+    x->renew = f >= 0.5f;
+    if (!x->renew)
+        x->leadin = 0;   /* (a handover under way finishes) */
 }
 
 static void dcs_composer_scale(t_dcs_composer *x, t_floatarg f)
@@ -885,10 +946,12 @@ static void *dcs_composer_new(void)
     x->sus_voice = -1;
     x->mel_kind = -1;
     x->stmt_on = 0;
+    x->renew = x->leadin = x->handover = 0;
     for (int k = 0; k < NKINDS; k++)
         x->have_motif[k] = 0;
     x->watch = clock_new(x, (t_method)dcs_composer_watch);
     x->rng = (unsigned int)time(0) * 2654435761u + ++made;   /* a different piece every time */
+    x->piece_bars = PIECE_BARS;
     x->bpm = 100;
     x->bright = 0.5f;
     x->energy = 0.5f;
@@ -925,6 +988,7 @@ void dcs_composer_setup(void)
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_energy, gensym("energy"), A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_seed, gensym("seed"), A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_color, gensym("color"), A_FLOAT, 0);
+    class_addmethod(dcs_composer_class, (t_method)dcs_composer_renew, gensym("renew"), A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_drums, gensym("drums"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_arp, gensym("arp"), A_FLOAT, A_FLOAT, 0);
     class_addmethod(dcs_composer_class, (t_method)dcs_composer_cell, gensym("cell"), A_FLOAT, A_FLOAT, 0);
