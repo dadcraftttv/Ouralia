@@ -25,6 +25,10 @@ tracking, no crash reporting. Android's automatic backup is turned off for it to
   only times, the room's loudness as numbers, the names of the headphones and mic in use, what the app did
   ("Phone went into a pocket", "Caught a snare"), and once a minute while playing the battery level, the phone's
   temperature and how hard the app works the processor. It is there so problems can be found after a walk.
+- **Session logs, only if you switch Session Log on** (Setup, Behavior; off unless you turn it on). One file per
+  listening session, at most about 200 MB in all, oldest dropped first. Like the event log they hold no sound and no
+  words: times, the room's loudness and the notes the app heard as numbers, what the app played, your settings, and
+  any Like, Flat or note you add yourself. They stay on your phone unless you copy them off it.
 
 Uninstalling the app deletes all of it.
 

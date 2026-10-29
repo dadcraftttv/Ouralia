@@ -46,6 +46,7 @@ final class DesktopApp {
     static final Map<String, Float> DESKTOP_DEFAULTS = Map.of("comp_thresh", 0f, "tempo_mode", 1f);
 
     static final String DESKTOP_PREFS = "ouralia_desktop";
+    private static long lastSessionLog;
     private static final long TICK_MS = 33;                       // the phone's mover tick
     private static final int[] SCALE_SIZES = {7, 7, 5, 5, 7, 7, 7, 6};   // the patch's scales, by music_scale
 
@@ -140,6 +141,10 @@ final class DesktopApp {
         for (String s : new String[]{"mic_level", "chime_note", "heard_deg", "heard_off", "tempo", "dcs_ok"}) {
             PdBase.subscribe(s);
         }
+        SessionLog.setDir(context.getFilesDir(), "desktop", "desktop");
+        for (String s : SessionLog.RECEIVERS) {   // (PdBase skips a symbol already subscribed)
+            PdBase.subscribe(s);
+        }
         if (win != null) {
             engine.openStopped();   // (like the phone: nothing is heard or played until Start)
         }
@@ -169,6 +174,7 @@ final class DesktopApp {
         Kits.refreshChoices();   // (the part menus say which kits lack a part: they need the kits' text)
         freshStart();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            SessionLog.stopAndWait();
             ParamStore.save(context);
             engine.stop();
         }));
@@ -302,6 +308,10 @@ final class DesktopApp {
             }
             ParamStore.morphTick(dt);
             Modulation.tick(dt, PdBase::sendFloat);
+            if (now - lastSessionLog >= 1_000_000_000L) {   // Session Log: once a second (if switched on)
+                lastSessionLog = now;
+                SessionLog.second(engine.running(), false, false);
+            }
             String world = Worlds.currentWorld();
             if (world != null ? !world.equals(worldShown) : worldShown != null) {
                 float cue = world == null ? 0f : worldShown == null ? 1f : 2f;   // up into a Realm, home, sideways
@@ -360,6 +370,7 @@ final class DesktopApp {
     /** What the patch reports: the mic's loudness, chimes played, sung notes heard, the tempo. */
     private static final class Receiver implements PdReceiver {
         @Override public void receiveFloat(String source, float x) {
+            SessionLog.pd(source, x);
             double t = System.nanoTime() / 1e9;
             switch (source) {
                 case "mic_level": Modulation.setMicLevelDb(x - 100f); break;   // (Pd's dB: 100 = full scale)
@@ -372,6 +383,7 @@ final class DesktopApp {
         }
 
         @Override public void receiveBang(String source) {
+            SessionLog.pd(source);
             if ("heard_off".equals(source)) {
                 callResponse.onNoteOff(System.nanoTime() / 1e9);
             }
@@ -385,8 +397,17 @@ final class DesktopApp {
         }
 
         @Override public void receiveSymbol(String source, String symbol) { }
-        @Override public void receiveList(String source, Object... args) { }
-        @Override public void receiveMessage(String source, String symbol, Object... args) { }
+        @Override public void receiveList(String source, Object... args) {
+            SessionLog.pd(source, args);
+        }
+        @Override public void receiveMessage(String source, String symbol, Object... args) {
+            if (SessionLog.recording()) {
+                Object[] all = new Object[args.length + 1];
+                all[0] = symbol;
+                System.arraycopy(args, 0, all, 1, args.length);
+                SessionLog.pd(source, all);
+            }
+        }
     }
 
     // ---- without a window: typed lines ----
@@ -395,6 +416,14 @@ final class DesktopApp {
         Thread t = new Thread(() -> {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(System.in))) {
                 for (String line; (line = r.readLine()) != null; ) {
+                    String said = line.trim();   // Session Log marks: "like", "flat", "mark <anything>"
+                    if (said.equals("like") || said.equals("flat") || said.startsWith("mark ")) {
+                        String text = said.startsWith("mark ") ? said.substring(5).trim() : said;
+                        SessionLog.mark(text);
+                        System.out.println(SessionLog.recording() ? "kept: " + text
+                                : "not kept: Session Log is off (session_log 1) or nothing is playing");
+                        continue;
+                    }
                     if (line.trim().equals("apps")) {
                         Map<String, String> labels = DesktopEngine.appLabels();
                         List<String> named = new java.util.ArrayList<>();

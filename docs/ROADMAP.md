@@ -23,6 +23,9 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
+**Session Log (item 23, Oct 29):** BUILT; DadCraft's first sessions, phone and desktop, for Maestro's R.1 (what
+sounds flat in today's composer).
+
 **Before advertising rc5 (item 22):** GitHub repo topics, maybe a short demo GIF.
 
 **Code health (item 22):** a cost per feature, so new sounds land with a known CPU price (the health line's CPU,
@@ -303,6 +306,10 @@ microphone declarations, store listing.
     3. **Kits for the parts the band already plays** (maybe): Harmony (the note answering a hum) and the Room notes'
        found bells. The easiest: their notes already exist.
     4. **A second melody** (later): an arpeggio or counter-melody around the main one; needs new music-writing rules.
+
+23. **Session Log (DadCraft, Oct 29: an app that "logs what it hears ... or logs what it plays", keeping every session
+    so several can come back from the phone).** For Maestro's work on dcs_composer. BUILT Oct 29 (design/app.md
+    "Session Log", `SessionLog.java`, test O, `tools/pull_sessions.sh`, `tools/session_summary.py`).
 
 22. **Outside reviews (ChatGPT, Grok, Kimi, 2026-10-22, from the public repo), checked against the code.** Accepted
     (all open, listed in "Open now"):

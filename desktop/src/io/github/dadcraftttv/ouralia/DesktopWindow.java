@@ -267,6 +267,7 @@ final class DesktopWindow {
         });
         startStop.setEnabled(false);   // (until the engine is up)
         top.add(left(startStop));
+        top.add(left(markRow()));
         top.add(left(status));
         top.add(left(now));
         JPanel meters = new JPanel(new GridBagLayout());
@@ -1099,6 +1100,34 @@ final class DesktopWindow {
     }
 
     /** A button that reads as a heading (fold open and shut). */
+    /** Session Log marks (DadCraft, Oct 29): his reaction, pinned to the moment, when the log is on. */
+    private JPanel markRow() {
+        JPanel row = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 4, 2));
+        row.add(button("Like", () -> markNow("like")));
+        row.add(button("Flat", () -> markNow("flat")));
+        row.add(button("Note...", () -> {
+            long pressed = System.nanoTime();
+            String text = javax.swing.JOptionPane.showInputDialog(frame, "What do you hear right now?");
+            if (text != null && !text.trim().isEmpty()) {
+                markNow(text.trim(), pressed);
+            }
+        }));
+        return row;
+    }
+
+    private void markNow(String text) {
+        markNow(text, System.nanoTime());
+    }
+
+    private void markNow(String text, long pressed) {
+        if (!SessionLog.recording()) {
+            say("Session Log is off (Setup, Behavior) or nothing is playing: the mark was not kept.");
+            return;
+        }
+        SessionLog.mark(text, pressed);
+        say("Kept in the session log: " + text);
+    }
+
     private static void flat(JButton b) {
         b.setHorizontalAlignment(JButton.LEFT);
         b.setBorderPainted(false);

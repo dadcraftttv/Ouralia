@@ -54,6 +54,8 @@ final class PlayerUi {
     private Button snapButton;
 
     private Button sleepButton;
+    /** Session Log marks (shown while a session is being kept): DadCraft's reaction, pinned to the moment. */
+    private LinearLayout markRow;
 
     /** The docked player: the small dial with Start inside, the status line, and Save sound. */
     View buildPlayer() {
@@ -174,6 +176,33 @@ final class PlayerUi {
         });
         snapButton = a.addButton(row, R.string.snapshot, a.presetUi::saveSnapshot);
         sleepButton = a.addButton(a.newButtonRow(playerContent), R.string.sleep_timer, this::showSleepSheet);
+        markRow = a.newButtonRow(playerContent);
+        a.addButton(markRow, R.string.mark_like, () -> mark("like"));
+        a.addButton(markRow, R.string.mark_flat, () -> mark("flat"));
+        a.addButton(markRow, R.string.mark_note, this::markNote);
+        markRow.setVisibility(View.GONE);
+    }
+
+    private void mark(String text) {
+        SessionLog.mark(text);
+        android.widget.Toast.makeText(a, a.getString(R.string.mark_kept, text), android.widget.Toast.LENGTH_SHORT).show();
+    }
+
+    /** A typed note; its time is when the button was pressed, not when the note is finished. */
+    private void markNote() {
+        long pressed = System.nanoTime();
+        android.widget.EditText field = new android.widget.EditText(a);
+        field.setHint(R.string.mark_note_hint);
+        new android.app.AlertDialog.Builder(a).setTitle(R.string.mark_note).setView(field)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    String text = field.getText().toString().trim();
+                    if (!text.isEmpty()) {
+                        SessionLog.mark(text, pressed);
+                        android.widget.Toast.makeText(a, a.getString(R.string.mark_kept, text),
+                                android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null).show();
     }
 
     /** The sleep timer's choices: Off and SleepTimer.MINUTES, the one running ticked. */
@@ -259,6 +288,7 @@ final class PlayerUi {
         snapButton.setVisibility(SceneSettings.current(a) == null ? View.VISIBLE : View.GONE);
         long sleepLeft = AudioService.sleepLeftMs();
         sleepButton.setVisibility(AudioService.isRunning() ? View.VISIBLE : View.GONE);
+        markRow.setVisibility(SessionLog.recording() ? View.VISIBLE : View.GONE);
         if (sleepLeft > 0) {
             sleepButton.setText(a.getString(R.string.sleep_in, SleepTimer.minutesLeft(sleepLeft)));
         } else {
