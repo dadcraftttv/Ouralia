@@ -28,6 +28,9 @@ sounds flat in today's composer).
 
 **New Pieces (item 21, step 5, Oct 29):** BUILT behind a switch (off by default); DadCraft's listen with Session Log on.
 
+**Sounds with character (item 24, Oct 29):** planned (Maestro PLAN R.4-R.8): slide and accent, Acid Bass and
+Ladder Bass kits, deeper drums, feel, textures. After New Pieces' listen.
+
 **Before advertising rc5 (item 22):** GitHub repo topics, maybe a short demo GIF.
 
 **Code health (item 22):** a cost per feature, so new sounds land with a known CPU price (the health line's CPU,
@@ -313,6 +316,27 @@ microphone declarations, store listing.
     3. **Kits for the parts the band already plays** (maybe): Harmony (the note answering a hum) and the Room notes'
        found bells. The easiest: their notes already exist.
     4. **A second melody** (later): an arpeggio or counter-melody around the main one; needs new music-writing rules.
+
+24. **Sounds with character (DadCraft, Oct 29: what's missing is "dynamics, character, texture, weight, impact,
+    flavour"; from OpenRB-338, a ReBirth RB-338 remake he found, "i like all 4", and "What about Moog synths and
+    those sounds?").** Ideas only from OpenRB-338: its engine is rebuilt from Propellerhead's program and its drums
+    are their samples, so none of its code, tables or samples. The hardware (TB-303, TR-808, TR-909, Minimoog) is
+    publicly documented; we write our own, kits named for the sound, not the brand. Already here: `dcs_ladder~`, the
+    analog engine (detuned saws, sub, ladder, filter envelope; Synth kit), the sub engine (808-like, glide), the
+    drums engine (synthesized; Low end 808-like, EDM 909-like). Plan in Maestro PLAN "R" (R.4-R.8). Each behind a
+    switch or as a new kit, the old sound the default:
+    1. **The target first** (Maestro R.4): his reference tracks and production logs measured (loudness, dynamics,
+       width, brightness, layering), privately.
+    2. **Slide and accent** in the analog engine: a held note gliding into the next (legato), an accented note louder
+       with the filter opened wider. The composer sends which notes slide or accent (Maestro R.7).
+    3. **Acid Bass kit:** one saw or square, high resonance, a short filter snap, slide and accent.
+    4. **Ladder Bass kit:** three detuned oscillators, glide, a slower filter envelope ("bwow"); fat bass and leads.
+    5. **Deeper drums:** a 909-like clap (several quick noise bursts), metallic hats (mixed square waves), the snare's
+       noise and tone apart, accents; Boom (808-like) and Punch (909-like) as kits.
+    6. **Feel** (Maestro R.6, Groove MIDI, CC BY 4.0): each style's push, pull and accents on the drums.
+    7. **Textures** (Maestro R.8): Freesound CC0 / CC BY recordings (crackle, tape hiss, room tone), licenses checked
+       and credited (`NOTICE.md`), and Tangerine (MIT) read for how it layers and changes texture.
+    After New Pieces' listen; one kit at a time, each heard by DadCraft.
 
 23. **Session Log (DadCraft, Oct 29: an app that "logs what it hears ... or logs what it plays", keeping every session
     so several can come back from the phone).** For Maestro's work on dcs_composer. BUILT Oct 29 (design/app.md
