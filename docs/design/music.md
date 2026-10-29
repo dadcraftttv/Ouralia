@@ -275,7 +275,8 @@
   walking notes, melody rhythm keep their section) and motif. A phrase later the groove is made new, a phrase after
   that the motifs. With it on, Home comes between half the sections (7 in 10 without). The first piece is a fixed
   64 bars so a seed's random numbers stay as before. Measured: 4 drops in 500 bars at 100 bpm (about one every
-  5 minutes), none with it off.
+  5 minutes), none with it off. DadCraft's first listen (Oct 29, 17.7 min with it on): "it's sounding better".
+  Not yet in the Session Log: an event at each handover (so a mark can be lined up with it).
   **Chord colours** (`chord_color`, Music toggle, default off, noPreset, `.dcs()`; Oct 21; composer `color`; test_dcs
   "chord colours"). Evolving only. After voicing, per chord by section (percent seventh / added ninth / sus; Home
   25/10/10, Lift 20/10/30, Calm 30/40/0, Turn 35/10/15): the seventh (degree + 6 of the chords' mode) replaces the
