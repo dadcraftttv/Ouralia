@@ -84,6 +84,7 @@ public class AudioService extends Service {
     private String worldLogged;
     private static final long HEARING_LOG_MS = 30_000;
     private long lastHearingLog;
+    private long lastSessionLog;
     /** Harmony answers since the last "Hearing:" line (the patch sends each one on harm_deg). */
     private static final String HARMONY_RECEIVER = "harm_deg";
     /** The patch reports each chime it plays here (not arpeggio notes or replays); motif memory listens. */
@@ -301,6 +302,11 @@ public class AudioService extends Service {
                     }
                 }
             }
+            if (now - lastSessionLog >= 1000) {   // Session Log: what it hears, once a second (if switched on)
+                lastSessionLog = now;
+                SessionLog.second(running && !sceneRunning,
+                        StepDetector.walking(SystemClock.elapsedRealtimeNanos() / 1e9), PhoneContext.inPocket());
+            }
             if (!sceneRunning) {
                 sendStereoShape();
             }
@@ -324,6 +330,14 @@ public class AudioService extends Service {
     /** Writes the event log off the main thread, so a slow flash write can't hold up the movers. */
     private final ExecutorService logWriter = Executors.newSingleThreadExecutor();
     private final SimpleDateFormat logTime = new SimpleDateFormat("MM-dd HH:mm:ss", Locale.US);   // main thread only
+
+    private String versionName() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            return "?";
+        }
+    }
 
     private void logEvent(String what) {
         Log.i(TAG, what);
@@ -688,6 +702,7 @@ public class AudioService extends Service {
         SceneLibrary.Scene scene = SceneSettings.current(this);
         File patchFile = scene != null ? scene.mainPatch() : new File(patchDir, SCENE_FILE);
 
+        SessionLog.setDir(getFilesDir(), versionName(), "phone");
         // The patch reports the mic loudness about 30 times a second for the "Louder" movers.
         PdBase.setReceiver(new PdReceiver.Adapter() {
             @Override
@@ -697,6 +712,7 @@ public class AudioService extends Service {
 
             @Override
             public void receiveFloat(String source, float x) {
+                SessionLog.pd(source, x);
                 if (DCS_OK.equals(source)) {
                     dcsOk = true;
                     return;
@@ -781,6 +797,7 @@ public class AudioService extends Service {
 
             @Override
             public void receiveBang(String source) {
+                SessionLog.pd(source);
                 if (HEARD_OFF.equals(source)) {
                     callResponse.onNoteOff(SystemClock.elapsedRealtimeNanos() / 1e9);
                 }
@@ -788,6 +805,7 @@ public class AudioService extends Service {
 
             @Override
             public void receiveList(String source, Object... args) {
+                SessionLog.pd(source, args);
                 if (ROOM_FEAT.equals(source) && args.length == 7) {   // (logcat only: tuning the listener on real places)
                     Log.i("RoomListener", String.format(Locale.US,
                             "voicing %.2f swing %.1f dB gaps %.2f steady %.2f lows %+.1f dB wind %.2f loudest %.0f dB",
@@ -833,6 +851,12 @@ public class AudioService extends Service {
 
             @Override
             public void receiveMessage(String source, String symbol, Object... args) {
+                if (SessionLog.recording()) {
+                    Object[] all = new Object[args.length + 1];
+                    all[0] = symbol;
+                    System.arraycopy(args, 0, all, 1, args.length);
+                    SessionLog.pd(source, all);
+                }
                 if (SceneState.SAVED.equals(source)) {   // (a saver's list that starts with a word)
                     Object[] m = new Object[args.length + 1];
                     m[0] = symbol;
@@ -885,6 +909,9 @@ public class AudioService extends Service {
             java.util.Arrays.fill(kitCaught, 0);   // a fresh patch starts with an empty kit
         }
         PdBase.subscribe(SceneEvents.REQUEST_RECEIVER);
+        for (String r : SessionLog.RECEIVERS) {   // (one binding each: PdBase skips a symbol already subscribed)
+            PdBase.subscribe(r);
+        }
 
         // Must come before initAudio. DEFAULT_ID lets Android choose ("Automatic").
         AudioDevices.Device in = AudioDevices.find(this, true);
@@ -1245,6 +1272,7 @@ public class AudioService extends Service {
             return;
         }
         running = false;
+        SessionLog.stop();
         stereoOn = false;
         outputLost = false;
         SceneGraphics.SCENE.clear();

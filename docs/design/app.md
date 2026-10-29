@@ -101,3 +101,19 @@
 - Presets store: sliders, movers, music pad/notes/tone/follow, beat, dry. A slider kept out of presets keeps its mover out too
   (`Params.withMovers`), or loading a preset or world switched it off. Not stored: gain/gate/compressor, smoothing/nudge,
   music on/key/scale, locks, worlds choices, audio device, scenes, appearance.
+- **Session Log** (DadCraft, Oct 29, for Maestro's work on the composer: "logs what it hears ... or logs what it
+  plays", every session kept so several can come back from the phone; ROADMAP 23; `SessionLog.java`, test O; switch
+  `session_log` in Behavior, off by default, noPreset, noPd). While it is on and the built-in patch plays, each session
+  is its own file, `files/sessions/<start>.jsonl` (desktop: `~/.local/share/ouralia/sessions/`), one JSON line per
+  event with `t` in seconds: `start` (version, host, every setting), `hear` once a second (mic and room level,
+  Intensity, lively, the hearing words, Realm, calm build phase, walking, pocket), `set` for a setting that changed,
+  `bar` at each bar line (`tick16` 0), `pd` for what the patch already reports (`SessionLog.RECEIVERS`: `chime_deg`
+  every melodic note's scale step, `comp_chord`, `comp_section`, `drum_kick`, `drum_snare`, `heard_deg`/`heard_off`,
+  `fs_caught`, `fs_levels`, `room_feat`, `room_kind`, `tempo`; no patch change, so Pd's random order is untouched),
+  `mark` and `stop`. Marks: Like, Flat and Note... in the player (phone; a note is timed when the button is pressed),
+  the same three buttons under Start in the desktop window, or typed `like`, `flat`, `mark <text>` with
+  `--no-window`. Sessions are kept up to 200 MB in all, the oldest going first; two in one second get `-2`, `-3`.
+  Measurements and decisions only, never audio (PRIVACY.md). `tools/pull_sessions.sh` copies the phone's to
+  `~/.local/share/ouralia/phone-sessions/` (`--clear` then deletes them on the phone: do it with the app stopped);
+  `tools/session_summary.py` prints a few lines per session and each mark with what played in the 10 s before it.
+  Velocity per note isn't in it yet (`chime_deg` carries only the step).

@@ -15,6 +15,11 @@
     <string name="tap_tempo_more">Keep tapping…</string>
     <string name="tap_tempo_bpm">Tap Tempo · %1$d BPM</string>
     <string name="sleep_timer">Sleep Timer</string>
+    <string name="mark_like">Like</string>
+    <string name="mark_flat">Flat</string>
+    <string name="mark_note">Note…</string>
+    <string name="mark_note_hint">What do you hear right now?</string>
+    <string name="mark_kept">Kept in the session log: %1$s</string>
     <string name="sleep_in">Sleep in %1$d min</string>
     <string name="sleep_hint">The sound fades out slowly over the last 5 minutes, then stops.</string>
     <string name="sleep_off">Off</string>

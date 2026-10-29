@@ -620,7 +620,11 @@ final class Params {
                     .inSection("behavior").noRandom().noPreset().noPd().decimals(3),
             // A soft two-note chime when a Realm starts (rising) or your own settings come back (falling).
             new Param("cue_sound", "Warp Sound", 0f, 1f, 1f, "", Param.Curve.LINEAR)
-                    .inSection("behavior").toggle().noPreset());
+                    .inSection("behavior").toggle().noPreset(),
+            // Session Log (DadCraft, Oct 29): keeps what it hears and plays, every session, for tuning the composer.
+            // Measurements only, never audio. SessionLog.java.
+            new Param("session_log", "Session Log (keeps what it hears and plays, for tuning)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("behavior").toggle().noPd().noRandom().noPreset());
 
     /** Everything: the sound parameters plus the settings of each mover (app-side only). */
     /**
