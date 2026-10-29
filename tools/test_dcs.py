@@ -1068,6 +1068,28 @@ check(all(v in tones or v - 1 in tones for a in arps for v in a) and all(a[0] ==
 wide, narrow = patterns(0.5, 1, pace=1.0)[1][0], patterns(0.5, 1, pace=0.0)[1][0]
 check(max(wide) >= max(narrow), f"patterns: a brisk walk reaches higher ({narrow} -> {wide})")
 
+# New pieces (renew 1, Oct 29): every few minutes the drums drop to the hats under an open chord, then a new piece;
+# Home comes back between only some of the sections
+prn = patch("composer_renew", ["r cin", "dcs_composer", "route drum", "s cdrum", "s csect"],
+            [(0, 0, 1, 0), (1, 4, 2, 0), (2, 0, 3, 0), (1, 1, 4, 0)])
+def renewing(on, bars=500, seed=6):
+    e = Engine(LIB, prn); e.listen("cdrum", "csect")
+    for sel, v in (("seed", seed), ("scale", 1), ("renew", on)):
+        e.send_msg("cin", sel, v)
+    e.send_msg("cin", "start")
+    for _ in range(bars):
+        e.send_msg("cin", "drums", 0.5, 0); e.send_msg("cin", "bar")
+    d, k = e.lists.get("cdrum", []), [int(x[0]) for x in e.lists.get("csect", [])]
+    e.close()
+    drop = [not any(d[3 * b][1:]) and not any(d[3 * b + 1][1:]) and any(d[3 * b + 2][1:]) for b in range(bars)]
+    return sum(1 for b in range(1, bars) if drop[b] and not drop[b - 1]), k
+for seed in (6, 7):
+    drops, kinds = renewing(1, seed=seed)
+    off, _ = renewing(0, seed=seed)
+    away = sum(1 for a, b in zip(kinds, kinds[1:]) if a and b)
+    check(2 <= drops <= 9 and off == 0 and away >= 1 and kinds.count(0) >= 3,
+          f"new pieces: {drops} drops to the hats in 500 bars (none without renew), {away} journeys straight into another ({''.join('HLCT'[k] for k in kinds)})")
+
 # Melody rhythm's bar by rules: straight on the 8ths, dotted with odd counts on the 16ths, a little change a bar
 pcl = patch("composer_cell", ["r cin", "dcs_composer", "route cell", "s ccell"], [(0, 0, 1, 0), (1, 4, 2, 0), (2, 0, 3, 0)])
 def cells(drive, style, bars=24, seed=4):

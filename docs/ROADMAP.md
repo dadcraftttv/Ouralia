@@ -26,6 +26,8 @@ Order (DadCraft, Oct 22): the reviews' release and code-health points first, Mai
 **Session Log (item 23, Oct 29):** BUILT; DadCraft's first sessions, phone and desktop, for Maestro's R.1 (what
 sounds flat in today's composer).
 
+**New Pieces (item 21, step 5, Oct 29):** BUILT behind a switch (off by default); DadCraft's listen with Session Log on.
+
 **Before advertising rc5 (item 22):** GitHub repo topics, maybe a short demo GIF.
 
 **Code health (item 22):** a cost per feature, so new sounds land with a known CPU price (the health line's CPU,
@@ -293,6 +295,11 @@ microphone declarations, store listing.
        set by what triggers them) and Melody rhythm's cells.
     4. **Chord colours and Melody rhythm by rules** (built Oct 21, `chord_color`; Melody rhythm's bar under
        `pat_gen`; waiting on DadCraft's ears).
+    5. **New pieces** (built Oct 29, `new_pieces`, composer `renew`; DadCraft's Session Log: "the melody,
+       progression, flatness didn't really feel like it changed all that much", and the composer had played one piece
+       for 18 minutes). Every 64-96 bars, a DJ-style handover: an open ending with the drums dropping to the hats,
+       the new chords under the old groove and motif, then a new groove, then new motifs. Home between half the
+       sections (was 7 in 10). Waiting on DadCraft's ears; next, the numbers measured from Maestro's scores.
     Left: the chimes' own timing when Melody rhythm is off (set by what triggers them, by design).
 
 20. **More kit parts (DadCraft, Oct 20: "lets plan on doing at least one and two, maybe three"; keep all four).**

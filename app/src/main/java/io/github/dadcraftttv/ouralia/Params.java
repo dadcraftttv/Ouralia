@@ -213,6 +213,11 @@ final class Params {
             // the next bar, more in Calm, more sus in Lift. Classic's chords stay as they are.
             new Param("chord_color", "Chord Colours (sevenths, sus, added notes, with Evolving)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().dcs(),
+            // New pieces (Oct 29, DadCraft's sessions were one piece for 18 minutes): every few minutes a new piece,
+            // blended in like a DJ (an open ending and the drums dropping to the hats, the new chords under the old
+            // groove, then a new groove, then a new motif), and Home between only half the sections.
+            new Param("new_pieces", "New Pieces (a fresh piece every few minutes, blended in, with Evolving)", 0f, 1f, 0f,
+                    "", Param.Curve.LINEAR).inSection("music").toggle().dcs(),
             new Param("mel_dev", "Hooks That Grow (a motif, repeated and changed)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().dcs(),
             // Patterns made by rules (Oct 21, stage 3): the walking notes and the drums get a bar made by rules each bar
@@ -633,7 +638,7 @@ final class Params {
      * them, and a preset made before keeps what you have (none is resetWhenAbsent).
      */
     static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
-            "music_on", "music_var", "chord_color", "mel_dev", "pat_gen", "walk_ease", "band_plays", "music_drift",
+            "music_on", "music_var", "chord_color", "new_pieces", "mel_dev", "pat_gen", "walk_ease", "band_plays", "music_drift",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
             "melody_src", "mel_rhythm", "mel_phrase", "fm_ring", "res_src", "harm_src", "harm_tracker");
 
