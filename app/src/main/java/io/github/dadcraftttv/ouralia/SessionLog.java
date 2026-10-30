@@ -40,8 +40,9 @@ final class SessionLog {
     static final String[] RECEIVERS = {"chime_deg", "comp_chord", "comp_section", "drum_kick", "drum_snare",
             "heard_deg", "heard_off", "fs_caught", "fs_levels", "room_feat", "room_kind", "tempo", "tick16"};
     private static final java.util.Set<String> KEPT = new java.util.HashSet<>(Arrays.asList(RECEIVERS));
-    /** The newest sessions are kept up to this much in all; past it the oldest go (a long session is ~2 MB/hour). */
-    static long maxTotalBytes = 200L * 1024 * 1024;   // (smaller in the tests)
+    /** The newest sessions are kept up to this much in all; past it the oldest go. A session is ~6 MB an hour, so
+     *  this is about 8 hours of listening (200 MB until rc5.2: DadCraft, Oct 30, no log that fills a phone). */
+    static long maxTotalBytes = 50L * 1024 * 1024;   // (smaller in the tests)
 
     private static final ExecutorService writer = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "session-log");
@@ -52,6 +53,7 @@ final class SessionLog {
     private static volatile boolean recording;
     private static volatile long startNanos;
     private static Writer out;                                   // writer thread only
+    private static volatile File current;                        // the file being written, while recording
     private static Map<String, Float> lastSettings = new HashMap<>();   // second()'s caller only
     private static int bar;
     private static String version = "?", host = "?";
@@ -63,6 +65,13 @@ final class SessionLog {
         dir = new File(filesDir, "sessions");
         version = appVersion;
         host = hostName;
+    }
+
+    /** For the screen, which can open before the sound service has set the folder. */
+    static void ensureDir(File filesDir) {
+        if (dir == null) {
+            dir = new File(filesDir, "sessions");
+        }
     }
 
     static boolean recording() {
@@ -148,6 +157,7 @@ final class SessionLog {
             } catch (IOException ignored) {
             }
             out = null;
+            current = null;
         });
     }
 
@@ -167,6 +177,90 @@ final class SessionLog {
         List<File> list = new ArrayList<>(files == null ? Collections.<File>emptyList() : Arrays.asList(files));
         list.sort((a, b) -> stem(a).compareTo(stem(b)));   // (by start: "...-140000" before "...-140000-2")
         return list;
+    }
+
+    /** The finished sessions (not the one being written), oldest first. */
+    static List<File> finished() {
+        List<File> list = sessions();
+        File now = current;
+        if (now != null) {
+            list.remove(now);
+        }
+        return list;
+    }
+
+    static long totalBytes(List<File> files) {
+        long total = 0;
+        for (File f : files) {
+            total += f.length();
+        }
+        return total;
+    }
+
+    /** Deletes every finished session (the one being written stays); returns how many went. */
+    static int deleteAll() {
+        int n = 0;
+        for (File f : finished()) {
+            if (f.delete()) {
+                n++;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * Send session logs (DadCraft, Oct 30: "it should always be optional"): packs the newest finished sessions into
+     * one zip, as many as fit in {@code maxZipBytes} (an email's attachment limit). Returns {packed, left out}.
+     */
+    static int[] pack(File zip, long maxZipBytes) throws IOException {
+        List<File> all = finished();
+        List<File> chosen = new ArrayList<>();
+        long size = 22;   // (the zip's closing record)
+        for (int i = all.size() - 1; i >= 0; i--) {   // newest first
+            File f = all.get(i);
+            long more = deflatedSize(f) + 2L * (f.getName().length() + 60);   // (each entry's two headers)
+            if (size + more > maxZipBytes) {
+                break;
+            }
+            size += more;
+            chosen.add(0, f);
+        }
+        zip.getParentFile().mkdirs();
+        try (java.util.zip.ZipOutputStream z = new java.util.zip.ZipOutputStream(new FileOutputStream(zip))) {
+            z.setLevel(java.util.zip.Deflater.BEST_COMPRESSION);
+            byte[] buf = new byte[65536];
+            for (File f : chosen) {
+                z.putNextEntry(new java.util.zip.ZipEntry(f.getName()));
+                try (java.io.InputStream in = new java.io.FileInputStream(f)) {
+                    for (int n; (n = in.read(buf)) > 0; ) {
+                        z.write(buf, 0, n);
+                    }
+                }
+                z.closeEntry();
+            }
+        }
+        return new int[]{chosen.size(), all.size() - chosen.size()};
+    }
+
+    private static long deflatedSize(File f) throws IOException {
+        java.util.zip.Deflater d = new java.util.zip.Deflater(java.util.zip.Deflater.BEST_COMPRESSION, true);
+        byte[] in = new byte[65536], sink = new byte[65536];
+        long size = 0;
+        try (java.io.InputStream s = new java.io.FileInputStream(f)) {
+            for (int n; (n = s.read(in)) > 0; ) {
+                d.setInput(in, 0, n);
+                while (!d.needsInput()) {
+                    size += d.deflate(sink);
+                }
+            }
+            d.finish();
+            while (!d.finished()) {
+                size += d.deflate(sink);
+            }
+        } finally {
+            d.end();
+        }
+        return size;
     }
 
     private static void start() {
@@ -194,6 +288,7 @@ final class SessionLog {
                     f = new File(d, stamp + "-" + k + ".jsonl");
                 }
                 out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8));
+                current = f;
             } catch (IOException e) {
                 out = null;
             }

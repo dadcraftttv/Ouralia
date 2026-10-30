@@ -627,8 +627,8 @@ final class Params {
             new Param("cue_sound", "Warp Sound", 0f, 1f, 1f, "", Param.Curve.LINEAR)
                     .inSection("behavior").toggle().noPreset(),
             // Session Log (DadCraft, Oct 29): keeps what it hears and plays, every session, for tuning the composer.
-            // Measurements only, never audio. SessionLog.java.
-            new Param("session_log", "Session Log (keeps what it hears and plays, for tuning)", 0f, 1f, 0f, "",
+            // Measurements only, never audio. SessionLog.java. Kept on the phone, sent only from About, Session logs.
+            new Param("session_log", "Session Log (keeps notes on what it hears and plays, no sound, on this phone)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("behavior").toggle().noPd().noRandom().noPreset());
 
     /** Everything: the sound parameters plus the settings of each mover (app-side only). */

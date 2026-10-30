@@ -50,6 +50,25 @@ public class O {   // Session Log: a file per session, only the kept receivers, 
     Thread.sleep(1100);   // (a new second: within the same one, the new file could take the deleted name)
     SessionLog.second(true,false,false); SessionLog.stopAndWait();
     check(!oldest.exists()&&SessionLog.sessions().size()==2,"past the cap the oldest goes, the rest stay ("+SessionLog.sessions().size()+")");
+    SessionLog.maxTotalBytes=50L*1024*1024;
+    // Send session logs (Oct 30): a zip of the newest that fit, never the one being written; Delete all.
+    Thread.sleep(1100); SessionLog.second(true,false,false);
+    check(SessionLog.recording()&&SessionLog.finished().size()==2,"the open session isn't offered ("+SessionLog.finished().size()+")");
+    File zip=new File(tmp,"share/s.zip");
+    int[] all=SessionLog.pack(zip,1L<<20);
+    java.util.List<String> names=new java.util.ArrayList<>();
+    try(java.util.zip.ZipInputStream z=new java.util.zip.ZipInputStream(new java.io.FileInputStream(zip))){
+      for(java.util.zip.ZipEntry e;(e=z.getNextEntry())!=null;) names.add(e.getName()); }
+    check(all[0]==2&&all[1]==0&&names.size()==2,"both finished sessions zipped ("+all[0]+","+all[1]+" "+names+")");
+    long whole=zip.length();
+    int[] part=SessionLog.pack(zip,whole-1);
+    String newest=SessionLog.finished().get(1).getName();
+    names.clear();
+    try(java.util.zip.ZipInputStream z=new java.util.zip.ZipInputStream(new java.io.FileInputStream(zip))){
+      for(java.util.zip.ZipEntry e;(e=z.getNextEntry())!=null;) names.add(e.getName()); }
+    check(part[0]==1&&part[1]==1&&names.equals(java.util.List.of(newest))&&zip.length()<whole,"too big for one email: the newest goes, the older stays ("+names+", "+zip.length()+" of limit "+(whole-1)+")");
+    check(SessionLog.deleteAll()==2&&SessionLog.finished().isEmpty()&&SessionLog.sessions().size()==1,"Delete all: the finished go, the open one stays");
+    SessionLog.stopAndWait();
     if(fails==0) System.out.println("ALL PASSED");
   }
 }

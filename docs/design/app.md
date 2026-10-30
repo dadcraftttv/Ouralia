@@ -112,7 +112,18 @@
   `fs_caught`, `fs_levels`, `room_feat`, `room_kind`, `tempo`; no patch change, so Pd's random order is untouched),
   `mark` and `stop`. Marks: Like, Flat and Note... in the player (phone; a note is timed when the button is pressed),
   the same three buttons under Start in the desktop window, or typed `like`, `flat`, `mark <text>` with
-  `--no-window`. Sessions are kept up to 200 MB in all, the oldest going first; two in one second get `-2`, `-3`.
+  `--no-window`. Sessions are kept up to 50 MB in all (200 MB until rc5.2; ~6 MB an hour, so about 8 hours), the
+  oldest going first; two in one second get `-2`, `-3`.
+  **Session logs** (DadCraft, Oct 30, rc5.2: the data should come back "so we can train on more data, but it should
+  always be optional, like everything else in the app"): a button in About and Licenses (`AboutUi.sessionLogs`) shows
+  how many finished sessions are kept and their size, with **Email them** and **Delete all** (confirmed). Email them
+  zips the newest finished sessions that fit in 18 MB (`SessionLog.pack`, under Gmail's 25 MB once encoded; the
+  open session is never sent or deleted), into `cache/share/ouralia-sessions.zip`, and opens Android's share sheet
+  with the address, subject and phone line filled in; `LogShare` (our own small ContentProvider, not exported, no
+  androidx) lets only the chosen app read that one file. The share sheet, not a mail-only selector: the test phone
+  has three apps answering `mailto:` (two of them shopping apps), and the selector fell back anyway. Checked on the
+  Moto: 7 sessions, 4.8 MB, a 662 KB zip attached in Gmail. One file per session (not one growing file) so a send,
+  the cap and Delete all each work on whole sessions.
   Measurements and decisions only, never audio (PRIVACY.md). `tools/pull_sessions.sh` copies the phone's to
   `~/.local/share/ouralia/phone-sessions/` (`--clear` then deletes them on the phone: do it with the app stopped);
   `tools/session_summary.py` prints a few lines per session and each mark with what played in the 10 s before it.
