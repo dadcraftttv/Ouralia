@@ -28,8 +28,14 @@ sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUIL
 
 **New Pieces (item 21, step 5, Oct 29):** BUILT behind a switch (off by default); DadCraft's listen with Session Log on.
 
-**Sounds with character (item 24, Oct 29):** planned (Maestro PLAN R.4-R.8): slide and accent, Acid Bass and
-Ladder Bass kits, deeper drums, feel, textures. After New Pieces' listen.
+**Reactive first (DadCraft, Oct 30):** Ouralia re-anchored on RjDj's rule, the world drives the music. Step 1 now: a
+listening baseline of what already reacts (Singing Room, Harmony, sudden-sound chimes, Call and Response) with the
+clock-driven layers off; no code. Then one reactive response made convincing, only where the baseline falls short.
+Kit removal (Acoustic kept as "Classic") is ON HOLD until after that; sound classification comes later, as a small
+experiment. The composer features are frozen (no new work), New Pieces' listen included.
+
+**Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
+when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.
 
 **Before advertising rc5 (item 22):** GitHub repo topics, maybe a short demo GIF.
 
@@ -317,7 +323,7 @@ microphone declarations, store listing.
        found bells. The easiest: their notes already exist.
     4. **A second melody** (later): an arpeggio or counter-melody around the main one; needs new music-writing rules.
 
-24. **Sounds with character (DadCraft, Oct 29: what's missing is "dynamics, character, texture, weight, impact,
+24. **SET ASIDE Oct 30 (see Open now).** **Sounds with character (DadCraft, Oct 29: what's missing is "dynamics, character, texture, weight, impact,
     flavour"; from OpenRB-338, a ReBirth RB-338 remake he found, "i like all 4", and "What about Moog synths and
     those sounds?").** Ideas only from OpenRB-338: its engine is rebuilt from Propellerhead's program and its drums
     are their samples, so none of its code, tables or samples. The hardware (TB-303, TR-808, TR-909, Minimoog) is
