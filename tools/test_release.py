@@ -54,8 +54,11 @@ for apk in apks if tools else []:
     badging = subprocess.run([tools[-1], "dump", "badging", apk], capture_output=True, text=True).stdout
     pkg = re.search(r"package: name='([^']+)'", badging)
     label = re.search(r"application-label:'([^']*)'", badging)
-    check(pkg and pkg.group(1) == PACKAGE, "%s: package %s" % (name, pkg.group(1) if pkg else "?"))
-    check(label and label.group(1) == "Ouralia", "%s: named Ouralia (%s)" % (name, label.group(1) if label else "?"))
+    # The dev build (R.5 dev path) installs beside the release app: its own id and name.
+    dev = os.path.basename(os.path.dirname(apk)) == "dev"
+    want_pkg, want_label = (PACKAGE + ".dev", "Ouralia Dev") if dev else (PACKAGE, "Ouralia")
+    check(pkg and pkg.group(1) == want_pkg, "%s: package %s" % (name, pkg.group(1) if pkg else "?"))
+    check(label and label.group(1) == want_label, "%s: named %s (%s)" % (name, want_label, label.group(1) if label else "?"))
 
 print("ALL PASSED" if not fails else "%d FAILED" % fails)
 sys.exit(1 if fails else 0)
