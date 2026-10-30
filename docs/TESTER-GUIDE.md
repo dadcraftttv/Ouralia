@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Oct 21, 2026 · Dad · for 0.9.0-rc5.1
+Oct 30, 2026 · Dad · for 0.9.0-rc5.2
 
 ## What this app is
 
@@ -14,6 +14,22 @@ There are two ways to use it:
 - **Scenes (optional).** Ready-made experiences from the original RjDj, which react to sound and to how you move the phone. The app comes with four official RjDj example scenes to try (see "The four built-in scenes" below). You can also import other scenes you already have, as a zip file or folder.
 
 ## What's new
+
+**New in rc5.2 (Oct 22-30):**
+
+- **Session logs you can send** (Setup, About and Licenses, **Session logs**): if you switch Session Log on, the app keeps a log of each listening session on your phone (no sound, only numbers). Session logs shows how many there are and lets you **Email them** to Dad as one zip, from your own mail app, or **Delete all**. Sending helps the music learn, and it is always your choice: nothing leaves your phone unless you send it. The oldest logs now go by themselves past 50 MB (about 8 hours).
+- **Session Log** (Setup, Behavior, off unless you turn it on): Like, Flat and Note… appear in the player while it's on, to mark a moment. See Setup.
+- **New Pieces** (Music, off by default, with Evolving): every few minutes the band moves on to a fresh piece, blended in like a DJ mix: the drums drop to the hats for a moment, new chords come in under the old beat, then a new beat, then a new tune. See Music.
+- **Sleep Timer** in the player: plays on, fades out over the last 5 minutes, then stops.
+- **Tap Tempo** under Set Tempo: a few taps set the tempo.
+- **Shimmer** and **Shimmer Style** (Reverb, off by default): the reverb's tail rises in octaves.
+- **Wind Guard** (off by default): wind rumble on the mic pulled down outdoors, voices kept.
+- **World in Stereo** (off by default): on phones with two mics, the world in stereo, left and right.
+- **Clear Catches** (off by default): found sounds only from sounds well above the room's background.
+- **Room listener:** the Now line and Diagnostics say what the app thinks it hears (talking, music, traffic, wind, a crowd).
+- **Diagnostics** counts dropouts (clicks or short gaps) since Start; the Input list marks Bluetooth mics and tells the phone's two mics apart.
+- **Scenes** that save their state now get it back the next time they start.
+- The notification shows Ouralia's own icon.
 
 **New in rc5.1 (Oct 21, a fix for rc5):**
 
@@ -41,7 +57,6 @@ There are two ways to use it:
 - **Soft Steps** (Music, on by default): the walking notes are softer, come in gently when you start walking, and glide to a new loudness when your pace changes.
 - **Rounder buttons:** the play and stop icons are rounded, and Start and Stop are written in the same font as the slider numbers. The padlock's glow now sits right on the padlock.
 - **Chord Colours** (Music, off by default, with Evolving): sevenths, added ninths and sus chords that resolve, now and then. See Music.
-- **New Pieces** (Music, off by default, with Evolving): every few minutes the band moves on to a fresh piece, blended in like a DJ mix: the drums drop to the hats for a moment, new chords come in under the old beat, then a new beat, then a new tune. See Music.
 - **A new welcome and a guided tour:** the welcome pages have a new look, and end with **Show me around**: the screen dims and arrows point at the small buttons (Save, Export, Import, Randomize, Nudge, Undo, Movers, the on/off switches, the player and the tab icons) with what each one does. Then you try it: press **Start**, open **Echo**, turn it up and hear your own voice change. When you tap Done, Echo goes back to how it was. **Skip tour** (or Back) leaves at any time. See it under Setup, About, **Show the walkthrough again**.
 
 **New in rc4 (Oct 17-19):**
@@ -591,7 +606,7 @@ A preset file holds the effect sliders, their movers, the Music and Rhythm level
 
 - **Diagnostics** (tap to open) shows, while the sound runs: the mic Android is really using (handy with Input on Automatic), whether a Bluetooth mic is in thin call mode, the headphones being played to, the mic level after Input gain (with the noise gate's setting next to it, so you can see whether the room is above or below it), and overloads in the last minute. **Dropouts since Start** appears if the phone ever couldn't keep up with the sound (each one a click or a short gap): if you hear clicks, check it and tell Dad the number and what was on. **Mic overloads** mean the sound was too loud or too close for the mic itself, which sounds harsh; Input gain can't fix that, because the overload happens before it. **Output limiter squashing hard** means the mix is too hot: if it sounds harsh, lower Input gain or some effect levels. It also counts **handling noises skipped**: taps and grips on the phone that weren't caught as found sounds. One loud clap may count once; that's fine. When the mic keeps overloading, the status line at the bottom says "Mic overloading" on every tab until it stops. Please mention these numbers when you report a harsh or distorted sound. The **Room listener** line shows its five numbers, 0 to 1 (talking, music, traffic, wind, crowd), twice a second: handy for telling Dad what it made of a place.
 - **Behavior:** **Smoothing** sets how smoothly the sound glides when you change a slider (low gives instant, snappy changes, high gives slow slides). **Nudge strength** sets how far the Nudge button moves things. **Warp sound** switches the warp sound off or on.
-- **Session Log** (Behavior, off unless you turn it on) keeps a record of each listening session: what the app heard and played, as numbers, never sound. While it is on, **Like**, **Flat** and **Note…** appear in the player: press one the moment something sounds good, flat, or worth a word. It's for tuning the music; nothing leaves your phone unless you copy it off.
+- **Session Log** (Behavior, off unless you turn it on) keeps a record of each listening session: what the app heard and played, as numbers, never sound. While it is on, **Like**, **Flat** and **Note…** appear in the player: press one the moment something sounds good, flat, or worth a word. It's for tuning the music; nothing leaves your phone unless you send it. **Session logs** (About and Licenses) emails them to Dad as one zip or deletes them all; past 50 MB (about 8 hours) the oldest go by themselves.
 - **Reset everything to defaults** (see "Starting fresh with Reset").
 
 **Earbud and headset mics are much quieter than the phone's.** They are made for your voice right next to them, not for hearing a room, so a USB-C, wired or Bluetooth headset mic can sound silent at first. If you pick one as Input, open **Input & output**, raise **Input gain** (around 8 worked for USB-C earbuds, against 1 to 2.5 for the phone mic) and lower **Noise gate threshold**, all the way to -80 if needed (-80 switches the gate off). When you go back to the phone's mic, turn them back, or it will be loud and hissy. The app keeps one set of these settings for every mic, because Android gives many headsets the same generic name and the app can't tell them apart.

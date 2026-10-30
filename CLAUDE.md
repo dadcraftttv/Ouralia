@@ -81,12 +81,16 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   updating PRIVACY.md and its list.
 
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
-- **Release:** rc5.1 (0.9.0-rc5.1, versionCode 14, Oct 21; DadCraft: a hotfix of rc5, not rc6) = rc5 + presets that save
+- **Release:** rc5.2 (0.9.0-rc5.2, versionCode 15, Oct 30; DadCraft chose rc5.2) = rc5.1 + everything since Oct 22
+  (Shimmer, Wind Guard, World in Stereo, Clear Catches, Room listener, Sleep Timer, Tap Tempo, Session Log, New
+  Pieces) and Session logs in About (email them as one zip or delete them, cap 50 MB). GitHub pre-release
+  v0.9.0-rc5.2, ~/Downloads/Ouralia-0.9.0-rc5.2.apk.
+- **rc5.1** (0.9.0-rc5.1, versionCode 14, Oct 21; DadCraft: a hotfix of rc5, not rc6) = rc5 + presets that save
   The Band, Intensity and the effects' voices, the Kit menus refreshing after a preset loads, and the cards'
   on/off switches back, Notes and Chimes Level in Mix (its APK was replaced twice on the release for those, before
   any download, DadCraft's choice). Release APK, debug
   key, ~/Downloads/Ouralia-0.9.0-rc5.1.apk; GitHub pre-releases v0.9.0-rc5 and v0.9.0-rc5.1, not advertised until
-  GitHub purges the old commits. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 15.
+  GitHub purges the old commits. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 16.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). World in Stereo (Oct 22): DadCraft likes it,
   an option for phones that support it, never the default ("as close to universal as possible"). Clear Catches
