@@ -179,7 +179,7 @@
   standing still, at most once per quiet spell and per 30 s, with chance 0.6, it sends `motif <step> 0.45` for each
   note: the phrase moved -2..+2 scale steps (sometimes 0), one note bent +-1 (40%), the rhythm x0.8-1.25. It counts
   for density memory. The event log says "Motif comes back". (Java's Random: small seeds all start near 0.73.)
-  **Chimes Only Answer** (`chime_answer`, Music, default off, saved in presets; Oct 30, reactive-first step 2, branch
+  **Chimes Only When Something Happens** (`chime_answer`, was "Chimes Only Answer", Music, default off, saved in presets; Oct 30, reactive-first step 2, branch
   `reactive`). DadCraft's listening baseline (Singing Room alone, then chimes, then the pad): Singing Room "doesn't
   play by itself without something happening", but with the chimes "a chime played in a quiet space with nothing
   causing it". Two uncaused sources: the still pattern (path 2, `mu_p`: its chance follows the room's loudness, plus
@@ -190,6 +190,8 @@
   (steady noise after a faint room, calm chimes up: 161 still chimes off, 0 on, 0 synced; a burst still chimes).
   Levels at the same three knocks (dry off): Singing Room Ring rms -45.4 dBFS, Found -46.2; chimes at Notes and Chimes
   0.4 -39.7 (about 6 dB louder, DadCraft: "they seem quite loud"), at 0.2 -45.0. Default not changed; his verdict.
+  DadCraft's A/B in Ouralia Dev (Oct 30): on, every chime had a cause ("Yes"); at 0.2 "when it's quiet they sound
+  fine"; "we can keep it, but it should be clear what it does": shown as "Chimes Only When Something Happens" since.
   **Key drift** (`music_drift`, Music, default on, noPreset; roadmap 12): every 3-6 min while the music plays the
   home chord moves to a related one on the same notes (`value mdrift` scale steps added to each pad pick, mod n), 60%
   of the time back home when away. Allowed homes per scale (`drift_options`): every pool chord moved there must not be

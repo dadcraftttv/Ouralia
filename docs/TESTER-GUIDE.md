@@ -101,7 +101,7 @@ There are two ways to use it:
 - **Send feedback** (Setup, About): writes an email to Dad with your phone and app details and, if you like, the app's event log.
 - **Stem packs** (The Band tab; removed in rc4, the kits replace them): your own loops, playing with the built-in sound and arranged by where you are and how you move.
 - **Slow Bloom** (Music, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
-- **Chimes Only Answer** (Music, off at first): chimes never play by themselves, only after a sound, a sung phrase or a step.
+- **Chimes Only When Something Happens** (Music, off at first): a chime plays only right after something you can hear caused it: a knock, a voice, a sung phrase or a step. Off, the music also adds chimes of its own now and then, even in a quiet room.
 - **Scenes show their pictures and words** on the touch pad, and a few more imported scenes load completely.
 - **Reverse reverb** (Reverb section, and in the Ghost realm): sounds come back as rising swells, landing on the beat while the Rhythm plays.
 - **Mix** (The Band tab): a level for every part of the music and rhythm, saved with your presets, so you can turn any part down or out.

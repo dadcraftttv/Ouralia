@@ -244,7 +244,7 @@ final class Params {
                     Param.Curve.LINEAR).inSection("music").toggle().noPd(),
             // Chimes only answer (DadCraft, Oct 30: "a chime played in a quiet space with nothing causing it"): no still
             // pattern and no remembered phrase coming back, so a chime always follows a sound, a sung phrase or a step.
-            new Param("chime_answer", "Chimes Only Answer (no chimes by themselves, only after a sound)", 0f, 1f, 0f, "",
+            new Param("chime_answer", "Chimes Only When Something Happens (after a knock, a voice or a step, never on their own)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("music_key", "Key", 0f, 11f, 0f, "", Param.Curve.LINEAR)
                     .choices("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
