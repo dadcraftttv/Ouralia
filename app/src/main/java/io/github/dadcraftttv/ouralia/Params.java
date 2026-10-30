@@ -242,6 +242,10 @@ final class Params {
             // then eases back (CalmBuild.java). Off by default.
             new Param("calm_build", "Slow Bloom (standing still, the music slowly grows)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd(),
+            // Chimes only answer (DadCraft, Oct 30: "a chime played in a quiet space with nothing causing it"): no still
+            // pattern and no remembered phrase coming back, so a chime always follows a sound, a sung phrase or a step.
+            new Param("chime_answer", "Chimes Only Answer (no chimes by themselves, only after a sound)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("music_key", "Key", 0f, 11f, 0f, "", Param.Curve.LINEAR)
                     .choices("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
                     .inSection("music"),
@@ -638,7 +642,7 @@ final class Params {
      * them, and a preset made before keeps what you have (none is resetWhenAbsent).
      */
     static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
-            "music_on", "music_var", "chord_color", "new_pieces", "mel_dev", "pat_gen", "walk_ease", "band_plays", "music_drift",
+            "music_on", "music_var", "chord_color", "new_pieces", "mel_dev", "pat_gen", "walk_ease", "band_plays", "chime_answer", "music_drift",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
             "melody_src", "mel_rhythm", "mel_phrase", "fm_ring", "res_src", "harm_src", "harm_tracker");
 

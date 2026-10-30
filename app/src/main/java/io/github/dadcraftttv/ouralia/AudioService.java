@@ -290,7 +290,7 @@ public class AudioService extends Service {
                     }
                 }
                 List<MotifMemory.Note> phrase = motif.poll(nowS, StepDetector.walking(nowS));
-                if (phrase != null) {
+                if (phrase != null && ParamStore.get("chime_answer") < 0.5f) {   // (Chimes Only Answer: none come back)
                     logEvent("Motif comes back: " + phrase.size() + " notes");
                     int generation = startGeneration;
                     for (MotifMemory.Note n : phrase) {
