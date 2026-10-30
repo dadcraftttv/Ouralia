@@ -24,7 +24,7 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
 **Session Log (item 23, Oct 29):** BUILT; DadCraft's first sessions, phone and desktop, for Maestro's R.1 (what
-sounds flat in today's composer).
+sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUILT Oct 30, in rc5.2.
 
 **New Pieces (item 21, step 5, Oct 29):** BUILT behind a switch (off by default); DadCraft's listen with Session Log on.
 
@@ -340,7 +340,9 @@ microphone declarations, store listing.
 
 23. **Session Log (DadCraft, Oct 29: an app that "logs what it hears ... or logs what it plays", keeping every session
     so several can come back from the phone).** For Maestro's work on dcs_composer. BUILT Oct 29 (design/app.md
-    "Session Log", `SessionLog.java`, test O, `tools/pull_sessions.sh`, `tools/session_summary.py`).
+    "Session Log", `SessionLog.java`, test O, `tools/pull_sessions.sh`, `tools/session_summary.py`). Oct 30: testers
+    can send theirs (About and Licenses, Session logs: email them as one zip or delete them all; cap 50 MB), BUILT
+    for rc5.2.
 
 22. **Outside reviews (ChatGPT, Grok, Kimi, 2026-10-22, from the public repo), checked against the code.** Accepted
     (all open, listed in "Open now"):

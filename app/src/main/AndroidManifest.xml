@@ -33,5 +33,12 @@
             android:name=".AudioService"
             android:exported="false"
             android:foregroundServiceType="microphone|mediaPlayback" />
+
+        <!-- Send session logs: the chosen mail app reads only the zip it is granted (LogShare.java). -->
+        <provider
+            android:name=".LogShare"
+            android:authorities="${applicationId}.logs"
+            android:exported="false"
+            android:grantUriPermissions="true" />
     </application>
 </manifest>

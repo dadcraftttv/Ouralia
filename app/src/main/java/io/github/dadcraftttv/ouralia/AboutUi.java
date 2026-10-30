@@ -18,8 +18,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * Setup's About card (moved out of MainActivity on Oct 22, ROADMAP 22): the licence line and the source link,
- * the phone's sensors, Send feedback (an email to DadCraft, the end of the event log if the tester agrees) and the
- * licence texts the GPL asks the app to carry.
+ * the phone's sensors, Send feedback (an email to DadCraft, the end of the event log if the tester agrees), Session
+ * logs (email them or delete them) and the licence texts the GPL asks the app to carry.
  */
 final class AboutUi {
     private final MainActivity a;
@@ -53,6 +53,97 @@ final class AboutUi {
         a.addButton(row, R.string.walk_show_again, a::showWalkthrough);
         LinearLayout row2 = a.newButtonRow(body);
         a.addButton(row2, R.string.feedback_send, this::sendFeedback);
+        a.addButton(row2, R.string.logs_button, this::sessionLogs);
+    }
+
+    /** An email attachment limit with room to spare (Gmail's is 25 MB, counted after encoding). */
+    private static final long MAX_ZIP_BYTES = 18L * 1024 * 1024;
+
+    /**
+     * Session logs (DadCraft, Oct 30: sending "should always be optional, like everything else in the app"): how many
+     * are kept and how much room they take, then email them (a zip in the user's own mail app, sent only if they send
+     * it) or delete them. Nothing leaves the phone otherwise.
+     */
+    private void sessionLogs() {
+        SessionLog.ensureDir(a.getFilesDir());
+        java.util.List<File> kept = SessionLog.finished();
+        long bytes = SessionLog.totalBytes(kept);
+        String summary = kept.isEmpty() ? a.getString(R.string.logs_none)
+                : a.getResources().getQuantityString(R.plurals.logs_kept, kept.size(), kept.size(), megabytes(bytes));
+        TextView text = new TextView(a);
+        text.setText(summary + "\n\n" + a.getString(R.string.logs_note));
+        text.setTextSize(14);
+        text.setPadding(a.dp(20), a.dp(8), a.dp(20), 0);
+        MainActivity.LookDialog d = a.new LookDialog();
+        d.setTitle(R.string.logs_button).setView(text).setNegativeButton(R.string.close, null);
+        if (!kept.isEmpty()) {
+            d.setPositiveButton(R.string.logs_email, (x, w) -> emailLogs());
+            d.setNeutralButton(R.string.logs_delete, (x, w) -> confirmDelete(kept.size(), bytes));
+        }
+        d.show();
+    }
+
+    private String megabytes(long bytes) {
+        return String.format(java.util.Locale.getDefault(), "%.1f", bytes / (1024.0 * 1024.0));
+    }
+
+    private void confirmDelete(int count, long bytes) {
+        a.new LookDialog().setTitle(R.string.logs_delete)
+                .setMessage(a.getResources().getQuantityString(R.plurals.logs_delete_confirm, count, count, megabytes(bytes)))
+                .setPositiveButton(R.string.logs_delete, (x, w) ->
+                        a.toast(R.string.logs_deleted, SessionLog.deleteAll()))
+                .setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    /** Zips the newest sessions that fit (off the main thread), then opens the share sheet to email it. */
+    private void emailLogs() {
+        File zip = LogShare.file(a);
+        new Thread(() -> {
+            int[] counts;
+            try {
+                counts = SessionLog.pack(zip, MAX_ZIP_BYTES);
+            } catch (IOException e) {
+                counts = null;
+            }
+            int[] packed = counts;
+            a.runOnUiThread(() -> {
+                if (packed == null || packed[0] == 0) {
+                    a.toast(R.string.logs_pack_failed);
+                    return;
+                }
+                String version = appVersion();
+                String body = a.getString(R.string.logs_body) + "\n\n---\n"
+                        + a.getString(R.string.feedback_device, Build.MANUFACTURER + " " + Build.MODEL,
+                        Build.VERSION.RELEASE, version) + "\n"
+                        + a.getResources().getQuantityString(R.plurals.logs_attached, packed[0], packed[0]);
+                Uri uri = LogShare.uri(a);
+                Intent send = new Intent(Intent.ACTION_SEND)
+                        .setType("application/zip")
+                        .putExtra(Intent.EXTRA_EMAIL, new String[]{a.getString(R.string.feedback_address)})
+                        .putExtra(Intent.EXTRA_SUBJECT, a.getString(R.string.logs_subject, version))
+                        .putExtra(Intent.EXTRA_TEXT, body)
+                        .putExtra(Intent.EXTRA_STREAM, uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                send.setClipData(android.content.ClipData.newRawUri(LogShare.FILE, uri));
+                try {   // (Android's share sheet: the user picks their mail app; others don't take the address)
+                    a.startActivity(Intent.createChooser(send, a.getString(R.string.logs_email)));
+                } catch (android.content.ActivityNotFoundException e) {
+                    a.toast(R.string.feedback_no_mail, a.getString(R.string.feedback_address));
+                    return;
+                }
+                if (packed[1] > 0) {
+                    a.toast(R.string.logs_left_out, packed[1]);
+                }
+            });
+        }, "pack-logs").start();
+    }
+
+    private String appVersion() {
+        try {
+            return a.getPackageManager().getPackageInfo(a.getPackageName(), 0).versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            return "?";
+        }
     }
 
     /**
@@ -74,12 +165,7 @@ final class AboutUi {
         box.addView(note);
         a.new LookDialog().setTitle(R.string.feedback_send).setView(box)
                 .setPositiveButton(R.string.feedback_write, (d, w) -> {
-                    String version = "?";
-                    try {
-                        version = a.getPackageManager().getPackageInfo(a.getPackageName(), 0).versionName;
-                    } catch (PackageManager.NameNotFoundException ignored) {
-                        // keep "?"
-                    }
+                    String version = appVersion();
                     StringBuilder body = new StringBuilder(a.getString(R.string.feedback_body_start)).append("\n\n\n");
                     body.append("---\n").append(a.getString(R.string.feedback_device, Build.MANUFACTURER + " " + Build.MODEL,
                             Build.VERSION.RELEASE, version)).append("\n");

@@ -331,6 +331,28 @@
     <string name="feedback_playing">Playing: %1$s</string>
     <string name="feedback_log_heading">Event log (the most recent lines):</string>
     <string name="feedback_log_empty">(the event log is empty)</string>
+    <string name="logs_button">Session logs</string>
+    <string name="logs_none">No session logs are kept. Turn on Session Log (Setup, Behavior) and the app keeps a log of each listening session on this phone.</string>
+    <plurals name="logs_kept">
+        <item quantity="one">%1$d session log kept on this phone (%2$s MB).</item>
+        <item quantity="other">%1$d session logs kept on this phone (%2$s MB).</item>
+    </plurals>
+    <string name="logs_note">A session log holds no sound: times, settings, what the app played, and the pitches and loudness it heard in the room, as numbers. They stay on this phone unless you email them. Sending them helps the music learn, and it is always your choice. The oldest go by themselves past 50 MB (about 8 hours).</string>
+    <string name="logs_email">Email them</string>
+    <string name="logs_delete">Delete all</string>
+    <plurals name="logs_delete_confirm">
+        <item quantity="one">Delete %1$d session log (%2$s MB)? This can\'t be undone.</item>
+        <item quantity="other">Delete all %1$d session logs (%2$s MB)? This can\'t be undone.</item>
+    </plurals>
+    <string name="logs_deleted">Deleted %1$d session logs</string>
+    <string name="logs_pack_failed">Couldn\'t pack the session logs</string>
+    <string name="logs_subject">Ouralia session logs (%1$s)</string>
+    <string name="logs_body">Session logs from Ouralia, attached. Anything you\'d like to add about how they sounded?</string>
+    <plurals name="logs_attached">
+        <item quantity="one">%1$d session attached</item>
+        <item quantity="other">%1$d sessions attached</item>
+    </plurals>
+    <string name="logs_left_out">%1$d older session logs didn\'t fit in one email and stay on this phone</string>
     <string name="feedback_no_mail">No email app found. Please write to %1$s</string>
     <string name="section_about">About and Licenses</string>
     <string name="about_text">Free software under the GNU General Public License v3 or later. It includes the RjDj library of Pd abstractions and Pure Data components under their own licences, and four example scenes from Reality Jockey Ltd.: Hello World World World (Frank Barknecht), and Onset Detection, Street Beatz and Vocoder (the RjDj team).</string>

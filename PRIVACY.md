@@ -26,9 +26,12 @@ tracking, no crash reporting. Android's automatic backup is turned off for it to
   ("Phone went into a pocket", "Caught a snare"), and once a minute while playing the battery level, the phone's
   temperature and how hard the app works the processor. It is there so problems can be found after a walk.
 - **Session logs, only if you switch Session Log on** (Setup, Behavior; off unless you turn it on). One file per
-  listening session, at most about 200 MB in all, oldest dropped first. Like the event log they hold no sound and no
-  words: times, the room's loudness and the notes the app heard as numbers, what the app played, your settings, and
-  any Like, Flat or note you add yourself. They stay on your phone unless you copy them off it.
+  listening session, at most about 50 MB in all (about 8 hours), oldest dropped first. Like the event log they hold no
+  sound and no words: times, the room's loudness and the notes the app heard as numbers, what the app played, your
+  settings, and any Like, Flat or note you add yourself. They stay on your phone unless you send them: **Session
+  logs** (Setup, About and Licenses) packs them into one zip and hands it to the mail app you pick, addressed to
+  DadCraft, and you decide whether to send that email. The same screen deletes them all. The app itself never sends
+  anything (it has no internet permission). Sent logs help tune the music (Maestro, the app's composer).
 
 Uninstalling the app deletes all of it.
 
