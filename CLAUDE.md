@@ -21,7 +21,7 @@ behaviour changes, or tell DadCraft it needs one).
   --history` and events.log, whose "Health:" lines give battery, temperature and the app's CPU each minute;
   DESIGN-NOTES "Diagnostics").
 - **Dev path** (DadCraft, Oct 30; the R.5 `dev` branch was deleted with the kits): new work is built on its own
-  branch (now `reactive`, the kit removal) and tried in "Ouralia Dev"
+  branch (now `reactive`: the reactive-first steps; kit removal on hold) and tried in "Ouralia Dev"
   (`./gradlew assembleDev`, `adb install -r app/build/outputs/apk/dev/app-dev.apk`; id `io.github.dadcraftttv.ouralia.dev`,
   beside the release app with its own settings). He listens after each first audible change; a branch merges to `main`
   only on his "yes", a step he doesn't like is dropped. `main` and the rc releases stay untouched meanwhile.
