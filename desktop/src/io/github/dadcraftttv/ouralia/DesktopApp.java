@@ -350,7 +350,8 @@ final class DesktopApp {
                     Math.round(Modulation.output(Params.byId("music_scale"), ParamStore.get("music_scale")))))];
             float answerLevel = ParamStore.get("music_on") >= 0.5f ? ParamStore.get("music_answer") : 0f;
             play(callResponse.poll(nowS, answerLevel, scaleSize), CallResponse.velocity(answerLevel));
-            play(motif.poll(nowS, false), MotifMemory.VELOCITY);
+            List<MotifMemory.Note> phrase = motif.poll(nowS, false);
+            if (ParamStore.get("chime_answer") < 0.5f) play(phrase, MotifMemory.VELOCITY);   // (Chimes Only Answer: none come back)
         } catch (RuntimeException e) {
             e.printStackTrace();   // (keep ticking)
         }

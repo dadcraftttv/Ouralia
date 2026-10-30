@@ -1146,6 +1146,21 @@ def still_count(**over):
 c_sync, c_free = still_count(), still_count(beat_level=0)
 check(c_free > 0 and 0.5 * c_free <= c_sync <= 2 * c_free, "music synced: the still chimes keep their density (%d vs %d free)" % (c_sync, c_free))
 
+# Chimes Only Answer (DadCraft, Oct 30): the still pattern never plays, free or on the 8ths, calm build or not;
+# a sudden sound still gets its chime
+def lively_count(**over):
+    e = fresh(**dict(dict(music_on=1, music_pad=0, music_arp=1, wet=0, beat_level=0), **over))
+    e.listen("chime_deg"); e.send("calm_chimes", 25); r = np.random.default_rng(11)   # (steady noise: nothing sudden)
+    e.run((r.standard_normal(4 * SR) * 0.003).astype(np.float32)); e.heard.pop("chime_deg", None)   # (a faint room
+    fade = 0.003 + 0.027 * np.minimum(1, np.arange(40 * SR) / (8 * SR))             # first: noise out of digital silence
+    e.run((r.standard_normal(40 * SR) * fade).astype(np.float32)); return len(e.heard.get("chime_deg", []))   # is sudden)
+ca_off, ca_free, ca_sync = lively_count(), lively_count(chime_answer=1), lively_count(chime_answer=1, beat_level=1, beat_follow=1, beat_when=1)
+e = fresh(music_on=1, music_pad=0, music_arp=1, wet=0, chime_answer=1); e.listen("chime_deg")
+e.run(e.silence(4)); e.run(np.concatenate([burst, np.zeros(SR * 3, np.float32)]))
+check(ca_off > 5 and ca_free == 0 and ca_sync == 0 and len(e.heard["chime_deg"]) >= 1,
+      "Chimes Only Answer: no still chimes in steady noise (%d off, %d on, %d on synced), a sudden sound still chimes (%d)"
+      % (ca_off, ca_free, ca_sync, len(e.heard["chime_deg"])))
+
 # echo follows the steps while walking: half a step at 0.5 s steps = 250 ms; the slider's 350 ms otherwise
 def echo_delay(sync, walk, after=0.0):
     e = fresh(echo_time=350, feedback=0, wet=1, dry=0, echo_sync=sync, beat_level=0)
