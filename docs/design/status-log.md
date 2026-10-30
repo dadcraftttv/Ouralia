@@ -85,3 +85,8 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   Sleep Timer, the health line in events.log, scene state saving (rjlib's sssad) and Info.plist in any capitals,
   Tap Tempo, the Bluetooth marks in the Input list; then code health: make_patch.py split into tools/patchgen/ (the
   patch byte for byte the same) and these notes into docs/design/ (every line kept, checked by script).
+- **Oct 23-30: Shimmer, Wind Guard, the Room listener, Session Log, New Pieces; rc5.2.** Reverb Shimmer and its
+  Style, Wind Guard, the Room listener, Session Log (Oct 29) and New Pieces (Oct 29, off by default) came in behind
+  their switches. Oct 30, DadCraft: logging goes in the release, "only sendable if the user wants to email the logs":
+  Session logs in About (email them as one zip or delete them all), the cap down from 200 to 50 MB. Released as
+  0.9.0-rc5.2 (versionCode 15), his call over rc6.

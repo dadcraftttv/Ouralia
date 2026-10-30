@@ -52,8 +52,9 @@ can't install over them, so testers uninstall once (exporting presets first).
   notification. Play may ask for a short video of the app in use.
 - **Data safety.** No data collected or shared: the app has no internet permission, so it can't send anything.
   The mic is processed live in memory and never stored. Send feedback opens the user's own mail app with the text
-  filled in, and the user decides whether to send it. That is the user sharing, not the app collecting, but check
-  Play's guidance on user-initiated email.
+  filled in, and the user decides whether to send it. Session logs (off unless switched on) work the same way: a zip
+  handed to the mail app the user picks, sent only if they send it. That is the user sharing, not the app
+  collecting, but check Play's guidance on user-initiated email.
 - **Privacy policy URL.** `PRIVACY.md` on GitHub:
   https://github.com/dadcraftttv/Ouralia/blob/main/PRIVACY.md
 - **Content rating.** No user content, no ads, no purchases, no location.
