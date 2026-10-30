@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The dev build (R.5 dev path): shown beside the release app as its own app. -->
+    <string name="app_name">Ouralia Dev</string>
+</resources>

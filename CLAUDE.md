@@ -20,6 +20,10 @@ behaviour changes, or tell DadCraft it needs one).
   session plugged in: `tools/session_log.sh start`, `stop`, `report` (it dies unplugged: then `dumpsys batterystats
   --history` and events.log, whose "Health:" lines give battery, temperature and the app's CPU each minute;
   DESIGN-NOTES "Diagnostics").
+- **R.5 dev path** (DadCraft, Oct 30): new sounds are built on the `dev` branch and tried in "Ouralia Dev"
+  (`./gradlew assembleDev`, `adb install -r app/build/outputs/apk/dev/app-dev.apk`; id `io.github.dadcraftttv.ouralia.dev`,
+  beside the release app with its own settings). He listens after each first audible change; a kit merges to `main`
+  only on his "yes", a step he doesn't like is dropped. `main` and the rc releases stay untouched meanwhile.
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
   Getting a sound's shape, tone and feel right takes rounds of listening: that is expected. Before his first listen,
   check what can be measured, so his rounds go on feel and not on faults (Shimmer Style, Oct 23):

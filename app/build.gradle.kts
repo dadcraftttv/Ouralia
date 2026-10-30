@@ -39,6 +39,15 @@ android {
             // name: Ouralia is a new app beside them). The Play key, once it exists, signs instead (see above).
             signingConfig = signingConfigs.getByName(if (releaseKey != null) "play" else "debug")
         }
+        // The R.5 dev path (DadCraft, Oct 30): new sounds are tried on the `dev` branch in "Ouralia Dev", a debug
+        // build that installs beside the release app (its own id, settings and logs), so he compares the two directly.
+        // `./gradlew assembleDev`; its name comes from src/dev/res.
+        create("dev") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            matchingFallbacks += "debug"
+        }
     }
 
     packaging {
