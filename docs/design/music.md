@@ -230,7 +230,9 @@
   check_classic_parity against 1f938ec 55/55 sample-identical. Its signal objects join the voice's switch~ group
   (left outside, they made a DSP loop: silence). Walking notes share the voices, so they change too; found notes
   don't. Pd test "Chime Voice Glass" (E4 328 Hz: strike +0.2 dB against Classic, 2.76x partial -12 dB vs -83,
-  -35 dB 0.4 s on).
+  -35 dB 0.4 s on). DadCraft's A/B (Oct 31): "Glass sounds great. can we keep both options and have a Both option
+  between them?" Now Classic / Both / Glass (0/1/2; Dev's stored Glass, 1, reads as Both): Classic x (1 - v/2),
+  Glass x v/2, so Both is half each on the shared fundamental.
   **Fixed, no switch (DadCraft, Oct 31):** "rather than make them switches on by default, lets make those the default
   behavior period, no switch." Then for the notes: "we should set the 20 db threshold on the slider, but users should
   have the ability to move it as they need or want, since each manufacturer could set mic values differently." So

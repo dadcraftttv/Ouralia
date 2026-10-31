@@ -379,7 +379,7 @@
 #X obj 4540 630 expr \$f1*mixc;
 #X obj 4400 660 r chime_voice;
 #X obj 4400 675 value cvoice;
-#X obj 4400 690 expr 1-\$f1;
+#X obj 4400 690 expr 1-\$f1/2;
 #X obj 5200 600 t b b b b;
 #X obj 5260 630 value cfreq;
 #X obj 5260 660 t f f f;
@@ -403,7 +403,7 @@
 #X msg 5260 646 \; sw_chv0 0;
 #X obj 5320 634 expr cfreq+\$f1*0;
 #X msg 5400 638 \; voc_ctl mnote \$1;
-#X obj 5320 1100 expr \$f1*cvoice*1.612;
+#X obj 5320 1100 expr \$f1*cvoice/2*1.612;
 #X obj 5320 1115 moses 0.0001;
 #X obj 5320 1130 t f b b;
 #X obj 5380 1145 value cdec;
@@ -440,7 +440,7 @@
 #X msg 5520 646 \; sw_chv1 0;
 #X obj 5580 634 expr cfreq+\$f1*0;
 #X msg 5660 638 \; voc_ctl mnote \$1;
-#X obj 5580 1100 expr \$f1*cvoice*1.612;
+#X obj 5580 1100 expr \$f1*cvoice/2*1.612;
 #X obj 5580 1115 moses 0.0001;
 #X obj 5580 1130 t f b b;
 #X obj 5640 1145 value cdec;
@@ -477,7 +477,7 @@
 #X msg 5780 646 \; sw_chv2 0;
 #X obj 5840 634 expr cfreq+\$f1*0;
 #X msg 5920 638 \; voc_ctl mnote \$1;
-#X obj 5840 1100 expr \$f1*cvoice*1.612;
+#X obj 5840 1100 expr \$f1*cvoice/2*1.612;
 #X obj 5840 1115 moses 0.0001;
 #X obj 5840 1130 t f b b;
 #X obj 5900 1145 value cdec;
@@ -514,7 +514,7 @@
 #X msg 6040 646 \; sw_chv3 0;
 #X obj 6100 634 expr cfreq+\$f1*0;
 #X msg 6180 638 \; voc_ctl mnote \$1;
-#X obj 6100 1100 expr \$f1*cvoice*1.612;
+#X obj 6100 1100 expr \$f1*cvoice/2*1.612;
 #X obj 6100 1115 moses 0.0001;
 #X obj 6100 1130 t f b b;
 #X obj 6160 1145 value cdec;

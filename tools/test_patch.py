@@ -1220,7 +1220,7 @@ check(nb_click0[0] > 0 and nb_click0[1] > 0 and nb_click == (0, 0) and nb_knock[
       "Notes Only for Bigger Sounds: clicks %s chimes/bells off, %s at 25 dB, knocks %s" % (nb_click0, nb_click, nb_knock))
 
 # Chime Voice Glass (DadCraft, Oct 31: Classic was "a musical bubble pop", the glass bar "sounds best"): as loud as
-# Classic at the strike, a struck bar's 2.76x partial that Classic doesn't have, and it fades before the note
+# Classic at the strike (Both too, Oct 31), a struck bar's 2.76x partial that Classic doesn't have, and it fades before the note
 def chime_run(v):
     e = fresh(wet=0, dry=0, music_key=0, music_on=1, music_arp=1, melody_src=0, music_res=0, music_react=0, chime_answer=1, mix_walk=0,
               music_pad=0, music_harm=0, beat_level=0, chime_voice=v)
@@ -1229,14 +1229,16 @@ def chime_run(v):
 def partial_db(y, f, t0, t1):
     w = y[int(t0 * SR):int(t1 * SR)]; S_ = np.abs(np.fft.rfft(w * np.hanning(len(w)))); fr = np.fft.rfftfreq(len(w), 1 / SR)
     return 20 * np.log10(S_[(fr > f * 0.97) & (fr < f * 1.03)].max() + 1e-12)
-cv_c, cv_g = chime_run(0), chime_run(1)
+cv_c, cv_b, cv_g = chime_run(0), chime_run(1), chime_run(2)
 S_ = np.abs(np.fft.rfft(cv_c[:SR // 4])); fr = np.fft.rfftfreq(SR // 4, 1 / SR); f0 = fr[np.argmax(S_ * (fr > 150) * (fr < 1500))]
 on_db = 20 * np.log10(rms(cv_g[:int(0.3 * SR)]) / rms(cv_c[:int(0.3 * SR)]))
+both_db = 20 * np.log10(rms(cv_b[:int(0.3 * SR)]) / rms(cv_c[:int(0.3 * SR)]))
 bar = lambda y, t0, t1: partial_db(y, 2.76 * f0, t0, t1) - partial_db(y, f0, t0, t1)
 check(rms(cv_g) > 1e-4 and abs(on_db) < 3 and bar(cv_g, 0.02, 0.12) > -30 and bar(cv_c, 0.02, 0.12) < -40
-      and bar(cv_g, 0.4, 0.5) < bar(cv_g, 0.02, 0.12) - 10,
-      "Chime Voice Glass: %.0f Hz, strike %+.1f dB against Classic; the 2.76x partial %.0f dB (Classic %.0f), %.0f dB 0.4 s on"
-      % (f0, on_db, bar(cv_g, 0.02, 0.12), bar(cv_c, 0.02, 0.12), bar(cv_g, 0.4, 0.5)))
+      and bar(cv_g, 0.4, 0.5) < bar(cv_g, 0.02, 0.12) - 10 and abs(both_db) < 3
+      and bar(cv_c, 0.02, 0.12) + 10 < bar(cv_b, 0.02, 0.12) < bar(cv_g, 0.02, 0.12),
+      "Chime Voice Glass: %.0f Hz, strike %+.1f dB against Classic; the 2.76x partial %.0f dB (Classic %.0f), %.0f dB 0.4 s on; Both %+.1f dB, its 2.76x %.0f dB"
+      % (f0, on_db, bar(cv_g, 0.02, 0.12), bar(cv_c, 0.02, 0.12), bar(cv_g, 0.4, 0.5), both_db, bar(cv_b, 0.02, 0.12)))
 
 # stopping after a walk: the pad and bass take a breath (a few dB down within ~3 s), then drift back to full.
 # Measured on the bass alone (a steady level); its own short dips at note changes are why we look at ranges.

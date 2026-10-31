@@ -278,9 +278,10 @@ final class Params {
             new Param("mel_phrase", "Phrasing (repeat and answer, needs Melody Rhythm)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle(),
             // Chime Voice (DadCraft, Oct 31: Classic was "a musical bubble pop"): Glass is a struck glass bar, its high
-            // partials fading first, with a soft rise and mallet. Classic stays the default until he says.
-            new Param("chime_voice", "Chime Voice", 0f, 1f, 0f, "", Param.Curve.LINEAR)
-                    .choices("Classic (soft tones)", "Glass (a struck glass bar)").inSection("music"),
+            // partials fading first, with a soft rise and mallet. Classic stays the default until he says. Both (his ask,
+            // Oct 31: "keep both options and have a Both option between them") blends the two half and half.
+            new Param("chime_voice", "Chime Voice", 0f, 2f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Classic (soft tones)", "Both (the two blended)", "Glass (a struck glass bar)").inSection("music"),
             new Param("chime_char", "Chime Character (ring to your sound)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0f, 1f).resetWhenAbsent(),
             // Found note ring (prototype, Oct 16): what a found melody note rings with. String = our own C object

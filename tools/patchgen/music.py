@@ -414,9 +414,9 @@ def add_music(P):
         P.obj(f"mu_{nm}_r", f"r {recv}", cx - 200 + (60 if nm == "mixw" else 0), cy - 20)
         P.obj(f"mu_{nm}_v", f"value {nm}", cx - 200 + (60 if nm == "mixw" else 0), cy - 5); P.c(f"mu_{nm}_r", f"mu_{nm}_v")
     ex("mu_v_trim", "$f1*mixc", cx - 60, cy + 30)
-    # Chime Voice (chime_voice: 0 Classic, 1 Glass): Classic's sum is scaled by 1 - voice, Glass only starts when on
+    # Chime Voice (chime_voice: 0 Classic, 1 Both, 2 Glass): Classic x (1 - voice/2), Glass x voice/2, starting only when on
     P.obj("mu_cv_r", "r chime_voice", cx - 200, cy + 60); P.obj("mu_cv_v", "value cvoice", cx - 200, cy + 75)
-    P.c("mu_cv_r", "mu_cv_v"); ex("mu_cv_cl", "1-$f1", cx - 200, cy + 90); P.c("mu_cv_r", "mu_cv_cl")
+    P.c("mu_cv_r", "mu_cv_v"); ex("mu_cv_cl", "1-$f1/2", cx - 200, cy + 90); P.c("mu_cv_r", "mu_cv_cl")
     P.c("mu_deg", "mu_v_trim", 3, 0); P.c("mu_v_trim", "mu_v_vel")
     voices = []
     for k in range(4):
@@ -481,7 +481,7 @@ def add_music(P):
         # Glass: a shared fade in dB below full (0 to -60 over the ring, then gone); partial i is 100 + fade / its
         # share in Pd's dB, so the high partials reach -60 first. The rise and the level ride on a second line.
         gx = vx + 120
-        ex(f"mu_v{k}_gv", f"$f1*cvoice*{GLASS_LEVEL}", gx, cy + 500); P.c(f"mu_v{k}_vst", f"mu_v{k}_gv", 0, 0)
+        ex(f"mu_v{k}_gv", f"$f1*cvoice/2*{GLASS_LEVEL}", gx, cy + 500); P.c(f"mu_v{k}_vst", f"mu_v{k}_gv", 0, 0)
         P.obj(f"mu_v{k}_gon", "moses 0.0001", gx, cy + 515); P.c(f"mu_v{k}_gv", f"mu_v{k}_gon")
         P.obj(f"mu_v{k}_gt", "t f b b", gx, cy + 530); P.c(f"mu_v{k}_gon", f"mu_v{k}_gt", 1, 0)
         P.obj(f"mu_v{k}_gdc", "value cdec", gx + 60, cy + 545); P.obj(f"mu_v{k}_gdx", f"* {GLASS_RING_X}", gx + 60, cy + 560)
