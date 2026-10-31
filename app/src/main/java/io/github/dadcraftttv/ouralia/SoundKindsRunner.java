@@ -112,7 +112,7 @@ final class SoundKindsRunner {
                     synchronized (lock) {
                         model = m;
                         kinds = k;
-                        seg = size / 3;
+                        seg = size / SoundKinds.SEGS;
                         judged = dropped = 0;
                     }
                     PdBase.sendFloat("sk_on", 1);
@@ -155,12 +155,12 @@ final class SoundKindsRunner {
         }
     }
 
-    /** The patch started writing segment {@code k}: the two before it are whole (Pd's thread: hand it on). */
+    /** The patch started writing segment {@code k}: the SEGS - 1 before it are whole (Pd's thread: hand it on). */
     static void ready(int k) {
         Handler w;
         synchronized (lock) {
             w = worker;
-            if (w == null || seg <= 0 || ++ticks < 3) {   // (the first two ticks: the ring isn't full yet)
+            if (w == null || seg <= 0 || ++ticks < SoundKinds.SEGS) {   // (until the ring is full)
                 return;
             }
         }
@@ -195,9 +195,11 @@ final class SoundKindsRunner {
         if (m == null || ks == null) {
             return;
         }
-        float[] x = new float[2 * s];
-        PdBase.readArray(x, 0, "sk_ring", ((k + 1) % 3) * s, s);   // the older whole segment (k - 2)
-        PdBase.readArray(x, s, "sk_ring", ((k + 2) % 3) * s, s);   // the newer (k - 1)
+        int n = SoundKinds.SEGS;
+        float[] x = new float[(n - 1) * s];
+        for (int j = 1; j < n; j++) {   // the whole segments, oldest (k + 1, i.e. k - n + 1) to newest (k - 1)
+            PdBase.readArray(x, (j - 1) * s, "sk_ring", ((k + j) % n) * s, s);
+        }
         float[] wave = SoundKinds.to16k(x, x.length, r);
         if (wave == null) {
             return;

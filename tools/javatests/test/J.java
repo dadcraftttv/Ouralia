@@ -19,10 +19,12 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     check(SoundKinds.to16k(new float[30000],30000,48000)==null,"too little: nothing");
     String kinds="# test\nvoices 0 1\nmusic 2\ntraffic 3\nbirds 4\nwater 5\nsteps 6\nquiet 494\n";
     SoundKinds k=new SoundKinds(kinds);
-    check(!k.judge(sc(4,70))&&k.kind()==-1,"one judgement isn't enough");
-    check(k.judge(sc(4,70))&&k.kind()==3&&k.heardLine().equals("Heard: birds 0.70"),"two in a row: "+k.heardLine());
-    k.judge(sc(1,60,2,50)); check(k.kind()==3,"a new kind needs two too");
-    k.judge(sc(1,60,2,50)); check(k.kind()==0,"...then voices, the highest of its classes");
+    check(!k.judge(sc(4,40))&&k.kind()==-1,"one judgement isn't enough");
+    check(k.judge(sc(4,40))&&k.kind()==3&&k.heardLine().equals("Heard: birds 0.40"),"two in a row: "+k.heardLine());
+    k.judge(sc(1,40,2,30)); check(k.kind()==3,"a new kind needs two too");
+    k.judge(sc(1,40,2,30)); check(k.kind()==0,"...then voices, the highest of its classes");
+    check(k.judge(sc(4,50))&&k.kind()==3,"a strong lead (0.50) changes it at once");
+    k.judge(sc(3,4)); check(k.kind()==3,"quiet always needs two, however sure");
     k.judge(sc(3,4)); k.judge(sc(3,4)); check(k.kind()==SoundKinds.QUIET,"nothing over 0.05: quiet");
     k.judge(sc(3,40,494,90)); k.judge(sc(3,40,494,90)); check(k.kind()==SoundKinds.QUIET,"YAMNet's top class Silence: quiet");
     k.reset(); check(k.kind()==-1&&k.scores()[3]==0,"reset forgets");

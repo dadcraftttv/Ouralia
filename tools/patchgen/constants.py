@@ -436,6 +436,8 @@ RIGHT_EXTRA_MS = 0.52
 # is centred and identical in both ears. tools/test_patch.py expects this latency.
 EAR_BASE_MS = 1.5
 
-# Sound kinds, step 4c (Oct 31, a Dev spike: docs/design/sound-kinds.md): the mic goes into a ring of three segments
-# this long (0.512 s at 48 kHz); the app reads the two newest (~1 s, YAMNet wants 0.975 s at 16 kHz) as each fills.
-SK_SEG = 24576
+# Sound kinds, step 4c (Oct 31, a Dev spike: docs/design/sound-kinds.md): the mic goes into a ring of SK_N segments
+# this long (0.256 s at 48 kHz); the app reads the SK_N - 1 whole ones (~1 s, YAMNet wants 0.975 s at 16 kHz) as each
+# fills. (Was three of 24576, a judgement every 0.512 s: birds showed after ~3 s, the 2 s gate wants quicker.)
+SK_SEG = 12288
+SK_N = 5
