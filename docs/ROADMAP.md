@@ -34,7 +34,10 @@ clock-driven layers off; no code. Then one reactive response made convincing, on
 Kit removal (Acoustic kept as "Classic") is ON HOLD until after that; sound classification comes later, as a small
 experiment. The composer features are frozen (no new work), New Pieces' listen included. Step 1 heard (Oct 30):
 Singing Room is the core; chimes came uncaused and ~6 dB loud; the pad a constant tone (step 5). Step 2: Chimes Only
-Answer, BUILT behind a switch on `reactive` (design/music.md); DadCraft's A/B in Ouralia Dev pending.
+Answer, BUILT behind a switch on `reactive` (design/music.md), kept (DadCraft: "Yes"), renamed Chimes Only When
+Something Happens. Next (DadCraft: "yes, lets do the pad"): Pad Only With a Steady Sound, BUILT behind a switch on
+`reactive`; his A/B in Ouralia Dev pending. Kit removal after. Keep the found-sound drums on the rhythm grid as they
+are (DadCraft: "absolutely loved from the day we got it worked out").
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.

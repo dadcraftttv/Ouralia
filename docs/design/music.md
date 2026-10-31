@@ -192,6 +192,18 @@
   0.4 -39.7 (about 6 dB louder, DadCraft: "they seem quite loud"), at 0.2 -45.0. Default not changed; his verdict.
   DadCraft's A/B in Ouralia Dev (Oct 30): on, every chime had a cause ("Yes"); at 0.2 "when it's quiet they sound
   fine"; "we can keep it, but it should be clear what it does": shown as "Chimes Only When Something Happens" since.
+  **Pad Only With a Steady Sound** (`pad_room`, Music, default off, saved in presets; Oct 30, reactive-first, branch
+  `reactive`). DadCraft's baseline: with the pad, "it's a constant musical sound/tone" (the pad's room factor
+  `mu_pad_fac` is 0.5 + 0.5 x loudness: never below half). On: the pad and bass together (`mu_pad_c`: synth, found
+  and kit voices) are multiplied by a hold `mphold` that heads, ten times a second, toward the room's loudness above
+  its quiet (`mloud01`, before Ear for the Room; PAD_ROOM_MIN 0.03, x PAD_ROOM_GAIN 2.5, so ~13 dB above the quiet is
+  full), in straight lines: silence to full over PAD_ROOM_UP_S 1.5 s, full to silence over PAD_ROOM_DOWN_S 4 s
+  (the first try was exponential and still whispered at -56 dB ten seconds after a hum). Chords and their changes
+  are unchanged. The room's quiet (the floor) still rises 0.3 dB/s under a long steady sound, so a hum that lasts
+  minutes slowly becomes the room and the pad fades: to be heard. Pd test "Pad Only With a Steady Sound": quiet
+  -140 dB (off -37), three knocks -65, a held 150 Hz hum -34 (off -33), 5 s after it -140.
+  DadCraft (Oct 30), on the way: the found sound on the rhythm grid as the drums, with his effects, he has "absolutely
+  loved from the day we got it worked out": keep it as it is.
   **Key drift** (`music_drift`, Music, default on, noPreset; roadmap 12): every 3-6 min while the music plays the
   home chord moves to a related one on the same notes (`value mdrift` scale steps added to each pad pick, mod n), 60%
   of the time back home when away. Allowed homes per scale (`drift_options`): every pool chord moved there must not be
