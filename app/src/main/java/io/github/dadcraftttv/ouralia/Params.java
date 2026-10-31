@@ -282,6 +282,10 @@ final class Params {
             // Oct 31: "keep both options and have a Both option between them") blends the two half and half.
             new Param("chime_voice", "Chime Voice", 0f, 2f, 0f, "", Param.Curve.LINEAR)
                     .choices("Classic (soft tones)", "Both (the two blended)", "Glass (a struck glass bar)").inSection("music"),
+            // Trailing Melody (DadCraft, Oct 31: "a little trailing melody" after the sounds stop): a chime that
+            // answered a sudden sound carries on for a few notes, softer and slower. Off by default until he says.
+            new Param("chime_trail", "Trailing Melody (notes that follow a chime)", 0f, 5f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Off", "1 note", "2 notes", "3 notes", "4 notes", "5 notes").inSection("music"),
             new Param("chime_char", "Chime Character (ring to your sound)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0f, 1f).resetWhenAbsent(),
             // Found note ring (prototype, Oct 16): what a found melody note rings with. String = our own C object
@@ -610,7 +614,7 @@ final class Params {
     static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
             "music_on", "music_var", "chord_color", "new_pieces", "mel_dev", "pat_gen", "walk_ease", "band_plays", "note_big", "music_drift",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
-            "melody_src", "mel_rhythm", "mel_phrase", "chime_voice", "fm_ring", "res_src", "harm_src", "harm_tracker");
+            "melody_src", "mel_rhythm", "mel_phrase", "chime_voice", "chime_trail", "fm_ring", "res_src", "harm_src", "harm_tracker");
 
     /** Which voice an effect plays with (Classic or New...): saved in presets since Oct 21 (DadCraft), left out of the
      *  built-in presets. */

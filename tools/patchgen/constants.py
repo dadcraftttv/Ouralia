@@ -38,7 +38,7 @@ DEFAULTS = [
     # Reactive first (DadCraft, Oct 31: "make those the default behavior period, no switch"): no setting in the app,
     # the first two stay as the patch's own values so the tests can still pin the old sound (0); Notes Only for Bigger
     # Sounds stays a slider, at his 20.5 dB by default (mics differ by maker)
-    ("chime_answer", 1), ("pad_room", 1), ("note_big", 20.5), ("chime_voice", 0),
+    ("chime_answer", 1), ("pad_room", 1), ("note_big", 20.5), ("chime_voice", 0), ("chime_trail", 0),
 ]
 
 # Scales as semitone steps above the key note. The patch snaps every note it plays to these.
@@ -136,6 +136,11 @@ GLASS_PARTIALS = ((1, 1.0, 0, 1.0), (2.76, 0.24, 0.6, 0.35), (5.40, 0.072, 0.18,
 GLASS_RING_X = 1.2               # the glass rings this much longer than a Classic chime of the same note
 GLASS_ATTACK_MS = 6              # the slower rise (a click at 1 ms)
 GLASS_LEVEL = 1.612              # matches Classic's loudness over each note's first 300 ms
+# Trailing Melody (DadCraft, Oct 31: chimes "should continue for a bit after they've stopped receiving stimuli, so
+# there's a little trailing melody"): after a sudden-sound chime (standing still), chime_trail more notes walk on
+TRAIL_GAP_MS = 450               # the first trailing note this long after the chime...
+TRAIL_SLOW = 1.3                 # ...each gap this much longer than the last (the phrase slows as it ends)
+TRAIL_VEL = 0.6                  # each note this much softer than the one before
 BASS_FOLLOW_PCT = 40    # chance (in 100) that a chord change moves the bass to the chord's root; else the key's root
 BASS_DIP_MS = 600       # a bass note change fades out over this...
 BASS_RISE_MS = 1500     # ...and the new note fades in over this

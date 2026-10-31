@@ -233,6 +233,13 @@
   -35 dB 0.4 s on). DadCraft's A/B (Oct 31): "Glass sounds great. can we keep both options and have a Both option
   between them?" Now Classic / Both / Glass (0/1/2; Dev's stored Glass, 1, reads as Both): Classic x (1 - v/2),
   Glass x v/2, so Both is half each on the shared fundamental.
+  **Trailing Melody** (`chime_trail`, Music, Off / 1-5 notes, Off by default, saved in presets; Oct 31, branch
+  `reactive`). DadCraft: "the chimes/bells we just worked on should continue for a bit after they've stopped
+  receiving stimuli, so there's a little trailing melody." A sudden-sound chime standing still (`mu_q_now`; walking
+  has its own arpeggio) starts a tail (`tr_*`): that many notes through `mu_deg`, so each walks a step or two on like
+  any chime; TRAIL_GAP_MS 450 to the first, each gap x TRAIL_SLOW 1.3, each note x TRAIL_VEL 0.6. The next sudden
+  sound stops the tail and starts its own. No new [random], so with it Off every test and Classic is unchanged
+  (check_classic_parity 55/55). Pd test "Trailing Melody" (3: notes at 0.02, 0.46, 1.04, 1.80 s).
   **Fixed, no switch (DadCraft, Oct 31):** "rather than make them switches on by default, lets make those the default
   behavior period, no switch." Then for the notes: "we should set the 20 db threshold on the slider, but users should
   have the ability to move it as they need or want, since each manufacturer could set mic values differently." So

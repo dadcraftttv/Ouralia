@@ -1240,6 +1240,26 @@ check(rms(cv_g) > 1e-4 and abs(on_db) < 3 and bar(cv_g, 0.02, 0.12) > -30 and ba
       "Chime Voice Glass: %.0f Hz, strike %+.1f dB against Classic; the 2.76x partial %.0f dB (Classic %.0f), %.0f dB 0.4 s on; Both %+.1f dB, its 2.76x %.0f dB"
       % (f0, on_db, bar(cv_g, 0.02, 0.12), bar(cv_c, 0.02, 0.12), bar(cv_g, 0.4, 0.5), both_db, bar(cv_b, 0.02, 0.12)))
 
+# Trailing Melody (chime_trail, DadCraft Oct 31: "a little trailing melody"): after a knock's chime, standing still,
+# that many more notes, each gap longer; off, none; a second knock starts a new tail
+def trail_times(n, knocks=(0.0,)):
+    e = fresh(music_on=1, music_pad=0, music_arp=1, wet=0, beat_level=0, chime_answer=1, mix_walk=0, chime_trail=n)
+    e.listen("chime_deg"); e.run(e.silence(4)); e.heard.pop("chime_deg", None)
+    x = np.zeros(6 * SR, np.float32)
+    for t in knocks:
+        x[int(t * SR):int(t * SR) + len(burst)] += burst
+    times, seen = [], 0
+    for i in range(0, len(x), SR // 50):
+        e.run(x[i:i + SR // 50]); k = len(e.heard.get("chime_deg", []))
+        times += [i / SR] * (k - seen); seen = k
+    return times
+tt0, tt3, tt2k = trail_times(0), trail_times(3), trail_times(3, (0.0, 1.0))
+tgaps = np.diff(tt3)
+check(len(tt0) == 1 and len(tt3) == 4 and all(np.diff(tgaps) > 0.05) and 0.35 < tgaps[0] < 0.6
+      and len(tt2k) == 1 + 1 + 1 + 3 and max(tt2k) > 2.5,   # (one tail note before the second knock restarts it)
+      "Trailing Melody: off %d note, 3 -> %d notes at %s s; two knocks 1 s apart -> %d notes, the last at %.2f s"
+      % (len(tt0), len(tt3), ", ".join("%.2f" % t for t in tt3), len(tt2k), max(tt2k)))
+
 # stopping after a walk: the pad and bass take a breath (a few dB down within ~3 s), then drift back to full.
 # Measured on the bass alone (a steady level); its own short dips at note changes are why we look at ranges.
 e = fresh(music_on=1, music_pad=0.5, music_arp=0, music_res=0, wet=0, beat_level=0, music_pad_reg=0)
