@@ -159,4 +159,5 @@ rolled over at 15:43):** on 15:25-15:57: 3691 -> ~3543 mAh, **~5.6%/h**, screen 
 apps). The "off" half drained more, so the screen time swamps the difference: **inconclusive as a measurement**.
 Estimate from the CPU A/B: +3% of one core is ~10-15 mA, about 0.3%/h of the ~4,600 mAh battery, far under the 3%/h
 gate. **DadCraft accepted the battery gate on the estimate** (Oct 31: "accept on the estimate."). **4c passes all
-its gates.** Next: 4d (his walk).
+its gates.** Next: 4d (his walk). Before it, the event log rolls over at 1 MB instead of 64 KB (64 KB held ~45 min
+with the room listener; DadCraft, Oct 31: "yes, raise the limit now").
