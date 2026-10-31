@@ -202,6 +202,20 @@
   are unchanged. The room's quiet (the floor) still rises 0.3 dB/s under a long steady sound, so a hum that lasts
   minutes slowly becomes the room and the pad fades: to be heard. Pd test "Pad Only With a Steady Sound": quiet
   -140 dB (off -37), three knocks -65, a held 150 Hz hum -34 (off -33), 5 s after it -140.
+  DadCraft's A/B (Oct 30), first through Ouralia Dev's leftover Future bass kit ("the pulsing pad sound"); on Kit
+  Classic: "it feels like it's answering my tones better now when i ahhhhhh or hum", "the bass still comes in and
+  just kind of feels like it always has", fades "fine". He chose "Pad without bass": while on, the bass (`ba_out`)
+  stays out (`mu_pr_blp`); the pad alone follows the hold. Test: under the hum, Pad register Low (bass only) -140.
+  **Notes Only for Bigger Sounds** (`note_big`, Music, 0-30 dB, 0 = off by default, saved in presets; Oct 30). DadCraft:
+  typing "just sounds like it's random notes responding with no musical semblance at all"; he chose: small clicks
+  become rhythm, only bigger sounds get a note. A sudden sound gets a chime (`mu_nb_chk`) or a Singing Room found bell
+  (`rnf_chk`) only if the level `mlev` (mic_level, ~30 a second, now stored before the onset reads it) is this many dB
+  above the room's quiet (`mfloor`, held within 46-58). The found bells' detector hears 5 ms readings, ahead of
+  `mlev`: with note_big on it checks 40 ms later (first try read the level before the knock and dropped knocks'
+  bells). Small sounds still get caught for the found drums and the learned groove, so with the beat on they turn
+  into rhythm. Measured (8 taps in a faint room): clicks get notes up to ~20 dB and none at 25, knocks and claps keep
+  theirs at 30, so it is a slider to set by ear. Pd test "Notes Only for Bigger Sounds" (at 25 dB: clicks 0 chimes 0
+  bells, knocks 5 and 5; off, clicks 5 and 8). `s rnf_note` reports each found bell for the tests.
   DadCraft (Oct 30), on the way: the found sound on the rhythm grid as the drums, with his effects, he has "absolutely
   loved from the day we got it worked out": keep it as it is.
   **Key drift** (`music_drift`, Music, default on, noPreset; roadmap 12): every 3-6 min while the music plays the

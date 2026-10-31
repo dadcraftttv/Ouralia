@@ -36,7 +36,9 @@ experiment. The composer features are frozen (no new work), New Pieces' listen i
 Singing Room is the core; chimes came uncaused and ~6 dB loud; the pad a constant tone (step 5). Step 2: Chimes Only
 Answer, BUILT behind a switch on `reactive` (design/music.md), kept (DadCraft: "Yes"), renamed Chimes Only When
 Something Happens. Next (DadCraft: "yes, lets do the pad"): Pad Only With a Steady Sound, BUILT behind a switch on
-`reactive`; his A/B in Ouralia Dev pending. Kit removal after. Keep the found-sound drums on the rhythm grid as they
+`reactive`; A/B (Oct 30): answers his voice better, "Pad without bass" chosen and built. Notes Only for Bigger
+Sounds (his pick "C": clicks become rhythm, bigger sounds get notes) BUILT behind a slider; his A/B pending. Kit
+removal after. Keep the found-sound drums on the rhythm grid as they
 are (DadCraft: "absolutely loved from the day we got it worked out").
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things

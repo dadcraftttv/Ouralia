@@ -366,7 +366,9 @@ def add_music(P):
     ex("mu_onset_thr", "14-8*$f1", x, 330)
     P.c("mu_r_react", "mu_onset_thr")
     ex("mu_onset", "(($f1-$f2)>$f3)*($f1>46)", x + 300, 450)   # a real jump, and not just room noise
-    P.c("mu_r_level", "mu_onset"); P.c("mu_snap_slow", "mu_onset", 0, 1)
+    P.obj("mu_lv_t", "t f f", x + 200, 430); P.obj("mu_lv_v", "value mlev", x + 260, 440)   # (the level first: the
+    P.c("mu_r_level", "mu_lv_t"); P.c("mu_lv_t", "mu_lv_v", 1, 0); P.c("mu_lv_t", "mu_onset", 0, 0)   # onset reads it)
+    P.c("mu_snap_slow", "mu_onset", 0, 1)
     P.c("mu_onset_thr", "mu_onset", 0, 2)
     P.obj("mu_onset_sel", "sel 1", x + 300, 480)
     P.c("mu_onset", "mu_onset_sel")
@@ -565,7 +567,14 @@ def add_music(P):
     # Path 1, sudden sounds: a chime whose loudness follows the room.
     P.obj("mu_ons_gate", "spigot 1", x + 300, 510)
     P.obj("mu_ons_gate_on", "spigot", x + 300, 540)
-    P.c(handling_gate(P, "mu_ons_hg", "mu_onset_sel", x + 400, 480, wait=False), "mu_ons_gate")   # not handling noise
+    # Notes only for bigger sounds (note_big, DadCraft Oct 30: typing "just sounds like it's random notes"): a sudden
+    # sound gets a note only this many dB above the room's quiet; smaller ones still feed the found drums and groove
+    P.obj("mu_nb_r", "r note_big", x + 480, 470); P.obj("mu_nb_v", "value nbig", x + 480, 485); P.c("mu_nb_r", "mu_nb_v")
+    P.obj("mu_nb_t", "t b", x + 400, 505)
+    ex("mu_nb_chk", f"(nbig<=0)+(nbig>0)*(mlev-min(max(mfloor,46),58)>=nbig)+$f1*0", x + 400, 515)
+    P.obj("mu_nb_sel", "sel 1", x + 400, 525)
+    P.c(handling_gate(P, "mu_ons_hg", "mu_onset_sel", x + 400, 480, wait=False), "mu_nb_t")   # not handling noise
+    P.c("mu_nb_t", "mu_nb_chk"); P.c("mu_nb_chk", "mu_nb_sel"); P.c("mu_nb_sel", "mu_ons_gate")
     P.obj("mu_ons_t", "t b b b", x + 300, 570)
     P.msg("mu_ons_close", "0", x + 360, 600); P.msg("mu_ons_open", "1", x + 420, 600)
     P.obj("mu_ons_wait", "del 700", x + 380, 630)
@@ -1106,7 +1115,6 @@ def add_music(P):
     P.c("ba_reg_init", "ba_reg_both"); P.c("ba_reg_both", "ba_mid_ln"); P.c("ba_reg_both", "ba_low_ln")
     P.sig2("mu_pad_mid", "*~", "mu_pad_b", "ba_mid_ln", px, 870)
     P.sig2("ba_out", "*~", "ba_b", "ba_low_ln", bx, 860)
-    P.sig2("mu_pad_c", "+~", "mu_pad_mid", "ba_out", px, 880)
 
     # ---- tone, levels, on/off ----
     P.obj("mu_r_tone", "r music_tone", x + 800, 300)
@@ -1141,8 +1149,9 @@ def add_music(P):
     P.c("mu_br_step", "mu_br_t"); P.c("mu_br_t", "mu_br_back", 1, 0); P.c("mu_br_t", "mu_br_del", 0, 0)
     P.c("mu_br_back", "mu_br_ln"); P.c("mu_br_del", "mu_br_dip"); P.c("mu_br_dip", "mu_br_ln")
     # Pad Only With a Steady Sound (pad_room, DadCraft Oct 30: the pad was "a constant musical sound/tone"): the pad
-    # and bass come in while the room holds a sound above its quiet (a hum, traffic, wind: rising over ~PAD_ROOM_UP_S)
-    # and fade to silence when it stops (over ~PAD_ROOM_DOWN_S). A knock is too short to open it. Off: always 1.
+    # comes in while the room holds a sound above its quiet (a hum, traffic, wind: rising over ~PAD_ROOM_UP_S)
+    # and fades to silence when it stops (over ~PAD_ROOM_DOWN_S). A knock is too short to open it. The bass stays out
+    # while it is on (DadCraft, Oct 30: "Pad without bass"). Off: both always 1.
     P.obj("mu_pr_tick", "metro 100", px + 600, 760); P.c("mu_load", "mu_pr_tick")
     P.obj("mu_pr_t", "t b b b", px + 600, 775); P.c("mu_pr_tick", "mu_pr_t")
     P.obj("mu_pr_l", "value mloud01", px + 600, 790); P.obj("mu_pr_h", "value mphold", px + 660, 790)
@@ -1158,7 +1167,12 @@ def add_music(P):
     P.c("mu_pr_new", "mu_pr_wr"); P.c("mu_pr_wr", "mu_pr_hw", 1, 0); P.c("mu_pr_wr", "mu_pr_g", 0, 0)
     P.obj("mu_pr_sig", "sig~ 1", px + 600, 855); P.obj("mu_pr_lp", "lop~ 2", px + 600, 870)
     P.c("mu_pr_g", "mu_pr_sig"); P.c("mu_pr_sig", "mu_pr_lp")
-    P.sig2("mu_pad_rm", "*~", "mu_pad_c", "mu_pr_lp", px, 885)
+    ex("mu_pr_bg", "1-$f1", px + 720, 840); P.c("mu_pr_r", "mu_pr_bg")
+    P.obj("mu_pr_bsig", "sig~ 1", px + 720, 855); P.obj("mu_pr_blp", "lop~ 2", px + 720, 870)
+    P.c("mu_pr_bg", "mu_pr_bsig"); P.c("mu_pr_bsig", "mu_pr_blp")
+    P.sig2("mu_pad_mrm", "*~", "mu_pad_mid", "mu_pr_lp", px, 880)
+    P.sig2("mu_pad_brm", "*~", "ba_out", "mu_pr_blp", px + 60, 880)
+    P.sig2("mu_pad_rm", "+~", "mu_pad_mrm", "mu_pad_brm", px, 885)
     P.sig2("mu_pad_br", "*~", "mu_pad_rm", "mu_br_ln", px, 890)
     P.sig2("mu_pad_out", "*~", "mu_pad_br", pad_lvl, px, 900)
     P.sig2("mu_chime_out", "*~", "mu_chime_lp", arp_lvl, px + 200, 900)
@@ -1495,8 +1509,15 @@ def add_room_notes(P, rx, ex, degree_to_hz):
     P.obj("rnf_lb", "loadbang", fx + 320, fy); P.msg("rnf_open1", "1", fx + 320, fy + 15)
     P.obj("rnf_v_open", "value rnf_open", fx + 320, fy + 30); P.c("rnf_lb", "rnf_open1"); P.c("rnf_open1", "rnf_v_open")
     P.obj("rnf_det", "t b", fx, fy + 50); P.c(handling_gate(P, "rnf_hg", "fs_det_sel", fx + 60, fy + 20, wait=False), "rnf_det")
-    ex("rnf_chk", "(rnf_src>=1)*(rnf_pk==0)*(rnf_on>0)*(rnf_open==1)+$f1*0", fx, fy + 65); P.c("rnf_det", "rnf_chk")
+    ex("rnf_chk", "(rnf_src>=1)*(rnf_pk==0)*(rnf_on>0)*(rnf_open==1)*((nbig<=0)+(nbig>0)*(mlev-min(max(mfloor,46),58)>=nbig))+$f1*0", fx, fy + 65)   # (note_big too)
+    # (this detector hears 5 ms readings, the level `mlev` comes ~30 times a second: with note_big on, wait for it)
+    ex("rnf_nb_on", "nbig>0", fx - 60, fy + 50); P.obj("rnf_nb_sel", "sel 0 1", fx - 60, fy + 57)
+    P.obj("rnf_nb_del", "del 40", fx - 30, fy + 60)
+    P.c("rnf_det", "rnf_nb_on"); P.c("rnf_nb_on", "rnf_nb_sel"); P.c("rnf_nb_sel", "rnf_chk", 0, 0)
+    P.c("rnf_nb_sel", "rnf_nb_del", 1, 0); P.c("rnf_nb_del", "rnf_chk")
     P.obj("rnf_sel", "sel 1", fx, fy + 80); P.c("rnf_chk", "rnf_sel")
+    P.msg("rnf_rep1", "1", fx - 60, fy + 95); P.obj("rnf_rep", "s rnf_note", fx - 60, fy + 110)   # for the tests
+    P.c("rnf_sel", "rnf_rep1"); P.c("rnf_rep1", "rnf_rep")
     P.obj("rnf_go", "t b b b b", fx, fy + 95); P.c("rnf_sel", "rnf_go")
     # 1. a short rest
     P.msg("rnf_close", "0", fx + 300, fy + 110); P.c("rnf_go", "rnf_close", 3, 0); P.c("rnf_close", "rnf_v_open")

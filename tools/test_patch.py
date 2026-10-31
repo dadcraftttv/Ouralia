@@ -1179,10 +1179,10 @@ check(abs(d_half - 250) < 6 and abs(d_quarter - 125) < 6 and abs(d_off - 350) < 
       % (d_half, d_quarter, d_off, d_still, d_after))
 
 # Pad Only With a Steady Sound (pad_room, DadCraft Oct 30): silent in a quiet room and after knocks, in under a held
-# hum at about the pad's usual level, silent again a few seconds after the hum stops
-def pad_room_run(on):
+# hum at about the pad's usual level, silent again a few seconds after the hum stops; no bass while on
+def pad_room_run(on, reg=1):
     e = fresh(music_on=1, music_pad=0.33, music_arp=0, music_res=0, music_harm=0, music_answer=0, pad_src=0, wet=0,
-              dry=0, beat_level=0, pad_room=on)
+              dry=0, beat_level=0, pad_room=on, music_pad_reg=reg)
     r = np.random.default_rng(5); room = lambda sec: (r.standard_normal(int(sec * SR)) * 0.003).astype(np.float32)
     kn = room(3.0); n = int(0.03 * SR)
     for t in (0.2, 1.1, 2.4):
@@ -1192,10 +1192,25 @@ def pad_room_run(on):
     e.run(room(3)); quiet = db(e.run(room(3))[:, 0]); knock = db(e.run(kn)[:, 0])
     e.run(hm[:3 * SR]); held = db(e.run(hm[3 * SR:])[:, 0]); e.run(room(5)); after = db(e.run(room(2))[:, 0])
     return quiet, knock, held, after
-pr_off, pr_on = pad_room_run(0), pad_room_run(1)
-check(pr_off[0] > -45 and pr_on[0] < -100 and pr_on[1] < -50 and abs(pr_on[2] - pr_off[2]) < 3 and pr_on[3] < -100,
-      "Pad Only With a Steady Sound: quiet %.0f dB (off %.0f), knocks %.0f, a held hum %.0f (off %.0f), 5 s after it %.0f"
-      % (pr_on[0], pr_off[0], pr_on[1], pr_on[2], pr_off[2], pr_on[3]))
+pr_off, pr_on, pr_bass_off, pr_bass = pad_room_run(0), pad_room_run(1), pad_room_run(0, reg=0), pad_room_run(1, reg=0)
+check(pr_off[0] > -45 and pr_on[0] < -100 and pr_on[1] < -50 and abs(pr_on[2] - pr_off[2]) < 3 and pr_on[3] < -100
+      and pr_bass_off[2] > -50 and pr_bass[2] < -100,
+      "Pad Only With a Steady Sound: quiet %.0f dB (off %.0f), knocks %.0f, a held hum %.0f (off %.0f), 5 s after it %.0f;"
+      " the bass under the hum %.0f (off %.0f)" % (pr_on[0], pr_off[0], pr_on[1], pr_on[2], pr_off[2], pr_on[3], pr_bass[2], pr_bass_off[2]))
+
+# Notes Only for Bigger Sounds (note_big, DadCraft Oct 30): at 25 dB, clicks get no chime and no found bell, knocks do
+def nb_count(amp, ms, nb):
+    e = fresh(music_on=1, music_pad=0, music_arp=0.2, music_res=0.8, res_src=1, wet=0, beat_level=0, note_big=nb, chime_answer=1)
+    e.listen("chime_deg", "rnf_note"); r = np.random.default_rng(9); e.run((r.standard_normal(4 * SR) * 0.0005).astype(np.float32))
+    for k in ("chime_deg", "rnf_note"):
+        e.heard.pop(k, None)
+    x = (r.standard_normal(10 * SR) * 0.0005).astype(np.float32); m = int(ms / 1000 * SR)
+    for k in range(8):
+        i = int((1 + 1.1 * k) * SR); x[i:i + m] += r.standard_normal(m) * np.exp(-np.arange(m) / (m / 5)) * amp
+    e.run(x); return len(e.heard.get("chime_deg", [])), len(e.heard.get("rnf_note", []))
+nb_click0, nb_click, nb_knock = nb_count(0.1, 5, 0), nb_count(0.1, 5, 25), nb_count(0.5, 30, 25)
+check(nb_click0[0] > 0 and nb_click0[1] > 0 and nb_click == (0, 0) and nb_knock[0] >= 2 and nb_knock[1] >= 2,
+      "Notes Only for Bigger Sounds: clicks %s chimes/bells off, %s at 25 dB, knocks %s" % (nb_click0, nb_click, nb_knock))
 
 # stopping after a walk: the pad and bass take a breath (a few dB down within ~3 s), then drift back to full.
 # Measured on the bass alone (a steady level); its own short dips at note changes are why we look at ranges.
