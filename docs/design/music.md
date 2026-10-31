@@ -217,6 +217,14 @@
   bells, knocks 5 and 5; off, clicks 5 and 8). `s rnf_note` reports each found bell for the tests.
   DadCraft's A/B (Oct 30): at 0 typing chimes; "not hearing any chimes when the slider is at 20.55. keep it. knocks
   and louder noises still get a chime." Default stays 0 until he says.
+  **Fixed, no switch (DadCraft, Oct 31):** "rather than make them switches on by default, lets make those the default
+  behavior period, no switch." Then for the notes: "we should set the 20 db threshold on the slider, but users should
+  have the ability to move it as they need or want, since each manufacturer could set mic values differently." So
+  `chime_answer` and `pad_room` left Params.java (old saves and presets ignore their keys) and are 1 in the patch's
+  own defaults, kept there only so the tests can pin the old sound (0, in test_patch `fresh()`); `note_big` stays a
+  slider, default 20.5 dB (his setting; clicks still got notes at ~20), patch default the same. Existing installs
+  keep a stored value. Motif comebacks are gone from the app (phone and
+  desktop no longer listen to `chime_note`); MotifMemory remains for its Note type, shared with Call and Response.
   DadCraft (Oct 30), on the way: the found sound on the rhythm grid as the drums, with his effects, he has "absolutely
   loved from the day we got it worked out": keep it as it is.
   **Key drift** (`music_drift`, Music, default on, noPreset; roadmap 12): every 3-6 min while the music plays the

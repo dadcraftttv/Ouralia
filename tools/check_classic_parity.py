@@ -56,6 +56,7 @@ def render(patch, part, src, switch, output):
         base.update(music_arp=0.4, music_pad=0.5, dry=1, voc_mix=1, voc_carrier=src,
                     melody_src=0, pad_src=0, bass_src=0, rhythm_src=0,
                     voc_wave=1)  # Chords, own pitch, whisper and melody; Chip carrier retained.
+    base.update(chime_answer=0, pad_room=0, note_big=0)   # (patch defaults since Oct 31: pin the old sound)
     if switch != 'off':
         base[switch] = 20.5 if switch == 'note_big' else 1
     for key, value in base.items():
