@@ -22,7 +22,7 @@ import java.util.function.Consumer;
 
 /**
  * The desktop version (stream mode): the phone app's own logic (settings, presets, movers, Realms, Intensity, Calm
- * builds, motifs, call and response) driving the built-in patch in {@link DesktopEngine}, with a window
+ * builds, call and response) driving the built-in patch in {@link DesktopEngine}, with a window
  * ({@link DesktopWindow}). There are no sensors: walking, pockets, light and shaking never happen here, so the
  * beat keeps the tempo you set and the Realms follow the room's loudness and the time of day.
  *
@@ -329,12 +329,12 @@ final class DesktopApp {
         }
     }
 
-    /** A remembered or answering phrase: each note at its time, through the patch's motif path. */
-    private static void play(List<MotifMemory.Note> notes, float velocity) {
+    /** An answering phrase: each note at its time, through the patch's motif path. */
+    private static void play(List<CallResponse.Note> notes, float velocity) {
         if (notes == null) {
             return;
         }
-        for (MotifMemory.Note n : notes) {
+        for (CallResponse.Note n : notes) {
             clock.schedule(() -> PdBase.sendList("motif", (float) n.degree, velocity), Math.round(n.at * 1000),
                     TimeUnit.MILLISECONDS);
         }

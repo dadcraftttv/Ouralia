@@ -14,6 +14,18 @@ import java.util.Random;
  * Pure logic (test L).
  */
 final class CallResponse {
+    /** One note of an answer: when (seconds after the answer starts) and which scale step. (It was MotifMemory's,
+     *  removed Oct 31 with motif comebacks.) */
+    static final class Note {
+        final double at;
+        final int degree;
+
+        Note(double at, int degree) {
+            this.at = at;
+            this.degree = degree;
+        }
+    }
+
 
     static final double PHRASE_GAP_S = 1.5;   // a longer pause between notes starts a new phrase
     static final double ANSWER_AFTER_S = 1.6; // the phrase has ended when nothing is sung for this long (longer than a
@@ -71,7 +83,7 @@ final class CallResponse {
      * steps; null otherwise. {@code level} is the Call and response setting (0 = never), {@code scaleSize} the
      * notes per octave of the scale playing.
      */
-    synchronized List<MotifMemory.Note> poll(double t, float level, int scaleSize) {
+    synchronized List<Note> poll(double t, float level, int scaleSize) {
         if (level <= 0 || noteOn || degrees.isEmpty() || t - lastEnd < ANSWER_AFTER_S || t - lastAnswer < COOLDOWN_S) {
             return null;
         }
@@ -80,20 +92,20 @@ final class CallResponse {
             high = Math.max(high, d);
         }
         int shift = high >= HIGH_STEP ? -2 : 2;
-        List<MotifMemory.Note> out = new ArrayList<>();
+        List<Note> out = new ArrayList<>();
         double t0 = starts.get(0);
         for (int i = 0; i < degrees.size(); i++) {
             double at = starts.get(i) - t0;
             if (at > MAX_SPAN_S) {
                 break;
             }
-            out.add(new MotifMemory.Note(at, degrees.get(i) + shift));
+            out.add(new Note(at, degrees.get(i) + shift));
         }
         // a little life: now and then the last note lands on the key note's nearest octave instead (a resolution)
         if (out.size() >= 3 && random.nextFloat() < 0.4f) {
-            MotifMemory.Note last = out.remove(out.size() - 1);
+            Note last = out.remove(out.size() - 1);
             int n = Math.max(1, scaleSize);
-            out.add(new MotifMemory.Note(last.at, Math.round(last.degree / (float) n) * n));
+            out.add(new Note(last.at, Math.round(last.degree / (float) n) * n));
         }
         degrees.clear();
         starts.clear();

@@ -233,6 +233,9 @@
   -35 dB 0.4 s on). DadCraft's A/B (Oct 31): "Glass sounds great. can we keep both options and have a Both option
   between them?" Now Classic / Both / Glass (0/1/2; Dev's stored Glass, 1, reads as Both): Classic x (1 - v/2),
   Glass x v/2, so Both is half each on the shared fundamental.
+  **Motif memory removed (Oct 31):** with Chimes Only When Something Happens fixed its comebacks never play, so
+  MotifMemory.java and its tests are gone; its Note type moved to CallResponse. The patch's `chime_note` report stays
+  (the tests count chimes with it).
   **Trailing Melody** (`chime_trail`, Music, Off / 1-5 notes, Off by default, saved in presets; Oct 31, branch
   `reactive`). DadCraft: "the chimes/bells we just worked on should continue for a bit after they've stopped
   receiving stimuli, so there's a little trailing melody." A sudden-sound chime standing still (`mu_q_now`; walking

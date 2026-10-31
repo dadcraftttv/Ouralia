@@ -3,14 +3,14 @@ import java.util.*;
 public class L {
   static int fails=0;
   static void check(boolean c,String m){ if(!c){fails++;System.out.println("FAIL: "+m);} else System.out.println("ok:   "+m); }
-  static String show(List<MotifMemory.Note> a){ if(a==null) return "null"; StringBuilder b=new StringBuilder(); for(MotifMemory.Note n:a) b.append(String.format("%.1f:%d ",n.at,n.degree)); return b.toString(); }
+  static String show(List<CallResponse.Note> a){ if(a==null) return "null"; StringBuilder b=new StringBuilder(); for(CallResponse.Note n:a) b.append(String.format("%.1f:%d ",n.at,n.degree)); return b.toString(); }
   public static void main(String[] a){
     CallResponse c=new CallResponse(new Random(3));
     c.onNote(0,10.0); c.onNoteOff(10.4); c.onNote(2,10.5); c.onNoteOff(10.9); c.onNote(4,11.0);
     check(c.poll(11.5,1f,7)==null,"nothing while a note is still sung");
     c.onNoteOff(11.6);
     check(c.poll(13.0,1f,7)==null,"nothing until the phrase has ended (1.6 s of quiet)");
-    List<MotifMemory.Note> ans=c.poll(13.3,1f,7);
+    List<CallResponse.Note> ans=c.poll(13.3,1f,7);
     check(ans!=null && ans.size()==3 && ans.get(0).at==0 && Math.abs(ans.get(1).at-0.5)<1e-9 && Math.abs(ans.get(2).at-1.0)<1e-9
         && ans.get(0).degree==2 && ans.get(1).degree==4 && (ans.get(2).degree==6 || ans.get(2).degree==7),
         "a three-note phrase is answered in its own rhythm, a third up (the last note may resolve to the key): "+show(ans));
