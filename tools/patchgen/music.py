@@ -414,6 +414,9 @@ def add_music(P):
         P.obj(f"mu_{nm}_r", f"r {recv}", cx - 200 + (60 if nm == "mixw" else 0), cy - 20)
         P.obj(f"mu_{nm}_v", f"value {nm}", cx - 200 + (60 if nm == "mixw" else 0), cy - 5); P.c(f"mu_{nm}_r", f"mu_{nm}_v")
     ex("mu_v_trim", "$f1*mixc", cx - 60, cy + 30)
+    # Chime Voice (chime_voice: 0 Classic, 1 Glass): Classic's sum is scaled by 1 - voice, Glass only starts when on
+    P.obj("mu_cv_r", "r chime_voice", cx - 200, cy + 60); P.obj("mu_cv_v", "value cvoice", cx - 200, cy + 75)
+    P.c("mu_cv_r", "mu_cv_v"); ex("mu_cv_cl", "1-$f1", cx - 200, cy + 90); P.c("mu_cv_r", "mu_cv_cl")
     P.c("mu_deg", "mu_v_trim", 3, 0); P.c("mu_v_trim", "mu_v_vel")
     voices = []
     for k in range(4):
@@ -459,7 +462,8 @@ def add_music(P):
         P.obj(f"mu_v{k}_von", "moses 0.0001", vx + 30, cy + 41); P.c(f"mu_v{k}_vst", f"mu_v{k}_von", 1, 0)
         P.obj(f"mu_v{k}_vbt", "t b b", vx + 30, cy + 42); P.c(f"mu_v{k}_von", f"mu_v{k}_vbt", 1, 0)
         P.msg(f"mu_v{k}_swon", f"{BS}; sw_chv{k} 1", vx + 30, cy + 43); P.c(f"mu_v{k}_vbt", f"mu_v{k}_swon", 1, 0)
-        P.obj(f"mu_v{k}_swdc", "value cdec", vx + 60, cy + 43); P.obj(f"mu_v{k}_swt", "+ 300", vx + 60, cy + 44)
+        P.obj(f"mu_v{k}_swdc", "value cdec", vx + 60, cy + 43)
+        ex(f"mu_v{k}_swt", f"$f1*if(cvoice>0,{GLASS_RING_X},1)+300", vx + 60, cy + 44)   # (Glass rings longer)
         P.obj(f"mu_v{k}_swdl", "del", vx + 60, cy + 45); P.msg(f"mu_v{k}_swoff", f"{BS}; sw_chv{k} 0", vx + 60, cy + 46)
         P.c(f"mu_v{k}_vbt", f"mu_v{k}_swdc", 0, 0); P.c(f"mu_v{k}_swdc", f"mu_v{k}_swt"); P.c(f"mu_v{k}_swt", f"mu_v{k}_swdl")
         P.c(f"mu_v{k}_swdl", f"mu_v{k}_swoff")
@@ -472,7 +476,45 @@ def add_music(P):
         P.msg(f"mu_v{k}_vmn", f"{BS}; voc_ctl mnote {BS}$1", vx + 200, cy + 38)
         P.c(f"mu_v{k}_vcf", f"mu_v{k}_vmn")
         P.c(f"mu_v{k}_pk", f"mu_v{k}_env_msg"); P.c(f"mu_v{k}_env_msg", f"mu_v{k}_env")
-        P.sig2(f"mu_v{k}_out", "*~", f"mu_v{k}_s", f"mu_v{k}_env", vx + 60, cy + 240)
+        P.sig2(f"mu_v{k}_cls", "*~", f"mu_v{k}_s", f"mu_v{k}_env", vx + 60, cy + 240)
+        P.obj(f"mu_v{k}_ck", "*~ 1", vx + 60, cy + 250); P.c(f"mu_v{k}_cls", f"mu_v{k}_ck"); P.c("mu_cv_cl", f"mu_v{k}_ck", 0, 1)
+        # Glass: a shared fade in dB below full (0 to -60 over the ring, then gone); partial i is 100 + fade / its
+        # share in Pd's dB, so the high partials reach -60 first. The rise and the level ride on a second line.
+        gx = vx + 120
+        ex(f"mu_v{k}_gv", f"$f1*cvoice*{GLASS_LEVEL}", gx, cy + 500); P.c(f"mu_v{k}_vst", f"mu_v{k}_gv", 0, 0)
+        P.obj(f"mu_v{k}_gon", "moses 0.0001", gx, cy + 515); P.c(f"mu_v{k}_gv", f"mu_v{k}_gon")
+        P.obj(f"mu_v{k}_gt", "t f b b", gx, cy + 530); P.c(f"mu_v{k}_gon", f"mu_v{k}_gt", 1, 0)
+        P.obj(f"mu_v{k}_gdc", "value cdec", gx + 60, cy + 545); P.obj(f"mu_v{k}_gdx", f"* {GLASS_RING_X}", gx + 60, cy + 560)
+        P.obj(f"mu_v{k}_gpk", "pack f f", gx, cy + 575)
+        P.c(f"mu_v{k}_gt", f"mu_v{k}_gdc", 2, 0); P.c(f"mu_v{k}_gdc", f"mu_v{k}_gdx"); P.c(f"mu_v{k}_gdx", f"mu_v{k}_gpk", 0, 1)
+        P.c(f"mu_v{k}_gt", f"mu_v{k}_gpk", 0, 0)
+        P.msg(f"mu_v{k}_gam", ("0, " + BS + f"$1 {GLASS_ATTACK_MS}").replace(",", comma), gx, cy + 590)
+        P.msg(f"mu_v{k}_gfm", ("0, -60 " + BS + "$2, -1000 1 " + BS + "$2").replace(",", comma), gx + 80, cy + 590)
+        P.obj(f"mu_v{k}_gat", "vline~", gx, cy + 605); P.obj(f"mu_v{k}_gfd", "vline~", gx + 80, cy + 605)
+        P.c(f"mu_v{k}_gpk", f"mu_v{k}_gam"); P.c(f"mu_v{k}_gam", f"mu_v{k}_gat")
+        P.c(f"mu_v{k}_gpk", f"mu_v{k}_gfm"); P.c(f"mu_v{k}_gfm", f"mu_v{k}_gfd")
+        P.obj(f"mu_v{k}_gbr", "value cbright", gx + 160, cy + 545); P.c(f"mu_v{k}_gt", f"mu_v{k}_gbr", 1, 0)
+        parts = []
+        for i, (ratio, lvl, per_br, share) in enumerate(GLASS_PARTIALS):
+            px = gx + 200 + 60 * i
+            if ratio == 1:
+                osc = f"mu_v{k}_o1"   # (the fundamental is Classic's own)
+            else:
+                P.obj(f"mu_v{k}_gf{i}", f"* {ratio}", px, cy + 620); P.c(f"mu_v{k}_f", f"mu_v{k}_gf{i}")
+                osc = P.obj(f"mu_v{k}_go{i}", "osc~", px, cy + 635); P.c(f"mu_v{k}_gf{i}", osc)
+            P.obj(f"mu_v{k}_gs{i}", f"*~ {1 / share:.6g}", px, cy + 650); P.c(f"mu_v{k}_gfd", f"mu_v{k}_gs{i}")
+            P.obj(f"mu_v{k}_gd{i}", "+~ 100", px, cy + 665); P.c(f"mu_v{k}_gs{i}", f"mu_v{k}_gd{i}")
+            P.obj(f"mu_v{k}_ge{i}", "dbtorms~", px, cy + 680); P.c(f"mu_v{k}_gd{i}", f"mu_v{k}_ge{i}")
+            P.obj(f"mu_v{k}_gg{i}", f"*~ {lvl}", px, cy + 695); P.c(f"mu_v{k}_ge{i}", f"mu_v{k}_gg{i}")
+            if per_br:
+                ex(f"mu_v{k}_gl{i}", f"{lvl}+{per_br}*$f1", px, cy + 560); P.c(f"mu_v{k}_gbr", f"mu_v{k}_gl{i}")
+                P.c(f"mu_v{k}_gl{i}", f"mu_v{k}_gg{i}", 0, 1)
+            parts.append(P.sig2(f"mu_v{k}_gp{i}", "*~", osc, f"mu_v{k}_gg{i}", px, cy + 710))
+        gsum = parts[0]
+        for i, p in enumerate(parts[1:]):
+            gsum = P.sig2(f"mu_v{k}_gsum{i}", "+~", gsum, p, gx + 200, cy + 725 + 10 * i)
+        P.sig2(f"mu_v{k}_gls", "*~", gsum, f"mu_v{k}_gat", gx + 200, cy + 760)
+        P.sig2(f"mu_v{k}_out", "+~", f"mu_v{k}_ck", f"mu_v{k}_gls", vx + 60, cy + 770)
         voices.append(f"mu_v{k}_out")
     acc = voices[0]
     for i, v in enumerate(voices[1:]):

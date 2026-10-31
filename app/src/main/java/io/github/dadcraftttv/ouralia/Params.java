@@ -277,6 +277,10 @@ final class Params {
             // goes somewhere new, then comes back to the first bar.
             new Param("mel_phrase", "Phrasing (repeat and answer, needs Melody Rhythm)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle(),
+            // Chime Voice (DadCraft, Oct 31: Classic was "a musical bubble pop"): Glass is a struck glass bar, its high
+            // partials fading first, with a soft rise and mallet. Classic stays the default until he says.
+            new Param("chime_voice", "Chime Voice", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Classic (soft tones)", "Glass (a struck glass bar)").inSection("music"),
             new Param("chime_char", "Chime Character (ring to your sound)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0f, 1f).resetWhenAbsent(),
             // Found note ring (prototype, Oct 16): what a found melody note rings with. String = our own C object
@@ -605,7 +609,7 @@ final class Params {
     static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
             "music_on", "music_var", "chord_color", "new_pieces", "mel_dev", "pat_gen", "walk_ease", "band_plays", "note_big", "music_drift",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
-            "melody_src", "mel_rhythm", "mel_phrase", "fm_ring", "res_src", "harm_src", "harm_tracker");
+            "melody_src", "mel_rhythm", "mel_phrase", "chime_voice", "fm_ring", "res_src", "harm_src", "harm_tracker");
 
     /** Which voice an effect plays with (Classic or New...): saved in presets since Oct 21 (DadCraft), left out of the
      *  built-in presets. */

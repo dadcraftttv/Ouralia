@@ -998,7 +998,7 @@ def build():
     P.group("rnfound", r"^(rnf_(sum|env|agc_ln|lvl|lim(_\w+)?))$")
     add_switch(P, "rnfound", ("music_on", "music_res", "rnf_found"), 3000)       # rings run up to ~2 s
     for k in range(4):                                                  # each synth chime voice: on only while it rings
-        P.group(f"chv{k}", rf"^mu_v{k}_(o1|o2|o3|g2|g3|s12|s|env|out)$")
+        P.group(f"chv{k}", rf"^mu_v{k}_(o1|o2|o3|g2|g3|s12|s|env|cls|ck|out|gat|gfd|go\d|gs\d|gd\d|ge\d|gg\d|gp\d|gsum\d|gls)$")   # (g*: Glass)
     for k in range(2):                                                  # the found pad's sets: on while heard and found
         P.group(f"fpad{k}", rf"^(fp{k}\d?[ab]?_(wl|wc|wn|w|ix|rd|s|acc\d|gm|out)|fp_xf{k})$")
         P.obj(f"grp_fpad{k}_r", f"r sw_fpad{k}", 10, 10); P.obj(f"grp_fpad{k}_sw", "switch~", 10, 40); P.c(f"grp_fpad{k}_r", f"grp_fpad{k}_sw")
