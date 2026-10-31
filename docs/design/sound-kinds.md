@@ -144,6 +144,13 @@ from the PC, "Heard:" lines corrected for the phone clock; the log has whole sec
 concerto ~2.0 s, piano sonata ~2.0 s, birdsong (dawn) ~3.0 s and gone back to quiet 3 s later at score 0.26,
 birdsong (sunny day) ~3.0 s with voices flips around it. Music is on the line, birds miss: **the gate fails for
 birds.** The cause is mostly built in: a judgement every 0.5 s over the last ~1 s, and two in a row to change, so a
-weak kind needs most of the window filled twice. One round of fixes is allowed (DadCraft's call).
-Still open: the fix round for the 2 s gate (or accept it), battery on/off unplugged (DadCraft's 30 + 30 minutes),
-then 4d (his walk).
+weak kind needs most of the window filled twice.
+**Fix round (DadCraft, Oct 31: "yes, do the fix round"; the one allowed):** the ring is now five segments of 12,288
+(0.256 s at 48 kHz) and the app reads the four whole ones (~1 s, same length as before), so a judgement comes every
+~0.25 s; a lead of 0.5 or more changes the kind at once, weaker ones still need two in a row (now 0.25 s apart),
+and quiet always needs two. Full tier passed (285 s), Dev installed. **Same four clips, same way: all ~1.5 s**
+(+-0.5): dawn birdsong 1.5 s (then flickers with quiet, the recording's gaps between calls), piano concerto 1.5 s,
+sunny-day birdsong 1.5 s and held for the whole clip, piano sonata 1.5 s. **The 2 s gate passes.**
+**CPU again** (twice the judgements, Diagnostics open both times): on 55.5%, off 52.4% of a core: **+3.1 points**,
+inside the 5-point gate (235 judgements a minute at a 9.4 ms median, slowest 16.3 ms, as expected).
+Still open: battery on/off unplugged (DadCraft's 30 + 30 minutes), then 4d (his walk).

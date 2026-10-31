@@ -2902,7 +2902,7 @@ sc = (st_catch(False, 0.00005), st_catch(True, 0.00005), st_catch(True, 0.001))
 check(sc == (0, 3, 0), "stereo: a soft catch counts against the room's background (-52 over -86: mono %d, stereo %d; over -60: %d)" % sc)
 
 # ---- 7z2. sound kinds: the mic into a ring for the app's classifier (Oct 31, step 4c), idle unless asked ----
-from patchgen.constants import SK_SEG
+from patchgen.constants import SK_SEG, SK_N
 e = fresh(); e.listen("sk_ready")
 ramp = (np.arange(SR * 3) / SR / 10).astype(np.float32)      # each sample tells its time
 e.run(ramp)
@@ -2910,11 +2910,13 @@ check(not e.heard.get("sk_ready") and not np.abs(e.array("sk_ring")).any(), "sou
 e.send("sk_on", 1); e.run(ramp)
 got = [int(v) for v in e.heard["sk_ready"]]
 ring = e.array("sk_ring"); k = got[-1]
-older, newer = ring[((k - 2) % 3) * SK_SEG:((k - 2) % 3 + 1) * SK_SEG], ring[((k - 1) % 3) * SK_SEG:((k - 1) % 3 + 1) * SK_SEG]
+segs = [ring[((k - j) % SK_N) * SK_SEG:((k - j) % SK_N + 1) * SK_SEG] for j in range(SK_N - 1, 0, -1)]   # oldest first
 step = 1 / SR / 10
-check(got[:4] == [0, 1, 2, 0] and len(got) == int(3 * SR / SK_SEG) + 1, "sound kinds: on, a segment every %d samples in turn (%s)" % (SK_SEG, got))
-check(abs(newer[0] - older[-1] - step) < 0.5 * step and np.all(np.diff(older) > 0) and np.all(np.diff(newer) > 0),
-      "sound kinds: the two before the one being written are whole and in order (joint %.1f samples)" % ((newer[0] - older[-1]) / step))
+check(got[:SK_N + 1] == list(range(SK_N)) + [0] and len(got) == int(3 * SR / SK_SEG) + 1,
+      "sound kinds: on, a segment every %d samples in turn (%s)" % (SK_SEG, got))
+joints = [(b[0] - a[-1]) / step for a, b in zip(segs, segs[1:])]
+check(all(abs(j - 1) < 0.5 for j in joints) and all(np.all(np.diff(g) > 0) for g in segs),
+      "sound kinds: the %d before the one being written are whole and in order (joints %s samples)" % (SK_N - 1, ["%.1f" % j for j in joints]))
 e.send("sk_on", 0); before = e.array("sk_ring").copy(); n = len(e.heard["sk_ready"]); e.run(ramp)
 check(len(e.heard["sk_ready"]) == n and np.array_equal(before, e.array("sk_ring")), "sound kinds: off again, it stops writing")
 

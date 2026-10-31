@@ -7,7 +7,8 @@ import java.util.Locale;
 /**
  * Sound kinds, step 4c (Oct 31, a Dev spike: docs/design/sound-kinds.md). Plain logic: the mic's last ~1 s (from the
  * patch's sk_ring) is brought to 16 kHz for YAMNet, its 521 scores become seven kinds (the highest of each kind's
- * classes, kinds.txt), and a kind is heard once it leads two judgements in a row (~1 s; the gate is 2 s). Only
+ * classes, kinds.txt), and a kind is heard once it leads two judgements in a row, or one with a score of STRONG or more
+ * (a judgement every ~0.25 s; the gate is 2 s). Only
  * listens: the Now line, Diagnostics and the event log show it. {@link SoundKindsRunner} does the Android part.
  */
 final class SoundKinds {
@@ -18,6 +19,10 @@ final class SoundKinds {
     /** No kind scores this much: the room is quiet (4b: 0.1 hid quiet traffic). */
     static final float QUIET_FLOOR = 0.05f;
     static final int ENTER_N = 2;
+    /** A lead this sure changes the kind at once (the 2 s check, Oct 31: birds took ~3 s with two in a row). */
+    static final float STRONG = 0.5f;
+    /** The patch's ring: SEGS segments (patchgen SK_N); the SEGS - 1 whole ones are read each time. */
+    static final int SEGS = 5;
 
     /** The model, only in the Dev build (src/dev YamNet: LiteRT). */
     interface Model {
@@ -117,13 +122,13 @@ final class SoundKinds {
         candidateN = lead == candidate ? candidateN + 1 : 1;
         candidate = lead;
         int was = kind;
-        if (lead != kind && candidateN >= ENTER_N) {
+        if (lead != kind && (candidateN >= ENTER_N || (lead != QUIET && last[lead] >= STRONG))) {
             kind = lead;
         }
         return kind != was;
     }
 
-    /** What is heard now (an index in NAMES), or -1 before the first two judgements. */
+    /** What is heard now (an index in NAMES), or -1 before the first (two, unless strong) judgements. */
     int kind() {
         return kind;
     }
