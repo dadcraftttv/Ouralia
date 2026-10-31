@@ -57,9 +57,6 @@ final class ParamStore {
         }
         float v = p.clamp(value);
         values.put(id, v);
-        if ((Kits.ID.equals(id) || id.startsWith("kitp_") || id.startsWith("kitl_")) && AudioService.isRunning()) {
-            sendKit(false);
-        }
         if (p.sendToPd && AudioService.isRunning()) {
             PdBase.sendFloat(id, Modulation.output(p, v));
             if (Intensity.ID.equals(id)) {   // everything Intensity scales goes out again
@@ -250,39 +247,6 @@ final class ParamStore {
                 PdBase.sendFloat(p.id, Modulation.output(p, get(p.id)));
             }
         }
-        sendKit(true);
-    }
-
-    /** Each part's kit (the Kit, or the part's own "from" choice), as messages to its kit voice (Kits); only the
-     *  parts that changed unless `all`. */
-    static void sendKit(boolean all) {
-        int[] from = new int[Kits.PARTS.length], layer = new int[Kits.PARTS.length];
-        for (int k = 0; k < from.length; k++) {
-            from[k] = Math.round(get("kitp_" + Kits.PARTS[k]));
-            layer[k] = Math.round(get("kitl_" + Kits.PARTS[k]));
-        }
-        Kits.send(Math.round(get(Kits.ID)), from, layer, all, new Kits.Out() {
-            @Override
-            public void send(String receiver, String selector, float value) {
-                PdBase.sendMessage(receiver, selector, value);
-            }
-
-            @Override
-            public void sendMessage(String receiver, String selector, Object... args) {
-                PdBase.sendMessage(receiver, selector, args);
-            }
-        });
-    }
-
-    /** After the user kit at Kit menu index `removed` was deleted: the kit settings that pointed at it go back to
-     *  the first choice, the ones after it move up with their kits (Kits.afterDelete). */
-    static synchronized void kitDeleted(int removed) {
-        for (String id : Kits.PARAMS) {
-            values.put(id, (float) Kits.afterDelete(Math.round(get(id)), removed, !Kits.ID.equals(id)));
-        }
-        if (AudioService.isRunning()) {
-            sendKit(false);   // (only a part that played the deleted kit changes)
-        }
     }
 
     private static void applyValues(Map<String, Float> map) {
@@ -335,8 +299,6 @@ final class ParamStore {
             return;
         }
         loaded = true;
-        Kits.userDir = new File(context.getFilesDir(), "kits");   // user kits (phone and desktop alike)
-        Kits.refreshChoices();
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         String saved = prefs.getString(KEY, null);
         if (saved == null) {

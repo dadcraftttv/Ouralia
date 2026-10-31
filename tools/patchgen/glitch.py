@@ -173,7 +173,9 @@ def add_glitch_cloud(P):
     L = (f"if($f1==0,({S})*(4+int($f5/250)),if($f1==1,300+0.4*$f3,if($f1==4,3.3*({Sr}),if($f1==5,({S5})*(3+int($f3/333)),"
          f"if($f1==6,400+0.4*$f3,if($f1==7,600+0.6*$f3,150+0.35*$f3))))))")
     base = f"if($f1==2||$f2<0,250+3*$f4,$f2+{GC_PREROLL_MS})"            # from just before the sound began
-    d0 = f"if($f1==1,10,if($f1==7,max(({base})-{W}/2,20),{base}))"      # (spray: the cloud from the sound on)
+    # (spray: the cloud from the sound on; a pitch jump up reads its slice faster than the sound comes in, so it starts
+    # (rate-1) slices further back: otherwise it catches up with the live sound and plays it unshifted, Oct 30)
+    d0 = f"if($f1==1,10,if($f1==7,max(({base})-{W}/2,20),if($f1==5,({base})+max({r5}-1,0)*({S5}),{base})))"
     outs = [L, d0, "if($f1==1,-1,if($f1==0||$f1==4||$f1==5,0,1))", f"if($f1==0||$f1==4,1,if($f1==5,{r5},0))",
             f"if($f1==0,{S},if($f1==4,{Sr},if($f1==5,{S5},10000000)))",
             "if($f7<500,-(0.45+0.55*$f7/500),0.45+0.55*($f7-500)/500)",

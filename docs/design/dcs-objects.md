@@ -181,149 +181,15 @@
   their line through a 4.5 kHz low-pass (twice; read 2-4x fast, the top would fold down). The biggest room still
   dies away for both (test_dcs). Clips for listening were rendered from these sounds (not from the mic).
   Mist's verdict open (ROADMAP Open now).
-- **Kits** (Oct 17, roadmap 19 step a+b; DadCraft: kits for acoustic / synth / EDM / future bass / low end, mix and
-  match, loadable, to replace the stems player; first new style: Acoustic). The music brain is untouched; a kit says
-  what each part sounds like. **Classic = today's Pd voices**, nothing ported: a part's kit engine 0 leaves it as it
-  was. `dcs_voice~` (one per part: `mu_kv_mel`, `ba_kv`, `mu_kv_pad`, in the music group) has engines 1 pluck
-  (Karplus-Strong as dcs_string~, x1.5), 2 bowed (the string kept up by a pulse once a period + 0.1 breath noise:
-  plain noise wandered 6 dB; x6; released strings die over `release`), 3 modal (bell / marimba / bowl partial banks,
-  struck once, gain ~ sin w); `note hz vel ms [bright]` one-shots, `pnote slot hz` held notes that crossfade when the
-  slot moves. Patch (`add_kits`): `kit_<part>` receivers feed the voices; `route engine` -> melody `value kmel`
-  (the synth's vsyn and the found twin's gate x (kmel==0); each voice's note also goes out as `note cfreq cvel cdec
-  cbright`), bass/pad `kit_<part>_cl` (== 0, 50 ms line~) on the Classic sound (synth + found), and
-  `kit_<part>_new` resends the held notes (`ba_kf`, `mu_pad<i>_kf`) so a kit chosen mid-chord sounds at once.
-  Java: `Kits.java` reads `assets/kits/<name>.txt` (one line per part: `mel: engine pluck, bright 0.45, level 4.3`;
-  unknown parts/settings skipped), `Kits.BUILT_IN` = the Kit menu; Param `kit` (Music, noPd, in presets); on a
-  change and in `ParamStore.sendAllToPd` every part gets the voice's defaults, the kit's settings, the engine last
-  (PdBase.sendMessage). Desktop reads assets/kits from the repo (run.sh/test.sh SHARED + Kits). Tests: test_dcs
-  (each engine: pitch, harmonics, a held note's level within 2.4 dB in 100 ms frames, slot moves, poff, bell's
-  2.76x partial, engine 0 silent), Java Q, test_patch "kits" (reads acoustic.txt; each part sounds on the same
-  notes within +-6 dB of Classic; Classic within the natural run-to-run spread, ~12%). Acoustic levels set to
-  match Classic (melody 4.3, bass 5, pad 0.05). Pd lessons: in add_music `ex()` doesn't escape ";" (a 4-output expr
-  became 1 output and three stray messages: `note 0 0.5 0 0`); two runs in one process never match sample for
-  sample (random choices carry on). **Mix and match** (Oct 17): "Melody from" / "Bass from" / "Pad from"
-  (`kitp_<part>`, Music, noPd, in presets; 0 = the Kit, else BUILT_IN[n - 1]); `Kits.send(kit, from, force, out)`
-  sends only parts whose kit changed (a resent part's held notes would start over), all of them from
-  `ParamStore.sendAllToPd`. Each part's menu (and layer menu) marks a kit with nothing for that part, which plays
-  Classic's sound there: "Synth (Classic's drums)" (Oct 19, `Kits.fromChoices(part)`; DadCraft tried parts on the
-  desktop and heard no change). The labels need the kits' text, so the phone reads the built-in kits at launch
-  (`AudioService.builtInKits`) and the desktop refreshes the menus once its kit folder is known. **Kit settings are not resetWhenAbsent**: a Realm's preset (no kit in it) would have
-  reset the Kit to Classic whenever a Realm took over the Music ingredient; now a preset that doesn't mention them
-  leaves them. That never helped Realms: every built-in preset starts from `defaults()`, so each Realm held Classic
-  for the kit and every part and switched them back (DadCraft, Oct 20: "the kit or user selected kit parts should not
-  change"). Now a Realm never sets a `kit*` setting (Kit, from, layer, blend; `Worlds.realmChanges`, test W); its
-  music levels and the Mix still change. Loading a preset by hand still sets them. **Layers** (Oct 19, DadCraft: "running both the NES pad and synthwave pad simultaneously and being
-  able to control how much of each is present"): "<Part> layer" (`kitl_<part>`: 0 = None, else BUILT_IN[n - 1],
-  same numbering as "from", in Kits.PARAMS so presets carry a user kit used as a layer) and "<Part> blend"
-  (`kitb_<part>`, 0 = the first kit, 1 = the layer, default 0.5). Both go to Pd; Kits sends the layer's kit to a
-  second dcs_voice~ per part (`kit2_<part>`; no layer = the voice's defaults, engine 0). add_kits works out three
-  shares from the two engines, the layer switch and the blend, equal power (cos/sin): Classic's (a side on Classic
-  gives its share to the Classic sound, at most 1), the first kit's and the layer's, each gliding 50 ms. Every note
-  goes to both voices (a voice on engine 0 ignores it); the Classic melody's notes stop while its share is 0
-  (`kmelcl`, as `kmel==0` did). The kit voices' sum for melody, bass and pad must be built inside the music
-  subpatch (names `mu_...`): built outside, music -> top -> music is a DSP loop and the whole patch goes silent. The
-  drums' pump comes from the first kit only. No layer = exactly as before (tests: test_patch "a sample kit", Q).
-  **Synth kit** (Oct 17, step 1 of "one by one"): `dcs_voice~` engine 4 analog = two PolyBLEP saws
-  `detune` cents apart + a PolyBLEP sub square (`sub`) into a 4-pole TPT ladder (zero-delay feedback solved,
-  tanh on the input, k = 3.9 x `reso`), cutoff = note x `cutoff` x (1 + `fenv` x env), the env falling over the
-  note (or `decay` for held notes), cutoff per block. Measured: in tune; brightness 218 / 341 / 819 Hz at cutoff
-  1.5 / 4 / 16; reso 0.9 lifts the 6th harmonic 20x; stable at full resonance; a 3 kHz saw 100% on its harmonics;
-  a held note within 0.09 dB (detune off: detuned saws beat on purpose). synth.txt: melody cutoff 2.5 reso 0.35
-  fenv 8, bass cutoff 1.2 reso 0.5 sub 0.7, pad cutoff 1.6 detune 14 attack 1.5 s; levels 7 / 13 / 0.5 to sit
-  near Classic. The kits test now checks every kit plays in key at Classic's level (each run in a process hears
-  other random chords; a dying pluck's FFT lobe had ripples just under the note: take the 3 strongest peaks 20 Hz
-  apart). **Marker**: `Param.dcs()` -> `shown()` adds " *" on phone and desktop to every setting using our C
-  objects (DadCraft, Oct 17; content descriptions stay plain). **EDM kit** (Oct 17, step 2): drums are a 4th part
-  (`kit_drums`, `kd_voice`, "Drums from" `kitp_drums`); dcs_voice~ engine 5 drums: `hit <0 kick|1 snare|2 hat>
-  <vel> [hat decay]` (kick: a sine diving from 4x `ktune` over 30 ms, `kdecay`, a 3 ms click, tanh `kdrive`;
-  snare: `stone` and 1.83x tones over 80 ms + one-pole high-passed noise over `sdecay`; hat: noise high-passed
-  twice, `hdecay` or the hit's own); it plays the pattern engine's `drum_kick` / `drum_snare` and `rh_h_v` (vel,
-  decay), scaled by mix_kick, beat_snare / 0.6, beat_hats / 0.5 (`add_kit_drums`). In "Your steps" (beat_follow 0)
-  the old step drums feed it the same way (Oct 19): each step's kick or snare as drum_kick / drum_snare 1, the hat
-  half a step later from `h_pack` (step-strength level and decay); before, a kit with drums was silent there
-  (test_patch "kit drums in Your steps": EDM 0.000 before). The Classic beat (synth + found:
-  `beat_sum00`) x `kit_drums_cl`. Supersaw: `saws` 1..7 spread across `detune` (2 = the note and +detune, as
-  before), 1.41 / sqrt(n) each, every saw from a random phase (no "zap"). **Pump**: `pump` depth and `pumprel` ms
-  come with the drums part (`route pump pumprel` in the patch, ignored by the voice); each drum_kick (while
-  beat_level > 0) snaps `kit_pump` (vline~) to 1 - depth in 4 ms and back over pumprel, on `mu_mix0` (pad, bass,
-  chimes; not room notes or harmony). edm.txt: supersaw lead (7 saws, 22 c), sub bass (sub 0.9), supersaw pad
-  (7 saws, 30 c), drums ktune 52 kdecay 380 kdrive 0.6, pump 0.55 / 220 ms; drums level 0.38 (0.068 rms = Classic's).
-  Measured in the patch: the music dips 5.3 dB right after each kick (median of 10), +0.4 without the pump.
-  **Future bass kit** (Oct 17, step 3): analog `wobble` 0..1 / `wrate` cycles a beat = one LFO shared by the
-  voice's notes, restarted by `tempo <bpm>` (the patch sends `r tempo` to the melody/bass/pad kit voices on every
-  beat): each cycle the level dips (1 - 0.8 x wobble x phase) and the cutoff closes (x (1 + 2 x wobble x (1 -
-  phase))); `bend` semitones / `bendms`: each note starts off and glides in. Engine 6 chop: a note plays `chop` ms
-  of the newest found-pad take (reads fpad_n [count, newest], fpad_<n>, fpad_f0, fpad_g with garray_getfloatwords),
-  from 0.2-0.3 s in, at note / take pitch folded into 0.75-1.5, 3 ms in, 25 ms out, x fpad_g x `CHOP_GAIN` 0.15;
-  nothing kept yet: the note plays on analog with the same settings. Tests (test_dcs): 2 a beat at 120 BPM pulses
-  at 4.00 Hz (158x vs none), a -2 bend starts at 206 Hz and lands on 220, a 220 Hz take plays a 330 Hz note for
-  178 ms. futurebass.txt: chop melody (saws 5 fallback), sub bass, pad 7 saws 35 c wobble 0.7 wrate 2 bend -2,
-  drums with pump 0.7 / 320 ms. The test runner now silences checks run only as another section's dependency
-  (they ran under other random choices and counted), and the glitch cost check interleaves its three setups.
-  **Chiptune kits** (Oct 18; DadCraft heard the Crusher styles and wanted "the console music sound" more than a
-  console voice: a kit, since the chips played notes, not processed sound). Engine 8 `chip`: `chip` 1 NES / 2 Game
-  Boy / 3 Genesis, `wave` pulse (PolyBLEP, `duty`) / triangle (NES: 32 steps, 15 down to 0 and back) / wave (Game
-  Boy: 32 four-bit samples, a soft ramp) / fm (two operators, modulator feedback `fmfb`, `fmratio`, `fmindex`
-  falling with the note, output to 9 bits as the YM2612's DAC). Pitch through the chip's period register (NES
-  CPU/(16 or 32 x (t+1)), Game Boy 131072/(2048-x), the wave channel half that): high notes land slightly off, as on
-  the hardware (3520 Hz plays 12 cents flat). Volume in 16 steps (not Genesis): `sus` = where it falls to over
-  `decay`. `vib` cents after 150 ms. One note per part at a time (a channel: the new note takes over the old one's
-  phase). `arp` ms: held notes (the pad's chord) take turns on one channel, ranked by slot; a chord change is
-  instant. Output stage per console: NES high-passes 90 and 440 Hz, low-pass 14 kHz (the bass triangle comes out
-  thin, as it did: its level is 30 to match Classic); Game Boy HP 30, LP 12 kHz; Genesis LP 7 kHz. Drums on a chip
-  (`hit`): the noise channel (15-bit LFSR at the console's rates; NES hats in short mode, metallic), the kick a
-  sweep on the triangle (NES, cut rather than faded), a pulse (Game Boy) or a sine (Genesis), plus a noise click.
-  Kits chipnes, chipgb, chipgenesis (Genesis has six FM channels: its chords stay chords). Levels matched to
-  Classic by the kits test. Adding built-in kits moves user kits' menu numbers up (DadCraft's imported kit needs
-  choosing again; presets carry the text, so they find it).
-  **Low end kit** (Oct 17, step 4, the last style): engine 7 sub (an 808): a sine x `drive` through tanh, falling
-  60 dB over `decay` from each note; a held slot that moves glides there (`glide` ms, ~ x 0.3 time constant) and
-  starts its level again; `retrig` restarts held 808 notes, sent by the patch on each kick while beat_level > 0,
-  else on each beat (an 808 note otherwise died long before the next chord change: silence). Any engine:
-  `octave` (notes n octaves off), `chance` (a one-shot plays with this chance), `hchance` (the same for hats).
-  lowend.txt: marimba melody at chance 0.45 (level 8), 808 bass decay 2.5 s drive 0.35 glide 90 (level 2.5), pad
-  3 saws an octave down, attack 2 s, drums ktune 42 kdecay 900, hats at hchance 0.4, no pump. Kit tests play every
-  note (chance and hchance dropped there; sparseness is test_dcs's, over 200 notes: 55-64 of 200 at 0.3).
-  **User kits** (Oct 17, step d, stage 1: text only; DadCraft chose kit.txt over kit.json, text kits before samples,
-  and presets that carry the kit's text): `files/kits/<NNN title>/kit.txt` (phone and desktop:
-  `~/.local/share/ouralia/kits`; `Kits.userDir`, set in `ParamStore.loadOnce`), numbered in import order and listed
-  after the built-in kits (menu index BUILT_IN.length + n; Params `kit`/`kitp_*` ranges have room for MAX_USER 99,
-  `Kits.refreshChoices()` sets the menus; Android rows and desktop combos swap their adapter when `p.choices`
-  changes). Music tab "Your kits": Import kit (a kit.txt or a zip), Import kit folder (kit.txt at the top or one
-  folder down; the whole folder is kept, for samples later), How to make a kit, Delete a kit (its users go back to the
-  first choice, later kits move up: `Kits.afterDelete`, `ParamStore.kitDeleted`). An import plays at once as the Kit
-  and reports what won't play (`Kits.check`: unknown parts, settings, engines). The same text twice is one kit; a
-  copy of a built-in kit is the built-in one. **Presets carry user kits**: `toJson` adds `"kits": {paramId: text}`,
-  `parse` installs each (or finds an identical one) and points the setting at it; a user kit index without its text
-  plays Classic. So a deleted kit comes back when a preset that uses it is loaded. `Kits.send` now remembers each
-  part's settings, not the kit index: an edited kit resends only the parts that changed, a renumbering resends
-  nothing. **Desktop bench**: each second the app compares `Kits.signature()` (folders, kit.txt times and sizes)
-  and on a change refreshes the menus and resends (a saved kit plays at once). Tests: Q (install, reuse, menus,
-  edit, delete, preset round trip, check, folder one level down). Since built: samples (stage 2, below), the format page (stage 3,
-  `docs/KIT-FORMAT.md`), register Low for kit pads (Oct 19: Low already muted a kit's pad
-  with Classic's and the kit's bass part plays the bass voice there, but the kit pad's voices kept running unheard
-  and doubled the patch's cost, 0.29 -> 0.58 s per 20 s; now groups `kpad` / `kbass` (switch~) run a kit's pad
-  voices only at Mid/Both and its bass voices only at Low/Both, and only with a kit or layer on the part:
-  `krun_<part>` -> `k<part>_run`; test_patch "a kit's pad and bass voices run only while heard"), kit drums in
-  "Your steps" mode (the old step drums sent no drum_* messages, so a kit with drums played no drums at all
-  there: fixed Oct 19, below).
-  **Stage 2, samples** (Oct 18). Engine 9 `sample` in dcs_voice~ reads WAV itself (dcs_wav.h: PCM 8/16/24/32,
-  float 32/64, extensible; channels averaged; kept at the file's rate, played at file rate / Pd rate x the note's
-  ratio, linear between samples): `sample <path> <root>` (up to 16 a part; a note takes the nearest root),
-  `dsample <role> <path>` (kick, snare, hat, open hat: a hat over 150 ms takes the open hat), `oneshot` (default 1:
-  ring to the end; 0: the note's length, then release), `loop`/`loopstart`/`loopend` (held notes loop, 30 ms
-  crossfade; loopend 0 = 50 ms before the end), `clear` (sent with the defaults on every part change), `sgain` (per
-  part, Kits.SAMPLE_GAIN 6.7/6/0.26/6, measured so a normalised recording at level 1 is about Classic's loudness).
-  Limits: 30 s a file, 120 s (at 48 kHz) a part. kit.txt: `sample piano c4.wav C4` (the file may have spaces; the
-  last word is the root if it is a note: C4 = 60, F#3, Bb2, 72; default C4), `kick kick.wav`. Files stay inside the
-  kit's folder (no ".." or absolute paths). Android decodes non-WAV at import (Kits.decoder = PackLibrary.decode,
-  to `.decoded-<name>.wav` beside it); the desktop plays WAV only. Missing files: the part stays Classic and the
-  import report lists them (`Kits.missingFiles`). A preset brings the kit's text only; when the kit is later
-  imported with its files, they fill in the text-only copy (same index). Loading happens on the message (the Pd
-  thread): a long kit can glitch the sound once as it loads. Tests: test_dcs.py (pitch, nearest root, 44.1 kHz
-  file, oneshot, loop, 16/24-bit/float alike, drums, missing file, clear), test_patch.py "a sample kit" (every part
-  in key at Classic's level), Q (note names, paths, Classic when missing, the text-only copy filled in).
-- **Status (Oct 19):** DadCraft approved by ear every object above (Glitch voice New, Found note ring String, Pitch
+- **Kits: REMOVED Oct 30** (on `reactive`, awaiting review and DadCraft's listen). DadCraft: "remove the kits";
+  "leave Classic the way it is, no change to accoustic". All built-in and user kits, sample-kit import/delete,
+  layers, blends, pump, kit menus, 13 settings and patch voices/gates are removed. Acoustic does not become
+  Classic: the existing Pd synth voices and synth drums remain, with the Found / Synth / Both choices unchanged.
+  Old state/preset kit keys and embedded kit text are ignored. Existing user files are left on disk, unused.
+  `dcs_voice_tilde.c` and its native engine tests remain for the frozen code; no native rebuild is needed.
+  The vocoder's melody/chord messages remain. Composer features do not read kit settings; their Classic
+  behaviour remains. Harmony's Organ and the Chip crusher are separate features and remain.
+- **Status (Oct 19, historical):** DadCraft approved by ear every object above (Glitch voice New, Found note ring String, Pitch
   tracker / Pitch shifter / Sudden-sound detector New, the kits, Sing in key, Vocoder, Talk box). All stay behind
   their switches with the old sound the default (he wants them opt-in), except Glitch voice, where New became the
   default and the old voice stays as Legacy. `dcs_derustle~` (Oct 17): see Pocket rustle.
@@ -383,7 +249,8 @@
   a plain replay. **Ratchet**: a stutter from min(2S, 300) ms, each repeat 0.7x the last (down to 12 ms), L =
   3.3x the first. **Pitch jump**: a stutter (S5 = min(1.5S, 250)) read at 2x, 0.5x or 1.5x (40/30/30%: octave up,
   down, fifth up), also on Legacy (its c2 multiplier); a read that runs ahead of the sound is clamped to the live
-  input. **Gate**: a forward replay (400-800 ms) on for the first half of each G ms (walking: half a step, at
+  input. Fixed Oct 30: a jump up starts (rate-1)·S5 further back, so its read never catches the live sound (before,
+  an octave up shortly after an onset came out mostly unshifted: 1 kHz in, 1001 Hz the loudest out). **Gate**: a forward replay (400-800 ms) on for the first half of each G ms (walking: half a step, at
   least 40; standing 50-110), 2 ms edges. **Spray**: 4 grains of 60 ms at once, a new one every 15 ms, each from
   somewhere in a 150-400 ms window starting at the sound (playing at its own speed), each placed at random around
   the glitch's place (+-1); 30 ms in, 400 ms out, 600-1200 ms. Tests: test_dcs "dcs_glitch~ new kinds" (ratchet

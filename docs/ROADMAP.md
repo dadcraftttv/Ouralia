@@ -28,18 +28,18 @@ sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUIL
 
 **New Pieces (item 21, step 5, Oct 29):** BUILT behind a switch (off by default); DadCraft's listen with Session Log on.
 
-**Reactive first (DadCraft, Oct 30):** Ouralia re-anchored on RjDj's rule, the world drives the music. Step 1 now: a
+**Reactive first (DadCraft, Oct 30):** Ouralia re-anchored on RjDj's rule, the world drives the music. Step 1 was a
 listening baseline of what already reacts (Singing Room, Harmony, sudden-sound chimes, Call and Response) with the
 clock-driven layers off; no code. Then one reactive response made convincing, only where the baseline falls short.
-Kit removal (Acoustic kept as "Classic") is ON HOLD until after that; sound classification comes later, as a small
-experiment. The composer features are frozen (no new work), New Pieces' listen included. Step 1 heard (Oct 30):
+Kit removal is now built with Classic unchanged and Acoustic removed (DadCraft, Oct 30); sound classification
+comes later, as a small experiment. The composer features are frozen (no new work), New Pieces' listen included. Step 1 heard (Oct 30):
 Singing Room is the core; chimes came uncaused and ~6 dB loud; the pad a constant tone (step 5). Step 2: Chimes Only
 Answer, BUILT behind a switch on `reactive` (design/music.md), kept (DadCraft: "Yes"), renamed Chimes Only When
 Something Happens. Next (DadCraft: "yes, lets do the pad"): Pad Only With a Steady Sound, BUILT behind a switch on
 `reactive`; A/B (Oct 30): answers his voice better, "Pad without bass" chosen and built. Notes Only for Bigger
 Sounds (his pick "C": clicks become rhythm, bigger sounds get notes) BUILT behind a slider, kept (Oct 30: at 20.55
-dB no chimes from typing, knocks still chime). Kit
-removal after. Keep the found-sound drums on the rhythm grid as they
+dB no chimes from typing, knocks still chime). Kit removal BUILT Oct 30 on `reactive`; Classic unchanged,
+Acoustic removed too. Next: Claude review, full tier, Dev install and DadCraft's Classic/Found comparison. Keep the found-sound drums on the rhythm grid as they
 are (DadCraft: "absolutely loved from the day we got it worked out").
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
@@ -78,8 +78,8 @@ against the room's background in stereo: BUILT Oct 22, DadCraft: working.)
 **Sound and music ideas (each behind a switch, the old sound the default):** the room listener (dcs_listen~,
 BUILT Oct 22, only listening: DadCraft watches it on walks, then we pick what it drives: Realm Hopper, auto-key from
 the room (22), a beat locked to music nearby); more drum hits, a
-moments part, kits for Harmony and Room notes, a second melody (20); glitch phase 2's per-slice filter, lanes and a
-chance per kind (5b); user kits with his own samples (MP3/OGG/FLAC import), kit layers, kit drums in "Your steps". (Reverb Shimmer and Wind Guard
+moments part, a second melody (20); glitch phase 2's per-slice filter, lanes and a
+chance per kind (5b). Kit expansion removed from the queue with kits (Oct 30). (Reverb Shimmer and Wind Guard
 (dcs_dewind~): BUILT Oct 22, DadCraft to listen. The grain cloud, dcs_grain~: back pocket.)
 
 **App ideas (item 22):** a home-screen widget, MIDI in (much later). (A simple walk-mode screen (14 UI): SET ASIDE
@@ -266,7 +266,7 @@ microphone declarations, store listing.
       (hold a moment as a drone), **dcs_grain~** (the room as a particle cloud). Several of these are kit voices (19).
     - When a few are solid: publish dcs on deken (Pd's package manager) for Pd users and scene authors.
 
-19. **Kits: the sound of the music, chosen and mixed per part (DadCraft, Oct 17; to replace the stems player).**
+19. **(REMOVED 2026-10-30 on reactive; Classic unchanged, all kits including Acoustic removed) Kits: the sound of the music, chosen and mixed per part (DadCraft, Oct 17; to replace the stems player).**
     The music brain (patterns, chords, melody, rhythm, call and response) stays one engine; a **kit** says what each
     part sounds like. Styles DadCraft named: acoustic, fully synth, EDM-adjacent, future bass, low end; mixing and
     matching parts between kits; users and sound designers making their own and loading them in.

@@ -90,3 +90,18 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   their switches. Oct 30, DadCraft: logging goes in the release, "only sendable if the user wants to email the logs":
   Session logs in About (email them as one zip or delete them all), the cap down from 200 to 50 MB. Released as
   0.9.0-rc5.2 (versionCode 15), his call over rc6.
+
+- **Oct 30: kits removed on reactive (Codex; review/listen next).** DadCraft: "remove the kits" and
+  "leave Classic the way it is, no change to accoustic". All selectable kits (Acoustic included), user kit
+  import/delete, layers/blends/pump and 13 settings removed. Classic synth voices, Found sources and source
+  choices/defaults unchanged; three reactive controls kept. The vocoder's note messages remain after removing
+  their kit plumbing; expanded parity caught and corrected an initial frequency-read regression. No C/native
+  changes, Harmony Organ and Chip crusher retained, composer frozen. Old saved state/presets ignore kit keys,
+  keep surviving values/locks and save without kit data (5 Java checks). Fixed-seed reference 0515f8d: 55/55
+  16-second synthetic renders sample-identical (4 parts × 3 sources × 4 control cases, 3 composer cases,
+  4 vocoder carriers), peak difference 0; baseline Pd diagnostics identical too. Dev assemble and desktop
+  tests/application compile passed. Maestro unchanged: 371 passed, 1 skipped. Full tier: 166/167 Pd sections and all 11 supporting suites passed (294 s).
+  The glitch pitch test then drew an octave up (Pd's random seeds shift with the removed objects) and exposed an
+  existing flaw: a jump up read past the live sound and played it unshifted (1001 Hz). Claude's review fixed the
+  pitch jump (dcs-objects "More glitch kinds"); full tier then 167/167 sections and all suites passed (265 s).
+  The legacy kit guide is archived. Claude review/install and DadCraft's listen remain; main untouched.

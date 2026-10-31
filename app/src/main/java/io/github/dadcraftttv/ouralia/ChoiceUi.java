@@ -285,7 +285,7 @@ final class ChoiceUi {
         a.openSheet(content);
     }
 
-    /** The entry a pick-one value shows: the first one if the value points past the list (a user kit gone). */
+    /** The entry a pick-one value shows: the first one if the value points past the list. */
     static int choiceIndex(Param p, float v) {
         int i = Math.round(v);
         return i >= 0 && i < p.choices.length ? i : 0;

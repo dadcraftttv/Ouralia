@@ -39,7 +39,7 @@ final class SettingRows {
     private final Map<View, String> fadedUnless = new HashMap<>();   // a row -> the setting it needs on (faded while off)
 
     /**
-     * The groups inside a long card (DadCraft, Oct 20: the kit menus "almost kind of run together"): a heading, and
+     * The groups inside a long card: a heading, and
      * a hint or 0, before the setting that starts each group.
      */
     private static final Map<String, int[]> SUBHEADINGS = new HashMap<>();
@@ -48,9 +48,6 @@ final class SettingRows {
         SUBHEADINGS.put("pocket_hush", new int[]{R.string.sub_pocket, R.string.sub_pocket_hint});
         SUBHEADINGS.put("dry", new int[]{R.string.sub_output, 0});
         SUBHEADINGS.put("music_var", new int[]{R.string.sub_notes, 0});
-        SUBHEADINGS.put(Kits.ID, new int[]{R.string.kits_heading, 0});
-        SUBHEADINGS.put("kitp_mel", new int[]{R.string.kits_mix_heading, R.string.kits_mix_hint});
-        SUBHEADINGS.put("kitl_mel", new int[]{R.string.kits_layers_heading, R.string.kits_layers_hint});
         SUBHEADINGS.put("mel_rhythm", new int[]{R.string.music_more_heading, 0});
         SUBHEADINGS.put("mix_kick", new int[]{R.string.sub_drums, 0});
         SUBHEADINGS.put("music_pad", new int[]{R.string.sub_pad_bass, 0});
@@ -207,12 +204,7 @@ final class SettingRows {
                 if (heading != null) {
                     addSubheading(body, heading[0], heading[1]);
                 }
-                if (p.id.startsWith("kitl_")) {
-                    addLayerPanel(body, p, Params.byId("kitb_" + p.id.substring(5)));
-                    continue;
-                } else if (p.id.startsWith("kitb_")) {
-                    continue;   // (inside its layer's panel)
-                } else if (p.id.equals("echo_throw") || p.id.equals("echo_depth")) {
+                if (p.id.equals("echo_throw") || p.id.equals("echo_depth")) {
                     LinearLayout box = new LinearLayout(a);   // (only the New scatter style uses them)
                     box.setOrientation(LinearLayout.VERTICAL);
                     addRow(box, p);
@@ -282,25 +274,7 @@ final class SettingRows {
         }
     }
 
-    /** A part's layer and its blend in one outlined panel; the blend fades while the layer is None. */
-    private void addLayerPanel(LinearLayout parent, Param layer, Param blend) {
-        LinearLayout panel = new LinearLayout(a);
-        panel.setOrientation(LinearLayout.VERTICAL);
-        panel.setBackground(a.look.outline(a.look.p.line, Look.RADIUS_TILE));
-        panel.setPadding(a.dp(12), 0, a.dp(12), a.dp(12));
-        addRow(panel, layer, false);
-        LinearLayout blendBox = new LinearLayout(a);
-        blendBox.setOrientation(LinearLayout.VERTICAL);
-        addRow(blendBox, blend, false);
-        panel.addView(blendBox);
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, a.dp(12), 0, 0);
-        parent.addView(panel, lp);
-        fadedUnless.put(blendBox, layer.id);
-    }
-
-    /** Rows that do nothing while another setting is off or None (a layer's blend, the New scatter's sliders) fade. */
+    /** Rows that do nothing while another setting is off or None (the New scatter's sliders) fade. */
     private void updateFadedRows() {
         for (Map.Entry<View, String> e : fadedUnless.entrySet()) {
             e.getKey().setAlpha(ParamStore.get(e.getValue()) >= 0.5f ? 1f : 0.4f);
@@ -583,10 +557,6 @@ final class SettingRows {
             if (r.switchView != null) {
                 r.switchView.setChecked(v >= 0.5f);
             } else if (r.tile != null) {
-                if (r.choicesShown != r.param.choices) {   // (a user kit came or went)
-                    r.choicesShown = r.param.choices;
-                    a.kitUi.updateKitStatus();
-                }
                 r.tile.setText(r.param.choices[ChoiceUi.choiceIndex(r.param, v)]);
             } else if (r.segment != null) {
                 a.choiceUi.showSegment(r, ChoiceUi.choiceIndex(r.param, v));
@@ -607,7 +577,6 @@ final class SettingRows {
         final TextView label;     // slider rows only
         final SeekBar slider;     // slider rows only
         final android.widget.CompoundButton switchView;  // toggle rows (a switch, or a card header's Movers pill)
-        String[] choicesShown;    // the names last shown (the Kit lists change when user kits come and go)
         TextView tile;            // pick-one rows shown as a tile that opens a sheet: its value
         TextView[] segment;       // pick-one rows shown as side-by-side buttons
         TextView segmentHint;     // ...and the chosen one's explanation under them
@@ -617,7 +586,6 @@ final class SettingRows {
             this.label = label;
             this.slider = slider;
             this.switchView = switchView;
-            this.choicesShown = param.choices;
         }
     }
 

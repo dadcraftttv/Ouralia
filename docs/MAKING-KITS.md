@@ -1,3 +1,9 @@
+# Archived kit guide
+
+Selectable kits were removed on `reactive` Oct 30, 2026 (DadCraft: "remove the kits";
+"leave Classic the way it is, no change to accoustic"). This guide applies only to older releases.
+The current app uses the existing Classic Pd voices and Found sounds; kit import and kit presets are removed.
+
 # Making a kit, step by step
 
 This guide starts from zero. If you want every setting in one place, the full reference is

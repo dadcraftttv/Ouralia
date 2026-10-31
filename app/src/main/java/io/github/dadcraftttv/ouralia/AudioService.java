@@ -590,18 +590,6 @@ public class AudioService extends Service {
         return dcsMissing;
     }
 
-    /** The built-in kits, from the app's assets (also read at launch, for the part menus' labels). */
-    static Kits.Source builtInKits(Context context) {
-        android.content.res.AssetManager assets = context.getApplicationContext().getAssets();
-        return name -> {
-            try (InputStream kitIn = assets.open("kits/" + name + ".txt")) {
-                return new String(kitIn.readAllBytes(), StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                return null;
-            }
-        };
-    }
-
     public static String getLastError() {
         return lastError;
     }
@@ -1008,7 +996,6 @@ public class AudioService extends Service {
                     scene != null ? scene.name : SCENE_FILE), e);
         }
 
-        Kits.source = builtInKits(this);
         ParamStore.sendAllToPd();
         if (scene == null) {
             float[] st = StereoRoom.patchValues(stereoOn, stereoOn ? AudioSettings.stereoTrimDb(this) : 0f);

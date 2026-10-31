@@ -21,7 +21,7 @@ behaviour changes, or tell DadCraft it needs one).
   --history` and events.log, whose "Health:" lines give battery, temperature and the app's CPU each minute;
   DESIGN-NOTES "Diagnostics").
 - **Dev path** (DadCraft, Oct 30; the R.5 `dev` branch was deleted with the kits): new work is built on its own
-  branch (now `reactive`: the reactive-first steps; kit removal on hold) and tried in "Ouralia Dev"
+  branch (now `reactive`: the reactive-first steps; kit removal built, awaiting review and listen) and tried in "Ouralia Dev"
   (`./gradlew assembleDev`, `adb install -r app/build/outputs/apk/dev/app-dev.apk`; id `io.github.dadcraftttv.ouralia.dev`,
   beside the release app with its own settings). He listens after each first audible change; a branch merges to `main`
   only on his "yes", a step he doesn't like is dropped. `main` and the rc releases stay untouched meanwhile.
@@ -62,8 +62,7 @@ behaviour changes, or tell DadCraft it needs one).
 - `app/src/main/assets/scene_lib` (rjlib + our scene helpers), `builtin_scenes/` (4 official RjDj scenes).
 - `dcs/` — our own Pd objects in C (prefix `dcs_`, BSD-3, loaded by `#X declare -lib dcs;`). After changing
   `dcs/src`: `make -C dcs`, `tools/build_dcs_android.sh` (commits `app/src/main/jniLibs/*/libdcs.so`), `tools/test_dcs.py`.
-- `app/src/main/assets/kits/*.txt` + `Kits.java` — kits (what each music part sounds like; `dcs_voice~` engines,
-  Classic = the Pd voices). Details: DESIGN-NOTES "Kits".
+- Selectable kits removed Oct 30 on `reactive`: Classic Pd voices and Found sources remain (DESIGN-NOTES "Kits").
 - `desktop/` — Linux stream mode (Swing + JACK via pw-jack), compiles the phone's logic classes unchanged.
 - `app/src/main/res/values/strings.xml` — escape apostrophes as `\'`.
 

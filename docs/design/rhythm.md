@@ -121,3 +121,10 @@
   `GL_MIN_PEAK` (0.02) is copied to `gl_loop` (quiet free-clock takes on near-silence used to overwrite good loops),
   and from then on it plays one bar every bar at that 16th inside the beat mix, keeping `GL_KEEP` (0.65) per bar,
   until a new loud take replaces it. Audio switched (`gloop`: beat_glitch x beat_level x gc_amount > 0).
+
+## Kit removal (Oct 30, reactive)
+
+Selectable instrument kits and their drum voices/pump are removed. The built-in synth drums and the found-sound
+kit (`add_found_kit`, the mic's catches in RAM) remain unchanged, including Your steps, patterns, Breakbeat and
+Living Grooves. The existing synth/found drum sum now feeds the same glitch-loop sum and rhythm gain directly.
+DadCraft's favourite found sounds on the rhythm grid stay as they are.

@@ -36,7 +36,7 @@ public class Context {
     }
 
     /** The working name's folders (~/.config/pdscenes, ~/.local/share/pdscenes) become Ouralia's, once, their stores
-     *  renamed from pdscenes_* to ouralia_*, so settings, presets and kits carry over the rename. */
+     *  renamed from pdscenes_* to ouralia_*, so settings and presets carry over the rename. */
     public static void moveFromWorkingName(File old, File now) {
         if (!old.isDirectory() || now.exists() || !old.renameTo(now)) {
             return;
