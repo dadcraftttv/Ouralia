@@ -6,7 +6,7 @@ export JAVA_TOOL_OPTIONS=
 H="$(cd "$(dirname "$0")" && pwd)"; SRC="$H/../../app/src/main/java/io/github/dadcraftttv/ouralia"
 CORE="$SRC/Param.java $SRC/Params.java $SRC/ParamStore.java $SRC/PresetManager.java $SRC/Modulation.java $SRC/PhoneContext.java $SRC/Intensity.java $SRC/CalmBuild.java"
 for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V Y Z K U A O}"; do for x in $t; do
-  extra=""; [ "$x" = W -o "$x" = X ] && extra="$SRC/StepDetector.java $SRC/WorldSelector.java $SRC/Worlds.java $SRC/MotifMemory.java $SRC/NoteRegister.java"
+  extra=""; [ "$x" = W -o "$x" = X ] && extra="$SRC/StepDetector.java $SRC/WorldSelector.java $SRC/Worlds.java $SRC/NoteRegister.java"
   [ "$x" = E ] && extra="$SRC/SceneEvents.java"
   [ "$x" = C ] && extra="$SRC/SensorInput.java $SRC/StepDetector.java $SRC/HandlingDetector.java"
   [ "$x" = P2 ] && extra="$SRC/SensorInput.java $SRC/StepDetector.java $SRC/HandlingDetector.java $SRC/ScenePad.java $SRC/SceneLibrary.java $SRC/SceneGraphics.java $SRC/Look.java"
@@ -20,9 +20,9 @@ for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V Y Z K U A O}"; do for x 
   [ "$x" = K ] && extra="$SRC/Health.java"
   [ "$x" = U ] && extra="$SRC/TapTempo.java"
   [ "$x" = A ] && extra="$SRC/RoomListener.java"
-  [ "$x" = O ] && extra="$SRC/SessionLog.java $SRC/StepDetector.java $SRC/WorldSelector.java $SRC/Worlds.java $SRC/MotifMemory.java $SRC/NoteRegister.java"
+  [ "$x" = O ] && extra="$SRC/SessionLog.java $SRC/StepDetector.java $SRC/WorldSelector.java $SRC/Worlds.java $SRC/NoteRegister.java"
   [ "$x" = G ] && extra="$SRC/SceneGraphics.java"
-  [ "$x" = L ] && extra="$SRC/CallResponse.java $SRC/MotifMemory.java"
+  [ "$x" = L ] && extra="$SRC/CallResponse.java"
   [ "$x" = X ] && extra="$extra $H/test/M.java"
   out=$(mktemp -d)
   javac -d "$out" -proc:none -cp "$H/stubs:$H/stubs2" $CORE $extra "$H/test/$x.java" 2>&1 | grep -v "^Note:" || true

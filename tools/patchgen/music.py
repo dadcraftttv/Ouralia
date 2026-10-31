@@ -568,7 +568,7 @@ def add_music(P):
     P.c("mu_pick_t", "mu_reg_add")
     P.obj("mu_note_s", "s chime_deg", cx - 100, cy + 160)              # every note played, for the tests
     P.c("mu_pick_t", "mu_note_s")
-    P.obj("mu_chime_s", "s chime_note", cx - 100, cy + 180)            # chimes only: the app's motif memory listens
+    P.obj("mu_chime_s", "s chime_note", cx - 100, cy + 180)            # chimes only (the tests count them; motif memory, its first listener, removed Oct 31)
     P.c("mu_pick_t", "mu_chime_s")
     # A remembered phrase coming back (motif memory, in the app): [motif <scale step> <velocity>( plays one chime.
     P.obj("mu_mo_up", "unpack f f", cx - 300, cy + 20)

@@ -87,7 +87,7 @@ public class AudioService extends Service {
     private long lastSessionLog;
     /** Harmony answers since the last "Hearing:" line (the patch sends each one on harm_deg). */
     private static final String HARMONY_RECEIVER = "harm_deg";
-    /** The patch reports each chime it plays here (not arpeggio notes or replays); motif memory listens. */
+    /** Call and Response plays its answer here, one [motif <scale step> <velocity>( per note. */
     private static final String MOTIF_PLAY = "motif";
     /** The Evolving music (dcs_composer) reports each section as it starts: 0 Home, 1 Lift, 2 Calm, 3 Turn. */
     private static final String COMP_SECTION = "comp_section";
@@ -274,12 +274,12 @@ public class AudioService extends Service {
                 int scaleSize = SCALE_SIZES[Math.max(0, Math.min(SCALE_SIZES.length - 1,
                         Math.round(Modulation.output(Params.byId("music_scale"), ParamStore.get("music_scale")))))];
                 float answerLevel = ParamStore.get("music_on") >= 0.5f ? ParamStore.get("music_answer") : 0f;
-                List<MotifMemory.Note> answer = callResponse.poll(nowS, answerLevel, scaleSize);
+                List<CallResponse.Note> answer = callResponse.poll(nowS, answerLevel, scaleSize);
                 if (answer != null && !answer.isEmpty()) {
                     logEvent("Answered a sung phrase: " + answer.size() + " notes");
                     float vel = CallResponse.velocity(answerLevel);
                     int generation = startGeneration;   // a restart (device, scene) drops the rest of the phrase
-                    for (MotifMemory.Note n : answer) {
+                    for (CallResponse.Note n : answer) {
                         handler.postDelayed(() -> {
                             if (running && generation == startGeneration) {
                                 PdBase.sendList(MOTIF_PLAY, (float) n.degree, vel);
