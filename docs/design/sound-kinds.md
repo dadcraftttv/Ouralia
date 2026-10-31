@@ -136,5 +136,14 @@ downsampling moved to Java (simpler; the patch only writes the ring). Full tier 
 Measured so far on the Moto (plugged in, 48 kHz): **YAMNet median 9.3 ms, slowest 14.6 ms** per judgement (114 in a
 minute, none skipped): the 30 ms gate passes. **APK: Dev 8.76 -> 15.89 MB (+7.1 MB)**: the 8 MB gate passes.
 Indoors it flipped between voices and quiet every few seconds (low voice scores 0.08-0.33).
-Still open: the CPU on/off comparison (the A/B was cut short: one minute on read 53% of a core; no "off" minutes
-yet), battery on/off unplugged (DadCraft's 30 + 30 minutes), the 2 s check, then 4d (his walk).
+**CPU on/off (Oct 31, plugged in, playing, 5-minute windows, /proc utime+stime):** on 55.5% of a core (Sound
+tab open), off 56.8% (Diagnostics open), on again 55.8% (Diagnostics open). On vs off is inside the app's own
+swing; YAMNet's share is about 2% of a core (117 judgements a minute at ~10 ms). The 5-point gate passes.
+**The 2 s check (Oct 31, clips from the 4b set played through headphones laid on the phone's bottom mic, start time
+from the PC, "Heard:" lines corrected for the phone clock; the log has whole seconds, so each is +-0.5 s):** piano
+concerto ~2.0 s, piano sonata ~2.0 s, birdsong (dawn) ~3.0 s and gone back to quiet 3 s later at score 0.26,
+birdsong (sunny day) ~3.0 s with voices flips around it. Music is on the line, birds miss: **the gate fails for
+birds.** The cause is mostly built in: a judgement every 0.5 s over the last ~1 s, and two in a row to change, so a
+weak kind needs most of the window filled twice. One round of fixes is allowed (DadCraft's call).
+Still open: the fix round for the 2 s gate (or accept it), battery on/off unplugged (DadCraft's 30 + 30 minutes),
+then 4d (his walk).
