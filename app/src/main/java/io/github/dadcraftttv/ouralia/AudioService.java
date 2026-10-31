@@ -313,7 +313,7 @@ public class AudioService extends Service {
     /** Pocket and world changes, kept in a small file so a whole outing can be read back afterwards
      *  ({@code adb shell run-as io.github.dadcraftttv.ouralia cat files/events.log}); logcat on the phone only holds minutes. */
     private static final String EVENT_LOG = "events.log";
-    private static final long EVENT_LOG_MAX_BYTES = 64 * 1024;
+    private static final long EVENT_LOG_MAX_BYTES = 1024 * 1024;   // (was 64 KB, ~45 min with the room listener: a walk lost its start; Oct 31)
 
     /** Writes the event log off the main thread, so a slow flash write can't hold up the movers. */
     private final ExecutorService logWriter = Executors.newSingleThreadExecutor();
