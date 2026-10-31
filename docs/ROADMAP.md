@@ -32,7 +32,7 @@ sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUIL
 listening baseline of what already reacts (Singing Room, Harmony, sudden-sound chimes, Call and Response) with the
 clock-driven layers off; no code. Then one reactive response made convincing, only where the baseline falls short.
 Kit removal is now built with Classic unchanged and Acoustic removed (DadCraft, Oct 30); sound classification
-comes later, as a small experiment (step 4 plan: design/sound-kinds.md, Oct 31, waiting for his yes). The composer features are frozen (no new work), New Pieces' listen included. Step 1 heard (Oct 30):
+comes later, as a small experiment (step 4 plan: design/sound-kinds.md; started Oct 31 on his yes, 4a done). The composer features are frozen (no new work), New Pieces' listen included. Step 1 heard (Oct 30):
 Singing Room is the core; chimes came uncaused and ~6 dB loud; the pad a constant tone (step 5). Step 2: Chimes Only
 Answer, BUILT behind a switch on `reactive` (design/music.md), kept (DadCraft: "Yes"), renamed Chimes Only When
 Something Happens. Next (DadCraft: "yes, lets do the pad"): Pad Only With a Steady Sound, BUILT behind a switch on
