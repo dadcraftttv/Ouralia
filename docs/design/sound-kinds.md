@@ -124,3 +124,17 @@ actually buys.
 
 4a and 4b: Claude/Codex time only, no phone. 4c: one Dev install and a 30-minute plugged-in session. 4d: one walk.
 The music stays exactly as it is through all of step 4.
+
+## 4c progress (Oct 31, branch `sound-kinds`, Ouralia Dev only; not finished)
+
+Built: the patch writes the mic (as it comes in) into `sk_ring`, three segments of 24,576 samples, only while the
+app sends `sk_on 1` (test_patch "sound kinds"); `SoundKinds` (plain logic: 16 kHz resampler, seven kinds, two
+judgements in a row to change; javatests J) and `SoundKindsRunner` (its own thread, events.log "Heard: ..." and a
+"Sound kinds:" cost line each minute); `YamNet` in `src/dev` (LiteRT 1.4.2, ARM only). The switch is in Diagnostics
+("Sound kinds (Dev test...)", Dev only); the Now line shows "YAMNet: <kind> <score>". The plan's patch-side 16 kHz
+downsampling moved to Java (simpler; the patch only writes the ring). Full tier passed (279 s), Dev installed.
+Measured so far on the Moto (plugged in, 48 kHz): **YAMNet median 9.3 ms, slowest 14.6 ms** per judgement (114 in a
+minute, none skipped): the 30 ms gate passes. **APK: Dev 8.76 -> 15.89 MB (+7.1 MB)**: the 8 MB gate passes.
+Indoors it flipped between voices and quiet every few seconds (low voice scores 0.08-0.33).
+Still open: the CPU on/off comparison (the A/B was cut short: one minute on read 53% of a core; no "off" minutes
+yet), battery on/off unplugged (DadCraft's 30 + 30 minutes), the 2 s check, then 4d (his walk).

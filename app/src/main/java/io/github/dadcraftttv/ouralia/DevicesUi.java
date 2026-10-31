@@ -337,6 +337,18 @@ final class DevicesUi {
             diagLevel = new android.widget.ProgressBar(a, null, android.R.attr.progressBarStyleHorizontal);
             diagLevel.setMax(80);   // -80 .. 0 dB
             body.addView(diagLevel, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, a.dp(10)));
+            if (SoundKindsRunner.available()) {   // sound kinds (Oct 31, step 4c): Ouralia Dev only
+                android.widget.Switch kinds = new android.widget.Switch(a);
+                kinds.setText(R.string.sound_kinds_switch);
+                a.look.label(kinds);
+                a.look.switchTint(kinds);
+                kinds.setSwitchPadding(a.dp(16));
+                kinds.setMinHeight(a.dp(52));
+                kinds.setPadding(a.dp(4), a.dp(8), 0, 0);
+                kinds.setChecked(SoundKindsRunner.enabled(a));
+                kinds.setOnClickListener(v -> SoundKindsRunner.setEnabled(a, kinds.isChecked()));
+                body.addView(kinds);
+            }
             TextView note = new TextView(a);
             note.setText(R.string.diag_note);
             note.setTextSize(13);
@@ -380,6 +392,10 @@ final class DevicesUi {
         if (SceneSettings.current(a) == null) {   // (the built-in patch's room listener; scenes have none)
             float[] r = AudioService.roomScores();
             lines.add(a.getString(R.string.diag_room, r[0], r[1], r[2], r[3], r[4]));
+            if (SoundKindsRunner.on()) {
+                int k = SoundKindsRunner.kind();
+                lines.add(a.getString(R.string.diag_kinds, k < 0 ? "\u2026" : SoundKinds.NAMES[k], SoundKindsRunner.score()));
+            }
         }
         ClipWatch c = AudioService.clips();
         if (!c.hasReports()) {

@@ -29,6 +29,28 @@ def add_stereo_in(P):
     P.obj("ls", "dcs_listen~", 20, 75); P.c("st_mid", "ls", 0, 0); P.c("dw", "ls", 2, 1)
     P.obj("ls_s", "s room_kind", 20, 90); P.c("ls", "ls_s")
     P.obj("ls_f", "s room_feat", 120, 90); P.c("ls", "ls_f", 1, 0)   # (the measures, for tuning on real places)
+    # Sound kinds (Oct 31, step 4c, a Dev spike: docs/design/sound-kinds.md). While the app sends sk_on 1, the mic as
+    # it comes in is written into sk_ring, three segments of SK_SEG samples in turn: each tick starts the next one
+    # and tells the app its number (sk_ready), so the two before it are whole and the app reads them (~1 s) to name
+    # the sound. In memory only (the mic never touches disk). sk_on 0: the metro and the writer stop.
+    P.obj("sk_tab", f"table sk_ring {3 * SK_SEG}", 400, 75)
+    P.obj("sk_on", "r sk_on", 400, 90)
+    P.obj("sk_sel", "sel 0", 400, 100); P.c("sk_on", "sk_sel")
+    P.msg("sk_stop", "stop", 400, 110); P.c("sk_sel", "sk_stop")
+    P.obj("sk_go", "t b b b", 460, 110); P.c("sk_sel", "sk_go", 1)
+    P.obj("sk_sr", "samplerate~", 520, 120); P.c("sk_go", "sk_sr", 2)
+    P.obj("sk_ms", f"expr {SK_SEG} * 1000 / {BS}$f1", 520, 130); P.c("sk_sr", "sk_ms")
+    P.msg("sk_zero", "0", 490, 120); P.c("sk_go", "sk_zero", 1)
+    P.obj("sk_metro", "metro 512", 460, 140); P.c("sk_go", "sk_metro", 0); P.c("sk_stop", "sk_metro")
+    P.c("sk_ms", "sk_metro", 0, 1)
+    P.obj("sk_n", "f", 460, 150); P.c("sk_metro", "sk_n"); P.c("sk_zero", "sk_n", 0, 1)
+    P.obj("sk_next", "+ 1", 500, 150); P.c("sk_n", "sk_next")
+    P.obj("sk_mod", "mod 3", 500, 160); P.c("sk_next", "sk_mod"); P.c("sk_mod", "sk_n", 0, 1)
+    P.obj("sk_t", "t f f", 460, 160); P.c("sk_n", "sk_t")
+    P.obj("sk_at", f"* {SK_SEG}", 480, 170); P.c("sk_t", "sk_at", 1)
+    P.msg("sk_start", f"start {BS}$1", 480, 180); P.c("sk_at", "sk_start")
+    P.obj("sk_w", "tabwrite~ sk_ring", 400, 190); P.c("st_mid", "sk_w"); P.c("sk_start", "sk_w"); P.c("sk_stop", "sk_w")
+    P.obj("sk_s", "s sk_ready", 460, 190); P.c("sk_t", "sk_s", 0)
     return "dw"
 
 def add_stereo_out(P, gain, dry):
