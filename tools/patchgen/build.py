@@ -3,7 +3,7 @@
 from .constants import *  # noqa: F401,F403 (the tuning numbers)
 from .core import *  # noqa: F401,F403
 from .stereo import add_stereo_in, add_stereo_out
-from .rhythm import add_tempo_clock, add_beat, add_kits, add_kit_drums
+from .rhythm import add_tempo_clock, add_beat
 from .music import add_music
 from .glitch import add_glitch_cloud, add_onset_switch, add_reverse_reverb
 from .sensing import add_pocket_rustle, add_handling, add_clip_watch
@@ -1019,10 +1019,6 @@ def build():
     add_switch(P, "harmsign", ("music_on", "harm_run", "harm_tracker"), 100, block="64 1 0.5")
     P.group("harm", r"^mu_hm")                                          # Harmony's tracker and voices: off at 0
     add_switch(P, "harm", ("music_on", "harm_run"), 2500)            # (its notes fade over 1.8 s)
-    P.group("kpad", r"^mu_kv_pad2?$")                                    # a kit's pad voices: only while heard
-    add_switch(P, "kpad", ("music_on", "kpad_run"), 3000)               # (a kit pad's release: up to 2.5 s)
-    P.group("kbass", r"^ba_kv2?$")                                        # a kit's bass voices: the same
-    add_switch(P, "kbass", ("music_on", "kbass_run"), 3000)
     P.group("music", r"^(mu_|ba_)")
     add_switch(P, "music", ("music_on",), 3000)                       # chimes fade over up to 2.6 s
     P.group("gloop", r"^gl_(rec_in|rec|ix|rd|env|s0|out)$")                    # the glitch loop's audio
@@ -1039,8 +1035,6 @@ def build():
     add_switch(P, "gcloud", ("gc_amount", "gc_level"), 1500)           # a glitch runs up to ~1.3 s
 
     add_onset_switch(P)
-    add_kits(P)
-    add_kit_drums(P)
     # Our own objects loaded (Oct 19): the app warns when `dcs_ok` doesn't come at Start (without them, nothing
     # plays: the effects are dcs objects in every sound's path). Where the library is missing this box can't be made.
     P.obj("dcs_loaded", "dcs_loaded", 4300, 2100); P.obj("dcs_ok", "s dcs_ok", 4300, 2120); P.c("dcs_loaded", "dcs_ok")

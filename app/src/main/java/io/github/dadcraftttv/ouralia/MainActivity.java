@@ -40,8 +40,6 @@ public class MainActivity extends Activity {
     static final int REQ_IMPORT = 3;
     static final int REQ_IMPORT_SCENE = 4;
     static final int REQ_IMPORT_SCENE_FOLDER = 5;
-    static final int REQ_IMPORT_KIT = 23;
-    static final int REQ_IMPORT_KIT_FOLDER = 24;
 
     private AudioManager audioManager;
 
@@ -90,8 +88,6 @@ public class MainActivity extends Activity {
     final ChoiceUi choiceUi = new ChoiceUi(this);
     /** Setup's Appearance card (AppearanceUi.java). */
     private final AppearanceUi appearanceUi = new AppearanceUi(this);
-    /** The Music tab's Kits card (KitUi.java). */
-    final KitUi kitUi = new KitUi(this);
     /** Presets (PresetUi.java). */
     final PresetUi presetUi = new PresetUi(this);
     /** Setup's About card (AboutUi.java). */
@@ -126,11 +122,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         look = new Styler(this, theme);
         ParamStore.loadOnce(this);
-        if (Kits.source == null) {                       // (the part menus say which kits lack a part)
-            Kits.source = AudioService.builtInKits(this);
-            Kits.refreshChoices();
-        }
-        Kits.decoder = AudioFiles::decode;               // (a kit's MP3, OGG, FLAC... recordings, at import)
         SceneLibrary.installBuiltIns(this, SceneSettings.scenesDir(this));
         audioManager = getSystemService(AudioManager.class);
 
@@ -288,7 +279,6 @@ public class MainActivity extends Activity {
                     body -> settingRows.fillEffectSection(body, section), settingRows.headerExtras(section));
         }
 
-        settingRows.addSection(music, "kits", getString(R.string.section_kits), false, kitUi::fillKitsSection);
 
         // ---- Setup ----
         devicesUi.addAudioSection(setup);
@@ -379,7 +369,7 @@ public class MainActivity extends Activity {
         }
         currentTab = tab;
         UiSettings.setTab(this, tab);
-        settingRows.refreshRows();   // rows on a hidden tab skip every refresh (a preset loaded on Sound left The Band's kit menus stale)
+        settingRows.refreshRows();   // rows on a hidden tab skip every refresh
         if (mainScroll != null) {
             final int y = tabScroll[tab];
             mainScroll.post(() -> mainScroll.scrollTo(0, y));
@@ -411,7 +401,7 @@ public class MainActivity extends Activity {
     // One bottom sheet, slid up over a dimmed screen, for whatever needs it: the player, the Key and Scale pickers.
     private View sheetScrim;
     private LinearLayout sheetBox;
-    private ScrollView sheetBody;   // scrolls when the content is taller than most of the screen (the kit lists)
+    private ScrollView sheetBody;   // scrolls when the content is taller than most of the screen
     private boolean sheetOpen;
     private Object backClosesSheet;   // an OnBackInvokedCallback on Android 13+ (kept as Object for older ones)
 
@@ -1089,7 +1079,7 @@ public class MainActivity extends Activity {
 
     /**
      * An AlertDialog in the app's look: rounded on the sheet colour, the fonts, buttons in the accent. Every dialog
-     * (confirmations, Save, the kit and feedback ones) is built with this instead of AlertDialog.Builder.
+     * (confirmations, Save and feedback ones) is built with this instead of AlertDialog.Builder.
      */
     final class LookDialog extends AlertDialog.Builder {
         LookDialog() {
@@ -1139,8 +1129,6 @@ public class MainActivity extends Activity {
             sceneUi.importSceneFrom(uri);
         } else if (requestCode == REQ_IMPORT_SCENE_FOLDER) {
             sceneUi.importSceneFolderFrom(uri);
-        } else if (requestCode == REQ_IMPORT_KIT || requestCode == REQ_IMPORT_KIT_FOLDER) {
-            kitUi.importKitFrom(uri, requestCode == REQ_IMPORT_KIT_FOLDER);
         }
     }
 

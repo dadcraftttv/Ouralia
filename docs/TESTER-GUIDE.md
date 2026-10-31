@@ -1,6 +1,12 @@
 # Beta Tester Guide
 
-Oct 30, 2026 · Dad · for 0.9.0-rc5.2
+Oct 30, 2026 · DadCraft · for reactive Dev (release history below is rc5.2)
+
+**Reactive Dev:** selectable kits (Acoustic included), Band Members, layers and kit import/delete are removed.
+The existing Classic synth voices and Found sounds keep their sound, choices and defaults. Older settings and
+presets still load; their kit choices are ignored. The release-history kit descriptions below describe older APKs.
+For the comparison with release, set release to Kit Classic with no layers and match all other settings.
+The three reactive controls are still optional. Compare Classic and Found on the same sources and levels.
 
 ## What this app is
 
@@ -173,7 +179,7 @@ What **Intensity** does: one dial for how much is going on. In the middle (50) e
 
 At the top of the screen a small red **No headphones** chip shows while none are connected (tap it for why).
 
-Inside a tab, settings are grouped in cards. Tap a card's heading to open or fold it; the app remembers which ones you opened. An effect's card has its **on/off switch** on its heading, so you can switch it without opening it, and a **Movers** button (see Movers). A slider shows its value on the right and a **padlock** (Lock, see Presets). A setting that picks one of a few choices shows them as side-by-side buttons, with the chosen one's explanation under them; a longer list (the kits, for example) is a box that opens a list from the bottom of the screen. While a scene is playing, the Sound, Music and Realms tabs say so instead of showing controls that would do nothing.
+Inside a tab, settings are grouped in cards. Tap a card's heading to open or fold it; the app remembers which ones you opened. An effect's card has its **on/off switch** on its heading, so you can switch it without opening it, and a **Movers** button (see Movers). A slider shows its value on the right and a **padlock** (Lock, see Presets). A setting that picks one of a few choices shows them as side-by-side buttons, with the chosen one's explanation under them; a longer list (the scales, for example) is a box that opens a list from the bottom of the screen. While a scene is playing, the Sound, Music and Realms tabs say so instead of showing controls that would do nothing.
 
 | Tab | What is on it |
 | --- | --- |
@@ -248,7 +254,7 @@ Makes your voice "sing" through a synth: the classic robot-choir sound. Your wor
   next).
 - **Vocoder synth sound \*:** what the synth is made of. *Saws* (the default) is the warm, slightly detuned
   vocoder sound. The three *Chip* choices are the old game consoles' pulse waves: *25%* is the NES lead, *12.5%*
-  thinner and more nasal, *50% square* hollow, like the Game Boy. Try them with the Chiptune kits. Whisper ignores it.
+  thinner and more nasal, *50% square* hollow, like the Game Boy. Whisper ignores it.
 - **Vocoder octave:** moves the synth notes up or down.
 - **Vocoder synth in key:** for Your own pitch: 1 keeps the synth on the notes of the key, 0 follows you exactly.
 - **Vocoder hiss:** keeps "s", "t" and "f" sounds clear. Turn it down for a smoother, less wordy sound.
@@ -456,17 +462,6 @@ This adds a soft, drifting musical layer that reacts to the world around you, in
   fooled by hiss, so the harmony and the found pad pick the right note more often.
 - **Call and response:** sing, hum or whistle a short phrase (one to six notes) and pause. A moment after you stop, the app answers it with chimes: the same rhythm and shape, a third higher (a third lower if you sang high), in key, sometimes ending on the home note. While the Rhythm plays, the answer falls on the beat. It answers each phrase once. Higher plays the answer louder; 0 turns it off. It needs Music on.
 - **Tone:** darker and rounder on the left, brighter and glassier on the right.
-- **Kit \* (the sound of the music):** what the melody, bass, pad and drums are played on. **Classic** is the
-  sound so far. **Acoustic** (plucked and bowed strings), **Synth** (warm analog-style synths), **EDM** (big
-  supersaws, a drum machine, and the music ducking at each kick), **Future bass** (wobbly chords and chopped
-  bits of your voice), **Low end** (a sliding 808 bass, a deep pad, a sparse top), and three **Chiptune** kits:
-  **NES**, **Game Boy** and **Genesis**. Your own kits join this menu too.
-- **Band Members: Lead, Bassist, Keys, Drummer \*:** mix kits: each part can come from another kit than the
-  Kit above ("The kit" = the same as the Kit). A kit that has nothing of its own for a part says so, for example
-  "Synth (Classic's drums)": that part then plays Classic's sound.
-- **Melody layer, Bass layer, Pad layer, Drums layer \*** and their **blend:** a second kit on the same part,
-  playing along with the first. The blend says how much of each: 0 is only the first kit, 1 only the layer, and
-  the middle both. None (the start) is off.
 - **Ear for the Room:** at the right end the music responds strongly to the room. At the left it plays a calmer, steadier pattern.
 
 What to expect:
@@ -492,19 +487,6 @@ One place to set how loud each part of the music and rhythm is, so you can turn 
 - **Harmony:** the answering note.
 
 The ones marked with an "x" (Kick, Bass, Chimes, Walking notes and the two room-note levels) are new. They sit inside their group's own level: Beat level still turns all the drums up or down together, Notes and chimes level all the melody notes, Pad level the pad and bass, Room notes both room-note kinds. Each starts at 1 (as before) and goes from 0 (out) to 1.5 (half as loud again).
-
-### Your Kits (sounds for the band)
-
-At the end of The Band tab. A kit is a small text file (kit.txt) that says what each part sounds like, so anyone
-can make one, and it can bring its own recordings (WAV, MP3, OGG, FLAC and more) for the melody, the pad or each drum.
-
-- **Import kit:** pick a kit.txt, or a zip with the kit and its sounds. **Import kit folder:** pick a folder that
-  holds them. The kit plays at once as the Kit, and joins every Kit and Band Members menu.
-- **How to make a kit:** a short explanation with examples. The full step-by-step guide is [MAKING-KITS.md](MAKING-KITS.md) (including how to use your own recordings, even sounds with no musical note, like a door squeak).
-- **Delete a kit:** removes one from this phone (any part that played it goes back to Classic). The file you
-  imported it from is not touched.
-- A preset carries the kits it uses, so a preset you share brings its sound with it. Recordings are not in the
-  preset: import the kit itself too if it has some.
 
 ## Movers: sliders that move on their own
 
@@ -543,7 +525,7 @@ Tip: a gentle Smooth wave or Random drift on a few sliders makes the sound feel 
 
 ## The Realms tab
 
-Switch on **Realm Hopper** and the app listens to the room and to how you are moving, then changes the sound for you. Because a Realm sets your sliders from its own preset (effects, music, rhythm and the Mix), the app asks first; your own settings come back when the Realm ends or you switch Realm Hopper off. To keep part of your sound, switch that part off under the Realm's "What it changes". Your kit choices are always yours: a Realm never changes the Kit, a part's "from", its layer or its blend (it can still change the music's levels and the Mix). (Realms were called Auto worlds before; they work the same.) They only work with the built-in effects, not with scenes.
+Switch on **Realm Hopper** and the app listens to the room and to how you are moving, then changes the sound for you. Because a Realm sets your sliders from its own preset (effects, music, rhythm and the Mix), the app asks first; your own settings come back when the Realm ends or you switch Realm Hopper off. To keep part of your sound, switch that part off under the Realm's "What it changes". (Realms were called Auto worlds before; they work the same.) They only work with the built-in effects, not with scenes.
 
 | Realm | When it plays | What it sounds like |
 | --- | --- | --- |
@@ -599,7 +581,7 @@ On the Setup tab is a **Reset everything to defaults** button. It asks you to co
 
 If you ever uninstall the app, everything in it is erased, including your saved presets. To keep your favorites, use Presets > Export on each one first and Import them again afterward.
 
-A preset file holds the effect sliders, their movers, the Music and Rhythm levels, Chime character, and the Dry level. It does not hold: Input gain, noise gate and compressor (and their shape); Pocket hush, Mic-down protection and Handling hush; Intensity; Smoothing and Nudge strength; whether Music is switched on, its key and scale, Pad register, the home-chord drift and "Light, pocket and stairs move the notes" switches, Calm builds, and the Synth / Found sounds choices; the Rhythm's tempo settings and "Beat follows" and "Beat plays"; the Warp sound; locks; the Realm choices; your audio device choices; imported scenes and kits; or the appearance look. Set those again by hand after reinstalling.
+A preset file holds the effect sliders, their movers, the Music and Rhythm levels, Chime character, and the Dry level. It does not hold: Input gain, noise gate and compressor (and their shape); Pocket hush, Mic-down protection and Handling hush; Intensity; Smoothing and Nudge strength; whether Music is switched on, its key and scale, Pad register, the home-chord drift and "Light, pocket and stairs move the notes" switches, Calm builds, and the Synth / Found sounds choices; the Rhythm's tempo settings and "Beat follows" and "Beat plays"; the Warp sound; locks; the Realm choices; your audio device choices; imported scenes; or the appearance look. Set those again by hand after reinstalling.
 
 ## The Setup tab
 
@@ -643,8 +625,6 @@ Thank you for trying this. Anything you notice is useful, even "it felt weird." 
 - **Realms:** do they change at the right moments? Do the "What it changes" switches leave the groups you switch off alone? Is the warp sound pleasant, and noticeable without being annoying?
 - **Glitch:** with Glitch cloud amount up, do sudden sounds come back in a fun way, and do they feel like they are all around you? Which glitch matrix mix did you like best? Do the echoes bouncing around (Echo scatter) feel good or dizzying? With Scatter style New, do the repeats sound like they come from places around you? Which Throw and Near and far settings do you like?
 - **Headphones and mic:** did the app refuse to start, stop when you unplugged, or pick the wrong mic? Did it go quiet during a call and come back after, and did it dip when another app played music?
-- **Kits:** which kits do you like, and for which parts? Do any parts sound too loud or too quiet next to the
-  others? If you make a kit of your own, did the format make sense, and did your recordings play?
 - **Vocoder and Sing in key:** are your words clear? Which vocoder style and synth sound do you like best?
 - **Classic or New:** for each setting with a \*, which one did you prefer, and why?
 - **Scenes:** does each of the four built-in scenes make sound, and does it react the way its description says? Tell me which ones felt dead, too loud or confusing.

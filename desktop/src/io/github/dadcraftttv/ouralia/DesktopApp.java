@@ -64,8 +64,7 @@ final class DesktopApp {
     private static String worldShown;
     private static float calmChimesSent;
     private static int minuteOfDay = Worlds.minuteOfDayNow();
-    private static long lastTick = System.nanoTime(), lastClock, lastKitCheck;
-    private static String kitSignature;
+    private static long lastTick = System.nanoTime(), lastClock;
     /** Our own Pd objects loaded (Oct 19): the patch's [dcs_loaded] sends dcs_ok as it opens. Without them nothing
      *  plays (the effects are dcs objects in every sound's path), so the window says so instead of staying silent. */
     private static volatile boolean dcsOk;
@@ -162,16 +161,6 @@ final class DesktopApp {
         }
         PdBase.computeAudio(true);
         started = engine.running();
-        File kits = new File(new File(patch).getAbsoluteFile().getParentFile().getParentFile(), "kits");   // (assets/kits)
-        Kits.source = name -> {
-            try {
-                return new String(java.nio.file.Files.readAllBytes(new File(kits, name + ".txt").toPath()),
-                        java.nio.charset.StandardCharsets.UTF_8);
-            } catch (IOException e) {
-                return null;
-            }
-        };
-        Kits.refreshChoices();   // (the part menus say which kits lack a part: they need the kits' text)
         freshStart();
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             SessionLog.stopAndWait();
@@ -206,7 +195,7 @@ final class DesktopApp {
 
     private static boolean started;   // played since the window opened (a later Start reopens the patch)
 
-    /** What a newly opened patch starts with: the app's memories cleared, every setting and kit sent. */
+    /** What a newly opened patch starts with: the app's memories cleared, every setting sent. */
     private static void freshStart() {
         Modulation.reset();
         motif.reset();
@@ -317,19 +306,6 @@ final class DesktopApp {
                 float cue = world == null ? 0f : worldShown == null ? 1f : 2f;   // up into a Realm, home, sideways
                 worldShown = world;
                 PdBase.sendFloat("realm_cue", cue);
-            }
-            if (now - lastKitCheck > 1_000_000_000L) {   // the kit bench: a kit saved, added or removed plays at once
-                lastKitCheck = now;
-                String sig = Kits.signature();
-                if (!sig.equals(kitSignature)) {
-                    boolean first = kitSignature == null;
-                    kitSignature = sig;
-                    if (!first) {
-                        Kits.refreshChoices();
-                        ParamStore.sendKit(false);
-                        say.accept("Your kits changed: " + Kits.userKits().size() + " in " + Kits.userDir + ".");
-                    }
-                }
             }
             if (now - lastClock > 30_000_000_000L) {
                 minuteOfDay = Worlds.minuteOfDayNow();

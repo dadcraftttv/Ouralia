@@ -17,8 +17,6 @@ DEFAULTS = [
     ("pitch_on", 1), ("pitch_semi", 0), ("pitch_mix", 0), ("pitch_window", 60),
     ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000), ("crush_style", 0), ("tune_amount", 0), ("tune_glide", 40),
     ("voc_on", 1), ("voc_mix", 0), ("voc_style", 0), ("voc_carrier", 0), ("voc_wave", 0), ("voc_sib", 0.5), ("voc_octave", 0), ("voc_snap", 1),
-    ("kitl_mel", 0), ("kitl_bass", 0), ("kitl_pad", 0), ("kitl_drums", 0),
-    ("kitb_mel", 0.5), ("kitb_bass", 0.5), ("kitb_pad", 0.5), ("kitb_drums", 0.5),
     ("space_on", 1), ("space_pan", 0), ("space_shift", 0),
     ("filter_on", 1), ("filter_mix", 0), ("filter_type", 0), ("filter_freq", 1500), ("filter_q", 1),
     ("reverb_on", 1), ("reverb_mix", 0), ("reverb_size", 0.5), ("reverb_tone", 6000), ("reverb_shimmer", 0),

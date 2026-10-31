@@ -4,7 +4,7 @@
 set -e
 export JAVA_TOOL_OPTIONS=
 H="$(cd "$(dirname "$0")" && pwd)"; SRC="$H/../../app/src/main/java/io/github/dadcraftttv/ouralia"
-CORE="$SRC/Param.java $SRC/Params.java $SRC/ParamStore.java $SRC/PresetManager.java $SRC/Modulation.java $SRC/PhoneContext.java $SRC/Intensity.java $SRC/CalmBuild.java $SRC/Kits.java"
+CORE="$SRC/Param.java $SRC/Params.java $SRC/ParamStore.java $SRC/PresetManager.java $SRC/Modulation.java $SRC/PhoneContext.java $SRC/Intensity.java $SRC/CalmBuild.java"
 for t in "${@:-M N W R C P P2 T S E X D H I F B G L Q V Y Z K U A O}"; do for x in $t; do
   extra=""; [ "$x" = W -o "$x" = X ] && extra="$SRC/StepDetector.java $SRC/WorldSelector.java $SRC/Worlds.java $SRC/MotifMemory.java $SRC/NoteRegister.java"
   [ "$x" = E ] && extra="$SRC/SceneEvents.java"

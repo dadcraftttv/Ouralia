@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Rhythm: the tempo clock, the beat and its patterns, the found-sound kit, glitch loops, the kits' drums."""
+"""The Rhythm: the tempo clock, the beat and its patterns, the found-sound kit, glitch loops."""
 from .constants import *  # noqa: F401,F403 (the tuning numbers)
 from .core import *  # noqa: F401,F403
 
@@ -899,10 +899,7 @@ def add_beat(P):
     P.sig2("fs_hat_l", "*~", fs_hat, hats, x + 900, 400)
     P.sig2("beat_hats_all", "+~", "hat", "fs_hat_l", x + 750, 410)
     P.sig2("beat_sum00", "+~", "beat_kick_snare", "beat_hats_all", x, 525)
-    # a kit's drums (Kits): the Classic drums (synth and found) give way to the kit's drum voice
-    P.sig2("beat_sum00c", "*~", "beat_sum00", "kit_drums_cl", x, 526)
-    P.sig2("beat_sum00k", "+~", "beat_sum00c", "kit_drums_mix", x, 527)
-    P.sig2("beat_sum0", "+~", "beat_sum00k", add_glitch_loop(P, x + 3000), x, 530)   # (C5: glitch loops in the beat)
+    P.sig2("beat_sum0", "+~", "beat_sum00", add_glitch_loop(P, x + 3000), x, 530)   # (C5: glitch loops in the beat)
     P.sig2("beat_sum", "*~", "beat_sum0", "rh_gain", x, 535)            # softer standing still (the pattern engine)
     lvl = smoothed(P, "beat_level", "beat_level", x + 1050, 20)
     bon = smoothed(P, "beat_on", "beat_on", x + 1150, 20)
@@ -917,109 +914,3 @@ def add_beat(P):
     P.obj("beat_out", "*~ 0.6", x, 590)
     P.c("beat_lvl", "beat_out")
     return "beat_out"
-
-def add_kits(P, x=3000, y=1700):
-    """Kits (Oct 17): each part (melody, bass, pad, drums) has a kit voice (dcs_voice~) that a kit configures by
-    messages to kit_<part> (Kits.java sends them from a kit file: `engine <n>` and the engine's settings). Engine 0 =
-    Classic: the part's own sound, as always. Otherwise the part's notes also go to its kit voice and its Classic sound
-    gives way.
-    Layers (Oct 19, DadCraft: "running both the NES pad and synthwave pad simultaneously and being able to control how
-    much of each is present"): a second voice per part, configured by kit2_<part>, heard when kitl_<part> (the layer
-    menu: 0 = none) is on, blended by kitb_<part> (0 = only the first, 1 = only the layer; equal power, cos/sin). A
-    side on Classic gives its share to the Classic sound (both on Classic: Classic at full level). The gains glide
-    over 50 ms: kit_<part>_cl (Classic), and the kit voices' sum kit_<part>_mix. The melody's Classic notes also stop
-    while Classic's share is 0 (value kmelcl), as before."""
-    def ex(name, text, xx, yy):
-        return P.obj(name, "expr " + text.replace(",", BS + ",").replace("$", BS + "$").replace(" ; ", " " + BS + "; "), xx, yy)
-    P.obj("krun_reg_r", "r music_pad_reg", x, y - 40); P.obj("krun_reg_v", "value kreg", x + 100, y - 30)
-    P.obj("krun_reg_t", "t b f", x, y - 30); P.c("krun_reg_r", "krun_reg_t"); P.c("krun_reg_t", "krun_reg_v", 1, 0)
-    for part, voice in (("mel", "mu_kv_mel"), ("bass", "ba_kv"), ("pad", "mu_kv_pad"), ("drums", "kd_voice")):
-        xx = x + 300 * ("mel", "bass", "pad", "drums").index(part)
-        for side, recv, v in (("", f"kit_{part}", voice), ("2", f"kit2_{part}", voice + "2")):
-            yy = y + 120 * (side == "2")
-            P.obj(f"{recv}_r", f"r {recv}", xx, yy)
-            P.obj(v, "dcs_voice~", xx, yy + 60); P.c(f"{recv}_r", v)
-            if part != "drums":                              # the tempo on every beat: a kit's wobble keeps to it
-                P.obj(f"{recv}_tr", "r tempo", xx + 200, yy); P.msg(f"{recv}_tm", f"tempo {BS}$1", xx + 200, yy + 20)
-                P.c(f"{recv}_tr", f"{recv}_tm"); P.c(f"{recv}_tm", v)
-            P.obj(f"{recv}_rt", "route engine", xx + 100, yy + 20); P.c(f"{recv}_r", f"{recv}_rt")
-            P.obj(f"{recv}_et", "t b f", xx + 100, yy + 30); P.c(f"{recv}_rt", f"{recv}_et")
-            P.obj(f"{recv}_ev", f"value ke{side}{part}", xx + 160, yy + 40); P.c(f"{recv}_et", f"{recv}_ev", 1, 0)
-            if part == "mel" and side == "":
-                P.obj("kit_mel_v", "value kmel", xx + 220, yy + 40); P.c(f"{recv}_et", "kit_mel_v", 1, 0)
-            if part in ("bass", "pad"):                      # (the note now: a new kit hears it at once)
-                P.obj(f"{recv}_new", f"s {recv}_new", xx + 100, yy + 50); P.c(f"{recv}_et", f"{recv}_new", 0, 0)
-        # the shares: Classic, the first kit, the layer
-        P.obj(f"kitg_{part}_b", "t b", xx + 100, y + 260)
-        for k in ("", "2"):
-            P.c(f"kit{k}_{part}_et", f"kitg_{part}_b", 0, 0)
-        for nm, recv in (("l", f"kitl_{part}"), ("b", f"kitb_{part}")):
-            P.obj(f"kitg_{part}_{nm}r", f"r {recv}", xx + 160 + 60 * (nm == "b"), y + 240)
-            P.obj(f"kitg_{part}_{nm}t", "t b f", xx + 160 + 60 * (nm == "b"), y + 250)
-            P.obj(f"kitg_{part}_{nm}v", f"value k{nm}{part}", xx + 160 + 60 * (nm == "b"), y + 260)
-            P.c(f"kitg_{part}_{nm}r", f"kitg_{part}_{nm}t"); P.c(f"kitg_{part}_{nm}t", f"kitg_{part}_{nm}v", 1, 0)
-            P.c(f"kitg_{part}_{nm}t", f"kitg_{part}_b", 0, 0)
-        P.obj(f"kitg_{part}_lb", "loadbang", xx + 40, y + 260); P.c(f"kitg_{part}_lb", f"kitg_{part}_b")
-        wa = f"if(kl{part}>0,cos(kb{part}*1.5708),1)"
-        wb = f"(kl{part}>0)*sin(kb{part}*1.5708)"
-        ex(f"kitg_{part}", f"min(1,(ke{part}==0)*{wa}+(ke2{part}==0)*{wb}) ; (ke{part}>0)*{wa} ; (ke2{part}>0)*{wb}",
-           xx + 100, y + 280)
-        P.c(f"kitg_{part}_b", f"kitg_{part}")
-        for o, nm in ((0, f"kit_{part}_cl"), (1, f"kit_{part}_ga"), (2, f"kit_{part}_gb")):
-            P.obj(f"{nm}_pk", "pack f 50", xx + 100 + 60 * o, y + 300); P.c(f"kitg_{part}", f"{nm}_pk", o, 0)
-            P.obj(nm, "line~", xx + 100 + 60 * o, y + 320); P.c(f"{nm}_pk", nm)
-        if part == "mel":
-            P.obj("kit_mel_clv", "value kmelcl", xx + 40, y + 300); P.c("kitg_mel", "kit_mel_clv", 0, 0)
-        mx = "" if part == "drums" else "mu_"                 # (beside its voices: in the music subpatch, no DSP loop)
-        P.sig2(f"{mx}kit_{part}_a", "*~", voice, f"kit_{part}_ga", xx, y + 340)
-        P.sig2(f"{mx}kit_{part}_b2", "*~", voice + "2", f"kit_{part}_gb", xx + 60, y + 340)
-        P.sig2(f"{mx}kit_{part}_mix", "+~", f"{mx}kit_{part}_a", f"{mx}kit_{part}_b2", xx, y + 360)
-        if part in ("pad", "bass"):   # (Oct 19) the kit voices run only while heard: a kit (or layer) on the part,
-            # and the register lets the part through (Pad register: 0 Low = the bass only, 1 Mid = the pad only)
-            off = {"pad": 0, "bass": 1}[part]
-            ex(f"krun_{part}", f"(kreg!={off})*((ke{part}>0)||(kl{part}>0)*(ke2{part}>0))+$f1*0", xx + 200, y + 280)
-            P.c(f"kitg_{part}_b", f"krun_{part}"); P.c("krun_reg_t", f"krun_{part}")
-            P.obj(f"krun_{part}_c", "change -1", xx + 200, y + 290); P.c(f"krun_{part}", f"krun_{part}_c")
-            P.obj(f"krun_{part}_s", f"s k{part}_run", xx + 200, y + 300); P.c(f"krun_{part}_c", f"krun_{part}_s")
-
-def add_kit_drums(P, x=4300, y=1700):
-    """The kit's drums play the pattern engine's hits (drum_kick / drum_snare, hats with their decay), scaled by the
-    Mix's kick trim, Snare and Hat levels (each over its default). The kit's pump (`pump` depth, `pumprel` ms, sent
-    with the drums part) ducks the music at each kick while the beat is audible."""
-    def ex(name, text, xx, yy):
-        return P.obj(name, "expr " + text.replace(",", BS + ",").replace("$", BS + "$").replace(" ; ", " " + BS + "; "), xx, yy)
-    for nm, recv in (("kdm_k", "mix_kick"), ("kdm_s", "beat_snare"), ("kdm_h", "beat_hats"), ("kdm_bl", "beat_level")):
-        P.obj(f"{nm}_r", f"r {recv}", x + 60 * len(nm), y); P.obj(f"{nm}_v", f"value {nm}", x + 60 * len(nm), y + 15)
-        P.c(f"{nm}_r", f"{nm}_v")
-    P.obj("kd_rk", "r drum_kick", x, y + 40); ex("kd_k", "$f1*kdm_k", x, y + 60); P.msg("kd_km", f"hit 0 {BS}$1", x, y + 80)
-    P.c("kd_rk", "kd_k"); P.c("kd_k", "kd_km"); P.c("kd_km", "kd_voice"); P.c("kd_km", "kd_voice2")
-    P.obj("kd_rs", "r drum_snare", x + 100, y + 40); ex("kd_s", "$f1*kdm_s/0.6", x + 100, y + 60)
-    P.msg("kd_sm", f"hit 1 {BS}$1", x + 100, y + 80); P.c("kd_rs", "kd_s"); P.c("kd_s", "kd_sm"); P.c("kd_sm", "kd_voice"); P.c("kd_sm", "kd_voice2")
-    P.obj("kd_hp", "pack f f", x + 200, y + 60); P.c("rh_h_v", "kd_hp", 1, 1); P.c("rh_h_v", "kd_hp", 0, 0)
-    ex("kd_h", "$f1*kdm_h/0.5 ; $f2", x + 200, y + 70)
-    P.obj("kd_hu", "unpack f f", x + 200, y + 65); P.c("kd_hp", "kd_hu"); P.c("kd_hu", "kd_h", 1, 1); P.c("kd_hu", "kd_h", 0, 0)
-    P.obj("kd_hk", "pack f f", x + 200, y + 75); P.c("kd_h", "kd_hk", 1, 1); P.c("kd_h", "kd_hk", 0, 0)
-    P.msg("kd_hm", f"hit 2 {BS}$1 {BS}$2", x + 200, y + 80); P.c("kd_hk", "kd_hm"); P.c("kd_hm", "kd_voice"); P.c("kd_hm", "kd_voice2")
-    # "Your steps" (beat_follow 0, Oct 19): the old one-hit-per-step drums play the kit too. Each step's kick or
-    # snare goes out as the pattern engine's would (velocity 1), and the hat half a step later with its step-strength
-    # level and decay (h_pack: the same pair as the pattern's rh_h_v)
-    P.obj("kd_st_k", "s drum_kick", x, y - 40); P.c("cnt_k1", "kd_st_k")
-    P.obj("kd_st_s", "s drum_snare", x + 100, y - 40); P.c("cnt_s1", "kd_st_s")
-    P.c("h_pack", "kd_hu")
-    # the pump: depth and release from the drums part's settings
-    P.obj("kd_pr", "route pump pumprel", x + 300, y + 20); P.c("kit_drums_r", "kd_pr")
-    P.obj("kd_pd", "value pumpd", x + 300, y + 40); P.obj("kd_prl", "value pumprel", x + 380, y + 40)
-    P.c("kd_pr", "kd_pd", 0, 0); P.c("kd_pr", "kd_prl", 1, 0)
-    ex("kd_pump", "1-pumpd*(kdm_bl>0) ; max(pumprel,20)", x + 300, y + 60); P.c("kd_rk", "kd_pump")
-    P.obj("kd_pp", "pack f f", x + 300, y + 75); P.c("kd_pump", "kd_pp", 1, 1); P.c("kd_pump", "kd_pp", 0, 0)
-    P.msg("kd_pm", f"{BS}$1 4 {BS}, 1 {BS}$2 4", x + 300, y + 85); P.c("kd_pp", "kd_pm")
-    P.obj("kit_pump", "vline~", x + 300, y + 100); P.c("kd_pm", "kit_pump")
-    # the bass's 808 (a kit's `sub` engine) plays in rhythm: its held note starts again on each kick while the beat
-    # is on, else on each beat (other engines ignore it)
-    P.obj("kd_blr", "r beat_level", x + 500, y); P.obj("kd_bl1", "> 0", x + 500, y + 15); P.c("kd_blr", "kd_bl1")
-    P.obj("kd_bl0", "== 0", x + 560, y + 15); P.c("kd_blr", "kd_bl0")
-    P.obj("kd_rtk", "spigot 0", x + 500, y + 50); P.c("kd_rk", "kd_rtk"); P.c("kd_bl1", "kd_rtk", 0, 1)
-    P.obj("kd_rtt_r", "r tempo", x + 560, y + 35); P.obj("kd_rtt", "spigot 1", x + 560, y + 50)
-    P.c("kd_rtt_r", "kd_rtt"); P.c("kd_bl0", "kd_rtt", 0, 1)
-    P.msg("kd_rtm", "retrig", x + 530, y + 70); P.c("kd_rtk", "kd_rtm"); P.c("kd_rtt", "kd_rtm"); P.c("kd_rtm", "ba_kv"); P.c("kd_rtm", "ba_kv2")
-    P.obj("kd_plb", "loadbang", x + 400, y + 80); P.msg("kd_p1", "1", x + 400, y + 90); P.c("kd_plb", "kd_p1"); P.c("kd_p1", "kit_pump")

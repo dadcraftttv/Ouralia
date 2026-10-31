@@ -451,7 +451,7 @@ def add_music(P):
         P.obj(f"mu_v{k}_env", "vline~", vx, cy + 90)
         # Melody sounds: the synth plays unless found only and something is caught; the found twin plays unless synth
         caught = "(fs_filled[0]+fs_filled[1]+fs_filled[2]>0)"
-        ex(f"mu_v{k}_vsyn", f"$f1*if(mel_src[0]==1&&{caught},0,1)*(kmelcl>0)", vx, cy + 38)
+        ex(f"mu_v{k}_vsyn", f"$f1*if(mel_src[0]==1&&{caught},0,1)", vx, cy + 38)
         P.obj(f"mu_v{k}_vt", "t f f", vx, cy + 34); P.c(f"mu_v{k}_vel", f"mu_v{k}_vt")
         P.c(f"mu_v{k}_vt", f"mu_v{k}_vsyn", 1, 0)
         # its audio runs only while it rings (its own switch~ group chv<k>): on at the note, off after the fade
@@ -465,17 +465,12 @@ def add_music(P):
         P.c(f"mu_v{k}_swdl", f"mu_v{k}_swoff")
         P.obj(f"grp_chv{k}_r", f"r sw_chv{k}", 10, 10); P.obj(f"grp_chv{k}_sw", "switch~", 10, 40); P.c(f"grp_chv{k}_r", f"grp_chv{k}_sw")
         P.c(f"mu_v{k}_vt", f"fm{k}_in", 0, 0)
-        add_found_note(P, k, vx, cy + 1500, ex, caught, gate="(mel_src[0]>=1)*(kmelcl>0)")
-        # the kits' melody voices (Kits, Oct 17; the layer Oct 19): the same note (a voice on Classic ignores it)
-        P.obj(f"mu_v{k}_kv", "expr $f1 ; cbright ; cdec ; cfreq".replace("$", BS + "$").replace(" ; ", " " + BS + "; "),
-              vx + 120, cy + 34)                                  # (this section's ex() doesn't escape ";")
-        P.c(f"mu_v{k}_vt", f"mu_v{k}_kv", 0, 0)
-        P.obj(f"mu_v{k}_kp", "pack f f f f", vx + 120, cy + 36)
-        for o in (3, 2, 1, 0):
-            P.c(f"mu_v{k}_kv", f"mu_v{k}_kp", o, o)
-        P.msg(f"mu_v{k}_km", f"note {BS}$4 {BS}$1 {BS}$3 {BS}$2", vx + 120, cy + 38)
-        P.c(f"mu_v{k}_kp", f"mu_v{k}_km"); P.c(f"mu_v{k}_km", "mu_kv_mel"); P.c(f"mu_v{k}_km", "mu_kv_mel2")
-        P.msg(f"mu_v{k}_vmn", f"{BS}; voc_ctl mnote {BS}$1", vx + 200, cy + 38); P.c(f"mu_v{k}_kv", f"mu_v{k}_vmn", 3, 0)  # (the vocoder's melody)
+        add_found_note(P, k, vx, cy + 1500, ex, caught, gate="(mel_src[0]>=1)")
+        # The vocoder follows the same melody frequency after the note is chosen.
+        ex(f"mu_v{k}_vcf", "cfreq+$f1*0", vx + 120, cy + 34)
+        P.c(f"mu_v{k}_vt", f"mu_v{k}_vcf", 0, 0)
+        P.msg(f"mu_v{k}_vmn", f"{BS}; voc_ctl mnote {BS}$1", vx + 200, cy + 38)
+        P.c(f"mu_v{k}_vcf", f"mu_v{k}_vmn")
         P.c(f"mu_v{k}_pk", f"mu_v{k}_env_msg"); P.c(f"mu_v{k}_env_msg", f"mu_v{k}_env")
         P.sig2(f"mu_v{k}_out", "*~", f"mu_v{k}_s", f"mu_v{k}_env", vx + 60, cy + 240)
         voices.append(f"mu_v{k}_out")
@@ -499,10 +494,8 @@ def add_music(P):
     P.obj("fm_cc_r", "r chime_char", cx + 1000, cy + 1880); P.obj("fm_cc_v", "value fm_cc", cx + 1000, cy + 1895); P.c("fm_cc_r", "fm_cc_v")
     P.obj("fm_rg_r", "r fm_ring", cx + 1100, cy + 1880); P.obj("fm_rg_v", "value fmring", cx + 1100, cy + 1895); P.c("fm_rg_r", "fm_rg_v")
     P.sig2("mu_chime_cl0", "+~", acc, "fm_lim", cx + 600, cy + 365)
-    P.sig2("mu_chime_cl", "*~", "mu_chime_cl0", "kit_mel_cl", cx + 600, cy + 367)    # (Kits: Classic's share)
-    P.sig2("mu_chime_all", "+~", "mu_chime_cl", "mu_kit_mel_mix", cx + 600, cy + 370)
     P.obj("mu_chime_scale", "*~ 0.22", cx + 600, cy + 380)
-    P.c("mu_chime_all", "mu_chime_scale")
+    P.c("mu_chime_cl0", "mu_chime_scale")
     P.obj("mu_chime_lp", "lop~ 3000", cx + 600, cy + 410)
     P.c("mu_chime_scale", "mu_chime_lp")
     # mu_deg: store velocity, then pick the next note. The melody walks a step or two from the last chime
@@ -982,11 +975,7 @@ def add_music(P):
         P.c(f"mu_pad{i}_deg", dg_in)
         P.obj(f"mu_pad{i}_hcl", "spigot 1", vx, 262); P.c(dg_cl, f"mu_pad{i}_hcl")   # Classic's note (add_composer)
         dg_hz = P.obj(f"mu_pad{i}_hz", "t f", vx, 264); P.c(f"mu_pad{i}_hcl", dg_hz)
-        P.obj(f"mu_pad{i}_kf", "f", vx + 60, 270); P.c(dg_hz, f"mu_pad{i}_kf")
-        P.msg(f"mu_pad{i}_kpn", f"pnote {i} {BS}$1", vx + 60, 280); P.c(f"mu_pad{i}_kf", f"mu_pad{i}_kpn"); P.c(f"mu_pad{i}_kpn", "mu_kv_pad"); P.c(f"mu_pad{i}_kpn", "mu_kv_pad2")
         P.msg(f"mu_pad{i}_vcn", f"{BS}; voc_ctl cnote {i} {BS}$1", vx + 120, 280); P.c(dg_hz, f"mu_pad{i}_vcn")   # (the vocoder's chord)
-        P.obj(f"mu_pad{i}_kre", "r kit_pad_new", vx + 100, 260); P.c(f"mu_pad{i}_kre", f"mu_pad{i}_kf")
-        P.obj(f"mu_pad{i}_kre2", "r kit2_pad_new", vx + 100, 265); P.c(f"mu_pad{i}_kre2", f"mu_pad{i}_kf")
         parts = []
         for k in (0, 1):                                   # the two crossfaded sets of this voice
             kx = vx + 75 * k
@@ -1007,9 +996,7 @@ def add_music(P):
         pad_sum = f"mu_pad{i}_g" if pad_sum is None else P.sig2(f"mu_pad_acc{i}", "+~", pad_sum, f"mu_pad{i}_g", vx, 620)
     P.obj("mu_pad_lp", "lop~ 1500", px, 650)
     P.sig2("mu_pad_cl0", "+~", pad_sum, "fp_sum", px, 636)            # (each set's group runs only while it is heard)
-    P.sig2("mu_pad_cl", "*~", "mu_pad_cl0", "kit_pad_cl", px, 638)    # the kit's pad replaces it (Kits)
-    P.sig2("mu_pad_all", "+~", "mu_pad_cl", "mu_kit_pad_mix", px, 640)
-    P.c("mu_pad_all", "mu_pad_lp")
+    P.c("mu_pad_cl0", "mu_pad_lp")
     # The pad swells and fades with the room, and breathes slowly.
     ex("mu_pad_fac", "0.5+0.5*$f1", px + 300, 650)
     P.obj("mu_pad_fac_sig", "sig~", px + 300, 680); P.obj("mu_pad_fac_lp", "lop~ 0.4", px + 300, 710)
@@ -1070,15 +1057,8 @@ def add_music(P):
     P.obj("ba_sg1", "+~ 1", bx + 40, 664); P.c("ba_sgain", "ba_sg1")      # the synth bass gives way to the found one
     P.sig2("ba_ss", "*~", "ba_s", "ba_sg1", bx, 664)
     P.sig2("ba_sall", "+~", "ba_ss", fb_out, bx, 667)
-    # the kit's bass (Kits): each new bass note held in its slot; the Classic bass (synth and found) gives way
-    P.obj("ba_kf", "f", bx + 200, 535); P.c("ba_ft", "ba_kf", 1, 0)        # (the note now: a new kit hears it at once)
-    P.msg("ba_kpn", f"pnote 0 {BS}$1", bx + 200, 545); P.c("ba_kf", "ba_kpn"); P.c("ba_kpn", "ba_kv"); P.c("ba_kpn", "ba_kv2")
-    P.obj("ba_kre", "r kit_bass_new", bx + 280, 525); P.c("ba_kre", "ba_kf")
-    P.obj("ba_kre2", "r kit2_bass_new", bx + 280, 530); P.c("ba_kre2", "ba_kf")
-    P.sig2("ba_scl", "*~", "ba_sall", "kit_bass_cl", bx, 667)
-    P.sig2("ba_sallk", "+~", "ba_scl", "mu_kit_bass_mix", bx, 667)
     mixb = smoothed(P, "mix_bass", "mix_bass", bx + 400, 600)              # the Mix's bass trim
-    P.sig2("ba_sm", "*~", "ba_sallk", mixb, bx, 668)
+    P.sig2("ba_sm", "*~", "ba_sall", mixb, bx, 668)
     P.sig2("ba_e", "*~", "ba_sm", "ba_env", bx, 670)
     # footstep duck, only while the walking beat is switched on and audible
     P.obj("ba_r_step", "r pulse", bx + 200, 600)
@@ -1177,8 +1157,7 @@ def add_music(P):
     P.sig2("mu_pad_out", "*~", "mu_pad_br", pad_lvl, px, 900)
     P.sig2("mu_chime_out", "*~", "mu_chime_lp", arp_lvl, px + 200, 900)
     P.sig2("mu_mix0", "+~", "mu_pad_out", "mu_chime_out", px, 930)
-    P.sig2("mu_mix0p", "*~", "mu_mix0", "kit_pump", px, 935)          # a kit's sidechain pump (Kits): ducks at its kicks
-    P.sig2("mu_mix1", "+~", "mu_mix0p", add_room_notes(P, x + 2500, ex, degree_to_hz), px, 940)
+    P.sig2("mu_mix1", "+~", "mu_mix0", add_room_notes(P, x + 2500, ex, degree_to_hz), px, 940)
     P.sig2("mu_mix", "+~", "mu_mix1", add_harmony(P, x + 3400, ex, degree_to_hz), px, 945)
     P.sig2("mu_out", "*~", "mu_mix", mon, px, 960)
     return "mu_out"

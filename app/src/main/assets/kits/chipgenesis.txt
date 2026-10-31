@@ -1,9 +1,0 @@
-# Chiptune: Genesis (Oct 18): the Genesis's FM chip (two operators: a modulator, with feedback, colouring a
-# carrier), its 9-bit output and its muffled filter, plus the noise of its second chip for the drums. FM had six
-# channels, so chords stay chords.
-#   fmratio = the modulator's pitch over the note's; fmindex = how bright (it falls over decay); fmfb = grit
-title: Chiptune: Genesis
-mel: engine chip, chip genesis, wave fm, fmratio 1, fmindex 2.5, fmfb 0.7, sus 0.5, decay 600, vib 15, attack 4, release 120, level 6.8
-bass: engine chip, chip genesis, wave fm, fmratio 1, fmindex 4, fmfb 0.9, sus 0.3, decay 350, attack 2, release 60, level 14
-pad: engine chip, chip genesis, wave fm, fmratio 2, fmindex 1.2, fmfb 0.2, sus 0.8, decay 2000, attack 300, release 600, level 0.17
-drums: engine chip, chip genesis, ktune 50, kdecay 250, sdecay 150, hdecay 35, level 1

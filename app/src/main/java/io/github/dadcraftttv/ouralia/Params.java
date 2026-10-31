@@ -193,7 +193,7 @@ final class Params {
                     .inSection("beat").rand(45f, 90f).decimals(0).resetWhenAbsent(),
             // Breakbeat (Oct 15): 0 = the patterns as before. Higher, the bars lean on syncopated kicks and snares with
             // ghost notes, and now and then a bar is chopped (its 16ths reordered, the downbeat kept), gets a short
-            // roll or a long fill. The tempo and the hats stay with your pace. Synth and found kits alike.
+            // roll or a long fill. The tempo and the hats stay with your pace. Synth and found drums alike.
             new Param("beat_break", "Breakbeat (chopped, syncopated drums)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("beat").rand(0f, 0.6f).resetWhenAbsent(),
 
@@ -274,46 +274,6 @@ final class Params {
             new Param("melody_src", "Melody Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth chimes", "Found sounds (tuned from what the mic hears)", "Both")
                     .inSection("music"),
-            // Kit (Oct 17): what each part of the music sounds like (Kits.java, assets/kits). Classic = as always.
-            // Saved in presets, so a shared preset sounds the same. Not reset when a preset or Realm says nothing
-            // about it. A Realm never changes any kit setting (Worlds.realmChanges).
-            // User kits come after the built-in ones (Kits.refreshChoices puts them in the menus).
-            new Param("kit", "Kit (the sound of the music)", 0f, Kits.BUILT_IN.length - 1f + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
-                    .choices("Classic", "Acoustic (plucked and bowed strings)", "Synth (saws through a resonant filter)",
-                            "EDM (supersaws, a drum machine, sidechain pump)",
-                            "Future bass (wobbly chords, chops of your voice, a deep pump)",
-                            "Low end (an 808 that slides, a deep pad, a sparse top)",
-                            "Chiptune: NES (pulse waves, the triangle bass, noise drums)",
-                            "Chiptune: Game Boy (pulses, the 4-bit wave bass, noise drums)",
-                            "Chiptune: Genesis (FM synthesis)")
-                    .inSection("music").noRandom().noPd().dcs(),
-            // Mix and match (Oct 17): each part can take its sound from another kit. "The kit" = the Kit above.
-            new Param("kitp_mel", "Lead (plays like)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
-                    .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_bass", "Bassist (plays like)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
-                    .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_pad", "Keys (plays like)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
-                    .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            new Param("kitp_drums", "Drummer (plays like)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "", Param.Curve.LINEAR)
-                    .choices(Kits.fromChoices()).inSection("music").noRandom().noPd().dcs(),
-            // Layers (Oct 19): a second kit on a part, blended with the first (DadCraft: the NES pad and the Synth pad
-            // together, "being able to control how much of each is present"). None = as before.
-            new Param("kitl_mel", "Lead Layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
-                    Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
-            new Param("kitb_mel", "Lead Blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
-                    .inSection("music").noRandom().dcs(),
-            new Param("kitl_bass", "Bassist Layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
-                    Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
-            new Param("kitb_bass", "Bassist Blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
-                    .inSection("music").noRandom().dcs(),
-            new Param("kitl_pad", "Keys Layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
-                    Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
-            new Param("kitb_pad", "Keys Blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
-                    .inSection("music").noRandom().dcs(),
-            new Param("kitl_drums", "Drummer Layer (a second kit)", 0f, (float) Kits.BUILT_IN.length + Kits.MAX_USER, 0f, "",
-                    Param.Curve.LINEAR).choices(Kits.layerChoices()).inSection("music").noRandom().dcs(),
-            new Param("kitb_drums", "Drummer Blend (0 = the first kit, 1 = the layer)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
-                    .inSection("music").noRandom().dcs(),
             // Melody rhythm (Oct 15): the walking notes and the standing-still chimes follow one-bar rhythm patterns
             // (whole to 8th notes, or dotted and syncopated ones), each note ringing as long as it lasts. Off = as before.
             new Param("mel_rhythm", "Melody Rhythm", 0f, 3f, 0f, "", Param.Curve.LINEAR)
@@ -659,16 +619,16 @@ final class Params {
     static final Set<String> STYLES = Set.of("gc_voice", "shift_voice", "crush_style", "dist_quality",
             "echo_scatter_style", "reverb_shimmer_style");
 
-    /** A built-in preset says nothing about these, so picking one leaves them as they are: the kit, its parts, layers
-     *  and blends too (DadCraft, Oct 21). */
+    /** A built-in preset says nothing about these, so picking one leaves them as they are: how the band plays,
+     *  effect styles and Intensity (DadCraft, Oct 21). */
     static boolean builtInsLeave(String id) {
-        return id.startsWith(Kits.ID) || BAND.contains(id) || STYLES.contains(id) || Intensity.ID.equals(id);
+        return BAND.contains(id) || STYLES.contains(id) || Intensity.ID.equals(id);
     }
 
-    /** A Realm never changes these, even playing a preset of yours: the kit (DadCraft, Oct 20), how the band plays
+    /** A Realm never changes these, even playing a preset of yours: how the band plays
      *  and Intensity (Oct 21), Shimmer Style (Oct 23: a Realm change put it back to Classic). */
     static boolean realmsLeave(String id) {
-        return id.startsWith(Kits.ID) || BAND.contains(id) || Intensity.ID.equals(id)
+        return BAND.contains(id) || Intensity.ID.equals(id)
                 || "reverb_shimmer_style".equals(id);
     }
 

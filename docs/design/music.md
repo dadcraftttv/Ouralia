@@ -194,8 +194,7 @@
   fine"; "we can keep it, but it should be clear what it does": shown as "Chimes Only When Something Happens" since.
   **Pad Only With a Steady Sound** (`pad_room`, Music, default off, saved in presets; Oct 30, reactive-first, branch
   `reactive`). DadCraft's baseline: with the pad, "it's a constant musical sound/tone" (the pad's room factor
-  `mu_pad_fac` is 0.5 + 0.5 x loudness: never below half). On: the pad and bass together (`mu_pad_c`: synth, found
-  and kit voices) are multiplied by a hold `mphold` that heads, ten times a second, toward the room's loudness above
+  `mu_pad_fac` is 0.5 + 0.5 x loudness: never below half). On: the pad (`mu_pad_mid`: synth and found voices) is multiplied by a hold `mphold` that heads, ten times a second, toward the room's loudness above
   its quiet (`mloud01`, before Ear for the Room; PAD_ROOM_MIN 0.03, x PAD_ROOM_GAIN 2.5, so ~13 dB above the quiet is
   full), in straight lines: silence to full over PAD_ROOM_UP_S 1.5 s, full to silence over PAD_ROOM_DOWN_S 4 s
   (the first try was exponential and still whispered at -56 dB ten seconds after a hum). Chords and their changes
@@ -250,7 +249,7 @@
   triad shares the most with the chord, its root first: for mchord, room notes, harmony, phrases, arpeggio), bass
   (0-11), four pad notes (semitones from the key note). The patch: the anchor goes into mu_pad_root_v (slot flip,
   mchord, pad_chord), whose outlets then bang the held notes through mtof into each voice's `mu_pad<i>_hz` (where
-  Classic's degree_to_hz now arrives through a spigot) and the bass into ba_fold; so kits, the found pad, the
+  Classic's degree_to_hz now arrives through a spigot) and the bass into ba_fold; so the found pad, the
   vocoder's chord and the bass all follow. Classic's picker (`mu_chord_go`, now a spigot before `mu_chord_go_t`)
   is closed while Evolving plays; switching back strikes Classic's chord at once. The section's register goes to
   `mu_sreg_add` (after the sensors' register; 0 in Classic). Random seed: time at creation (`comp_seed` for tests).
@@ -337,3 +336,13 @@
   It no longer follows the Dry level (DadCraft, Oct 13): Dry scales the mic just before the music joins (`filtered_dry`;
   the chain from there to `voice` is linear, so the mic sounds as before) and the echo gets the part Dry took away
   (`echo_mic_rest` = mic x (1 - dry)), so at Dry 0 it still repeats the mic. Only the real room tells us if the tuning is right — expect further tweaks from DadCraft's reports.
+
+## Kit removal (Oct 30, reactive)
+
+DadCraft: "remove the kits"; "leave Classic the way it is, no change to accoustic". The built-in Pd chimes,
+pad and bass keep their existing voices; Acoustic and every other kit are removed. Synth / Found / Both keep
+their labels and defaults. The Classic and Found sums now feed the same filters and levels directly, with no
+kit shares, layers or pump. Pad Only With a Steady Sound still gates the complete pad sum and keeps bass out;
+Chimes Only When Something Happens and Notes Only for Bigger Sounds are unchanged. The frozen composer
+features use the same Classic path and no kit settings. The vocoder still receives the melody's frequency and
+all four chord notes. See dcs-objects "Kits: REMOVED Oct 30" for removal scope and status-log for checks.

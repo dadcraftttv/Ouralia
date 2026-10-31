@@ -208,7 +208,7 @@ final class Worlds {
 
     private static boolean realmChanges(String worldId, Param p) {
         if (Params.realmsLeave(p.id)) {
-            return false;   // the kit, how the band plays and Intensity stay the user's (DadCraft, Oct 20 and 21)
+            return false;   // how the band plays and Intensity stay the user's (DadCraft, Oct 21)
         }
         String g = groupOf(p);
         return g == null || uses(worldId, g);
