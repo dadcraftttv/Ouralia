@@ -9,6 +9,7 @@ __pycache__/
 *.jks
 *.keystore
 tools/.venv/
+tools/.sound_kinds_cache/
 desktop/lib/
 desktop/build/
 tools/.pdcore/

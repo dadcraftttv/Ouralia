@@ -58,6 +58,43 @@ Moto's mic shape (high-pass, compressor at the app's defaults).
 *Gate:* each kind is named right on at least 8 of 10 clear clips; voices vs singing and wind vs traffic, the
 likely confusions, are listed with numbers.
 
+*4b result (Oct 31): six kinds pass, three don't; stopped for DadCraft's call.* `tools/sound_kinds/bench.py`
+(clips.json: 103 clips with source and licence; groups.json: each kind = AudioSet ontology subtrees). Clips: 69
+from Wikimedia Commons (CC0, PD, CC BY, CC BY-SA), 21 from ESC-50 (wind, traffic, steps, water, birds, laughter;
+ESC-50 is CC BY-NC apart from its ESC-10 part: fine for a local test, never committed or shipped), 13 made here
+(quiet rooms at -90..-45 dBFS, wind buffeting the mic, the app's buzz and clap). Each clip: up to 12 windows of
+0.975 s, named by majority; a kind = the highest of its classes. Conditions: clean (-20 dBFS); **phone** (-35 dBFS,
+100 Hz mic high-pass, the default compressor -30 dB 4:1) = the gate; far (phone 15 dB quieter).
+
+| Kind (phone) | Right | Wrong as | No-ML fallback |
+|---|---|---|---|
+| Voices | 13/13 | | |
+| Singing | **2/10** | music 5, voices 3 | |
+| Music | 10/10 | | |
+| Singing + music as one kind | 17/20 | voices 3 (folk singing heard as speech) | |
+| Traffic | 12/12 | | 2/12, fires on 8 of 91 others |
+| Birds | 12/12 | | 11/12, fires on 7 of 91 |
+| Wind | **6/12** (synthetic mic wind 0/2) | birds 4, quiet 2 | 3/14, fires on 3 of 89 |
+| Water | 9/10 | traffic 1 | |
+| Steps and handling | **9/12** (75%) | music, voices, birds 1 each | 9/12, fires on 1 of 91 |
+| Quiet | 8/10 (1 real + 7/9 made) | wind 2 (the noisiest rooms) | 6/10, never on others |
+
+- **Confusions asked for:** voices named singing 0 of 13, singing named voices 3 of 10; wind named traffic 1 of 14,
+  traffic named wind 0 of 12. YAMNet hears choirs and chants as Music, solo folk singing as Speech.
+- **Wind:** its scores are low (0.05-0.3). Three Commons "Bourne woods windy" clips are heard as birds (0.3-0.5;
+  birdsong in a wood, likely right); one ESC-50 wind as a train. The made mic buffeting reads as "heart sounds,
+  rumble". Wind Guard's detector (`dcs_dewind~`, third outlet "how windy") already measures mic wind in the patch.
+- **Far** (-50 dBFS): voices, birds, music, steps hold; traffic 1/12, water 3/10, wind 2/12 drop to quiet.
+- **Speed:** 2.2 ms per window on the desktop (one thread). The app's buzz reads "Synthesizer", the clap "Chirp tone".
+- **The one fix round used:** traffic's group missed YAMNet's plain "Vehicle" class (its top answer for traffic),
+  wind's missed "Rustle", and the quiet floor 0.1 hid quiet traffic (now 0.05). Before: traffic 6/12, wind 3/12.
+  Summing a kind's classes instead of taking the highest changes little (steps 10/12, traffic 11/12).
+- **What ML buys over the fallback:** traffic, voices, music, water and quiet-vs-noise; birds and steps the
+  fallback does nearly as well (birds with more false alarms).
+- **Proposal for 4c (DadCraft's call):** seven kinds: voices, music (singing folded in; Harmony's pitch tracker,
+  `harm_tracker`, already follows a pitched voice), traffic, birds, water and quiet from YAMNet; steps from onsets (the
+  patch already finds them for found sounds); wind from Wind Guard's detector. Or stop here.
+
 **4c. Phone spike (a branch off `reactive`, Dev only).** The patch writes the mic, downsampled to 16 kHz mono, into a
 ring array in memory; the app reads it every 0.5 s (libpd's array read), runs YAMNet on the last ~1 s, and shows
 the top kind and its confidence on a debug line. Group changes go to events.log as words ("Heard: birds 0.71").
