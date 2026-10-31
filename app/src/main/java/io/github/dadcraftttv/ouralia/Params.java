@@ -244,6 +244,10 @@ final class Params {
                     Param.Curve.LINEAR).inSection("music").toggle().noPd(),
             // Chimes only answer (DadCraft, Oct 30: "a chime played in a quiet space with nothing causing it"): no still
             // pattern and no remembered phrase coming back, so a chime always follows a sound, a sung phrase or a step.
+            // Pad only with a steady sound (DadCraft, Oct 30: the pad was "a constant musical sound/tone"): the pad and
+            // bass come in under a held sound in the room (a hum, traffic, wind) and fade to silence when it stops.
+            new Param("pad_room", "Pad Only With a Steady Sound (it comes in under a hum, traffic or wind, and fades out in quiet)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("chime_answer", "Chimes Only When Something Happens (after a knock, a voice or a step, never on their own)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("music_key", "Key", 0f, 11f, 0f, "", Param.Curve.LINEAR)
@@ -642,7 +646,7 @@ final class Params {
      * them, and a preset made before keeps what you have (none is resetWhenAbsent).
      */
     static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
-            "music_on", "music_var", "chord_color", "new_pieces", "mel_dev", "pat_gen", "walk_ease", "band_plays", "chime_answer", "music_drift",
+            "music_on", "music_var", "chord_color", "new_pieces", "mel_dev", "pat_gen", "walk_ease", "band_plays", "chime_answer", "pad_room", "music_drift",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
             "melody_src", "mel_rhythm", "mel_phrase", "fm_ring", "res_src", "harm_src", "harm_tracker");
 

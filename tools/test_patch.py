@@ -1178,6 +1178,25 @@ check(abs(d_half - 250) < 6 and abs(d_quarter - 125) < 6 and abs(d_off - 350) < 
       "echo follows the steps: half %.0f ms, quarter %.0f, off %.0f, standing %.0f, 3 s after stopping %.0f"
       % (d_half, d_quarter, d_off, d_still, d_after))
 
+# Pad Only With a Steady Sound (pad_room, DadCraft Oct 30): silent in a quiet room and after knocks, in under a held
+# hum at about the pad's usual level, silent again a few seconds after the hum stops
+def pad_room_run(on):
+    e = fresh(music_on=1, music_pad=0.33, music_arp=0, music_res=0, music_harm=0, music_answer=0, pad_src=0, wet=0,
+              dry=0, beat_level=0, pad_room=on)
+    r = np.random.default_rng(5); room = lambda sec: (r.standard_normal(int(sec * SR)) * 0.003).astype(np.float32)
+    kn = room(3.0); n = int(0.03 * SR)
+    for t in (0.2, 1.1, 2.4):
+        kn[int(t * SR):int(t * SR) + n] += r.standard_normal(n) * np.exp(-np.arange(n) / (0.006 * SR)) * 0.5
+    tt = np.arange(10 * SR) / SR; hm = room(10) + (0.03 * np.sqrt(2) * np.sin(2 * np.pi * 150 * tt)).astype(np.float32)
+    db = lambda y: 20 * np.log10(max(rms(y), 1e-7))
+    e.run(room(3)); quiet = db(e.run(room(3))[:, 0]); knock = db(e.run(kn)[:, 0])
+    e.run(hm[:3 * SR]); held = db(e.run(hm[3 * SR:])[:, 0]); e.run(room(5)); after = db(e.run(room(2))[:, 0])
+    return quiet, knock, held, after
+pr_off, pr_on = pad_room_run(0), pad_room_run(1)
+check(pr_off[0] > -45 and pr_on[0] < -100 and pr_on[1] < -50 and abs(pr_on[2] - pr_off[2]) < 3 and pr_on[3] < -100,
+      "Pad Only With a Steady Sound: quiet %.0f dB (off %.0f), knocks %.0f, a held hum %.0f (off %.0f), 5 s after it %.0f"
+      % (pr_on[0], pr_off[0], pr_on[1], pr_on[2], pr_off[2], pr_on[3]))
+
 # stopping after a walk: the pad and bass take a breath (a few dB down within ~3 s), then drift back to full.
 # Measured on the bass alone (a steady level); its own short dips at note changes are why we look at ranges.
 e = fresh(music_on=1, music_pad=0.5, music_arp=0, music_res=0, wet=0, beat_level=0, music_pad_reg=0)

@@ -35,7 +35,7 @@ DEFAULTS = [
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("fs_clean", 0), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 0), ("new_pieces", 0), ("walk_ease", 1), ("band_plays", 0), ("chime_answer", 0),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 0), ("new_pieces", 0), ("walk_ease", 1), ("band_plays", 0), ("chime_answer", 0), ("pad_room", 0),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("wind_guard", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
 ]
 
@@ -373,6 +373,10 @@ BAND_ARC = (-0.15, 0.4, 1.6)  # ...the drive moved from -0.15 at its first bar t
 BAND_LIFT = 0.06            # ...each phrase this much bigger, smaller or the same as set...
 BAND_FLOOR = 0.3            # ...standing still the drive never below this, however calm the room...
 BAND_CHIME_P = 30           # ...and standing-still chimes get this chance (in 1000 per 0.25 s), half to 1.5x over the phrase
+PAD_ROOM_MIN = 0.03         # Pad Only With a Steady Sound: a sound at least this far above the room's quiet (0..1 = 32 dB)
+PAD_ROOM_GAIN = 2.5         # ...opens the pad this much (0.4 = 13 dB above the quiet: full)
+PAD_ROOM_UP_S = 1.5         # ...rising from silence to full over this long (a knock is too short to open it)
+PAD_ROOM_DOWN_S = 4.0       # ...and from full to silence over this long when the sound stops
 INT_DRIVE = 0.6             # Intensity 0..1 moves the beat's drive by -0.3..+0.3 (calmer / busier patterns)
 HND_HUSH_DB = 24            # handling hush at 1 turns the mic down this much at full handling (the app's 0-1 level)
 HND_ATTACK_MS = 15          # ...going down this fast (a tap rings on for a while; its very start can't be caught)
