@@ -217,6 +217,20 @@
   bells, knocks 5 and 5; off, clicks 5 and 8). `s rnf_note` reports each found bell for the tests.
   DadCraft's A/B (Oct 30): at 0 typing chimes; "not hearing any chimes when the slider is at 20.55. keep it. knocks
   and louder noises still get a chime." Default stays 0 until he says.
+  **Chime Voice** (`chime_voice`, Music, Classic by default, saved in presets; Oct 31, branch `reactive`). DadCraft
+  (Oct 30) on Classic: "more chime or bell like, but they also sound like what i'd call a musical bubble pop". Read:
+  Classic is harmonic sines (1x, 2x, 3x), 4 ms up, one straight fade for all. Clips (numpy, level-matched on each
+  note's first 300 ms): classic, classic with exponential fades, glass bar, small bell; he leaned to the glass bar
+  "with a slightly softer attack", then of three softer ones (6 ms rise, softer mallet, both): "both sounds best".
+  Glass (GLASS_* in constants.py): partials 1, 2.76, 5.40, 8.93 (a free bar's), levels 1, 0.24+0.6b, 0.072+0.18b,
+  0.017 (b = the chime's random brightness), each fading to -60 dB over 1, 0.35, 0.15, 0.07 of the ring
+  (GLASS_RING_X 1.2 x Classic's), a 6 ms rise, x1.612 to match Classic. Built from plain objects (no expr~): one
+  vline~ fade in dB below full, scaled per partial, +100, dbtorms~; a second vline~ is the rise and level. The
+  fundamental is Classic's own oscillator. With Classic the glass lines never start and Classic's sum is x1:
+  check_classic_parity against 1f938ec 55/55 sample-identical. Its signal objects join the voice's switch~ group
+  (left outside, they made a DSP loop: silence). Walking notes share the voices, so they change too; found notes
+  don't. Pd test "Chime Voice Glass" (E4 328 Hz: strike +0.2 dB against Classic, 2.76x partial -12 dB vs -83,
+  -35 dB 0.4 s on).
   **Fixed, no switch (DadCraft, Oct 31):** "rather than make them switches on by default, lets make those the default
   behavior period, no switch." Then for the notes: "we should set the 20 db threshold on the slider, but users should
   have the ability to move it as they need or want, since each manufacturer could set mic values differently." So

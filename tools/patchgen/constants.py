@@ -38,7 +38,7 @@ DEFAULTS = [
     # Reactive first (DadCraft, Oct 31: "make those the default behavior period, no switch"): no setting in the app,
     # the first two stay as the patch's own values so the tests can still pin the old sound (0); Notes Only for Bigger
     # Sounds stays a slider, at his 20.5 dB by default (mics differ by maker)
-    ("chime_answer", 1), ("pad_room", 1), ("note_big", 20.5),
+    ("chime_answer", 1), ("pad_room", 1), ("note_big", 20.5), ("chime_voice", 0),
 ]
 
 # Scales as semitone steps above the key note. The patch snaps every note it plays to these.
@@ -129,6 +129,13 @@ MEL_RING = (1.0, 200, 250, 3000)    # a note's ring (ms) = its length x this + t
 # comes back with it.
 PH_STEP2_PCT = 30                   # a made-up note moves one scale step, or two this often (in 100)
 CHIME_OVERTONE = (0.12, 0.45)    # each chime's 2nd-harmonic level (3rd is a third of it): mellow to bright
+# Chime Voice Glass (DadCraft, Oct 31: Classic was "a musical bubble pop"; of the clips, the glass bar with a slower
+# rise and a softer mallet "sounds best"): a struck bar's partials, each fading on its own (the high ones first).
+# (ratio, level, extra level per chime brightness, fade as a share of the chime's ring)
+GLASS_PARTIALS = ((1, 1.0, 0, 1.0), (2.76, 0.24, 0.6, 0.35), (5.40, 0.072, 0.18, 0.15), (8.93, 0.0173, 0, 0.07))
+GLASS_RING_X = 1.2               # the glass rings this much longer than a Classic chime of the same note
+GLASS_ATTACK_MS = 6              # the slower rise (a click at 1 ms)
+GLASS_LEVEL = 1.612              # matches Classic's loudness over each note's first 300 ms
 BASS_FOLLOW_PCT = 40    # chance (in 100) that a chord change moves the bass to the chord's root; else the key's root
 BASS_DIP_MS = 600       # a bass note change fades out over this...
 BASS_RISE_MS = 1500     # ...and the new note fades in over this
