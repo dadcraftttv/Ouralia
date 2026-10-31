@@ -52,6 +52,7 @@ def fresh(**over):
                 beat_on=1, beat_level=0, beat_hats=0.5, beat_snare=0.6, beat_pitch=55,
                 music_on=0, music_key=0, music_scale=0, music_pad=0.33, music_arp=0.4,
                 music_tone=0.5, music_react=0.8, music_res=0.8, music_harm=0, echo_scatter=0, beat_follow=0, music_pad_reg=2, pocket_hush=0.5, pocket_guard=0.6, melody_src=0, harm_src=0, pad_src=0, bass_src=0, chime_char=0, res_src=0, music_answer=0, walk_ease=0)   # (Soft Steps: tested on its own)
+    base.update(chime_answer=0, pad_room=0, note_big=0)   # (the old sound: the three reactive behaviours are tested on their own)
     base.update(over)
     for k, v in base.items():
         e.send(k, v)
@@ -77,7 +78,8 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room",   # (fixed since Oct 31: patch defaults, no setting)
+    "step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -1193,6 +1195,11 @@ def pad_room_run(on, reg=1):
     e.run(hm[:3 * SR]); held = db(e.run(hm[3 * SR:])[:, 0]); e.run(room(5)); after = db(e.run(room(2))[:, 0])
     return quiet, knock, held, after
 pr_off, pr_on, pr_bass_off, pr_bass = pad_room_run(0), pad_room_run(1), pad_room_run(0, reg=0), pad_room_run(1, reg=0)
+# (since Oct 31 the app has no switch: the patch's own defaults turn all three on)
+on_load = open(PATCH).read()
+check(all(re.search(r"\\; %s %s[ ;\n]" % kv, on_load) for kv in (("chime_answer", 1), ("pad_room", 1), ("note_big", 20.5))),
+      "The three reactive behaviours are on from the patch's defaults (chimes only answer, pad only with a steady sound, notes only above 20.5 dB)")
+
 check(pr_off[0] > -45 and pr_on[0] < -100 and pr_on[1] < -50 and abs(pr_on[2] - pr_off[2]) < 3 and pr_on[3] < -100
       and pr_bass_off[2] > -50 and pr_bass[2] < -100,
       "Pad Only With a Steady Sound: quiet %.0f dB (off %.0f), knocks %.0f, a held hum %.0f (off %.0f), 5 s after it %.0f;"

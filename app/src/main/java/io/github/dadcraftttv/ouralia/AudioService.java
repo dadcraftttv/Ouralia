@@ -88,7 +88,6 @@ public class AudioService extends Service {
     /** Harmony answers since the last "Hearing:" line (the patch sends each one on harm_deg). */
     private static final String HARMONY_RECEIVER = "harm_deg";
     /** The patch reports each chime it plays here (not arpeggio notes or replays); motif memory listens. */
-    private static final String CHIME_NOTE = "chime_note";
     private static final String MOTIF_PLAY = "motif";
     /** The Evolving music (dcs_composer) reports each section as it starts: 0 Home, 1 Lift, 2 Calm, 3 Turn. */
     private static final String COMP_SECTION = "comp_section";
@@ -182,7 +181,6 @@ public class AudioService extends Service {
     /** The found pad kept a held note (its pitch, MIDI). */
     private static final String FPAD_CAUGHT = "fpad_caught";
     private volatile String fsLevels = "";
-    private final MotifMemory motif = new MotifMemory(new java.util.Random());
     private final NoteRegister noteRegister = new NoteRegister();
     /** Kicks, snares and hats in the found-sound kit now (0-5 each). */
     static int[] kit() {
@@ -285,18 +283,6 @@ public class AudioService extends Service {
                         handler.postDelayed(() -> {
                             if (running && generation == startGeneration) {
                                 PdBase.sendList(MOTIF_PLAY, (float) n.degree, vel);
-                            }
-                        }, Math.round(n.at * 1000));
-                    }
-                }
-                List<MotifMemory.Note> phrase = motif.poll(nowS, StepDetector.walking(nowS));
-                if (phrase != null && ParamStore.get("chime_answer") < 0.5f) {   // (Chimes Only Answer: none come back)
-                    logEvent("Motif comes back: " + phrase.size() + " notes");
-                    int generation = startGeneration;
-                    for (MotifMemory.Note n : phrase) {
-                        handler.postDelayed(() -> {
-                            if (running && generation == startGeneration) {
-                                PdBase.sendList(MOTIF_PLAY, (float) n.degree, MotifMemory.VELOCITY);
                             }
                         }, Math.round(n.at * 1000));
                     }
@@ -770,10 +756,6 @@ public class AudioService extends Service {
                     }
                     return;
                 }
-                if (CHIME_NOTE.equals(source)) {
-                    motif.onNote(Math.round(x), SystemClock.elapsedRealtimeNanos() / 1e9);
-                    return;
-                }
                 if (HARMONY_RECEIVER.equals(source)) {
                     if (ParamStore.get("music_harm") > 0) {   // (the tracker also runs for call and response)
                         harmonyNotes.incrementAndGet();
@@ -866,7 +848,6 @@ public class AudioService extends Service {
         });
         PdBase.subscribe("mic_level");
         PdBase.subscribe(HARMONY_RECEIVER);
-        PdBase.subscribe(CHIME_NOTE);
         PdBase.subscribe(COMP_SECTION);
         PdBase.subscribe(TEMPO);
         PdBase.subscribe(FS_CAUGHT);
@@ -1051,7 +1032,6 @@ public class AudioService extends Service {
         updateOtherAudio(am.getActivePlaybackConfigurations());
         Modulation.reset();
         StepDetector.reset();
-        motif.reset();
         noteRegister.reset();
         // Footsteps drive the built-in patch's drums; scenes have their own business with the sensors.
         StepDetector.setListener(scene == null ? (interval, strength) -> {

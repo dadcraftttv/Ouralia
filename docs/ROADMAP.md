@@ -39,7 +39,10 @@ Something Happens. Next (DadCraft: "yes, lets do the pad"): Pad Only With a Stea
 `reactive`; A/B (Oct 30): answers his voice better, "Pad without bass" chosen and built. Notes Only for Bigger
 Sounds (his pick "C": clicks become rhythm, bigger sounds get notes) BUILT behind a slider, kept (Oct 30: at 20.55
 dB no chimes from typing, knocks still chime). Kit removal BUILT Oct 30 on `reactive`; Classic unchanged,
-Acoustic removed too. Next: Claude review, full tier, Dev install and DadCraft's Classic/Found comparison. Keep the found-sound drums on the rhythm grid as they
+Acoustic removed too; DadCraft's Dev listen (Oct 31): "it sounds the same, which is what we wanted". Chimes Only
+When Something Happens and Pad Only With a Steady Sound are the fixed behaviour since Oct 31, no switch (DadCraft:
+"make those the default behavior period"); Notes Only for Bigger Sounds stays a slider, default 20.5 dB ("each
+manufacturer could set mic values differently"). Next: his merge of `reactive` to main. Keep the found-sound drums on the rhythm grid as they
 are (DadCraft: "absolutely loved from the day we got it worked out").
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things

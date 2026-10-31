@@ -58,7 +58,6 @@ final class DesktopApp {
         return t;
     });
 
-    private static final MotifMemory motif = new MotifMemory(new Random());
     private static final CallResponse callResponse = new CallResponse(new Random());
     private static volatile float tempoBpm;
     private static String worldShown;
@@ -137,7 +136,7 @@ final class DesktopApp {
         }
         engine = new DesktopEngine(m -> say.accept(m));
         PdBase.setReceiver(new Receiver());
-        for (String s : new String[]{"mic_level", "chime_note", "heard_deg", "heard_off", "tempo", "dcs_ok"}) {
+        for (String s : new String[]{"mic_level", "heard_deg", "heard_off", "tempo", "dcs_ok"}) {
             PdBase.subscribe(s);
         }
         SessionLog.setDir(context.getFilesDir(), "desktop", "desktop");
@@ -198,7 +197,6 @@ final class DesktopApp {
     /** What a newly opened patch starts with: the app's memories cleared, every setting sent. */
     private static void freshStart() {
         Modulation.reset();
-        motif.reset();
         callResponse.reset();
         Worlds.reset();
         CalmBuild.reset();
@@ -326,8 +324,6 @@ final class DesktopApp {
                     Math.round(Modulation.output(Params.byId("music_scale"), ParamStore.get("music_scale")))))];
             float answerLevel = ParamStore.get("music_on") >= 0.5f ? ParamStore.get("music_answer") : 0f;
             play(callResponse.poll(nowS, answerLevel, scaleSize), CallResponse.velocity(answerLevel));
-            List<MotifMemory.Note> phrase = motif.poll(nowS, false);
-            if (ParamStore.get("chime_answer") < 0.5f) play(phrase, MotifMemory.VELOCITY);   // (Chimes Only Answer: none come back)
         } catch (RuntimeException e) {
             e.printStackTrace();   // (keep ticking)
         }
@@ -351,7 +347,6 @@ final class DesktopApp {
             double t = System.nanoTime() / 1e9;
             switch (source) {
                 case "mic_level": Modulation.setMicLevelDb(x - 100f); break;   // (Pd's dB: 100 = full scale)
-                case "chime_note": motif.onNote(Math.round(x), t); break;
                 case "heard_deg": callResponse.onNote(Math.round(x), t); break;
                 case "tempo": tempoBpm = x; break;
                 case "dcs_ok": dcsOk = true; break;
