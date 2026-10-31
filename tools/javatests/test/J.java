@@ -1,0 +1,34 @@
+package io.github.dadcraftttv.ouralia;
+public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and their hysteresis
+  static int fails=0;
+  static void check(boolean c,String m){ if(!c){fails++;System.out.println("FAIL: "+m);} else System.out.println("ok:   "+m); }
+  static float[] sine(double f,int rate,int n){ float[] x=new float[n]; for(int i=0;i<n;i++) x[i]=(float)Math.sin(2*Math.PI*f*i/rate); return x; }
+  static double amp(float[] y,double f){ double c=0,s=0; for(int i=0;i<y.length;i++){ c+=y[i]*Math.cos(2*Math.PI*f*i/16000); s+=y[i]*Math.sin(2*Math.PI*f*i/16000);} return 2*Math.hypot(c,s)/y.length; }
+  static float[] sc(int... hot){ float[] s=new float[521]; for(int i=0;i<hot.length;i+=2) s[hot[i]]=hot[i+1]/100f; return s; }
+  public static void main(String[] a){
+    for(int rate: new int[]{48000,44100}){
+      float[] y=SoundKinds.to16k(sine(1000,rate,2*24576),2*24576,rate);
+      check(y!=null&&y.length==SoundKinds.SAMPLES&&Math.abs(amp(y,1000)-1)<0.02,"at "+rate+" Hz: 1 kHz comes through whole ("+String.format("%.3f",y==null?0:amp(y,1000))+")");
+      float[] z=SoundKinds.to16k(sine(12000,rate,2*24576),2*24576,rate);
+      double rms=0; for(float v:z) rms+=v*v; rms=Math.sqrt(rms/z.length);
+      check(rms<0.02,"at "+rate+" Hz: 12 kHz doesn't fold down into the 16 kHz copy (rms "+String.format("%.4f",rms)+")");
+    }
+    float[] r=new float[2*24576]; for(int i=0;i<r.length;i++) r[i]=i;
+    float[] y=SoundKinds.to16k(r,r.length,48000);
+    check(Math.abs(y[y.length-1]-(r.length-2-32))<1.5&&Math.abs(y[1]-y[0]-3)<1e-3,"the newest samples, 3 to 1 at 48 kHz ("+y[y.length-1]+")");
+    check(SoundKinds.to16k(new float[30000],30000,48000)==null,"too little: nothing");
+    String kinds="# test\nvoices 0 1\nmusic 2\ntraffic 3\nbirds 4\nwater 5\nsteps 6\nquiet 494\n";
+    SoundKinds k=new SoundKinds(kinds);
+    check(!k.judge(sc(4,70))&&k.kind()==-1,"one judgement isn't enough");
+    check(k.judge(sc(4,70))&&k.kind()==3&&k.heardLine().equals("Heard: birds 0.70"),"two in a row: "+k.heardLine());
+    k.judge(sc(1,60,2,50)); check(k.kind()==3,"a new kind needs two too");
+    k.judge(sc(1,60,2,50)); check(k.kind()==0,"...then voices, the highest of its classes");
+    k.judge(sc(3,4)); k.judge(sc(3,4)); check(k.kind()==SoundKinds.QUIET,"nothing over 0.05: quiet");
+    k.judge(sc(3,40,494,90)); k.judge(sc(3,40,494,90)); check(k.kind()==SoundKinds.QUIET,"YAMNet's top class Silence: quiet");
+    k.reset(); check(k.kind()==-1&&k.scores()[3]==0,"reset forgets");
+    boolean threw=false; try{ new SoundKinds("voices 1\n"); }catch(IllegalArgumentException e){ threw=true; }
+    check(threw,"kinds.txt missing a kind is refused");
+    check(SoundKinds.costLine(new long[]{3000000,1000000,2000000},3).equals("Sound kinds: 3 judgements, YAMNet median 2.0 ms, slowest 3.0 ms"),"the minute's cost line");
+    if(fails==0) System.out.println("ALL PASSED");
+  }
+}

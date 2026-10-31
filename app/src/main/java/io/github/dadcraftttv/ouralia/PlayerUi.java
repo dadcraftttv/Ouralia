@@ -339,6 +339,10 @@ final class PlayerUi {
             why.add(a.getString(new int[]{R.string.hears_talking, R.string.hears_music, R.string.hears_traffic,
                     R.string.hears_wind, R.string.hears_crowd}[heard]));
         }
+        int kind = SoundKindsRunner.kind();   // sound kinds (Dev, step 4c): YAMNet's word beside the room listener's
+        if (kind >= 0) {
+            why.add(a.getString(R.string.hears_kind, SoundKinds.NAMES[kind], SoundKindsRunner.score()));
+        }
         if (ParamStore.get("beat_level") > 0 && ParamStore.get("beat_follow") >= 0.5f && ParamStore.get("rhythm_src") >= 0.5f) {
             int[] kit = AudioService.kit();
             why.add(a.getString(R.string.why_kit, kit[0], kit[1], kit[2], kit[3]));

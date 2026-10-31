@@ -3,6 +3,7 @@
 
 Plan and results: docs/design/sound-kinds.md. Run from the repo root:
     tools/.venv/bin/python tools/sound_kinds/bench.py
+    tools/.venv/bin/python tools/sound_kinds/bench.py --export   (the Dev app's model and kinds: step 4c)
 Needs ffmpeg and ai-edge-litert in tools/.venv. The model and the clips download into tools/.sound_kinds_cache
 (gitignored): they are not ours to commit. clips.json lists every clip with its source and licence (Wikimedia
 Commons, ESC-50 or made here); groups.json maps each kind to YAMNet's class names (the AudioSet ontology's
@@ -159,8 +160,25 @@ def features_kind(w):
         return "wind" if np.std(edb) > 3 else "traffic"
     return "other"
 
+PHONE_KINDS = [("voices", ["voices"]), ("music", ["music", "singing"]), ("traffic", ["traffic"]), ("birds", ["birds"]),
+               ("water", ["water"]), ("steps", ["steps"]), ("quiet", ["quiet"])]   # step 4c: singing folded into music
+
+def export(path, labels):
+    """The Dev app's files (app/src/dev/assets/sound_kinds): the model, and each kind's class numbers, one line each."""
+    dest = os.path.join(HERE, "..", "..", "app", "src", "dev", "assets", "sound_kinds")
+    os.makedirs(dest, exist_ok=True)
+    with open(path, "rb") as f, open(os.path.join(dest, "yamnet.tflite"), "wb") as g:
+        g.write(f.read())
+    groups = json.load(open(os.path.join(HERE, "groups.json")))
+    with open(os.path.join(dest, "kinds.txt"), "w") as f:
+        f.write("# Made by tools/sound_kinds/bench.py --export from groups.json: a kind, then YAMNet's class numbers\n")
+        for k, parts in PHONE_KINDS:
+            f.write(k + " " + " ".join(str(i) for i in sorted(labels.index(n) for p in parts for n in groups[p])) + "\n")
+
 def main():
     path, labels = model()
+    if "--export" in sys.argv:
+        return export(path, labels)
     from ai_edge_litert.interpreter import Interpreter
     it = Interpreter(model_path=path, num_threads=1); it.allocate_tensors()
     inp, out = it.get_input_details()[0]["index"], it.get_output_details()[0]["index"]

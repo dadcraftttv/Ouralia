@@ -121,6 +121,8 @@ public class AudioService extends Service {
     /** The room listener's judgements (dcs_listen~): talking, music, traffic, wind, crowd, twice a second. */
     private static final String ROOM_KIND = "room_kind", ROOM_FEAT = "room_feat";
     private static final RoomListener room = new RoomListener();
+    /** Sound kinds (Oct 31, step 4c, Dev only): the patch's mic ring has a new segment (SoundKindsRunner). */
+    private static final String SK_READY = "sk_ready";
     static final String[] ROOM_KIND_NAMES = {"talking", "music", "traffic", "wind", "crowd"};
 
     /** What the room listener hears now (RoomListener.TALKING..CROWD, -1: none of them, or not running). */
@@ -687,6 +689,10 @@ public class AudioService extends Service {
             @Override
             public void receiveFloat(String source, float x) {
                 SessionLog.pd(source, x);
+                if (SK_READY.equals(source)) {   // sound kinds (Dev): a ring segment filled
+                    SoundKindsRunner.ready(Math.round(x));
+                    return;
+                }
                 if (DCS_OK.equals(source)) {
                     dcsOk = true;
                     return;
@@ -854,6 +860,7 @@ public class AudioService extends Service {
         PdBase.subscribe(FS_LEVELS);
         PdBase.subscribe(ROOM_KIND);
         PdBase.subscribe(ROOM_FEAT);
+        PdBase.subscribe(SK_READY);
         synchronized (room) {
             room.reset();
         }
@@ -1022,6 +1029,9 @@ public class AudioService extends Service {
         }
         actualRate = queryActualRate();
         running = true;
+        if (scene == null) {   // (the built-in patch has the mic ring; scenes don't)
+            SoundKindsRunner.attach(this, sampleRate, what -> handler.post(() -> logEvent(what)));
+        }
         AudioManager am = getSystemService(AudioManager.class);
         am.registerAudioDeviceCallback(outputWatcher, handler);
         pausedForCall = false;
@@ -1081,6 +1091,9 @@ public class AudioService extends Service {
         String thermal = Build.VERSION.SDK_INT >= 29
                 ? Health.thermal(getSystemService(android.os.PowerManager.class).getCurrentThermalStatus()) : null;
         logEvent(Health.line(pct, plugged, tempC, thermal, cpuPct, xruns));
+        if (SoundKindsRunner.on()) {
+            logEvent(SoundKindsRunner.minuteLine());
+        }
     }
 
     private static final long XRUN_CHECK_MS = 5000;
@@ -1239,6 +1252,7 @@ public class AudioService extends Service {
             return;
         }
         running = false;
+        SoundKindsRunner.detach();
         SessionLog.stop();
         stereoOn = false;
         outputLost = false;

@@ -79,7 +79,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 jp = java_params()
 patch_text = open(PATCH).read()
 receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room",   # (fixed since Oct 31: patch defaults, no setting)
-    "step", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+    "step", "sk_on", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2900,6 +2900,23 @@ def st_catch(on, hiss, peak=0.0025):
     e.run(x); return len(e.heard["fs_caught"])
 sc = (st_catch(False, 0.00005), st_catch(True, 0.00005), st_catch(True, 0.001))
 check(sc == (0, 3, 0), "stereo: a soft catch counts against the room's background (-52 over -86: mono %d, stereo %d; over -60: %d)" % sc)
+
+# ---- 7z2. sound kinds: the mic into a ring for the app's classifier (Oct 31, step 4c), idle unless asked ----
+from patchgen.constants import SK_SEG
+e = fresh(); e.listen("sk_ready")
+ramp = (np.arange(SR * 3) / SR / 10).astype(np.float32)      # each sample tells its time
+e.run(ramp)
+check(not e.heard.get("sk_ready") and not np.abs(e.array("sk_ring")).any(), "sound kinds: off by default, nothing written")
+e.send("sk_on", 1); e.run(ramp)
+got = [int(v) for v in e.heard["sk_ready"]]
+ring = e.array("sk_ring"); k = got[-1]
+older, newer = ring[((k - 2) % 3) * SK_SEG:((k - 2) % 3 + 1) * SK_SEG], ring[((k - 1) % 3) * SK_SEG:((k - 1) % 3 + 1) * SK_SEG]
+step = 1 / SR / 10
+check(got[:4] == [0, 1, 2, 0] and len(got) == int(3 * SR / SK_SEG) + 1, "sound kinds: on, a segment every %d samples in turn (%s)" % (SK_SEG, got))
+check(abs(newer[0] - older[-1] - step) < 0.5 * step and np.all(np.diff(older) > 0) and np.all(np.diff(newer) > 0),
+      "sound kinds: the two before the one being written are whole and in order (joint %.1f samples)" % ((newer[0] - older[-1]) / step))
+e.send("sk_on", 0); before = e.array("sk_ring").copy(); n = len(e.heard["sk_ready"]); e.run(ramp)
+check(len(e.heard["sk_ready"]) == n and np.array_equal(before, e.array("sk_ring")), "sound kinds: off again, it stops writing")
 
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)

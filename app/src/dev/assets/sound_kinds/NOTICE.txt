@@ -1,0 +1,9 @@
+Sound kinds (step 4c, Ouralia Dev only; docs/design/sound-kinds.md)
+
+yamnet.tflite: YAMNet, Google (tensorflow/models, research/audioset/yamnet), the "classification-tflite" v1 model
+from Kaggle (google/yamnet). Licensed under the Apache License, Version 2.0:
+https://www.apache.org/licenses/LICENSE-2.0
+
+The class names inside it come from the AudioSet ontology, Google, licensed under Creative Commons
+Attribution-ShareAlike 4.0 (https://creativecommons.org/licenses/by-sa/4.0/), used here under GPLv3 by CC's one-way
+compatibility declaration. kinds.txt groups those classes into Ouralia's kinds (tools/sound_kinds/bench.py).
