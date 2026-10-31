@@ -644,6 +644,40 @@ def add_music(P):
     P.c("mu_q_go", "mu_q_clear", 1, 0); P.c("mu_q_clear", "mu_q_store", 0, 1)
     P.c("mu_q_go", "mu_deg", 0, 0)
     P.obj("mu_q_flush", "spigot 1", x + 380, 720); P.c("mu_q_flush", "mu_q_store")   # (stopping plays a waiting chime)
+    # Trailing Melody (chime_trail, 0 = off): a chime that answered a sudden sound (standing still) carries on for a
+    # few notes, each a step or two on, softer and later; the next sudden sound starts a new tail. trn notes left,
+    # trv the next one's velocity, trg the next gap (ms).
+    tx, ty = x + 450, 860
+    P.obj("tr_r", "r chime_trail", tx + 200, ty - 30); P.obj("tr_cnt_v", "value ctrail", tx + 200, ty - 15)
+    P.c("tr_r", "tr_cnt_v")
+    P.obj("tr_in", "t b f", tx, ty); P.c("mu_q_now", "tr_in")
+    ex("tr_setv", f"$f1*{TRAIL_VEL}", tx + 60, ty + 15); P.obj("tr_wv", "value trv", tx + 60, ty + 30)
+    P.c("tr_in", "tr_setv", 1, 0); P.c("tr_setv", "tr_wv")
+    P.obj("tr_start", "t b b b b", tx, ty + 45); P.c("tr_in", "tr_start", 0, 0)
+    P.obj("tr_del", "del", tx, ty + 150)
+    P.msg("tr_stop", "stop", tx + 180, ty + 60); P.c("tr_start", "tr_stop", 3, 0); P.c("tr_stop", "tr_del")
+    P.obj("tr_rc", "value ctrail", tx + 120, ty + 60); ex("tr_n0", "int($f1+0.5)", tx + 120, ty + 75)
+    P.obj("tr_wn", "value trn", tx + 120, ty + 90)
+    P.c("tr_start", "tr_rc", 2, 0); P.c("tr_rc", "tr_n0"); P.c("tr_n0", "tr_wn")
+    P.msg("tr_g0", str(TRAIL_GAP_MS), tx + 60, ty + 60); P.obj("tr_wg", "value trg", tx + 60, ty + 75)
+    P.c("tr_start", "tr_g0", 1, 0); P.c("tr_g0", "tr_wg")
+    # schedule the next note if any are left: the gap, or 0 (nothing) when trn is used up
+    P.obj("tr_rg", "value trg", tx, ty + 90); ex("tr_chk", "$f1*(trn>=1)", tx, ty + 105)
+    P.obj("tr_ok", "moses 1", tx, ty + 120)
+    P.c("tr_start", "tr_rg", 0, 0); P.c("tr_rg", "tr_chk"); P.c("tr_chk", "tr_ok"); P.c("tr_ok", "tr_del", 1, 0)
+    # a trailing note: one fewer left, play at trv (then softer), the next gap longer, schedule again
+    P.obj("tr_fire", "t b b b", tx, ty + 170); P.c("tr_del", "tr_fire")
+    P.obj("tr_dn", "value trn", tx + 120, ty + 185); P.obj("tr_dn1", "- 1", tx + 120, ty + 200)
+    P.obj("tr_dnw", "value trn", tx + 120, ty + 215)
+    P.c("tr_fire", "tr_dn", 2, 0); P.c("tr_dn", "tr_dn1"); P.c("tr_dn1", "tr_dnw")
+    P.obj("tr_pv", "value trv", tx + 60, ty + 185); P.obj("tr_pvt", "t f f", tx + 60, ty + 200)
+    P.obj("tr_pv2", f"* {TRAIL_VEL}", tx + 80, ty + 215); P.obj("tr_pvw", "value trv", tx + 80, ty + 230)
+    P.c("tr_fire", "tr_pv", 1, 0); P.c("tr_pv", "tr_pvt"); P.c("tr_pvt", "tr_pv2", 1, 0); P.c("tr_pv2", "tr_pvw")
+    P.c("tr_pvt", "mu_deg", 0, 0)
+    P.obj("tr_ng", "value trg", tx, ty + 185); P.obj("tr_ng2", f"* {TRAIL_SLOW}", tx, ty + 200)
+    P.obj("tr_ngt", "t f f", tx, ty + 215); P.obj("tr_ngw", "value trg", tx + 30, ty + 230)
+    P.c("tr_fire", "tr_ng", 0, 0); P.c("tr_ng", "tr_ng2"); P.c("tr_ng2", "tr_ngt"); P.c("tr_ngt", "tr_ngw", 1, 0)
+    P.c("tr_ngt", "tr_chk", 0, 0)
 
     # Path 2, a slow pattern while you are still: now and then a chime, more often in a livelier room.
     P.obj("mu_still_tick", "metro 250", x + 800, 600)

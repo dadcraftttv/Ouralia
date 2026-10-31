@@ -109,6 +109,7 @@ There are two ways to use it:
 - **Slow Bloom** (Music, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
 - **The music follows the room** (always, no setting): the pad stays silent until the room holds a sound (a hum, traffic, wind), comes in under it and fades out a few seconds after it stops, with no bass; and a chime plays only right after something you can hear caused it, never on its own in a quiet room.
 - **Chime Voice** (Music, Classic at first): Glass plays the chimes and walking notes as a softly struck glass bar, its bright overtones fading first, instead of Classic's soft tones; Both blends the two.
+- **Trailing Melody** (Music, Off at first): after a sound gets a chime while you stand still, the melody carries on for this many notes, each a little softer and later, like a phrase ending. A new sound starts a new tail.
 - **Notes Only for Bigger Sounds** (Music, 20.5 dB at first, 0 = off): small sounds like typing or tapping get no note: they are caught for the found drums, so with the beat on they become rhythm. Only sounds this far above the room (a knock, a clap, a voice) get a chime. Mics differ from phone to phone: if knocks get no chime, turn it down; if typing still chimes, turn it up.
 - **Scenes show their pictures and words** on the touch pad, and a few more imported scenes load completely.
 - **Reverse reverb** (Reverb section, and in the Ghost realm): sounds come back as rising swells, landing on the beat while the Rhythm plays.
