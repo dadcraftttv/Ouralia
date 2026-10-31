@@ -101,7 +101,8 @@ There are two ways to use it:
 - **Send feedback** (Setup, About): writes an email to Dad with your phone and app details and, if you like, the app's event log.
 - **Stem packs** (The Band tab; removed in rc4, the kits replace them): your own loops, playing with the built-in sound and arranged by where you are and how you move.
 - **Slow Bloom** (Music, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
-- **Pad Only With a Steady Sound** (Music, off at first): the pad and bass stay silent until the room holds a sound (a hum, traffic, wind), come in under it, and fade out a few seconds after it stops. Off, the pad plays all the time.
+- **Pad Only With a Steady Sound** (Music, off at first): the pad and bass stay silent until the room holds a sound (a hum, traffic, wind), come in under it, and fade out a few seconds after it stops; the bass stays out while it is on. Off, the pad plays all the time.
+- **Notes Only for Bigger Sounds** (Music, 0 = off): small sounds like typing or tapping get no note: they are caught for the found drums, so with the beat on they become rhythm. Only sounds this far above the room (a knock, a clap, a voice) get a chime. Try 20-25 dB.
 - **Chimes Only When Something Happens** (Music, off at first): a chime plays only right after something you can hear caused it: a knock, a voice, a sung phrase or a step. Off, the music also adds chimes of its own now and then, even in a quiet room.
 - **Scenes show their pictures and words** on the touch pad, and a few more imported scenes load completely.
 - **Reverse reverb** (Reverb section, and in the Ghost realm): sounds come back as rising swells, landing on the beat while the Rhythm plays.
