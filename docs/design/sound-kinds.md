@@ -125,7 +125,7 @@ actually buys.
 4a and 4b: Claude/Codex time only, no phone. 4c: one Dev install and a 30-minute plugged-in session. 4d: one walk.
 The music stays exactly as it is through all of step 4.
 
-## 4c progress (Oct 31, branch `sound-kinds`, Ouralia Dev only; not finished)
+## 4c progress (Oct 31, branch `sound-kinds`, Ouralia Dev only; passed)
 
 Built: the patch writes the mic (as it comes in) into `sk_ring`, three segments of 24,576 samples, only while the
 app sends `sk_on 1` (test_patch "sound kinds"); `SoundKinds` (plain logic: 16 kHz resampler, seven kinds, two
@@ -158,4 +158,5 @@ rolled over at 15:43):** on 15:25-15:57: 3691 -> ~3543 mAh, **~5.6%/h**, screen 
 -> 3326 mAh, **~9.2%/h**, screen on 16.7 min (DadCraft used the phone more in the second half: launcher, social
 apps). The "off" half drained more, so the screen time swamps the difference: **inconclusive as a measurement**.
 Estimate from the CPU A/B: +3% of one core is ~10-15 mA, about 0.3%/h of the ~4,600 mAh battery, far under the 3%/h
-gate. Still open: DadCraft's call (accept on the estimate, or a screen-off rerun), then 4d (his walk).
+gate. **DadCraft accepted the battery gate on the estimate** (Oct 31: "accept on the estimate."). **4c passes all
+its gates.** Next: 4d (his walk).
