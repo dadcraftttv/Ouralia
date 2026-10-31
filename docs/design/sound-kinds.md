@@ -153,4 +153,9 @@ and quiet always needs two. Full tier passed (285 s), Dev installed. **Same four
 sunny-day birdsong 1.5 s and held for the whole clip, piano sonata 1.5 s. **The 2 s gate passes.**
 **CPU again** (twice the judgements, Diagnostics open both times): on 55.5%, off 52.4% of a core: **+3.1 points**,
 inside the 5-point gate (235 judgements a minute at a 9.4 ms median, slowest 16.3 ms, as expected).
-Still open: battery on/off unplugged (DadCraft's 30 + 30 minutes), then 4d (his walk).
+**Battery on/off (Oct 31, unplugged 15:25-16:28, playing, Android's charge counter in batterystats; events.log had
+rolled over at 15:43):** on 15:25-15:57: 3691 -> ~3543 mAh, **~5.6%/h**, screen on 7.7 min; off 15:57-16:28:
+-> 3326 mAh, **~9.2%/h**, screen on 16.7 min (DadCraft used the phone more in the second half: launcher, social
+apps). The "off" half drained more, so the screen time swamps the difference: **inconclusive as a measurement**.
+Estimate from the CPU A/B: +3% of one core is ~10-15 mA, about 0.3%/h of the ~4,600 mAh battery, far under the 3%/h
+gate. Still open: DadCraft's call (accept on the estimate, or a screen-off rerun), then 4d (his walk).
