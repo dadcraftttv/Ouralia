@@ -216,6 +216,8 @@
   into rhythm. Measured (8 taps in a faint room): clicks get notes up to ~20 dB and none at 25, knocks and claps keep
   theirs at 30, so it is a slider to set by ear. Pd test "Notes Only for Bigger Sounds" (at 25 dB: clicks 0 chimes 0
   bells, knocks 5 and 5; off, clicks 5 and 8). `s rnf_note` reports each found bell for the tests.
+  DadCraft's A/B (Oct 30): at 0 typing chimes; "not hearing any chimes when the slider is at 20.55. keep it. knocks
+  and louder noises still get a chime." Default stays 0 until he says.
   DadCraft (Oct 30), on the way: the found sound on the rhythm grid as the drums, with his effects, he has "absolutely
   loved from the day we got it worked out": keep it as it is.
   **Key drift** (`music_drift`, Music, default on, noPreset; roadmap 12): every 3-6 min while the music plays the
