@@ -22,7 +22,7 @@ import java.util.function.Consumer;
  */
 final class SoundKindsRunner {
     private static final String TAG = "SoundKinds";
-    private static final String PREFS = "sound_kinds", ON = "on";
+    private static final String PREFS = "sound_kinds", ON = "on", ROOM = "room";
     private static final String MODEL_CLASS = "io.github.dadcraftttv.ouralia.YamNet";
 
     private static final Object lock = new Object();
@@ -37,6 +37,7 @@ final class SoundKindsRunner {
     private static int dropped;
     private static final long[] nanos = new long[600];
     private static int judged;
+    private static volatile boolean roomOn;
 
     private SoundKindsRunner() { }
 
@@ -52,6 +53,25 @@ final class SoundKindsRunner {
 
     static boolean enabled(Context c) {
         return available() && c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(ON, false);
+    }
+
+    /** Make Room for Music (Nov 1, Dev): the music steps back while sound kinds hears music in the room. */
+    static boolean roomEnabled(Context c) {
+        return available() && c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(ROOM, false);
+    }
+
+    /** Its Diagnostics switch: stored, and the patch told at once (only stepping back if music is heard now). */
+    static void setRoomEnabled(Context c, boolean on) {
+        c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ROOM, on).apply();
+        boolean now;
+        synchronized (lock) {
+            roomOn = on;
+            now = kinds != null && kinds.roomMusic();
+            if (app == null) {
+                return;
+            }
+        }
+        PdBase.sendFloat("room_music", on && now ? 1 : 0);
     }
 
     /** The Diagnostics switch: stored, and started or stopped at once if the built-in patch is playing. */
@@ -76,6 +96,7 @@ final class SoundKindsRunner {
             app = c.getApplicationContext();
             log = logger;
             rate = sampleRate;
+            roomOn = roomEnabled(c);
         }
         if (enabled(c)) {
             start();
@@ -140,6 +161,7 @@ final class SoundKindsRunner {
             worker = null;
         }
         PdBase.sendFloat("sk_on", 0);
+        PdBase.sendFloat("room_music", 0);   // (no ears: the music comes back)
         w.post(() -> {
             synchronized (lock) {
                 if (model != null) {
@@ -207,17 +229,30 @@ final class SoundKindsRunner {
         long t0 = System.nanoTime();
         float[] scores = m.scores(wave);
         long took = System.nanoTime() - t0;
-        boolean changed;
+        boolean changed, roomChanged, room;
         String line;
         synchronized (lock) {
             if (judged < nanos.length) {
                 nanos[judged++] = took;
             }
+            boolean wasRoom = ks.roomMusic();
             changed = ks.judge(scores);
             line = ks.heardLine();
+            room = ks.roomMusic();
+            roomChanged = room != wasRoom;
         }
         if (changed && l != null) {
             l.accept(line);
+        }
+        if (roomChanged) {
+            boolean step = roomOn;
+            if (step) {
+                PdBase.sendFloat("room_music", room ? 1 : 0);
+            }
+            if (l != null) {
+                l.accept(room ? "Room music: heard" + (step ? ", the music steps back" : " (Make Room for Music off)")
+                        : "Room music: gone" + (step ? ", the music comes back" : ""));
+            }
         }
     }
 

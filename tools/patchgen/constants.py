@@ -440,4 +440,10 @@ EAR_BASE_MS = 1.5
 # this long (0.256 s at 48 kHz); the app reads the SK_N - 1 whole ones (~1 s, YAMNet wants 0.975 s at 16 kHz) as each
 # fills. (Was three of 24576, a judgement every 0.512 s: birds showed after ~3 s, the 2 s gate wants quicker.)
 SK_SEG = 12288
+# Make Room for Music (Nov 1, step 5, DadCraft picked "music in the room"): while the app says music is playing in the
+# room (room_music 1, from sound kinds), the generated music and the beat step back and the chimes need bigger sounds
+RM_DB = 6               # how far the music and beat dip
+RM_BIG_DB = 6           # dB added to the chimes' and room bells' "bigger sounds" threshold (also when note_big is off)
+RM_DOWN_MS = 4000       # the dip's ramp: slow, so it reads as making room, not as a cut
+RM_UP_MS = 8000         # coming back is slower still
 SK_N = 5

@@ -23,6 +23,13 @@ final class SoundKinds {
     static final float STRONG = 0.5f;
     /** The patch's ring: SEGS segments (patchgen SK_N); the SEGS - 1 whole ones are read each time. */
     static final int SEGS = 5;
+    /**
+     * Make Room for Music (Nov 1): music in the room when it was the kind for ROOM_ON of the last ROOM_N judgements
+     * (~20 s at one every ~0.25 s), gone again under ROOM_OFF. DadCraft's Nov 1 runs replayed: never on the walk or at
+     * home, on 86% of a song-filled 14 minutes, 3 changes.
+     */
+    static final int MUSIC = 1, ROOM_N = 80;
+    static final float ROOM_ON = 0.4f, ROOM_OFF = 0.15f;
 
     /** The model, only in the Dev build (src/dev YamNet: LiteRT). */
     interface Model {
@@ -34,6 +41,9 @@ final class SoundKinds {
     private final int[][] cols;
     private final float[] last = new float[NAMES.length];
     private int kind = -1, candidate = -1, candidateN;
+    private final boolean[] wasMusic = new boolean[ROOM_N];
+    private int musicN, roomI;
+    private boolean roomMusic;
 
     /** {@code kinds}: kinds.txt's lines ("voices 0 1 2 ...", "#" comments), one per name, in NAMES' order. */
     SoundKinds(String kinds) {
@@ -125,12 +135,26 @@ final class SoundKinds {
         if (lead != kind && (candidateN >= ENTER_N || (lead != QUIET && last[lead] >= STRONG))) {
             kind = lead;
         }
+        boolean m = kind == MUSIC;   // the room-music window (a fixed ROOM_N long, empty at first: fills from silence)
+        musicN += (m ? 1 : 0) - (wasMusic[roomI] ? 1 : 0);
+        wasMusic[roomI] = m;
+        roomI = (roomI + 1) % ROOM_N;
+        if (!roomMusic && musicN >= ROOM_ON * ROOM_N) {
+            roomMusic = true;
+        } else if (roomMusic && musicN <= ROOM_OFF * ROOM_N) {
+            roomMusic = false;
+        }
         return kind != was;
     }
 
     /** What is heard now (an index in NAMES), or -1 before the first (two, unless strong) judgements. */
     int kind() {
         return kind;
+    }
+
+    /** True while music has been playing in the room (see ROOM_N). */
+    boolean roomMusic() {
+        return roomMusic;
     }
 
     /** The last judgement's numbers, one per kind. */
@@ -158,5 +182,8 @@ final class SoundKinds {
         Arrays.fill(last, 0);
         kind = candidate = -1;
         candidateN = 0;
+        Arrays.fill(wasMusic, false);
+        musicN = roomI = 0;
+        roomMusic = false;
     }
 }

@@ -348,6 +348,16 @@ final class DevicesUi {
                 kinds.setChecked(SoundKindsRunner.enabled(a));
                 kinds.setOnClickListener(v -> SoundKindsRunner.setEnabled(a, kinds.isChecked()));
                 body.addView(kinds);
+                android.widget.Switch room = new android.widget.Switch(a);   // Make Room for Music (Nov 1, Dev)
+                room.setText(R.string.room_music_switch);
+                a.look.label(room);
+                a.look.switchTint(room);
+                room.setSwitchPadding(a.dp(16));
+                room.setMinHeight(a.dp(52));
+                room.setPadding(a.dp(4), a.dp(8), 0, 0);
+                room.setChecked(SoundKindsRunner.roomEnabled(a));
+                room.setOnClickListener(v -> SoundKindsRunner.setRoomEnabled(a, room.isChecked()));
+                body.addView(room);
             }
             TextView note = new TextView(a);
             note.setText(R.string.diag_note);

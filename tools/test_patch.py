@@ -79,7 +79,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 jp = java_params()
 patch_text = open(PATCH).read()
 receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room",   # (fixed since Oct 31: patch defaults, no setting)
-    "step", "sk_on", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+    "step", "sk_on", "room_music", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2919,6 +2919,31 @@ check(all(abs(j - 1) < 0.5 for j in joints) and all(np.all(np.diff(g) > 0) for g
       "sound kinds: the %d before the one being written are whole and in order (joints %s samples)" % (SK_N - 1, ["%.1f" % j for j in joints]))
 e.send("sk_on", 0); before = e.array("sk_ring").copy(); n = len(e.heard["sk_ready"]); e.run(ramp)
 check(len(e.heard["sk_ready"]) == n and np.array_equal(before, e.array("sk_ring")), "sound kinds: off again, it stops writing")
+
+# ---- 7z3. make room for music: while the app hears music in the room, the music and beat step back (Nov 1) ----
+from patchgen.constants import RM_DB, RM_BIG_DB, RM_DOWN_MS, RM_UP_MS
+e = fresh(wet=0, dry=0, music_on=1); e.listen("rm_level")
+def rm_at(t):   # the step-back gain in dB after t more seconds
+    e.run(e.silence(t)); e.send_msg("rm_probe", "bang"); return 20 * np.log10(e.heard["rm_level"][-1])
+rm_0 = rm_at(0.1); e.send("room_music", 1)
+rm_half = rm_at(RM_DOWN_MS / 2000); rm_dip = rm_at(RM_DOWN_MS / 2000 + 0.5)
+e.send("room_music", 0); rm_uphalf = rm_at(RM_UP_MS / 2000); rm_back = rm_at(RM_UP_MS / 2000 + 0.5)
+check(abs(rm_0) < 1e-6 and abs(rm_dip + RM_DB) < 0.05 and abs(rm_back) < 1e-3 and -RM_DB + 1 < rm_half < -1 and -RM_DB + 1 < rm_uphalf < -1,
+      "make room for music: the music and beat dip %.1f dB over %d ms (halfway %.1f) and come back over %d ms (halfway %.1f, then %.2f)"
+      % (rm_dip, RM_DOWN_MS, rm_half, RM_UP_MS, rm_uphalf, rm_back))
+def rm_count(amp, rm):
+    e = fresh(music_on=1, music_pad=0, music_arp=0.2, music_res=0.8, res_src=1, wet=0, beat_level=0, note_big=20.5, chime_answer=1)
+    e.listen("chime_deg", "rnf_note"); r = np.random.default_rng(9); e.run((r.standard_normal(4 * SR) * 0.0005).astype(np.float32))
+    e.send("room_music", rm)
+    for k in ("chime_deg", "rnf_note"):
+        e.heard.pop(k, None)
+    x = (r.standard_normal(10 * SR) * 0.0005).astype(np.float32); m = int(0.03 * SR)
+    for k in range(8):
+        i = int((1 + 1.1 * k) * SR); x[i:i + m] += r.standard_normal(m) * np.exp(-np.arange(m) / (m / 5)) * amp
+    e.run(x); return len(e.heard.get("chime_deg", [])), len(e.heard.get("rnf_note", []))
+rm_c = [(amp, rm_count(amp, 0), rm_count(amp, 1)) for amp in (0.02, 0.04, 0.08, 0.5)]
+rm_ok = rm_c[2][1][0] > 0 and rm_c[2][2] == (0, 0) and rm_c[3][2][0] > 0 and all(c[2][0] <= c[1][0] for c in rm_c)
+check(rm_ok, "make room for music: knocks need %d dB more to get a chime or bell (amp, off, on: %s)" % (RM_BIG_DB, rm_c))
 
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)
