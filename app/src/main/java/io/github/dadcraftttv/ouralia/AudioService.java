@@ -90,8 +90,6 @@ public class AudioService extends Service {
     /** Call and Response plays its answer here, one [motif <scale step> <velocity>( per note. */
     private static final String MOTIF_PLAY = "motif";
     /** The Evolving music (dcs_composer) reports each section as it starts: 0 Home, 1 Lift, 2 Calm, 3 Turn. */
-    private static final String COMP_SECTION = "comp_section";
-    private static final String[] SECTION_NAMES = {"Home", "Lift", "Calm", "Turn"};
     /** The patch's tempo clock reports its tempo on each beat. */
     private static final String TEMPO = "tempo";
     private static volatile float tempoBpm;
@@ -754,14 +752,6 @@ public class AudioService extends Service {
                     tempoBpm = x;
                     return;
                 }
-                if (COMP_SECTION.equals(source)) {   // (it runs in Classic too, unheard: only Evolving's are logged)
-                    int k = Math.round(x);
-                    if (k >= 0 && k < SECTION_NAMES.length && ParamStore.get("music_var") >= 0.5f
-                            && ParamStore.get("music_on") >= 0.5f) {
-                        logEvent("Music section: " + SECTION_NAMES[k]);
-                    }
-                    return;
-                }
                 if (HARMONY_RECEIVER.equals(source)) {
                     if (ParamStore.get("music_harm") > 0) {   // (the tracker also runs for call and response)
                         harmonyNotes.incrementAndGet();
@@ -854,7 +844,6 @@ public class AudioService extends Service {
         });
         PdBase.subscribe("mic_level");
         PdBase.subscribe(HARMONY_RECEIVER);
-        PdBase.subscribe(COMP_SECTION);
         PdBase.subscribe(TEMPO);
         PdBase.subscribe(FS_CAUGHT);
         PdBase.subscribe(FS_LEVELS);

@@ -380,3 +380,15 @@ kit shares, layers or pump. Pad Only With a Steady Sound still gates the complet
 Chimes Only When Something Happens and Notes Only for Bigger Sounds are unchanged. The frozen composer
 features use the same Classic path and no kit settings. The vocoder still receives the melody's frequency and
 all four chord notes. See dcs-objects "Kits: REMOVED Oct 30" for removal scope and status-log for checks.
+
+## Removed Nov 1: the parts the room doesn't drive
+
+DadCraft (Nov 1, after asking whether the old band switches still did anything): "if the room or environment doesn't
+drive it, then lets take them out." Removed from the app and the patch, on `sound-kinds`: **Song Shape** (Evolving's
+progressions and sections; the chords are always Classic's, near the room's brightness), **Chord Colours** and **New
+Pieces** (both Evolving only), **The Band Plays** (8-bar phrases, the calm-room drive floor, its fills and chimes) and
+**Wandering Home** (the home chord's drift every 3-6 minutes). Their entries above are history. Kept, because the room
+or his steps decide when they play: Hooks That Grow, Living Grooves, Sway with the World. dcs_composer itself keeps
+the progression, colour and renew code (unused; Hooks and Grooves use it for motifs and bars). Stored values and
+presets that name the removed settings are ignored. Events log: no more "Music section:" lines.
+
