@@ -161,3 +161,7 @@ Estimate from the CPU A/B: +3% of one core is ~10-15 mA, about 0.3%/h of the ~4,
 gate. **DadCraft accepted the battery gate on the estimate** (Oct 31: "accept on the estimate."). **4c passes all
 its gates.** Next: 4d (his walk). Before it, the event log rolls over at 1 MB instead of 64 KB (64 KB held ~45 min
 with the room listener; DadCraft, Oct 31: "yes, raise the limit now").
+
+## 4d (Nov 1, passed)
+
+A short walk (Oct 31, 17 min, mostly in a pocket) and two home runs (Nov 1). Walk: voices 79%, quiet 15%, steps 4%, birds 1%, no traffic or wind; the voices were real (three people walking and talking). Home, 73 min (laundry, dishes, talking): quiet 78%, voices 13%, water 8% (the sink running: right). Music playing in the room, 14 min: music 67%, voices 25%. Judgements ~9.5 ms throughout. Dish clatter has no kind and reads as quiet or steps. **DadCraft (Nov 1): "mostly right and quick enough." 4d passes; step 4 passes all four gates.** Next: choose the first musical response together.
