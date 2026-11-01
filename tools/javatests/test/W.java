@@ -200,7 +200,7 @@ public class W {
     for(String id:Params.BAND) ParamStore.set(id,Params.byId(id).def);
     // a built-in preset says nothing about the band: picking one leaves it (DadCraft, Oct 21)
     ParamStore.set("music_on",1f); ParamStore.set("music_key",5f); ParamStore.applyPreset(PresetManager.builtIn("Robot"));
-    check(ParamStore.get("music_on")==1f&&ParamStore.get("music_key")==5f&&!PresetManager.builtIn("Default").containsKey("music_var"),"a built-in preset (Robot) leaves Music on and the Key alone");
+    check(ParamStore.get("music_on")==1f&&ParamStore.get("music_key")==5f&&!PresetManager.builtIn("Default").containsKey("mel_dev"),"a built-in preset (Robot) leaves Music on and the Key alone");
     ParamStore.set("music_on",0f); ParamStore.set("music_key",0f);
     // the effects' voices and Intensity: saved in presets, left alone by built-in ones (DadCraft, Oct 21)
     ParamStore.set("gc_voice",0f); ParamStore.set("dist_quality",0f); ParamStore.set("intensity",0.8f);

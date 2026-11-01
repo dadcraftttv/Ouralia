@@ -754,9 +754,9 @@ public class AudioService extends Service {
                     tempoBpm = x;
                     return;
                 }
-                if (COMP_SECTION.equals(source)) {   // (it runs in Classic too, unheard: only Evolving's are logged)
+                if (COMP_SECTION.equals(source)) {   // (always Evolving since Nov 1)
                     int k = Math.round(x);
-                    if (k >= 0 && k < SECTION_NAMES.length && ParamStore.get("music_var") >= 0.5f
+                    if (k >= 0 && k < SECTION_NAMES.length
                             && ParamStore.get("music_on") >= 0.5f) {
                         logEvent("Music section: " + SECTION_NAMES[k]);
                     }
