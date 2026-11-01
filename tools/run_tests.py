@@ -196,7 +196,7 @@ def worker(path, lib, ids):
         k = own_of.get(i)
         if k is not None:
             times[k] = times.get(k, 0) + time.perf_counter() - t0
-    print("@@fails %d" % g.get("fails", 0))
+    print("\n@@fails %d" % g.get("fails", 0))   # (a fresh line: Pd's C prints "realloc called..." with no newline)
     print("@@times " + json.dumps({sections[k]["title"]: t for k, t in times.items()}))
 
 
@@ -224,16 +224,17 @@ def run_patch_sections(pick, workers):
         for b, (code, text) in zip(bins, ex.map(go, bins)):
             shown = len(out)
             for line in text.splitlines():
-                if line.startswith("@@fails "):
-                    fails += int(line.split()[1])
-                    if int(line.split()[1]) and not any("FAIL" in l for l in text.splitlines()):
+                if "@@fails " in line:   # (anywhere in the line: Pd's C output can run into it, Nov 1: a lost count)
+                    nf = int(line.split("@@fails ")[1].split()[0])
+                    fails += nf
+                    if nf and not any("FAIL" in l for l in text.splitlines()):
                         out.append("FAIL: [%s] counted a failure without a message; its last lines:" % sections[b[1][0]]["title"][:60])
                         out += ["    " + l for l in text.splitlines()[-6:]]
-                elif line.startswith("@@times "):
-                    costs.update(json.loads(line[8:]))
+                elif "@@times " in line:
+                    costs.update(json.loads(line.split("@@times ", 1)[1]))
                 elif "FAIL" in line or "Traceback" in line or "Error" in line[:40]:
                     out.append(line[line.find("FAIL"):] if "FAIL" in line else line)
-            if code and not any(l.startswith("@@fails") for l in text.splitlines()):
+            if code and not any("@@fails" in l for l in text.splitlines()):
                 out.append("FAIL: a worker stopped: " + text.strip().splitlines()[-1] if text.strip() else "FAIL: a worker stopped")
                 fails += 1
     json.dump(costs, open(COSTS, "w"), indent=0, sort_keys=True)

@@ -386,3 +386,9 @@ all four chord notes. See dcs-objects "Kits: REMOVED Oct 30" for removal scope a
 Song Shape, Chord Colours, New Pieces, The Band Plays and Wandering Home were removed (Ouralia 1277104; DadCraft: "if
 the room or environment doesn't drive it, then lets take them out"), then restored the same day, all five (DadCraft:
 "no no no, i want that stuff in the drums. can we add that code back in?"; asked which, "Everything removed").
+Then (Nov 1) made the fixed behaviour, switches removed: DadCraft, "can we make those being on the default and remove
+the switches? i feel like what they bring makes the sound we're currently getting a bit more alive." The patch's own
+defaults turn all five on (patchgen DEFAULTS); the app no longer has the settings, so stored values and presets that
+name them are ignored. test_patch pins the old values in `fresh()` so the existing checks keep comparing like for
+like, and checks the five defaults are on. Their entries above describe what each does.
+

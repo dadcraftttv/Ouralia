@@ -26,7 +26,7 @@ Order (DadCraft, Oct 22): the reviews' release and code-health points first, Mai
 **Session Log (item 23, Oct 29):** BUILT; DadCraft's first sessions, phone and desktop, for Maestro's R.1 (what
 sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUILT Oct 30, in rc5.2.
 
-**New Pieces (item 21, step 5, Oct 29):** BUILT behind a switch (off by default); DadCraft's listen with Session Log on.
+**New Pieces (item 21, step 5, Oct 29):** BUILT; since Nov 1 always on with Song Shape Evolving, Chord Colours, The Band Plays and Wandering Home, no switches (DadCraft: "what they bring makes the sound we're currently getting a bit more alive"; design/music.md "Removed and restored").
 
 **Reactive first (DadCraft, Oct 30):** Ouralia re-anchored on RjDj's rule, the world drives the music. Step 1 was a
 listening baseline of what already reacts (Singing Room, Harmony, sudden-sound chimes, Call and Response) with the

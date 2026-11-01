@@ -13,6 +13,24 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 PATCH = os.path.join(ROOT, "app/src/main/assets/patches/test_scene.pd")
 PARAMS_JAVA = os.path.join(ROOT, "app/src/main/java/io/github/dadcraftttv/ouralia/Params.java")
 LIB = sys.argv[1] if len(sys.argv) > 1 else "libpd.so"
+# The tests' patch: the real one, but loading with the old defaults of what has been on by default since Nov 1
+# (Evolving, Chord Colours, New Pieces, The Band Plays), so the checks compare like for like; the tests that are
+# about them switch them on. (Sending them off after load isn't the same: leaving Evolving re-picks the chord.)
+OLD_DEFAULTS = ("music_var", "chord_color", "new_pieces", "band_plays")
+_test_patch = []
+def test_patch_path():
+    """Written once per process (the runner's workers run only defs and the sections, not loose setup)."""
+    if not _test_patch:
+        import tempfile
+        t = open(PATCH).read()
+        for k in OLD_DEFAULTS:
+            assert t.count("\\; %s 1 " % k) == 1, k
+            t = t.replace("\\; %s 1 " % k, "\\; %s 0 " % k)
+        path = os.path.join(tempfile.mkdtemp(prefix="ouralia_test_"), "test_scene.pd")
+        with open(path, "w") as f:
+            f.write(t)
+        _test_patch.append(path)
+    return _test_patch[0]
 
 fails = 0
 def check(cond, msg):
@@ -33,7 +51,7 @@ def java_params():
 L = 2   # ms of fixed latency from the spatial stage (1.5 ms, rounded in peak reports)
 
 def fresh(**over):
-    e = Engine(LIB, PATCH)
+    e = Engine(LIB, test_patch_path())
     base = dict(gain=1, dry=1, echo_on=1, echo_time=350, feedback=0.4, wet=0.5,
                 ring_on=1, ring_freq=80, ring_mix=0, smooth=30,
                 pitch_on=1, pitch_semi=0, pitch_mix=0, pitch_window=60,
@@ -78,7 +96,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room", "rm_probe",   # (fixed since Oct 31: patch defaults, no setting)
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room", "rm_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
     "step", "sk_on", "room_music", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
@@ -1199,6 +1217,8 @@ pr_off, pr_on, pr_bass_off, pr_bass = pad_room_run(0), pad_room_run(1), pad_room
 on_load = open(PATCH).read()
 check(all(re.search(r"\\; %s %s[ ;\n]" % kv, on_load) for kv in (("chime_answer", 1), ("pad_room", 1), ("note_big", 20.5))),
       "The three reactive behaviours are on from the patch's defaults (chimes only answer, pad only with a steady sound, notes only above 20.5 dB)")
+check(all(re.search(r"\\; %s 1[ ;\n]" % k, on_load) for k in ("music_var", "chord_color", "new_pieces", "band_plays", "music_drift")),
+      "Evolving, Chord Colours, New Pieces, The Band Plays and Wandering Home are on from the patch's defaults (Nov 1, no switches)")
 
 check(pr_off[0] > -45 and pr_on[0] < -100 and pr_on[1] < -50 and abs(pr_on[2] - pr_off[2]) < 3 and pr_on[3] < -100
       and pr_bass_off[2] > -50 and pr_bass[2] < -100,
@@ -2843,7 +2863,7 @@ check(abs(ch_on / res["chimes"][0] - 1) < 0.25, "mix: the walking notes at 0 lea
 # ---- 7z. stereo room: the phone's two mics as left and right (mid and side), off exactly as before ----
 def fresh_st(on, trim=1.0, plain=1.0, **over):
     """An engine with the phone's two mics (in_channels=2), the switch on or off as the app sends it."""
-    e = Engine(LIB, PATCH, in_channels=2)
+    e = Engine(LIB, test_patch_path(), in_channels=2)
     b = dict(gain=1, dry=1, echo_on=1, echo_time=350, feedback=0.4, wet=0, smooth=30, gate_thresh=-80, comp_thresh=0,
              space_on=1, space_pan=0, space_shift=0, music_on=0, beat_level=0)
     b.update(over)

@@ -200,24 +200,12 @@ final class Params {
             // ---- Music ---- (a reactive synth: notes snapped to a key and scale, added after the first presets)
             new Param("music_on", "Music Enabled", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .inSection("music").toggle(),
-            // Music variety (Oct 21, DadCraft: with a key and scale he likes, "the band keeps playing much of the same
-            // things"): Evolving = chord progressions in sections from our dcs_composer (Home, Lift, Calm, Turn), the
-            // pentatonic scales borrowing the full scale's chords. Classic = the chord near the room's brightness.
-            new Param("music_var", "Song Shape (how the chords and sections go)", 0f, 1f, 0f, "", Param.Curve.LINEAR)
-                    .choices("Steady (as before)", "Evolving (chord progressions and sections)")
-                    .inSection("music").dcs(),
+            // Always on since Nov 1, no switches (DadCraft: "make those being on the default and remove the switches...
+            // what they bring makes the sound we're currently getting a bit more alive"): Song Shape Evolving, Chord
+            // Colours, New Pieces, The Band Plays and Wandering Home are the patch's own defaults (patchgen DEFAULTS).
             // Melodies that develop (Oct 21, stage 2): the chimes play a motif per section in statements, like a theme
             // and its variations (again, answered, moved, upside down, backwards, cut short, carried on), instead of a
-            // random step from the last note. Works with either Music variety.
-            // Chord colours (Oct 21, with Evolving): now and then a seventh, an added ninth, or a sus chord resolving at
-            // the next bar, more in Calm, more sus in Lift. Classic's chords stay as they are.
-            new Param("chord_color", "Chord Colours (sevenths, sus, added notes, with Evolving)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().dcs(),
-            // New pieces (Oct 29, DadCraft's sessions were one piece for 18 minutes): every few minutes a new piece,
-            // blended in like a DJ (an open ending and the drums dropping to the hats, the new chords under the old
-            // groove, then a new groove, then a new motif), and Home between only half the sections.
-            new Param("new_pieces", "New Pieces (a fresh piece every few minutes, blended in, with Evolving)", 0f, 1f, 0f,
-                    "", Param.Curve.LINEAR).inSection("music").toggle().dcs(),
+            // random step from the last note.
             new Param("mel_dev", "Hooks That Grow (a motif, repeated and changed)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().dcs(),
             // Patterns made by rules (Oct 21, stage 3): the walking notes and the drums get a bar made by rules each bar
@@ -229,12 +217,6 @@ final class Params {
             // below the standing chimes' loudness, following the pace smoothly, a walk starting soft. Off = as before.
             // The default since Oct 21 (DadCraft: "just be the default", and softer still).
             new Param("walk_ease", "Soft Steps (walking notes softer, gliding to their level)", 0f, 1f, 1f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle(),
-            // The Band Plays (Oct 21, DadCraft: more "build and flow", and more going on in a calm room): 8-bar phrases
-            // that build up to a fill and drop back, a band that never quite stops standing still, chimes in a quiet room.
-            new Param("band_plays", "The Band Plays (builds and drops back, busier in a calm room)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle(),
-            new Param("music_drift", "Wandering Home (the home chord drifts every few minutes, same notes)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("music_follow", "Sway with the World (light, pocket and stairs move the notes higher or lower)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd(),
@@ -612,7 +594,7 @@ final class Params {
      * them, and a preset made before keeps what you have (none is resetWhenAbsent).
      */
     static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
-            "music_on", "music_var", "chord_color", "new_pieces", "mel_dev", "pat_gen", "walk_ease", "band_plays", "note_big", "music_drift",
+            "music_on", "mel_dev", "pat_gen", "walk_ease", "note_big",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
             "melody_src", "mel_rhythm", "mel_phrase", "chime_voice", "chime_trail", "fm_ring", "res_src", "harm_src", "harm_tracker");
 
