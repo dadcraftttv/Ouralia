@@ -193,7 +193,8 @@ final class SettingRows {
         Param moversSwitch = Params.byId(Params.moversSwitchId(section.id));
         Param onSwitch = Params.onSwitch(section);   // (both sit on the card's header)
         for (Param p : Params.ALL) {
-            if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch && p != onSwitch) {
+            if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch && p != onSwitch
+                    && !(p.soundKinds && !SoundKindsRunner.available())) {
                 if (p.id.equals("music_key")) {   // Key and Scale: two tiles side by side, each opening a sheet
                     a.choiceUi.addKeyScaleTiles(body);
                     continue;
