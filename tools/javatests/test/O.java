@@ -16,7 +16,7 @@ public class O {   // Session Log: a file per session, only the kept receivers, 
     check(!SessionLog.recording(),"switched on but not playing: nothing kept");
     SessionLog.second(true,true,false);
     check(SessionLog.recording(),"switched on and playing: a session starts");
-    SessionLog.pd("chime_deg",3f); SessionLog.pd("mic_level",42f); SessionLog.pd("pad_chord",2f);
+    SessionLog.pd("chime_deg",3f); SessionLog.pd("mic_level",42f); SessionLog.pd("comp_chord",2f,0f,4f,7f,11f,-12f);
     SessionLog.pd("tick16",5f); SessionLog.pd("tick16",0f); SessionLog.pd("heard_off");
     SessionLog.mark("flat \"here\"\n");
     ParamStore.set("music_on",ParamStore.get("music_on")>=0.5f?0f:1f);
@@ -28,7 +28,7 @@ public class O {   // Session Log: a file per session, only the kept receivers, 
     boolean shaped=true; for(String l:lines) shaped&=l.startsWith("{\"t\":")&&l.endsWith("}");
     check(shaped,"every line is one JSON object ("+lines.length+" lines)");
     check(lines[0].contains("\"ev\":\"start\"")&&lines[0].contains("\"settings\":{")&&lines[lines.length-1].contains("\"ev\":\"stop\""),"starts with the settings, ends with stop");
-    check(text.contains("\"src\":\"chime_deg\",\"v\":[3.000]")&&text.contains("\"src\":\"pad_chord\""),"the patch's notes and chords kept");
+    check(text.contains("\"src\":\"chime_deg\",\"v\":[3.000]")&&text.contains("\"src\":\"comp_chord\""),"the patch's notes and chords kept");
     check(!text.contains("mic_level"),"what the log doesn't keep is left out");
     int bars=text.split("\"ev\":\"bar\"",-1).length-1;
     check(bars==1,"only the bar line of the 16th-note clock ("+bars+")");

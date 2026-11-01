@@ -47,7 +47,7 @@ final class SettingRows {
         SUBHEADINGS.put("gain", new int[]{R.string.sub_mic, 0});
         SUBHEADINGS.put("pocket_hush", new int[]{R.string.sub_pocket, R.string.sub_pocket_hint});
         SUBHEADINGS.put("dry", new int[]{R.string.sub_output, 0});
-        SUBHEADINGS.put("mel_dev", new int[]{R.string.sub_notes, 0});
+        SUBHEADINGS.put("music_var", new int[]{R.string.sub_notes, 0});
         SUBHEADINGS.put("mel_rhythm", new int[]{R.string.music_more_heading, 0});
         SUBHEADINGS.put("mix_kick", new int[]{R.string.sub_drums, 0});
         SUBHEADINGS.put("music_pad", new int[]{R.string.sub_pad_bass, 0});
