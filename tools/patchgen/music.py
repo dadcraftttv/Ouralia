@@ -606,7 +606,8 @@ def add_music(P):
     # sound gets a note only this many dB above the room's quiet; smaller ones still feed the found drums and groove
     P.obj("mu_nb_r", "r note_big", x + 480, 470); P.obj("mu_nb_v", "value nbig", x + 480, 485); P.c("mu_nb_r", "mu_nb_v")
     P.obj("mu_nb_t", "t b", x + 400, 505)
-    ex("mu_nb_chk", f"(nbig<=0)+(nbig>0)*(mlev-min(max(mfloor,46),58)>=nbig)+$f1*0", x + 400, 515)
+    nbt = f"(nbig*(nbig>0)+{RM_BIG_DB}*rmus)"   # (+RM_BIG_DB while music plays in the room: Make Room for Music)
+    ex("mu_nb_chk", f"({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt})+$f1*0", x + 400, 515)
     P.obj("mu_nb_sel", "sel 1", x + 400, 525)
     P.c(handling_gate(P, "mu_ons_hg", "mu_onset_sel", x + 400, 480, wait=False), "mu_nb_t")   # not handling noise
     P.c("mu_nb_t", "mu_nb_chk"); P.c("mu_nb_chk", "mu_nb_sel"); P.c("mu_nb_sel", "mu_ons_gate")
@@ -1564,9 +1565,10 @@ def add_room_notes(P, rx, ex, degree_to_hz):
     P.obj("rnf_lb", "loadbang", fx + 320, fy); P.msg("rnf_open1", "1", fx + 320, fy + 15)
     P.obj("rnf_v_open", "value rnf_open", fx + 320, fy + 30); P.c("rnf_lb", "rnf_open1"); P.c("rnf_open1", "rnf_v_open")
     P.obj("rnf_det", "t b", fx, fy + 50); P.c(handling_gate(P, "rnf_hg", "fs_det_sel", fx + 60, fy + 20, wait=False), "rnf_det")
-    ex("rnf_chk", "(rnf_src>=1)*(rnf_pk==0)*(rnf_on>0)*(rnf_open==1)*((nbig<=0)+(nbig>0)*(mlev-min(max(mfloor,46),58)>=nbig))+$f1*0", fx, fy + 65)   # (note_big too)
+    nbt = f"(nbig*(nbig>0)+{RM_BIG_DB}*rmus)"   # (Make Room for Music, as for the chimes)
+    ex("rnf_chk", f"(rnf_src>=1)*(rnf_pk==0)*(rnf_on>0)*(rnf_open==1)*(({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt}))+$f1*0", fx, fy + 65)   # (note_big too)
     # (this detector hears 5 ms readings, the level `mlev` comes ~30 times a second: with note_big on, wait for it)
-    ex("rnf_nb_on", "nbig>0", fx - 60, fy + 50); P.obj("rnf_nb_sel", "sel 0 1", fx - 60, fy + 57)
+    ex("rnf_nb_on", "(nbig>0)+(rmus>0)>0", fx - 60, fy + 50); P.obj("rnf_nb_sel", "sel 0 1", fx - 60, fy + 57)
     P.obj("rnf_nb_del", "del 40", fx - 30, fy + 60)
     P.c("rnf_det", "rnf_nb_on"); P.c("rnf_nb_on", "rnf_nb_sel"); P.c("rnf_nb_sel", "rnf_chk", 0, 0)
     P.c("rnf_nb_sel", "rnf_nb_del", 1, 0); P.c("rnf_nb_del", "rnf_chk")

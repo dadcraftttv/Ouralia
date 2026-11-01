@@ -144,6 +144,7 @@
     <string name="hears_wind">wind</string>
     <string name="hears_crowd">a crowd</string>
     <string name="sound_kinds_switch">Sound kinds (Dev test: YAMNet names what it hears)</string>
+    <string name="room_music_switch">Make Room for Music (Dev test, with Sound kinds on: the music and beat step back while music plays in the room)</string>
     <string name="diag_kinds">Sound kinds (YAMNet, only listens): %1$s %2$.2f</string>
     <string name="hears_kind">YAMNet: %1$s %2$.2f</string>
     <string name="diag_room">Room listener (only listens for now): talking %1$.2f · music %2$.2f · traffic %3$.2f · wind %4$.2f · crowd %5$.2f</string>

@@ -165,3 +165,20 @@ with the room listener; DadCraft, Oct 31: "yes, raise the limit now").
 ## 4d (Nov 1, passed)
 
 A short walk (Oct 31, 17 min, mostly in a pocket) and two home runs (Nov 1). Walk: voices 79%, quiet 15%, steps 4%, birds 1%, no traffic or wind; the voices were real (three people walking and talking). Home, 73 min (laundry, dishes, talking): quiet 78%, voices 13%, water 8% (the sink running: right). Music playing in the room, 14 min: music 67%, voices 25%. Judgements ~9.5 ms throughout. Dish clatter has no kind and reads as quiet or steps. **DadCraft (Nov 1): "mostly right and quick enough." 4d passes; step 4 passes all four gates.** Next: choose the first musical response together.
+
+## Step 5: Make Room for Music (Nov 1, branch `sound-kinds`, Dev only; his listen next)
+
+DadCraft picked the first musical response (Nov 1: "let's go with 3, music in the room"): while music plays in the
+room, Ouralia steps back. Built behind a second Dev switch in Diagnostics, "Make Room for Music" (off by default;
+it only works with Sound kinds on).
+- **When:** `SoundKinds.roomMusic()`: music was the kind for at least 40% of the last 80 judgements (~20 s), gone
+  again under 15%. Replayed on his Nov 1 runs before building: never on the walk or the 73 minutes at home, on for
+  86% of the 14 minutes of Shannon's music with 3 changes. It takes ~8 s of steady music to step back and ~17 s
+  after the music stops to come back (then the ramp). Java tests J.
+- **What:** the app sends `room_music 1/0`; the patch dips the generated music (pad, chimes, room notes, harmony) and
+  the beat by `RM_DB` 6 dB over 4 s, coming back over 8 s (the mic's dry room and its effects are untouched), and the
+  chimes' and room bells' "bigger sounds" threshold rises `RM_BIG_DB` 6 dB (also when Notes Only for Bigger Sounds is
+  off), so the room's music doesn't set off notes. Events log: "Room music: heard, the music steps back" / "gone, the
+  music comes back" (logged with the switch off too). test_patch "make room for music": -6.0 dB, halfway -2.5,
+  back 0.00; knocks at 0.08 get 5 chimes and 3 bells off, none on, loud ones (0.5) still get some.
+

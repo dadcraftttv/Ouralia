@@ -9,6 +9,26 @@ from .glitch import add_glitch_cloud, add_onset_switch, add_reverse_reverb
 from .sensing import add_pocket_rustle, add_handling, add_clip_watch
 
 
+def add_room_music(P, x, y):
+    """Make Room for Music (Nov 1): "room_music 1" from the app (sound kinds hears music in the room) dips the music
+    and the beat RM_DB over RM_DOWN_MS, "room_music 0" brings them back over RM_UP_MS; 1 (no dip) before anything
+    arrives. The value `rmus` also raises the chimes' threshold (music.py, mu_nb_chk and rnf_chk)."""
+    P.obj("rm_r", "r room_music", x, y)
+    P.obj("rm_v", "value rmus", x + 100, y + 15); P.c("rm_r", "rm_v")
+    cut = 1 - 10 ** (-RM_DB / 20)
+    calc = "expr ($f1>0)*%.5f ; ($f1>0)*%d+($f1<=0)*%d" % (cut, RM_DOWN_MS, RM_UP_MS)   # (expr fires right to left)
+    P.obj("rm_calc", calc.replace("$", BS + "$").replace(";", BS + ";"), x, y + 30)
+    P.obj("rm_pk", "pack f f", x, y + 50)
+    P.c("rm_r", "rm_calc"); P.c("rm_calc", "rm_pk", 1, 1); P.c("rm_calc", "rm_pk", 0, 0)
+    P.obj("rm_ln", "line~", x, y + 70); P.c("rm_pk", "rm_ln")
+    P.obj("rm_neg", "*~ -1", x, y + 90); P.obj("rm_gain", "+~ 1", x, y + 110)
+    P.c("rm_ln", "rm_neg"); P.c("rm_neg", "rm_gain")
+    P.obj("rm_probe_r", "r rm_probe", x + 100, y + 110); P.obj("rm_probe", "snapshot~", x + 100, y + 130)   # (for the tests)
+    P.obj("rm_probe_s", "s rm_level", x + 100, y + 150)
+    P.c("rm_gain", "rm_probe"); P.c("rm_probe_r", "rm_probe"); P.c("rm_probe", "rm_probe_s")
+    return "rm_gain"
+
+
 def build():
     P = Patch()
 
@@ -450,7 +470,9 @@ def build():
     dry = smoothed(P, "dry", "dry", 1500, 300)
     P.sig2("filtered_dry", "*~", "filtered_pre", dry, 1600, 325)
     music = add_music(P)
-    P.sig2("filtered_mix", "+~", "filtered_dry", music, 1600, 340)
+    rm_gain = add_room_music(P, 1750, 300)
+    P.sig2("music_rm", "*~", music, rm_gain, 1700, 335)                # Make Room for Music: the music steps back
+    P.sig2("filtered_mix", "+~", "filtered_dry", "music_rm", 1600, 340)
 
     # --- chorus: the signal mixed with two copies whose delay wobbles, which detunes them slightly ---
     if LEGACY_FX:
@@ -772,7 +794,8 @@ def build():
     P.obj("mix_pre", "+~", 250, 420); P.c("dry_sig", "mix_pre")      # the echo joins both ears later, scattered
     add_tempo_clock(P)
     beat = add_beat(P)
-    P.sig2("mix_out", "+~", "mix_pre", beat, 250, 450)       # the beat joins here, so reverb and pan apply to it
+    P.sig2("beat_rm", "*~", beat, "rm_gain", 300, 440)                # (the beat steps back with the music)
+    P.sig2("mix_out", "+~", "mix_pre", "beat_rm", 250, 450)       # the beat joins here, so reverb and pan apply to it
 
     # --- reverb: stereo, added to the mix before the spatial stage ---
     rfb = "0.7+0.28*$f1"                                         # feedback: room size 0..1 -> 0.7..0.98
