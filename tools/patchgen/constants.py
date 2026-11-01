@@ -32,8 +32,8 @@ DEFAULTS = [
     ("beat_on", 1), ("beat_level", 0), ("beat_hats", 0.5), ("beat_snare", 0.6), ("beat_pitch", 55),
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
     ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("fs_clean", 0), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
-    ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
-    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 0), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 0), ("new_pieces", 0), ("walk_ease", 1), ("band_plays", 0),
+    ("comp_release", 40), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
+    ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("mel_dev", 0), ("pat_gen", 0), ("walk_ease", 1), 
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("wind_guard", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
     # Reactive first (DadCraft, Oct 31: "make those the default behavior period, no switch"): no setting in the app,
     # the first two stay as the patch's own values so the tests can still pin the old sound (0); Notes Only for Bigger
@@ -66,20 +66,6 @@ CHORD_POOLS = [
     ((0, 1, 2, 3, 4, 5), None),  # Whole tone
 ]
 CONTRAST_PCT = 20             # chance (in 100) that a chord change picks the contrast chord
-# Key drift: every few minutes the home chord moves to a related one on the same notes (C major -> D dorian, G or
-# A minor feel), and later comes home. Only moves where every chord of the pool stays free of diminished chords.
-DRIFT_MIN_S, DRIFT_MAX_S = 180, 360
-DRIFT_HOME_PCT = 60           # away from home, the chance the next drift goes back home
-
-
-def drift_options(iv, pool):
-    """Scale steps the home chord may drift to: those where every pool chord moved there is not diminished."""
-    n = len(iv)
-    def note(d):
-        return iv[d % n] + 12 * (d // n)
-    def ok(r):
-        return note(r + 4) - note(r) != 6 or note(r + 2) - note(r) != 3
-    return [o for o in range(n) if all(ok(o + r) for r in pool)]
 # Footstep arpeggios: scale steps above the current chord root, one per footstep. Every bar (8 steps) a new
 # pattern is picked at random, and now and then a step rests.
 # Ordered calm -> busy: each bar picks one near the walking pace (a stroll stays near the top, a brisk walk near
@@ -382,11 +368,6 @@ RR_LEAD_MS = 25             # the read ends this long before the sound was notic
                             # handling check), at the reverb's first echo (~30 ms after the sound), so the loudest moment is on time
 RR_GAIN = 1.5               # its level at reverb_rev 1 (the windows and the backwards tail lose a little)
 CALM_CHIME_P = 40           # a calm build at its peak: a standing-still chime about every 6 s even in a quiet room
-BAND_PHRASE = 8             # The Band Plays: a phrase of this many bars builds up and drops back...
-BAND_ARC = (-0.15, 0.4, 1.6)  # ...the drive moved from -0.15 at its first bar to +0.25 at its last (curve power 1.6)...
-BAND_LIFT = 0.06            # ...each phrase this much bigger, smaller or the same as set...
-BAND_FLOOR = 0.3            # ...standing still the drive never below this, however calm the room...
-BAND_CHIME_P = 30           # ...and standing-still chimes get this chance (in 1000 per 0.25 s), half to 1.5x over the phrase
 PAD_ROOM_MIN = 0.03         # Pad Only With a Steady Sound: a sound at least this far above the room's quiet (0..1 = 32 dB)
 PAD_ROOM_GAIN = 2.5         # ...opens the pad this much (0.4 = 13 dB above the quiet: full)
 PAD_ROOM_UP_S = 1.5         # ...rising from silence to full over this long (a knock is too short to open it)

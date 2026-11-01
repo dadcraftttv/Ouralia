@@ -49,9 +49,8 @@ def render(patch, part, src, switch, output):
     if part == 'drums':
         base['beat_level'] = 0.6
     if part == 'composer':
-        base.update(music_arp=0.4, music_pad=0.5, beat_level=0.6, music_var=1, mel_dev=1,
-                    new_pieces=1, pat_gen=1, mel_rhythm=1, mel_phrase=1, beat_break=1,
-                    band_plays=1, chord_color=1)
+        base.update(music_arp=0.4, music_pad=0.5, beat_level=0.6, mel_dev=1,
+                    pat_gen=1, mel_rhythm=1, mel_phrase=1, beat_break=1)
     if part == 'vocoder':
         base.update(music_arp=0.4, music_pad=0.5, dry=1, voc_mix=1, voc_carrier=src,
                     melody_src=0, pad_src=0, bass_src=0, rhythm_src=0,

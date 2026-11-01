@@ -138,65 +138,27 @@ def add_phrases(P, ex, src, outlet, px, py):
     P.c("mph_pk", "mph_s")
 
 def add_composer(P, x, y):
-    """Music variety (music_var, Music: 0 Classic = as before, 1 Evolving; DadCraft, Oct 21: with a key and scale he
-    likes, "the band keeps playing much of the same things"): [dcs_composer] plays chord progressions in sections
-    (Home, Lift, Calm, Turn) instead of the Classic pick near the room's brightness every 7 s. Its chord comes in
-    where Classic's does (mu_pad_root_v: the anchor scale step for everything that thinks in steps, the slot flip),
-    but the four pad notes and the bass come as real notes, so the pentatonic scales can borrow the full scale's
-    chords while the melody stays pentatonic. The section moves the melody's register. Classic's picker, pad notes
-    and bass are switched off (spigots) while it plays."""
+    """[dcs_composer] for Hooks That Grow (mel_dev: the chimes' motif notes) and Living Grooves (pat_gen: the walking
+    notes', drums' and melody rhythm's bars). The chords stay Classic's (near the room's brightness). Its own chord
+    progressions and sections (Song Shape: Evolving), Chord Colours and New Pieces were removed Nov 1 (DadCraft: "if
+    the room or environment doesn't drive it, then lets take them out")."""
     BSd = BS + "$"
     P.obj("cmp", "dcs_composer", x, y + 200)
-    # Classic or Evolving: the switches, then (Evolving) the chord now or (Classic) Classic's chord now
-    P.obj("cmp_r_var", "r music_var", x, y)
-    P.obj("cmp_var_ch", "change 0", x, y + 10); P.c("cmp_r_var", "cmp_var_ch")   # (Classic at load: nothing to do)
-    P.obj("cmp_var_t", "t f f f", x, y + 20); P.c("cmp_var_ch", "cmp_var_t")
-    P.obj("cmp_is", ">= 0.5", x, y + 40); P.obj("cmp_not", "< 0.5", x + 60, y + 40)
-    P.c("cmp_var_t", "cmp_is", 2, 0); P.c("cmp_var_t", "cmp_not", 2, 0)
-    for i in range(4):
-        P.c("cmp_not", f"mu_pad{i}_hcl", 0, 1)
-    P.c("cmp_not", "ba_hcl", 0, 1); P.c("cmp_not", "mu_chord_go", 0, 1)
-    P.obj("cmp_gate", "spigot 0", x, y + 230); P.c("cmp_is", "cmp_gate", 0, 1)
-    P.obj("cmp_now", "sel 0 1", x, y + 60); P.c("cmp_var_t", "cmp_now", 0, 0)
-    P.c("cmp_now", "mu_chord_go", 0, 0)
-    P.msg("cmp_start", "start", x + 60, y + 80); P.c("cmp_now", "cmp_start", 1, 0); P.c("cmp_start", "cmp")
     # what it listens to: the scale (after its tables), the key (the same chord, new notes), the music starting,
     # the bars of the clock (the room's brightness first), the tempo and Intensity
     P.obj("cmp_sc", "f", x + 140, y); P.c("mu_scale_t", "cmp_sc", 1, 1); P.c("mu_scale_t", "cmp_sc", 0, 0)
     P.msg("cmp_sc_m", f"scale {BSd}1", x + 140, y + 20); P.c("cmp_sc", "cmp_sc_m"); P.c("cmp_sc_m", "cmp")
     P.msg("cmp_again", "again", x + 220, y + 20); P.c("mu_key_t", "cmp_again", 0, 0); P.c("cmp_again", "cmp")
+    P.msg("cmp_start", "start", x + 60, y + 80); P.c("cmp_start", "cmp")   # (the music starting)
     P.c("mu_on_t", "cmp_start", 1, 0)
     P.obj("cmp_r_tick", "r tick16", x + 300, y); P.obj("cmp_bar_sel", "sel 0", x + 300, y + 20)
     P.obj("cmp_bar_t", "t b b", x + 300, y + 40); P.c("cmp_r_tick", "cmp_bar_sel"); P.c("cmp_bar_sel", "cmp_bar_t")
     P.obj("cmp_br", "value mbright", x + 360, y + 60); P.msg("cmp_br_m", f"bright {BSd}1", x + 360, y + 80)
     P.c("cmp_bar_t", "cmp_br", 1, 0); P.c("cmp_br", "cmp_br_m"); P.c("cmp_br_m", "cmp")
     P.msg("cmp_bar", "bar", x + 300, y + 100); P.c("cmp_bar_t", "cmp_bar", 0, 0); P.c("cmp_bar", "cmp")
-    for k, (rcv, sel) in enumerate((("tempo", "tempo"), ("intensity", "energy"), ("comp_seed", "seed"), ("chord_color", "color"), ("new_pieces", "renew"))):
+    for k, (rcv, sel) in enumerate((("tempo", "tempo"), ("intensity", "energy"), ("comp_seed", "seed"))):
         P.obj(f"cmp_r{k}", f"r {rcv}", x + 460 + 80 * k, y); P.msg(f"cmp_m{k}", f"{sel} {BSd}1", x + 460 + 80 * k, y + 20)
         P.c(f"cmp_r{k}", f"cmp_m{k}"); P.c(f"cmp_m{k}", "cmp")
-    # a chord: the four pad notes and the bass held first, then the anchor goes where Classic's root goes; that
-    # flips the crossfade slot and then asks for the notes (pad: outlet 0, bass: outlet 1, after the slot flip)
-    P.c("cmp", "cmp_gate", 0, 0)
-    P.obj("cmp_s_chord", "s comp_chord", x + 100, y + 250); P.c("cmp_gate", "cmp_s_chord")   # (for the tests)
-    P.obj("cmp_up", "unpack f f f f f f", x, y + 260); P.c("cmp_gate", "cmp_up")
-    P.c("cmp_up", "mu_pad_root_v", 0, 0)
-    P.obj("cmp_ask_pad", "t b", x, y + 300); P.c("mu_pad_root_v", "cmp_ask_pad", 0, 0)
-    P.obj("cmp_ask_bass", "t b", x + 60, y + 300); P.c("mu_pad_root_v", "cmp_ask_bass", 1, 0)
-    for j, (nm, dest, ask) in enumerate([("bass", "ba_fold", "cmp_ask_bass")] + [(f"v{i}", f"mu_pad{i}_hz", "cmp_ask_pad") for i in range(4)]):
-        xx = x + 120 + 70 * j
-        P.obj(f"cmp_{nm}", "f", xx, y + 320); P.c("cmp_up", f"cmp_{nm}", j + 1, 1); P.c(ask, f"cmp_{nm}")
-        P.obj(f"cmp_{nm}_k", "+ 0", xx, y + 340); P.c(f"cmp_{nm}", f"cmp_{nm}_k"); P.c("mu_key_root", f"cmp_{nm}_k", 0, 1)
-        P.obj(f"cmp_{nm}_hz", "mtof", xx, y + 360); P.c(f"cmp_{nm}_k", f"cmp_{nm}_hz")
-        P.obj(f"cmp_{nm}_g", "spigot 0", xx, y + 380); P.c("cmp_is", f"cmp_{nm}_g", 0, 1)
-        P.c(f"cmp_{nm}_hz", f"cmp_{nm}_g"); P.c(f"cmp_{nm}_g", dest)
-    # the section: its register for the melody (0 in Classic), and a report
-    P.obj("cmp_su", "unpack f f", x + 500, y + 230); P.c("cmp", "cmp_su", 1, 0)
-    P.obj("cmp_s_sect", "s comp_section", x + 600, y + 250); P.c("cmp_su", "cmp_s_sect", 0, 0)
-    P.obj("cmp_reg", "f", x + 560, y + 260); P.c("cmp_su", "cmp_reg", 1, 0)
-    P.obj("cmp_reg_on", "*", x + 560, y + 280); P.c("cmp_reg", "cmp_reg_on")
-    P.c("cmp_var_t", "cmp_reg_on", 1, 1)                              # (set before the bang below re-sends)
-    P.obj("cmp_reg_b", "t b", x + 640, y + 60); P.c("cmp_var_t", "cmp_reg_b", 0, 0); P.c("cmp_reg_b", "cmp_reg")
-    P.c("cmp_reg_on", "mu_sreg_add", 0, 1)
     # Melodies that develop (mel_dev, stage 2): instead of a random step from the last chime, each chime asks the
     # composer for the next note of its motif's statements, around the same middle (the brightness note) and on the
     # chord sounding now; the sensors' and the section's registers and Melody phrases still apply after it
@@ -264,16 +226,13 @@ def add_music(P):
     # ---- scale and key: the scale lives in a table; a degree (0, 1, 2...) becomes a pitch ----
     P.obj("mu_scale_tab", "table scale_iv 8", x, 20)
     P.obj("mu_pcdeg_tab", "table pc_deg 12", x + 100, 20)
-    P.obj("mu_dr_tab", "table drift_opts 8", x + 200, 40)
     P.obj("mu_r_scale", "r music_scale", x, 50)
     P.obj("mu_scale_t", "t b f", x, 65)                                  # table first, then re-pick the chord
     sel = P.obj("mu_scale_sel", "sel " + " ".join(str(i) for i in range(len(SCALES))), x, 80)
     P.c("mu_r_scale", "mu_scale_t"); P.c("mu_scale_t", sel, 1, 0)
     for i, iv in enumerate(SCALES):
         pool, contrast = CHORD_POOLS[i]
-        opts = drift_options(iv, pool)
-        text = (f"{BS}; drift_opts 0 {' '.join(str(v) for v in opts)} {BS}; drift_n {len(opts)} {BS}; drift_set 0"
-                f" {BS}; scale_iv 0 {' '.join(str(v) for v in iv)} {BS}; scale_n {len(iv)}"
+        text = (f"{BS}; scale_iv 0 {' '.join(str(v) for v in iv)} {BS}; scale_n {len(iv)}"
                 f" {BS}; pc_deg 0 {' '.join(str(v) for v in pc_to_degree(iv))}"
                 f" {BS}; chord_pool 0 {' '.join(str(v) for v in pool)} {BS}; pool_n {len(pool)}"
                 f" {BS}; pool_x {-1 if contrast is None else contrast}")
@@ -699,7 +658,7 @@ def add_music(P):
     ex("mu_chance", "$f1<$f2", x + 800, 750)
     # (a calm build adds a gentle chance of its own: up to CALM_CHIME_P in 1000 per 0.25 s at its peak, value calmc)
     P.obj("mu_calm_r", "r calm_chimes", x + 1100, 650); P.obj("mu_calm_v", "value calmc", x + 1100, 665); P.c("mu_calm_r", "mu_calm_v")
-    ex("mu_p", f"(320*pow($f1,3)/(1+pow($f2/{DENSITY_BUSY},2))+calmc*{CALM_CHIME_P}+bandch*{BAND_CHIME_P})*$f3/250", x + 900, 720)   # chance in 1000 every 0.25 s: 0 in a quiet room, about 1 in 3 when lively (less when busy lately)
+    ex("mu_p", f"(320*pow($f1,3)/(1+pow($f2/{DENSITY_BUSY},2))+calmc*{CALM_CHIME_P})*$f3/250", x + 900, 720)   # chance in 1000 every 0.25 s: 0 in a quiet room, about 1 in 3 when lively (less when busy lately)
     P.obj("mu_p_dn", "value mdens", x + 980, 690)
     P.obj("mu_rd_p", "value mloud", x + 900, 690)
     P.c("mu_still_t", "mu_roll", 0, 0)
@@ -947,57 +906,15 @@ def add_music(P):
     P.c("mu_chord_go_t", "mu_rd_root", 0, 0); P.c("mu_rd_root", "mu_pad_idx")
     P.obj("mu_pad_pool", "tabread chord_pool", px, 160)
     P.c("mu_pad_idx", "mu_pad_pool")
-    # key drift: the pool's chords moved by the drift (mdrift scale steps); no contrast chord while drifted
-    P.obj("mu_dr_pt", "t f b b", px, 170)
-    P.c("mu_pad_pool", "mu_dr_pt")
-    P.obj("mu_dr_rd1", "value mdrift", px + 60, 172); P.obj("mu_dr_rd2", "value mdrift", px + 120, 172)
-    P.obj("mu_dr_n", "value scale_n", px + 180, 172)
     # now and then the contrast chord instead (when the scale has one)
     P.obj("mu_pad_roll", "random 100", px + 160, 140)
     P.c("mu_chord_go_t", "mu_pad_roll", 2, 0)
     P.obj("mu_r_pool_x", "r pool_x", px + 300, 140)
-    ex("mu_pad_root", f"if($f2<{CONTRAST_PCT}&&$f3>=0&&$f4==0,$f3,$f1)", px, 180)
-    P.c("mu_dr_pt", "mu_pad_root", 0, 0); P.c("mu_pad_roll", "mu_pad_root", 0, 1); P.c("mu_r_pool_x", "mu_pad_root", 0, 2)
-    ex("mu_dr_apply", "($f1+$f2)%$f3", px, 190)
-    P.c("mu_dr_pt", "mu_dr_rd1", 2, 0); P.c("mu_dr_rd1", "mu_pad_root", 0, 3)
-    P.c("mu_dr_pt", "mu_dr_rd2", 1, 0); P.c("mu_dr_rd2", "mu_dr_apply", 0, 1)
-    P.c("mu_dr_pt", "mu_dr_n", 1, 0); P.c("mu_dr_n", "mu_dr_apply", 0, 2)
-    P.c("mu_pad_root", "mu_dr_apply")
+    ex("mu_pad_root", f"if($f2<{CONTRAST_PCT}&&$f3>=0,$f3,$f1)", px, 180)
+    P.c("mu_pad_pool", "mu_pad_root")
+    P.c("mu_pad_roll", "mu_pad_root", 0, 1); P.c("mu_r_pool_x", "mu_pad_root", 0, 2)
     P.obj("mu_pad_root_v", "t f f b", px, 200)
-    P.c("mu_dr_apply", "mu_pad_root_v")
-    # the drift itself: every 3-6 minutes while the music plays (and the switch is on) a new home, often back home
-    P.obj("mu_dr_r_set", "r drift_set", px + 300, 20); P.obj("mu_dr_wr", "value mdrift", px + 300, 40)
-    P.c("mu_dr_r_set", "mu_dr_wr")
-    P.obj("mu_dr_s", "s drift", px + 380, 40)                       # for the tests
-    P.c("mu_dr_r_set", "mu_dr_s")
-    P.obj("mu_dr_del", "del 240000", px + 300, 80)
-    P.obj("mu_dr_sched", "t b b", px + 300, 100)
-    P.obj("mu_dr_rms", "random 1000", px + 380, 110)
-    ex("mu_dr_ms", f"{DRIFT_MIN_S * 1000}+{(DRIFT_MAX_S - DRIFT_MIN_S)}*$f1", px + 380, 130)
-    P.c("mu_dr_sched", "mu_dr_rms", 0, 0); P.c("mu_dr_rms", "mu_dr_ms"); P.c("mu_dr_ms", "mu_dr_del")
-    P.c("mu_on_sel", "mu_dr_sched")                                  # the clock starts with the music
-    P.obj("mu_dr_now", "r drift_now", px + 460, 80)                  # (tests: drift at once)
-    P.obj("mu_dr_fire", "t b b b b b", px + 300, 150)
-    P.c("mu_dr_del", "mu_dr_fire"); P.c("mu_dr_now", "mu_dr_fire")
-    P.obj("mu_dr_on", "r music_drift", px + 560, 80); P.obj("mu_dr_onv", "f 1", px + 560, 110)
-    P.c("mu_dr_on", "mu_dr_onv", 0, 1)
-    P.obj("mu_dr_r1", "random 1000", px + 360, 180); P.obj("mu_dr_r2", "random 1000", px + 420, 180)
-    P.obj("mu_dr_cur", "value mdrift", px + 480, 180); P.obj("mu_dr_nn", "value drift_nv", px + 540, 180)
-    P.obj("mu_dr_rnn", "r drift_n", px + 600, 160); P.obj("mu_dr_wnn", "value drift_nv", px + 600, 180)
-    P.c("mu_dr_rnn", "mu_dr_wnn")
-    ex("mu_dr_pick", f"if($f5==0,0,if($f3!=0&&$f1<{DRIFT_HOME_PCT * 10},0,if(drift_opts[int($f2*$f4/1000)]==$f3,"
-                     f"drift_opts[(int($f2*$f4/1000)+1)%max($f4,1)],drift_opts[int($f2*$f4/1000)])))", px + 300, 210)
-    P.c("mu_dr_fire", "mu_dr_onv", 4, 0); P.c("mu_dr_onv", "mu_dr_pick", 0, 4)
-    P.c("mu_dr_fire", "mu_dr_nn", 3, 0); P.c("mu_dr_nn", "mu_dr_pick", 0, 3)
-    P.c("mu_dr_fire", "mu_dr_cur", 2, 0); P.c("mu_dr_cur", "mu_dr_pick", 0, 2)
-    P.c("mu_dr_fire", "mu_dr_r2", 1, 0); P.c("mu_dr_r2", "mu_dr_pick", 0, 1)
-    P.c("mu_dr_fire", "mu_dr_r1", 0, 0); P.c("mu_dr_r1", "mu_dr_pick")
-    P.obj("mu_dr_out", "t b f", px + 300, 240)
-    P.c("mu_dr_pick", "mu_dr_out"); P.c("mu_dr_out", "mu_dr_wr", 1, 0); P.c("mu_dr_out", "mu_dr_s", 1, 0)
-    P.c("mu_dr_out", "mu_chord_go", 0, 0); P.c("mu_dr_out", "mu_dr_sched", 0, 0)
-    # switching drift off brings the home chord back at once
-    P.obj("mu_dr_off", "sel 0", px + 560, 130); P.msg("mu_dr_home", "0", px + 560, 150)
-    P.c("mu_dr_on", "mu_dr_off"); P.c("mu_dr_off", "mu_dr_home"); P.c("mu_dr_home", "mu_dr_out")
+    P.c("mu_pad_root", "mu_pad_root_v")
     P.obj("mu_chord_s", "s pad_chord", px + 240, 230)               # for the tests
     P.c("mu_pad_root_v", "mu_chord_s", 1, 0)
     P.obj("mu_v_chord_set", "value mchord", px + 80, 200)
@@ -1097,10 +1014,7 @@ def add_music(P):
     P.c("mu_pad_root_v", "ba_in", 1, 0)
     P.obj("ba_roll", "random 100", bx + 80, 250)
     P.c("ba_in", "ba_roll", 1, 0)
-    P.obj("ba_home", "value mdrift", bx + 160, 250)                    # the home note moves with the key drift
-    P.c("ba_in", "ba_home", 2, 0)
-    ex("ba_pick", f"if($f2<{BASS_FOLLOW_PCT},$f1,$f3)", bx, 270)
-    P.c("ba_home", "ba_pick", 0, 2)
+    ex("ba_pick", f"if($f2<{BASS_FOLLOW_PCT},$f1,0)", bx, 270)
     P.c("ba_in", "ba_pick", 0, 0); P.c("ba_roll", "ba_pick", 0, 1)
     ba_deg, ba_hz = degree_to_hz("bad", bx, 290)
     P.c("ba_pick", ba_deg)

@@ -534,7 +534,7 @@ def add_rhythm(P, x):
     # Intensity (the app's macro, 0.5 = as set) makes the patterns calmer or busier: +-INT_DRIVE/2 on the drive
     P.obj("rh_r_int", "r intensity", x + 1600, y + 200); ex("rh_int_o", f"($f1-0.5)*{INT_DRIVE}", x + 1600, y + 215)
     P.obj("rh_int_v", "value rh_intoff", x + 1600, y + 230); P.c("rh_r_int", "rh_int_o"); P.c("rh_int_o", "rh_int_v")
-    ex("rh_dg_i", f"min(max(max($f1,bandp*{BAND_FLOOR})+rh_intoff+rh_band,0),1)", x + 1700, y + 228); P.c("rh_dg", "rh_dg_i", 0, 0)
+    ex("rh_dg_i", "min(max($f1+rh_intoff,0),1)", x + 1700, y + 228); P.c("rh_dg", "rh_dg_i", 0, 0)
     P.obj("rh_drive_v", "value rh_drive", x + 1700, y + 240); P.c("rh_dg_i", "rh_drive_v", 0, 0)
     # only real changes move the level (a ramp restarted every 100 ms never quite arrives), and to 0 always quickly
     P.obj("rh_gain_chg", "change", x + 1800, y + 225)
@@ -640,32 +640,6 @@ def add_rhythm(P, x):
     ex("rh_bar_due", f"$f1%{RH_HOLD_BARS}=={RH_HOLD_BARS - 1}", x + 460, y + 85)
     P.c("rh_bar_cnt", "rh_bar_due"); P.c("rh_bar_due", "rh_hold", 0, 1)
     P.c("rh_bar_cnt_t", "rh_hold", 0, 0); P.c("rh_hold", "rh_bar_t")
-    # The Band Plays (band_plays, DadCraft Oct 21: the band could "dynamically get busier within measures and scale back
-    # down, like a natural build and flow of a song"): each BAND_PHRASE-bar phrase starts pulled back and builds bar by
-    # bar (rh_band on the drive: more ghost notes, extra kicks, longer hats, busier picks), its last bar ends in a snare
-    # fill (rh_bfill), then the next phrase drops back. Each phrase is a little bigger, smaller or the same (bplift).
-    # bandch: the standing-still chimes' own chance, rising over the phrase. (rh_bar_cnt here is the coming bar.)
-    P.obj("bp_r", "r band_plays", x + 1300, y - 40); P.obj("bp_v", "value bandp", x + 1300, y - 25); P.c("bp_r", "bp_v")
-    P.obj("bp_t", "t f f", x + 1300, y + 70); P.c("rh_bar_cnt", "bp_t")
-    ex("bp_first", f"$f1%{BAND_PHRASE}==1", x + 1400, y + 85); P.obj("bp_first_s", "sel 1", x + 1400, y + 95)
-    # (expr's random: a new [random] would take the next seed and reshuffle every later [random]'s sequence)
-    ex("bp_lift", f"(random(0,3)-1)*{BAND_LIFT}", x + 1400, y + 115)
-    P.obj("bp_lift_v", "value bplift", x + 1400, y + 125)
-    P.c("bp_t", "bp_first", 1, 0); P.c("bp_first", "bp_first_s"); P.c("bp_first_s", "bp_lift")
-    P.c("bp_lift", "bp_lift_v")
-    # (a phrase starts on a bar that picks new patterns, which are held RH_HOLD_BARS: bars 1, 3, 5... of the count)
-    b = f"(($f1+{BAND_PHRASE - 1})%{BAND_PHRASE})"
-    ex("bp_arc", f"bandp*({BAND_ARC[0]}+{BAND_ARC[1]}*pow({b}/{BAND_PHRASE - 1},{BAND_ARC[2]})+bplift) ; "
-                 f"bandp*({b}=={BAND_PHRASE - 1}) ; bandp*(0.5+{b}/{BAND_PHRASE - 1})".replace(" ; ", " " + BS + "; "),
-       x + 1300, y + 140)
-    P.c("bp_t", "bp_arc", 0, 0)
-    ex("bp_ph", f"{b}", x + 1500, y + 140); P.obj("bp_ph_s", "s band_phase", x + 1500, y + 155)   # (for the tests)
-    P.c("bp_t", "bp_ph", 0, 0); P.c("bp_ph", "bp_ph_s")
-    # (the drive takes the new bar's place at once: the bar's patterns are picked right after this, rh_bar_cnt_t)
-    P.obj("bp_redrive", "t b f", x + 1300, y + 150); P.c("bp_arc", "bp_redrive", 0, 0); P.c("bp_redrive", "rh_dg_i", 0, 0)
-    for k, nm in enumerate(("rh_band", "rh_bfill", "bandch")):
-        P.obj(f"bp_out{k}", f"value {nm}", x + 1300 + 70 * k, y + 160)
-        P.c("bp_redrive" if k == 0 else "bp_arc", f"bp_out{k}", 1 if k == 0 else k, 0)
     P.obj("rh_bar", "f", x + 300, y + 100); P.obj("rh_bar_add", "+ 1", x + 340, y + 100)
     P.c("rh_bar_t", "rh_bar", 4, 0); P.c("rh_bar", "rh_bar_add"); P.c("rh_bar_add", "rh_bar", 0, 1)
     P.obj("rh_dr_rd", "value rh_drive", x + 420, y + 100)
@@ -725,7 +699,7 @@ def add_rhythm(P, x):
     sv = f"rh_spat[$f3*16+{st}]"
     hv = f"rh_hpat[$f4*16+{st}]"
     kick = f"if({kv}>0,{kv}*($f7>=40),($f1%2==0)*($f1>0)*($f7<10+20*$f6)*0.55)"
-    snare = f"if(($f5||(rh_bfill&&$f6>0.2))&&$f1>=12,rh_fpat[$f1-12]*(0.75+0.25*$f8/1000),if({sv}>0,{sv},($f8<8+17*$f6)*0.22))"
+    snare = f"if($f5&&$f1>=12,rh_fpat[$f1-12]*(0.75+0.25*$f8/1000),if({sv}>0,{sv},($f8<8+17*$f6)*0.22))"
     # breakbeat: a long fill over the last two beats; a roll's hits on the 16ths (its in-between 32nds come below)
     snare = f"if(rh_bfl>0&&$f1>=8,rh_flong[$f1-8]*(0.75+0.25*$f8/1000),{snare})"
     in_roll = "(rh_roll>0&&$f1>=rh_roll&&$f1<rh_roll+2)"
