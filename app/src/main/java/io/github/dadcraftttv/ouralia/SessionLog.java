@@ -37,7 +37,7 @@ import java.util.concurrent.Executors;
 final class SessionLog {
     static final String PARAM = "session_log";
     /** What the patch already sends that the log keeps (subscribed by the host). */
-    static final String[] RECEIVERS = {"chime_deg", "pad_chord", "drum_kick", "drum_snare",
+    static final String[] RECEIVERS = {"chime_deg", "comp_chord", "comp_section", "drum_kick", "drum_snare",
             "heard_deg", "heard_off", "fs_caught", "fs_levels", "room_feat", "room_kind", "tempo", "tick16"};
     private static final java.util.Set<String> KEPT = new java.util.HashSet<>(Arrays.asList(RECEIVERS));
     /** The newest sessions are kept up to this much in all; past it the oldest go. A session is ~6 MB an hour, so
