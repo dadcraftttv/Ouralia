@@ -122,6 +122,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         look = new Styler(this, theme);
         ParamStore.loadOnce(this);
+        SoundKindsRunner.carryRoomSwitch(this);   // (the Nov 1 Dev switch becomes the Music setting)
         SceneLibrary.installBuiltIns(this, SceneSettings.scenesDir(this));
         audioManager = getSystemService(AudioManager.class);
 

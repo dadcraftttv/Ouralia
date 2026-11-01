@@ -166,7 +166,7 @@ with the room listener; DadCraft, Oct 31: "yes, raise the limit now").
 
 A short walk (Oct 31, 17 min, mostly in a pocket) and two home runs (Nov 1). Walk: voices 79%, quiet 15%, steps 4%, birds 1%, no traffic or wind; the voices were real (three people walking and talking). Home, 73 min (laundry, dishes, talking): quiet 78%, voices 13%, water 8% (the sink running: right). Music playing in the room, 14 min: music 67%, voices 25%. Judgements ~9.5 ms throughout. Dish clatter has no kind and reads as quiet or steps. **DadCraft (Nov 1): "mostly right and quick enough." 4d passes; step 4 passes all four gates.** Next: choose the first musical response together.
 
-## Step 5: Make Room for Music (Nov 1, branch `sound-kinds`, Dev only; his listen next)
+## Step 5: Make Room for Music (Nov 1, branch `sound-kinds`, Dev only; a Music setting)
 
 DadCraft picked the first musical response (Nov 1: "let's go with 3, music in the room"): while music plays in the
 room, Ouralia steps back. Built behind a second Dev switch in Diagnostics, "Make Room for Music" (off by default;
@@ -181,4 +181,10 @@ it only works with Sound kinds on).
   off), so the room's music doesn't set off notes. Events log: "Room music: heard, the music steps back" / "gone, the
   music comes back" (logged with the switch off too). test_patch "make room for music": -6.0 dB, halfway -2.5,
   back 0.00; knocks at 0.08 get 5 chimes and 3 bells off, none on, loud ones (0.5) still get some.
+- **A setting (DadCraft, Nov 1: "i'm fine with that level of pull back as long the user can turn it on or off as they
+  like"):** the Diagnostics switch became the Music card's "Make Room for Music" (`room_make`, off by default, not in
+  presets or the dice; his old switch value carried over once). Shown only where sound kinds can run (Ouralia Dev,
+  `Param.soundKinds()`). On, it starts the listening itself: the Sound kinds switch in Diagnostics is no longer
+  needed (it stays, for watching the kinds). AudioService's loop calls `SoundKindsRunner.roomTick()`, so a row, a
+  reset or a preset switches it at once.
 

@@ -224,6 +224,12 @@ final class Params {
             // then eases back (CalmBuild.java). Off by default.
             new Param("calm_build", "Slow Bloom (standing still, the music slowly grows)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd(),
+            // Make Room for Music (Nov 1, step 5): while sound kinds hears music in the room, the music and beat step
+            // back 6 dB and chimes need bigger sounds. A setting since Nov 1 (DadCraft: "i'm fine with that level of pull
+            // back as long the user can turn it on or off as they like"), off by default. On, it listens by itself (no
+            // Sound kinds switch needed). Only where sound kinds can run, kept out of presets and the dice.
+            new Param("room_make", "Make Room for Music (music playing in the room: the music and beat step back)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
             // Notes only for bigger sounds (DadCraft, Oct 30: typing "just sounds like it's random notes responding with
             // no musical semblance"): small sudden sounds get no chime or found bell, only the found drums and groove.
             // On by default at his 20.5 dB (Oct 31), still a slider: "each manufacturer could set mic values differently".

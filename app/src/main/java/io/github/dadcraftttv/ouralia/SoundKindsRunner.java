@@ -55,23 +55,43 @@ final class SoundKindsRunner {
         return available() && c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(ON, false);
     }
 
-    /** Make Room for Music (Nov 1, Dev): the music steps back while sound kinds hears music in the room. */
-    static boolean roomEnabled(Context c) {
-        return available() && c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(ROOM, false);
+    /** Make Room for Music (Nov 1): the music steps back while sound kinds hears music in the room. The Music
+     *  setting {@link #ROOM_ID} since Nov 1 (was a Dev switch in Diagnostics). */
+    static final String ROOM_ID = "room_make";
+
+    static boolean roomEnabled() {
+        return available() && ParamStore.get(ROOM_ID) >= 0.5f;
     }
 
-    /** Its Diagnostics switch: stored, and the patch told at once (only stepping back if music is heard now). */
-    static void setRoomEnabled(Context c, boolean on) {
-        c.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putBoolean(ROOM, on).apply();
-        boolean now;
+    /** The old Diagnostics switch's stored value moves to the setting, once (stored values are kept). */
+    static void carryRoomSwitch(Context c) {
+        android.content.SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        if (p.contains(ROOM)) {
+            ParamStore.set(ROOM_ID, p.getBoolean(ROOM, false) ? 1f : 0f);
+            ParamStore.save(c);
+            p.edit().remove(ROOM).apply();
+        }
+    }
+
+    /** Called each tick of the sound's loop: the setting changed (row, preset, reset): listen or not, and tell the
+     *  patch at once (only stepping back if music is heard now). */
+    static void roomTick() {
+        boolean on = roomEnabled();
+        boolean now, listen;
         synchronized (lock) {
-            roomOn = on;
-            now = kinds != null && kinds.roomMusic();
-            if (app == null) {
+            if (on == roomOn || app == null) {
                 return;
             }
+            roomOn = on;
+            now = kinds != null && kinds.roomMusic();
+            listen = on || enabled(app);
         }
         PdBase.sendFloat("room_music", on && now ? 1 : 0);
+        if (listen) {
+            start();
+        } else {
+            stop("Make Room for Music off");
+        }
     }
 
     /** The Diagnostics switch: stored, and started or stopped at once if the built-in patch is playing. */
@@ -84,7 +104,7 @@ final class SoundKindsRunner {
         }
         if (on) {
             start();
-        } else {
+        } else if (!roomEnabled()) {   // (Make Room for Music on keeps listening)
             stop("switched off");
         }
     }
@@ -96,9 +116,9 @@ final class SoundKindsRunner {
             app = c.getApplicationContext();
             log = logger;
             rate = sampleRate;
-            roomOn = roomEnabled(c);
+            roomOn = roomEnabled();
         }
-        if (enabled(c)) {
+        if (enabled(c) || roomOn) {
             start();
         }
     }

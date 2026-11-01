@@ -24,6 +24,8 @@ final class Param {
     boolean inPreset = true;
     /** On/off switch: values are 0 or 1 and the UI shows a switch instead of a slider. */
     boolean toggle = false;
+    /** Shown only where sound kinds can run (Ouralia Dev: the model is there). */
+    boolean soundKinds = false;
     /** False for app-only settings (e.g. nudge strength) that Pd never sees. */
     boolean sendToPd = true;
     /** Which collapsible group on the screen this belongs to (see Params.SECTIONS). */
@@ -89,6 +91,11 @@ final class Param {
 
     Param inSection(String sectionId) {
         section = sectionId;
+        return this;
+    }
+
+    Param soundKinds() {
+        soundKinds = true;
         return this;
     }
 
