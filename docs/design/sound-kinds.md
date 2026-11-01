@@ -188,3 +188,20 @@ it only works with Sound kinds on).
   needed (it stays, for watching the kinds). AudioService's loop calls `SoundKindsRunner.roomTick()`, so a row, a
   reset or a preset switches it at once.
 
+
+## Step 6 options: voices (Nov 1, his pick next)
+
+DadCraft (Nov 1: "yes, write up the voice options"). Voices were 79% of his walk and 13% at home, and the model
+names them best (13/13). Each option sits behind its own switch, off by default, decided by the voices share of a
+short window (~8 s, faster than Make Room's ~20 s, as talk starts and stops more often than a song).
+1. **Hush for Talk:** while people talk, the music and beat step back (about 4 dB, quicker than Make Room), chimes
+   need bigger sounds and Harmony stops answering the pitch of speech. Reuses step 5. Risk: on a walk with
+   company the music would sit back most of the time.
+2. **Answer in the Gaps:** while someone talks, the music holds still (no new chimes, the pad held); in the pause
+   after a voice (0.5-2 s quieter, from the mic level, as the model judges only every 0.25 s) a short phrase of
+   2-3 chimes answers in key, using Trailing Melody's code. The most musical, and the riskiest: notes during a
+   conversation can annoy.
+3. **Room for Words:** the level stays, the sound makes way: the generated music dips only in the speech band
+   (about 300 Hz-3 kHz, 6 dB), so voices stay clear and the bass, beat and chime shimmer stay full. Comes back
+   when the talk ends. Least intrusive, closest to how a mix makes room for a singer.
+Recommended first: 3 (fits a talking walk without hiding the music); 2 after it if he wants the music to take part.
