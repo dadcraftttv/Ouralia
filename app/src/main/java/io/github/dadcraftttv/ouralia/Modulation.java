@@ -287,6 +287,9 @@ final class Modulation {
         if (i == null || !moving[i]) {
             return base;
         }
+        if (p.choiceMoves && base <= p.min) {
+            return base;   // a moving dropdown set to Off stays off
+        }
         float baseNorm = p.toNorm(base);
         // Stay inside the safe range, but never fight a slider the user put outside it.
         float lo = Math.min(p.toNorm(p.randMin), baseNorm);
