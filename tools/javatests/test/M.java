@@ -13,7 +13,7 @@ public class M {
   static float max(List<Float> l){ float m=-1e9f; for(float f:l) m=Math.max(m,f); return m; }
   public static void main(String[] a) throws Exception {
     // every movable slider has movement/speed/depth params and its section a switch
-    for(Param p:Params.MOVABLE){ check(!p.toggle&&p.sendToPd&&p.choices==null,p.id+" movable is a Pd slider");
+    for(Param p:Params.MOVABLE){ check(!p.toggle&&p.sendToPd&&(p.choices==null||p.choiceMoves),p.id+" movable is a Pd slider (or a moving dropdown)");
       Param mv=Params.byId(Params.moverId(p.id,"mv")); check(mv!=null&&mv.choices.length==16&&mv.section.equals(p.section)&&Params.byId(Params.moverId(p.id,"mvspeed"))!=null&&Params.byId(Params.moverId(p.id,"mvdepth"))!=null&&Params.byId(Params.moversSwitchId(p.section))!=null,p.id+" has mover params + section switch"); }
     check(Params.MOVABLE.size()>=38,"at least the 38 old targets are movable: "+Params.MOVABLE.size());
     check(Params.byId("mover1_target")==null,"old shared movers gone");
@@ -93,6 +93,15 @@ public class M {
       Param on=Params.onSwitch(sec); if(on!=null) switches++; if(has&&on==null) missing+=sec.id+" "; }
     check(switches==17&&missing.isEmpty(),"every card's on/off switch is found for its header ("+switches+" cards"+(missing.isEmpty()?"":", missing: "+missing)+")");
     org.json.JSONObject none=new org.json.JSONObject(); none.put("wet",0.3); Params.upgradeLegacyMovers(none); check(!none.has("echo_movers"),"no legacy movers: nothing added");
+    // Trailing Melody's mover (DadCraft, Nov 2: "random slides up and down the amount scale"): moves between 1 and
+    // 5 notes, and Off stays off
+    check(Params.byId(Params.moverId("chime_trail","mv"))!=null,"Trailing Melody has a mover");
+    ParamStore.set("chime_trail",3f); setMover("chime_trail",2,1f,1f); Modulation.reset(); sent.clear(); run(20,0.033);
+    List<Float> tr=sent.get("chime_trail");
+    check(tr!=null&&min(tr)>=1f-1e-4&&max(tr)<=5f+1e-4&&Math.round(min(tr))<=2&&Math.round(max(tr))>=4,"trail drifts within 1..5 notes: "+(tr==null?"none":min(tr)+".."+max(tr)));
+    ParamStore.set("chime_trail",0f); sent.clear(); run(5,0.033); tr=sent.get("chime_trail");
+    check(tr!=null&&max(tr)==0f,"trail at Off stays off with its mover on");
+    off("chime_trail"); ParamStore.set(Params.moversSwitchId("music"),0);
     System.out.println(fails==0?"ALL PASSED":(fails+" FAILED")); System.exit(fails==0?0:1);
   }
 }

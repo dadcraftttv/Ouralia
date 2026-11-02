@@ -243,6 +243,12 @@
   any chime; TRAIL_GAP_MS 450 to the first, each gap x TRAIL_SLOW 1.3, each note x TRAIL_VEL 0.6. The next sudden
   sound stops the tail and starts its own. No new [random], so with it Off every test and Classic is unchanged
   (check_classic_parity 55/55). Pd test "Trailing Melody" (3: notes at 0.02, 0.46, 1.04, 1.80 s).
+  **Left to the user, with a mover (DadCraft, Nov 2):** "i can't make up my mind between 3 or 5, which tells me
+  something: that it should be left as is and users can determine which amount they like"; Off stays the default.
+  Then: "that should have a Movers, to allow for random slides up and down the amount scale, just to add a touch of
+  flux to it." Dropdowns had no movers; `Param.movingChoice()` gives one its mover (Java only, `Modulation.moved`):
+  it swings within `rand(1, 5)` notes, Pd's `int($f1+0.5)` takes the count when each chime starts, and Off stays
+  off (the mover never switches the tail on). Java test M "Trailing Melody has a mover".
   **Fixed, no switch (DadCraft, Oct 31):** "rather than make them switches on by default, lets make those the default
   behavior period, no switch." Then for the notes: "we should set the 20 db threshold on the slider, but users should
   have the ability to move it as they need or want, since each manufacturer could set mic values differently." So

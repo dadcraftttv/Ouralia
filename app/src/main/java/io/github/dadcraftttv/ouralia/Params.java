@@ -278,7 +278,10 @@ final class Params {
             // Trailing Melody (DadCraft, Oct 31: "a little trailing melody" after the sounds stop): a chime that
             // answered a sudden sound carries on for a few notes, softer and slower. Off by default until he says.
             new Param("chime_trail", "Trailing Melody (notes that follow a chime)", 0f, 5f, 0f, "", Param.Curve.LINEAR)
-                    .choices("Off", "1 note", "2 notes", "3 notes", "4 notes", "5 notes").inSection("music"),
+                    .choices("Off", "1 note", "2 notes", "3 notes", "4 notes", "5 notes").inSection("music")
+                    // its mover (DadCraft, Nov 2: "random slides up and down the amount scale, just to add a touch
+                    // of flux") wanders between 1 and 5 notes, each chime taking the count rounded at that moment
+                    .rand(1f, 5f).movingChoice(),
             new Param("chime_char", "Chime Character (ring to your sound)", 0f, 1f, 0.5f, "", Param.Curve.LINEAR)
                     .inSection("music").rand(0f, 1f).resetWhenAbsent(),
             // Found note ring (prototype, Oct 16): what a found melody note rings with. String = our own C object
@@ -639,9 +642,9 @@ final class Params {
         return paramId + "_" + field;
     }
 
-    /** True for sliders that can have a mover: not switches, dropdowns or app-only settings. */
+    /** True for sliders that can have a mover: not switches, dropdowns (but a movingChoice) or app-only settings. */
     private static boolean movable(Param p) {
-        return !p.toggle && p.choices == null && p.sendToPd && p.movable;
+        return !p.toggle && (p.choices == null || p.choiceMoves) && p.sendToPd && p.movable;
     }
 
     /**

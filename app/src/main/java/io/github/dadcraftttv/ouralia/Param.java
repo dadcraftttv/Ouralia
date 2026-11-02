@@ -42,6 +42,9 @@ final class Param {
     boolean dcs = false;
     /** False: no mover for this slider (settings about the mic, where automatic wandering would only confuse). */
     boolean movable = true;
+    /** A dropdown whose mover slides it up and down its steps (Trailing Melody, DadCraft Nov 2). Its first step
+     *  (Off) stays off: the mover only moves it once it's on. */
+    boolean choiceMoves = false;
     /** Sliders with the same budget share it: together they may not go past their max (the glitch matrix: 100%). */
     String budget;
 
@@ -60,6 +63,11 @@ final class Param {
     Param rand(float lo, float hi) {
         randMin = lo;
         randMax = hi;
+        return this;
+    }
+
+    Param movingChoice() {
+        choiceMoves = true;
         return this;
     }
 
