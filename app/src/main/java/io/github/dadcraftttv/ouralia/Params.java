@@ -230,6 +230,11 @@ final class Params {
             // Sound kinds switch needed). Only where sound kinds can run, kept out of presets and the dice.
             new Param("room_make", "Make Room for Music (music playing in the room: the music and beat step back)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
+            // Answer in the Gaps (DadCraft, Nov 1, step 6: "go with 2"): while sound kinds hears people talking, the
+            // chimes and room bells hold still and the chords and sections wait, then in each pause after someone
+            // speaks 2-3 chimes answer in key. Off by default, only where sound kinds can run, like Make Room.
+            new Param("voice_gaps", "Answer in the Gaps (people talking: the chimes wait, then answer in the pauses)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
             // Notes only for bigger sounds (DadCraft, Oct 30: typing "just sounds like it's random notes responding with
             // no musical semblance"): small sudden sounds get no chime or found bell, only the found drums and groove.
             // On by default at his 20.5 dB (Oct 31), still a slider: "each manufacturer could set mic values differently".

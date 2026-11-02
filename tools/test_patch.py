@@ -97,7 +97,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 jp = java_params()
 patch_text = open(PATCH).read()
 receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room", "rm_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
-    "step", "sk_on", "room_music", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+    "step", "sk_on", "room_music", "voice_talk", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2964,6 +2964,36 @@ def rm_count(amp, rm):
 rm_c = [(amp, rm_count(amp, 0), rm_count(amp, 1)) for amp in (0.02, 0.04, 0.08, 0.5)]
 rm_ok = rm_c[2][1][0] > 0 and rm_c[2][2] == (0, 0) and rm_c[3][2][0] > 0 and all(c[2][0] <= c[1][0] for c in rm_c)
 check(rm_ok, "make room for music: knocks need %d dB more to get a chime or bell (amp, off, on: %s)" % (RM_BIG_DB, rm_c))
+
+# ---- 7z4. answer in the gaps: while people talk the chimes wait, then answer in the pauses (Nov 1, step 6) ----
+from patchgen.constants import TALK_GAP_MS, TALK_NOTE_MS
+def tg_run(talk, pause, on=1, rounds=4, speech=1.5):   # "speech" (noise, 1.5 s) then a pause, a few times: answers, chime times
+    e = fresh(music_on=on, music_pad=0, music_arp=0, music_res=0, wet=0, beat_level=0, chime_answer=1)
+    e.listen("talk_answer", "chime_deg"); r = np.random.default_rng(5)
+    e.run((r.standard_normal(4 * SR) * 0.0005).astype(np.float32)); e.send("voice_talk", talk)
+    for k in ("talk_answer", "chime_deg"):
+        e.heard.pop(k, None)
+    seg = []
+    for _ in range(rounds):
+        seg.append((r.standard_normal(int(speech * SR)) * 0.02).astype(np.float32))
+        seg.append((r.standard_normal(int(pause * SR)) * 0.0005).astype(np.float32))
+    e.run(np.concatenate(seg)); return len(e.heard.get("talk_answer", [])), len(e.heard.get("chime_deg", []))
+tg = {"talk": tg_run(1, 1.5), "long talk": tg_run(1, 1.5, speech=2.5), "no talk": tg_run(0, 1.5), "short pauses": tg_run(1, 0.3), "music off": tg_run(1, 1.5, on=0)}
+check(tg["talk"] == (4, 8) and tg["long talk"] == (4, 12) and tg["no talk"][0] == 0 and tg["short pauses"][0] == 0 and tg["music off"] == (0, 0),
+      "answer in the gaps: each pause of %d ms after speech gets 2 chimes (3 after 2 s of it), none without talk, in short pauses or with Music off (answers, chimes: %s)"
+      % (TALK_GAP_MS, tg))
+def tg_hold(talk):   # knocks while people talk: no chime or bell of their own (answers aside), the still pattern quiet
+    e = fresh(music_on=1, music_pad=0, music_arp=0.2, music_res=0.8, res_src=1, wet=0, beat_level=0, note_big=0, chime_answer=0)
+    e.listen("chime_deg", "rnf_note", "talk_answer"); r = np.random.default_rng(9); e.run((r.standard_normal(4 * SR) * 0.0005).astype(np.float32))
+    e.send("voice_talk", talk)
+    for k in ("chime_deg", "rnf_note", "talk_answer"):
+        e.heard.pop(k, None)
+    x = (r.standard_normal(10 * SR) * 0.003).astype(np.float32); m = int(0.03 * SR)
+    for k in range(8):
+        i = int((1 + 1.1 * k) * SR); x[i:i + m] += r.standard_normal(m) * np.exp(-np.arange(m) / (m / 5)) * 0.3
+    e.run(x); return len(e.heard.get("chime_deg", [])), len(e.heard.get("rnf_note", [])), len(e.heard.get("talk_answer", []))
+th = (tg_hold(0), tg_hold(1))
+check(th[0][0] > 0 and th[1][1] == 0 and th[1][0] <= 3 * th[1][2], "answer in the gaps: talk holds the chimes, the still pattern and the room bells (chimes, bells, answers: off %s, on %s)" % th)
 
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)

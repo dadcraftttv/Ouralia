@@ -170,7 +170,10 @@ def add_composer(P, x, y):
     P.obj("cmp_bar_t", "t b b", x + 300, y + 40); P.c("cmp_r_tick", "cmp_bar_sel"); P.c("cmp_bar_sel", "cmp_bar_t")
     P.obj("cmp_br", "value mbright", x + 360, y + 60); P.msg("cmp_br_m", f"bright {BSd}1", x + 360, y + 80)
     P.c("cmp_bar_t", "cmp_br", 1, 0); P.c("cmp_br", "cmp_br_m"); P.c("cmp_br_m", "cmp")
-    P.msg("cmp_bar", "bar", x + 300, y + 100); P.c("cmp_bar_t", "cmp_bar", 0, 0); P.c("cmp_bar", "cmp")
+    P.msg("cmp_bar", "bar", x + 300, y + 100); P.c("cmp_bar", "cmp")
+    P.obj("cmp_talk_g", "spigot 1", x + 300, y + 70); P.c("cmp_bar_t", "cmp_talk_g", 0, 0); P.c("cmp_talk_g", "cmp_bar")
+    P.obj("cmp_talk_r", "r voice_talk", x + 380, y + 50); P.obj("cmp_talk_not", "== 0", x + 380, y + 60)   # (Answer in
+    P.c("cmp_talk_r", "cmp_talk_not"); P.c("cmp_talk_not", "cmp_talk_g", 0, 1)   # the Gaps: the chords wait for the talk)
     for k, (rcv, sel) in enumerate((("tempo", "tempo"), ("intensity", "energy"), ("comp_seed", "seed"), ("chord_color", "color"), ("new_pieces", "renew"))):
         P.obj(f"cmp_r{k}", f"r {rcv}", x + 460 + 80 * k, y); P.msg(f"cmp_m{k}", f"{sel} {BSd}1", x + 460 + 80 * k, y + 20)
         P.c(f"cmp_r{k}", f"cmp_m{k}"); P.c(f"cmp_m{k}", "cmp")
@@ -607,7 +610,7 @@ def add_music(P):
     P.obj("mu_nb_r", "r note_big", x + 480, 470); P.obj("mu_nb_v", "value nbig", x + 480, 485); P.c("mu_nb_r", "mu_nb_v")
     P.obj("mu_nb_t", "t b", x + 400, 505)
     nbt = f"(nbig*(nbig>0)+{RM_BIG_DB}*rmus)"   # (+RM_BIG_DB while music plays in the room: Make Room for Music)
-    ex("mu_nb_chk", f"({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt})+$f1*0", x + 400, 515)
+    ex("mu_nb_chk", f"(({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt}))*(vtalk<0.5)+$f1*0", x + 400, 515)   # (people talking: Answer in the Gaps)
     P.obj("mu_nb_sel", "sel 1", x + 400, 525)
     P.c(handling_gate(P, "mu_ons_hg", "mu_onset_sel", x + 400, 480, wait=False), "mu_nb_t")   # not handling noise
     P.c("mu_nb_t", "mu_nb_chk"); P.c("mu_nb_chk", "mu_nb_sel"); P.c("mu_nb_sel", "mu_ons_gate")
@@ -679,6 +682,7 @@ def add_music(P):
     P.obj("tr_ngt", "t f f", tx, ty + 215); P.obj("tr_ngw", "value trg", tx + 30, ty + 230)
     P.c("tr_fire", "tr_ng", 0, 0); P.c("tr_ng", "tr_ng2"); P.c("tr_ng2", "tr_ngt"); P.c("tr_ngt", "tr_ngw", 1, 0)
     P.c("tr_ngt", "tr_chk", 0, 0)
+    add_talk_gaps(P, x + 450, 1120, ex)
 
     # Path 2, a slow pattern while you are still: now and then a chime, more often in a livelier room.
     P.obj("mu_still_tick", "metro 250", x + 800, 600)
@@ -699,7 +703,7 @@ def add_music(P):
     ex("mu_chance", "$f1<$f2", x + 800, 750)
     # (a calm build adds a gentle chance of its own: up to CALM_CHIME_P in 1000 per 0.25 s at its peak, value calmc)
     P.obj("mu_calm_r", "r calm_chimes", x + 1100, 650); P.obj("mu_calm_v", "value calmc", x + 1100, 665); P.c("mu_calm_r", "mu_calm_v")
-    ex("mu_p", f"(320*pow($f1,3)/(1+pow($f2/{DENSITY_BUSY},2))+calmc*{CALM_CHIME_P}+bandch*{BAND_CHIME_P})*$f3/250", x + 900, 720)   # chance in 1000 every 0.25 s: 0 in a quiet room, about 1 in 3 when lively (less when busy lately)
+    ex("mu_p", f"(320*pow($f1,3)/(1+pow($f2/{DENSITY_BUSY},2))+calmc*{CALM_CHIME_P}+bandch*{BAND_CHIME_P})*$f3/250*(vtalk<0.5)", x + 900, 720)   # chance in 1000 every 0.25 s: 0 in a quiet room, about 1 in 3 when lively (less when busy lately)
     P.obj("mu_p_dn", "value mdens", x + 980, 690)
     P.obj("mu_rd_p", "value mloud", x + 900, 690)
     P.c("mu_still_t", "mu_roll", 0, 0)
@@ -1239,6 +1243,60 @@ def add_music(P):
     P.sig2("mu_out", "*~", "mu_mix", mon, px, 960)
     return "mu_out"
 
+def add_talk_gaps(P, gx, gy, ex):
+    """Answer in the Gaps (DadCraft, Nov 1, step 6): "voice_talk 1" from the app (sound kinds hears people talking)
+    holds the chimes (their checks read vtalk); here, every TALK_TICK_MS, the level above the room's quiet tells
+    speech from a pause. A pause of TALK_GAP_MS after at least TALK_SPEECH_MS of speech gets an answer: 2 or 3
+    chimes into mu_deg (in key, a step or two apart like any chime), each softer and a little later."""
+    P.obj("tg_r", "r voice_talk", gx, gy); P.obj("tg_v", "value vtalk", gx, gy + 15); P.c("tg_r", "tg_v")
+    P.obj("tg_lb", "loadbang", gx + 80, gy); P.msg("tg_0", "0", gx + 80, gy + 15); P.obj("tg_v0", "value vtalk", gx + 80, gy + 30)
+    P.c("tg_lb", "tg_0"); P.c("tg_0", "tg_v0")
+    P.obj("tg_tick", f"metro {TALK_TICK_MS}", gx, gy + 45); P.c("mu_load", "tg_tick")
+    # loud now? (1 = speech or any sound, 0 = a pause), then: the pause's length, the speech since the last answer
+    ex("tg_loud", f"(mlev-min(max(mfloor,46),58))>={TALK_GAP_DB}", gx, gy + 60); P.c("tg_tick", "tg_loud")
+    P.obj("tg_t", "t f f f", gx, gy + 75); P.c("tg_loud", "tg_t")
+    ex("tg_q", f"if($f1,0,min(tgq+{TALK_TICK_MS},60000))", gx + 160, gy + 90); P.obj("tg_qw", "value tgq", gx + 160, gy + 105)
+    P.c("tg_t", "tg_q", 2, 0); P.c("tg_q", "tg_qw")
+    ex("tg_s", f"if($f1,min(tgs+{TALK_TICK_MS},60000),tgs)", gx + 80, gy + 90); P.obj("tg_sw", "value tgs", gx + 80, gy + 105)
+    P.c("tg_t", "tg_s", 1, 0); P.c("tg_s", "tg_sw")
+    ex("tg_go", f"(vtalk>0.5)*(tgq>={TALK_GAP_MS})*(tgq<{TALK_GAP_MS + TALK_TICK_MS})*(tgs>={TALK_SPEECH_MS})+$f1*0", gx, gy + 90)
+    P.c("tg_t", "tg_go", 0, 0)
+    P.obj("tg_sel", "sel 1", gx, gy + 105); P.c("tg_go", "tg_sel")
+    P.obj("tg_on", "spigot", gx, gy + 120); P.c("tg_sel", "tg_on"); P.c("mu_r_on", "tg_on", 0, 1)   # (Music Enabled)
+    P.obj("tg_fire", "t b b b b b", gx, gy + 135); P.c("tg_on", "tg_fire")
+    P.msg("tg_s0", "0", gx + 240, gy + 150); P.obj("tg_s0w", "value tgs", gx + 240, gy + 165)        # speech counted again
+    P.c("tg_fire", "tg_s0", 3, 0); P.c("tg_s0", "tg_s0w")
+    P.msg("tg_one", "1", gx + 300, gy + 150); P.obj("tg_send", "s talk_answer", gx + 300, gy + 165)   # (for the tests)
+    P.c("tg_fire", "tg_one", 3, 0); P.c("tg_one", "tg_send")
+    # the phrase: notes left after the first (2 after TALK_LONG_MS of speech, else 1: read before the count resets;
+    # no [random], which would reshuffle every later one), the next velocity, the next gap
+    ex("tg_rn", f"1+(tgs>={TALK_LONG_MS})+$f1*0", gx + 160, gy + 150)
+    P.obj("tg_wn", "value tgn", gx + 160, gy + 180); P.c("tg_fire", "tg_rn", 4, 0); P.c("tg_rn", "tg_wn")
+    P.msg("tg_g0", str(TALK_NOTE_MS), gx + 240, gy + 180); P.obj("tg_wg", "value tgg", gx + 240, gy + 195)
+    P.c("tg_fire", "tg_g0", 2, 0); P.c("tg_g0", "tg_wg")
+    ex("tg_v1", f"{TALK_VEL}*phush+$f1*0", gx + 80, gy + 150); P.obj("tg_v1t", "t f f", gx + 80, gy + 165)
+    P.obj("tg_wv", f"* {TALK_VEL_STEP}", gx + 120, gy + 180); P.obj("tg_wvw", "value tgv", gx + 120, gy + 195)
+    P.c("tg_fire", "tg_v1", 1, 0); P.c("tg_v1", "tg_v1t"); P.c("tg_v1t", "tg_wv", 1, 0); P.c("tg_wv", "tg_wvw")
+    P.c("tg_v1t", "mu_deg", 0, 0)                                                                      # the first note
+    P.obj("tg_del", "del", gx, gy + 230)
+    P.msg("tg_stop", "stop", gx + 40, gy + 150); P.c("tg_stop", "tg_del")
+    P.obj("tg_first", "t b b", gx, gy + 165); P.c("tg_fire", "tg_first", 0, 0)
+    P.c("tg_first", "tg_stop", 1, 0)
+    P.obj("tg_rg", "value tgg", gx, gy + 180); P.c("tg_first", "tg_rg", 0, 0); P.c("tg_rg", "tg_del", 0, 0)
+    # each later note: one fewer left, play at tgv (then softer), the next gap longer, schedule again if any left
+    P.obj("tg_nf", "t b b b", gx, gy + 245); P.c("tg_del", "tg_nf")
+    P.obj("tg_dn", "value tgn", gx + 160, gy + 260); P.obj("tg_dn1", "- 1", gx + 160, gy + 275); P.obj("tg_dnw", "value tgn", gx + 160, gy + 290)
+    P.c("tg_nf", "tg_dn", 2, 0); P.c("tg_dn", "tg_dn1"); P.c("tg_dn1", "tg_dnw")
+    P.obj("tg_pv", "value tgv", gx + 80, gy + 260); P.obj("tg_pvt", "t f f", gx + 80, gy + 275)
+    P.obj("tg_pv2", f"* {TALK_VEL_STEP}", gx + 100, gy + 290); P.obj("tg_pvw", "value tgv", gx + 100, gy + 305)
+    P.c("tg_nf", "tg_pv", 1, 0); P.c("tg_pv", "tg_pvt"); P.c("tg_pvt", "tg_pv2", 1, 0); P.c("tg_pv2", "tg_pvw")
+    P.c("tg_pvt", "mu_deg", 0, 0)
+    ex("tg_ng", f"tgg*{TRAIL_SLOW}*(tgn>=1)+$f1*0", gx, gy + 260); P.c("tg_nf", "tg_ng", 0, 0)
+    P.obj("tg_ngt", "t f f", gx, gy + 275); P.c("tg_ng", "tg_ngt")
+    P.obj("tg_ngw", "value tgg", gx + 40, gy + 290); P.c("tg_ngt", "tg_ngw", 1, 0)
+    P.obj("tg_ok", "moses 1", gx, gy + 290); P.c("tg_ngt", "tg_ok", 0, 0); P.c("tg_ok", "tg_del", 1, 0)
+
+
 def add_harmony(P, hx, ex, degree_to_hz):
     """Answers a held pitch with a note of the pad's chord: the nearest chord note at least a third above it, an
     octave up (a whistle or bird: the nearest a third below it, an octave down), so it is clearly a second voice and
@@ -1566,7 +1624,7 @@ def add_room_notes(P, rx, ex, degree_to_hz):
     P.obj("rnf_v_open", "value rnf_open", fx + 320, fy + 30); P.c("rnf_lb", "rnf_open1"); P.c("rnf_open1", "rnf_v_open")
     P.obj("rnf_det", "t b", fx, fy + 50); P.c(handling_gate(P, "rnf_hg", "fs_det_sel", fx + 60, fy + 20, wait=False), "rnf_det")
     nbt = f"(nbig*(nbig>0)+{RM_BIG_DB}*rmus)"   # (Make Room for Music, as for the chimes)
-    ex("rnf_chk", f"(rnf_src>=1)*(rnf_pk==0)*(rnf_on>0)*(rnf_open==1)*(({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt}))+$f1*0", fx, fy + 65)   # (note_big too)
+    ex("rnf_chk", f"(vtalk<0.5)*(rnf_src>=1)*(rnf_pk==0)*(rnf_on>0)*(rnf_open==1)*(({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt}))+$f1*0", fx, fy + 65)   # (note_big too)
     # (this detector hears 5 ms readings, the level `mlev` comes ~30 times a second: with note_big on, wait for it)
     ex("rnf_nb_on", "(nbig>0)+(rmus>0)>0", fx - 60, fy + 50); P.obj("rnf_nb_sel", "sel 0 1", fx - 60, fy + 57)
     P.obj("rnf_nb_del", "del 40", fx - 30, fy + 60)

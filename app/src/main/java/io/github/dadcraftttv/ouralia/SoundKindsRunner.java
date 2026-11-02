@@ -37,7 +37,7 @@ final class SoundKindsRunner {
     private static int dropped;
     private static final long[] nanos = new long[600];
     private static int judged;
-    private static volatile boolean roomOn;
+    private static volatile boolean roomOn, gapsOn;
 
     private SoundKindsRunner() { }
 
@@ -63,6 +63,13 @@ final class SoundKindsRunner {
         return available() && ParamStore.get(ROOM_ID) >= 0.5f;
     }
 
+    /** Answer in the Gaps (Nov 1, step 6): while people talk the chimes hold still and answer in the pauses. */
+    static final String GAPS_ID = "voice_gaps";
+
+    static boolean gapsEnabled() {
+        return available() && ParamStore.get(GAPS_ID) >= 0.5f;
+    }
+
     /** The old Diagnostics switch's stored value moves to the setting, once (stored values are kept). */
     static void carryRoomSwitch(Context c) {
         android.content.SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -73,24 +80,27 @@ final class SoundKindsRunner {
         }
     }
 
-    /** Called each tick of the sound's loop: the setting changed (row, preset, reset): listen or not, and tell the
-     *  patch at once (only stepping back if music is heard now). */
-    static void roomTick() {
-        boolean on = roomEnabled();
-        boolean now, listen;
+    /** Called each tick of the sound's loop: Make Room for Music or Answer in the Gaps changed (row, preset, reset):
+     *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
+    static void settingsTick() {
+        boolean room = roomEnabled(), gaps = gapsEnabled();
+        boolean music, talk, listen;
         synchronized (lock) {
-            if (on == roomOn || app == null) {
+            if ((room == roomOn && gaps == gapsOn) || app == null) {
                 return;
             }
-            roomOn = on;
-            now = kinds != null && kinds.roomMusic();
-            listen = on || enabled(app);
+            roomOn = room;
+            gapsOn = gaps;
+            music = kinds != null && kinds.roomMusic();
+            talk = kinds != null && kinds.talking();
+            listen = room || gaps || enabled(app);
         }
-        PdBase.sendFloat("room_music", on && now ? 1 : 0);
+        PdBase.sendFloat("room_music", room && music ? 1 : 0);
+        PdBase.sendFloat("voice_talk", gaps && talk ? 1 : 0);
         if (listen) {
             start();
         } else {
-            stop("Make Room for Music off");
+            stop("Make Room for Music and Answer in the Gaps off");
         }
     }
 
@@ -104,7 +114,7 @@ final class SoundKindsRunner {
         }
         if (on) {
             start();
-        } else if (!roomEnabled()) {   // (Make Room for Music on keeps listening)
+        } else if (!roomEnabled() && !gapsEnabled()) {   // (Make Room for Music or Answer in the Gaps keeps listening)
             stop("switched off");
         }
     }
@@ -117,8 +127,9 @@ final class SoundKindsRunner {
             log = logger;
             rate = sampleRate;
             roomOn = roomEnabled();
+            gapsOn = gapsEnabled();
         }
-        if (enabled(c) || roomOn) {
+        if (enabled(c) || roomOn || gapsOn) {
             start();
         }
     }
@@ -182,6 +193,7 @@ final class SoundKindsRunner {
         }
         PdBase.sendFloat("sk_on", 0);
         PdBase.sendFloat("room_music", 0);   // (no ears: the music comes back)
+        PdBase.sendFloat("voice_talk", 0);
         w.post(() -> {
             synchronized (lock) {
                 if (model != null) {
@@ -249,17 +261,19 @@ final class SoundKindsRunner {
         long t0 = System.nanoTime();
         float[] scores = m.scores(wave);
         long took = System.nanoTime() - t0;
-        boolean changed, roomChanged, room;
+        boolean changed, roomChanged, room, talkChanged, talk;
         String line;
         synchronized (lock) {
             if (judged < nanos.length) {
                 nanos[judged++] = took;
             }
-            boolean wasRoom = ks.roomMusic();
+            boolean wasRoom = ks.roomMusic(), wasTalk = ks.talking();
             changed = ks.judge(scores);
             line = ks.heardLine();
             room = ks.roomMusic();
             roomChanged = room != wasRoom;
+            talk = ks.talking();
+            talkChanged = talk != wasTalk;
         }
         if (changed && l != null) {
             l.accept(line);
@@ -272,6 +286,16 @@ final class SoundKindsRunner {
             if (l != null) {
                 l.accept(room ? "Room music: heard" + (step ? ", the music steps back" : " (Make Room for Music off)")
                         : "Room music: gone" + (step ? ", the music comes back" : ""));
+            }
+        }
+        if (talkChanged) {
+            boolean gaps = gapsOn;
+            if (gaps) {
+                PdBase.sendFloat("voice_talk", talk ? 1 : 0);
+            }
+            if (l != null) {
+                l.accept(talk ? "Talk: heard" + (gaps ? ", the chimes wait for the gaps" : " (Answer in the Gaps off)")
+                        : "Talk: over" + (gaps ? ", the chimes play again" : ""));
             }
         }
     }
