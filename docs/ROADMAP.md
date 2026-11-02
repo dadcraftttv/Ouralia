@@ -45,12 +45,12 @@ When Something Happens and Pad Only With a Steady Sound are the fixed behaviour 
 manufacturer could set mic values differently"). Next: his merge of `reactive` to main. Keep the found-sound drums on the rhythm grid as they
 are (DadCraft: "absolutely loved from the day we got it worked out").
 
-**Water Leaves a Trail (step 7, Nov 2):** BUILT on `sound-kinds`, Dev Music switch, off by default; his listen
-next. Water in 40% of 32 judgements supplies at least two softer trailing notes after an earned chime; off at
+**Water Leaves a Trail (step 7, Nov 2):** BUILT on `sound-kinds`, Dev Music switch, off by default; heard and
+liked (DadCraft, Nov 2: "it sounds good"). Water in 40% of 32 judgements supplies at least two softer trailing notes after an earned chime; off at
 15%. Higher Trailing Melody counts win. Talk or water ending removes only water-added notes. See design/sound-kinds.md.
 
-**Underwater (water, next option; DadCraft, Nov 2: "yes, add it to the plan"):** PLAN ONLY, waits for his listen
-to Water Leaves a Trail. While water is heard, generated music (pad, chimes, room bells, beat, tones; never the
+**Underwater (water, next option; DadCraft, Nov 2: "yes, add it to the plan"):** PLAN ONLY; Water Leaves a
+Trail is liked, so it is next if he wants it. While water is heard, generated music (pad, chimes, room bells, beat, tones; never the
 dry mic) eases into a muffled low-pass with a slow pitch wobble/light chorus, fading in and out over seconds.
 Its own switch or a "watery" style for the trail; implementation and tuning still to choose.
 
