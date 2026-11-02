@@ -224,3 +224,54 @@ or the dice, only where sound kinds can run; on, it listens by itself, like Make
   test_patch "answer in the gaps": four rounds of 1.5 s speech and a pause get 4 answers and 8 chimes (2.5 s of
   speech: 12); none without talk, in 0.3 s pauses or with Music off; knocks during talk 0 chimes and 0 bells
   (6 and 8 without).
+
+## Step 7 options: water (Nov 2)
+
+DadCraft: "Water, options first." Proposals only; his pick comes before a build. Water was right on 9/10
+benchmark clips at phone level (one heard as traffic), but only 3/10 far away, the rest dropping to quiet.
+At home it occupied 8% of the 73-minute run; DadCraft confirmed the sink was running. Rain and waves are in the
+group, but untested on his phone: these are sink-first proposals, not evidence that all water behaves alike.
+
+Either option would have its own Music setting, off by default, Dev only (`Param.soundKinds()`), outside presets
+and the dice. Turning it on would start listening by itself, extending `SoundKindsRunner.settingsTick()` like
+the existing Music settings; no Diagnostics switch needed. Music off means no musical response. The mic stays
+in memory and never touches disk. The windows below count the settled `water` kind, like `roomMusic()` and
+`talking()`, not raw class scores; timings are approximate and add the classifier's delay.
+
+1. **Water Leaves a Trail:** while water is heard, a splash that already earns a sudden-sound chime gets at least
+   two softer notes following it, each a little later. A smooth running tap gets no extra notes without a new
+   qualifying sound; this does not start a repeating melody. **When:** water in at least 40% of the last 32
+   judgements (~8 s), off at 15% or less: roughly 3.25 s to enter from empty and 7 s to leave a full window.
+   That catches a tap running for seconds without letting one brief water judgement change the music; rain
+   lasting minutes simply keeps the response available. On leaving, cancel pending water-added notes; already
+   ringing notes decay. Reuses the sudden-sound gate and Trailing Melody's softer, slower `mu_deg` path. This
+   setting supplies the two-note minimum even with Trailing Melody Off; a higher selected or moving count still
+   wins, and its stored setting stays unchanged. Risk: taps may be too smooth to trigger chimes, especially with
+   Notes Only for Bigger Sounds high; splashing may instead become busy, and distant water may lose its trail.
+   With Make Room for Music, keep its 6 dB dip and raised trigger threshold. With Answer in the Gaps, talk takes
+   priority: cancel water-added tails when `voice_talk` is on, including notes already queued, and add no water
+   tail to the voice answer. That arbitration needs new wiring; the current trail scheduler does not check talk.
+
+2. **Make Room for Water:** while the tap runs, generated music and beat ease down by about 4 dB, leaving the
+   water and its existing effects more exposed; they return after it stops. No extra notes. **When:** water in
+   at least 40% of the last 80 judgements (~20 s), off at 15% or less: roughly 8 s to enter and 17 s to leave a
+   full window, followed by a 4 s dip / 8 s return ramp. Better for sustained washing or eventual rain than a
+   quick splash; the slower window avoids repeated level changes between splashes. Reuses Make Room's gain
+   stages and `RM_DOWN_MS` / `RM_UP_MS`, with an independent water receiver rather than sending fake
+   `room_music` events. Keep dry mic and effects untouched. Risk: this may feel like ordinary ducking, with a
+   late return after a short tap; far water can release it even while still running. If Make Room for Music is
+   also active, take the stronger dip (6 dB), never add them into 10 dB; keep its bigger-sound threshold tied to
+   music. Answer in the Gaps keeps its holds and pause answers, with those answers subject to the shared dip.
+
+**Recommended first: 1, Water Leaves a Trail.** It gives the confirmed sink sounds a recognisable musical answer
+using an existing voice, without a new clock-driven layer. First listen: tap running smoothly, then a few
+splashes, then off; compare at the same chime level and threshold. Its value depends on splashes actually
+earning chimes, so DadCraft's listen decides whether it adds enough beyond ordinary Trailing Melody. Option 2
+is the quieter choice if he wants to hear more of the water itself.
+
+**Replay:** no new on-time estimate claimed. The local `tools/.session/events*.log` copies have no `Heard:`
+events; the documented 8% alone cannot reconstruct either window. With the original Oct 31 / Nov 1 event logs,
+a small local replay can hold each logged kind until the next change, sample at 0.25 s, reset at listener/session
+boundaries, and report each window's active share and changes as an estimate (judgements are not exactly 0.25 s
+apart). That needs no audio. It estimates availability, not splash-triggered phrase counts or audibility; those
+need a live listen, and rain/waves still need their own phone check.
