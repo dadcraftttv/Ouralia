@@ -173,7 +173,7 @@ room, Ouralia steps back. Built behind a second Dev switch in Diagnostics, "Make
 it only works with Sound kinds on).
 - **When:** `SoundKinds.roomMusic()`: music was the kind for at least 40% of the last 80 judgements (~20 s), gone
   again under 15%. Replayed on his Nov 1 runs before building: never on the walk or the 73 minutes at home, on for
-  86% of the 14 minutes of [someone]'s music with 3 changes. It takes ~8 s of steady music to step back and ~17 s
+  86% of the 14 minutes of music played in the room with 3 changes. It takes ~8 s of steady music to step back and ~17 s
   after the music stops to come back (then the ramp). Java tests J.
 - **What:** the app sends `room_music 1/0`; the patch dips the generated music (pad, chimes, room notes, harmony) and
   the beat by `RM_DB` 6 dB over 4 s, coming back over 8 s (the mic's dry room and its effects are untouched), and the
