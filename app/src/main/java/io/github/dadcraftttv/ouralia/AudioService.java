@@ -256,7 +256,7 @@ public class AudioService extends Service {
                 // calm builds: standing still in a calm room, the music grows a layer at a time (if switched on)
                 boolean calm = ParamStore.get(CalmBuild.ID) >= 0.5f && ParamStore.get("music_on") >= 0.5f
                         && !StepDetector.walking(nowS) && !(Worlds.roomLoud() && Worlds.roomLively());
-                SoundKindsRunner.settingsTick();   // Make Room for Music or Answer in the Gaps switched (row, preset, reset)
+                SoundKindsRunner.settingsTick();   // Make Room for Music or Mind the Gap switched (row, preset, reset)
                 if (CalmBuild.tick(dt, calm)) {
                     logEvent(CalmBuild.phase() == CalmBuild.Phase.RISING ? "Calm build starts" : "Calm build ends");
                 }

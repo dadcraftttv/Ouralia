@@ -32,7 +32,7 @@ sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUIL
 listening baseline of what already reacts (Singing Room, Harmony, sudden-sound chimes, Call and Response) with the
 clock-driven layers off; no code. Then one reactive response made convincing, only where the baseline falls short.
 Kit removal is now built with Classic unchanged and Acoustic removed (DadCraft, Oct 30); sound classification
-comes later, as a small experiment (step 4 plan: design/sound-kinds.md; started Oct 31 on his yes; all four gates passed Nov 1, 4d his walk: "mostly right and quick enough"). First musical response (his pick, Nov 1): Make Room for Music, BUILT on `sound-kinds`; his verdict (Nov 1): the pull back is fine as a user on/off setting, now a Music setting (Dev only, off by default). Second, voices (his pick, Nov 1: "go with 2"): Answer in the Gaps, BUILT on `sound-kinds` as a Music setting (Dev only, off by default), his listen next. The composer features are frozen (no new work), New Pieces' listen included. Step 1 heard (Oct 30):
+comes later, as a small experiment (step 4 plan: design/sound-kinds.md; started Oct 31 on his yes; all four gates passed Nov 1, 4d his walk: "mostly right and quick enough"). First musical response (his pick, Nov 1): Make Room for Music, BUILT on `sound-kinds`; his verdict (Nov 1): the pull back is fine as a user on/off setting, now a Music setting (Dev only, off by default). Second, voices (his pick, Nov 1: "go with 2"): Mind the Gap (originally Answer in the Gaps), BUILT on `sound-kinds` as a Music setting (Dev only, off by default), heard and liked Nov 2; rename included with step 7. The composer features are frozen (no new work), New Pieces' listen included. Step 1 heard (Oct 30):
 Singing Room is the core; chimes came uncaused and ~6 dB loud; the pad a constant tone (step 5). Step 2: Chimes Only
 Answer, BUILT behind a switch on `reactive` (design/music.md), kept (DadCraft: "Yes"), renamed Chimes Only When
 Something Happens. Next (DadCraft: "yes, lets do the pad"): Pad Only With a Steady Sound, BUILT behind a switch on
@@ -44,6 +44,15 @@ When Something Happens and Pad Only With a Steady Sound are the fixed behaviour 
 "make those the default behavior period"); Notes Only for Bigger Sounds stays a slider, default 20.5 dB ("each
 manufacturer could set mic values differently"). Next: his merge of `reactive` to main. Keep the found-sound drums on the rhythm grid as they
 are (DadCraft: "absolutely loved from the day we got it worked out").
+
+**Water Leaves a Trail (step 7, Nov 2):** BUILT on `sound-kinds`, Dev Music switch, off by default; his listen
+next. Water in 40% of 32 judgements supplies at least two softer trailing notes after an earned chime; off at
+15%. Higher Trailing Melody counts win. Talk or water ending removes only water-added notes. See design/sound-kinds.md.
+
+**Underwater (water, next option; DadCraft, Nov 2: "yes, add it to the plan"):** PLAN ONLY, waits for his listen
+to Water Leaves a Trail. While water is heard, generated music (pad, chimes, room bells, beat, tones; never the
+dry mic) eases into a muffled low-pass with a slow pitch wobble/light chorus, fading in and out over seconds.
+Its own switch or a "watery" style for the trail; implementation and tuning still to choose.
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.

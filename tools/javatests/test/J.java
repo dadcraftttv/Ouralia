@@ -41,6 +41,21 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     check(tq==29,"talk: over "+tq+" judgements (~7 s) after the voices stop (the window lets 9 of its 13 go: 4 = 0.15 of 32)");
     k.reset(); for(int i=0;i<400;i++){ k.judge(i%12<8?sc(0,40):sc(6,4)); } check(k.talking(),"talk: speech with pauses stays on");
     k.reset(); check(!k.talking(),"reset forgets talk");
+    Param waterSetting=Params.byId("water_trail");
+    check(waterSetting!=null&&waterSetting.def==0f&&waterSetting.toggle&&!waterSetting.sendToPd
+        &&!waterSetting.inPreset&&!waterSetting.randomizable,"water switch: off, app-controlled, outside presets and dice");
+    k.reset(); for(int i=0;i<12;i++) k.judge(sc(5,60));
+    check(!k.water(),"water: 12/32 below 40 percent");
+    k.judge(sc(5,60)); check(k.water(),"water: 13/32 turns on");
+    for(int i=0;i<32;i++) k.judge(sc(5,60));
+    for(int i=0;i<27;i++) k.judge(sc(0,60));
+    check(k.water(),"water: 5/32 stays on above 15 percent");
+    k.judge(sc(0,60)); check(!k.water(),"water: 4/32 turns off");
+    for(int i=0;i<32;i++) k.judge(sc(5,60));
+    boolean held=true;
+    for(int i=0;i<300;i++){ k.judge(sc(i%2==0?5:0,60)); held &= k.water(); }
+    check(held,"water: half the window holds on without flapping");
+    k.reset(); check(!k.water(),"reset forgets water");
     boolean threw=false; try{ new SoundKinds("voices 1\n"); }catch(IllegalArgumentException e){ threw=true; }
     check(threw,"kinds.txt missing a kind is refused");
     check(SoundKinds.costLine(new long[]{3000000,1000000,2000000},3).equals("Sound kinds: 3 judgements, YAMNet median 2.0 ms, slowest 3.0 ms"),"the minute's cost line");

@@ -37,7 +37,8 @@ final class SoundKindsRunner {
     private static int dropped;
     private static final long[] nanos = new long[600];
     private static int judged;
-    private static volatile boolean roomOn, gapsOn;
+    private static volatile boolean roomOn, gapsOn, waterOn;
+    private static boolean waterSent;
 
     private SoundKindsRunner() { }
 
@@ -63,11 +64,35 @@ final class SoundKindsRunner {
         return available() && ParamStore.get(ROOM_ID) >= 0.5f;
     }
 
-    /** Answer in the Gaps (Nov 1, step 6): while people talk the chimes hold still and answer in the pauses. */
+    /** Mind the Gap (Nov 1, step 6): while people talk the chimes hold still and answer in the pauses. */
     static final String GAPS_ID = "voice_gaps";
 
     static boolean gapsEnabled() {
         return available() && ParamStore.get(GAPS_ID) >= 0.5f;
+    }
+
+    static final String WATER_ID = "water_trail";
+
+    static boolean waterEnabled() {
+        return available() && ParamStore.get(WATER_ID) >= 0.5f;
+    }
+
+    /** Called with lock held: the value to send if it changed (Music off and no ears too), else -1. The caller
+     *  sends it with {@link #sendWater} after letting go of the lock (Pd's callbacks take the lock: ready()). */
+    private static int waterTick() {
+        boolean next = thread != null && waterOn && ParamStore.get("music_on") >= 0.5f
+                && kinds != null && kinds.water();
+        if (next == waterSent) {
+            return -1;
+        }
+        waterSent = next;
+        return next ? 1 : 0;
+    }
+
+    private static void sendWater(int w) {
+        if (w >= 0) {
+            PdBase.sendFloat("water_trail", w);
+        }
     }
 
     /** The old Diagnostics switch's stored value moves to the setting, once (stored values are kept). */
@@ -80,27 +105,37 @@ final class SoundKindsRunner {
         }
     }
 
-    /** Called each tick of the sound's loop: Make Room for Music or Answer in the Gaps changed (row, preset, reset):
+    /** Called each tick of the sound's loop: Make Room for Music, Mind the Gap or Water Leaves a Trail changed (row, preset, reset):
      *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
     static void settingsTick() {
-        boolean room = roomEnabled(), gaps = gapsEnabled();
-        boolean music, talk, listen;
+        boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled();
+        boolean music, talk, listen, same;
+        int w;
         synchronized (lock) {
-            if ((room == roomOn && gaps == gapsOn) || app == null) {
-                return;
+            boolean waterChanged = waterOn != water;
+            waterOn = water;
+            w = waterTick();
+            same = (room == roomOn && gaps == gapsOn && !waterChanged) || app == null;
+            if (same) {
+                music = talk = listen = false;
+            } else {
+                roomOn = room;
+                gapsOn = gaps;
+                music = kinds != null && kinds.roomMusic();
+                talk = kinds != null && kinds.talking();
+                listen = room || gaps || water || enabled(app);
             }
-            roomOn = room;
-            gapsOn = gaps;
-            music = kinds != null && kinds.roomMusic();
-            talk = kinds != null && kinds.talking();
-            listen = room || gaps || enabled(app);
+        }
+        sendWater(w);
+        if (same) {
+            return;
         }
         PdBase.sendFloat("room_music", room && music ? 1 : 0);
         PdBase.sendFloat("voice_talk", gaps && talk ? 1 : 0);
         if (listen) {
             start();
         } else {
-            stop("Make Room for Music and Answer in the Gaps off");
+            stop("Make Room for Music, Mind the Gap and Water Leaves a Trail off");
         }
     }
 
@@ -114,7 +149,7 @@ final class SoundKindsRunner {
         }
         if (on) {
             start();
-        } else if (!roomEnabled() && !gapsEnabled()) {   // (Make Room for Music or Answer in the Gaps keeps listening)
+        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled()) {   // (any of the Music sound-kind settings keeps listening)
             stop("switched off");
         }
     }
@@ -128,8 +163,9 @@ final class SoundKindsRunner {
             rate = sampleRate;
             roomOn = roomEnabled();
             gapsOn = gapsEnabled();
+            waterOn = waterEnabled();
         }
-        if (enabled(c) || roomOn || gapsOn) {
+        if (enabled(c) || roomOn || gapsOn || waterOn) {
             start();
         }
     }
@@ -181,6 +217,7 @@ final class SoundKindsRunner {
         HandlerThread t;
         Handler w;
         Consumer<String> l;
+        int water;
         synchronized (lock) {
             if (thread == null) {
                 return;
@@ -190,7 +227,9 @@ final class SoundKindsRunner {
             l = log;
             thread = null;
             worker = null;
+            water = waterTick();
         }
+        sendWater(water);
         PdBase.sendFloat("sk_on", 0);
         PdBase.sendFloat("room_music", 0);   // (no ears: the music comes back)
         PdBase.sendFloat("voice_talk", 0);
@@ -262,6 +301,7 @@ final class SoundKindsRunner {
         float[] scores = m.scores(wave);
         long took = System.nanoTime() - t0;
         boolean changed, roomChanged, room, talkChanged, talk;
+        int water;
         String line;
         synchronized (lock) {
             if (judged < nanos.length) {
@@ -274,7 +314,9 @@ final class SoundKindsRunner {
             roomChanged = room != wasRoom;
             talk = ks.talking();
             talkChanged = talk != wasTalk;
+            water = waterTick();
         }
+        sendWater(water);
         if (changed && l != null) {
             l.accept(line);
         }
@@ -294,7 +336,7 @@ final class SoundKindsRunner {
                 PdBase.sendFloat("voice_talk", talk ? 1 : 0);
             }
             if (l != null) {
-                l.accept(talk ? "Talk: heard" + (gaps ? ", the chimes wait for the gaps" : " (Answer in the Gaps off)")
+                l.accept(talk ? "Talk: heard" + (gaps ? ", the chimes wait for the gaps" : " (Mind the Gap off)")
                         : "Talk: over" + (gaps ? ", the chimes play again" : ""));
             }
         }

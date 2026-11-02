@@ -138,6 +138,7 @@ GLASS_ATTACK_MS = 6              # the slower rise (a click at 1 ms)
 GLASS_LEVEL = 1.612              # matches Classic's loudness over each note's first 300 ms
 # Trailing Melody (DadCraft, Oct 31: chimes "should continue for a bit after they've stopped receiving stimuli, so
 # there's a little trailing melody"): after a sudden-sound chime (standing still), chime_trail more notes walk on
+WATER_TRAIL_MIN = 2              # minimum tail while settled water is heard, unless people are talking
 TRAIL_GAP_MS = 450               # the first trailing note this long after the chime...
 TRAIL_SLOW = 1.3                 # ...each gap this much longer than the last (the phrase slows as it ends)
 TRAIL_VEL = 0.6                  # each note this much softer than the one before
@@ -447,7 +448,7 @@ RM_BIG_DB = 6           # dB added to the chimes' and room bells' "bigger sounds
 RM_DOWN_MS = 4000       # the dip's ramp: slow, so it reads as making room, not as a cut
 RM_UP_MS = 8000         # coming back is slower still
 SK_N = 5
-# Answer in the Gaps (DadCraft, Nov 1, step 6: "go with 2"): while people talk (voice_talk 1, from sound kinds) the
+# Mind the Gap (DadCraft, Nov 1, step 6: "go with 2"): while people talk (voice_talk 1, from sound kinds) the
 # chimes and room bells hold and the composer's bars wait; in a pause after speech a short phrase answers in key
 TALK_GAP_DB = 8         # quieter than this many dB above the room's quiet = a pause
 TALK_GAP_MS = 600       # a pause this long gets the answer...
