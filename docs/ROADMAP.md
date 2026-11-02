@@ -31,7 +31,7 @@ sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUIL
 **Sounds with character (item 24, Oct 29):** planned (Maestro PLAN R.4-R.8): slide and accent, Acid Bass and
 Ladder Bass kits, deeper drums, feel, textures. After New Pieces' listen.
 
-**Before advertising rc5 (item 22):** GitHub repo topics, maybe a short demo GIF.
+**Before advertising the next release (item 22):** GitHub repo topics, maybe a short demo GIF.
 
 **Code health (item 22):** a cost per feature, so new sounds land with a known CPU price (the health line's CPU,
 a feature on and off; DadCraft's phone). (The long session: done Oct 22. DESIGN-NOTES and make_patch.py split the way
