@@ -56,6 +56,9 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     for(int i=0;i<300;i++){ k.judge(sc(i%2==0?5:0,60)); held &= k.water(); }
     check(held,"water: half the window holds on without flapping");
     k.reset(); check(!k.water(),"reset forgets water");
+    Param uw=Params.byId("underwater");
+    check(uw!=null&&uw.def==0f&&uw.max==2f&&uw.choices!=null&&uw.choices.length==3&&!uw.sendToPd
+        &&!uw.inPreset&&!uw.randomizable&&uw.soundKinds,"underwater: Off/Gentle/Deeper, off, app-controlled, outside presets and dice");
     boolean threw=false; try{ new SoundKinds("voices 1\n"); }catch(IllegalArgumentException e){ threw=true; }
     check(threw,"kinds.txt missing a kind is refused");
     check(SoundKinds.costLine(new long[]{3000000,1000000,2000000},3).equals("Sound kinds: 3 judgements, YAMNet median 2.0 ms, slowest 3.0 ms"),"the minute's cost line");

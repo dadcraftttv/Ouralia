@@ -49,11 +49,11 @@ are (DadCraft: "absolutely loved from the day we got it worked out").
 liked (DadCraft, Nov 2: "it sounds good"). Water in 40% of 32 judgements supplies at least two softer trailing notes after an earned chime; off at
 15%. Higher Trailing Melody counts win. Talk or water ending removes only water-added notes. See design/sound-kinds.md.
 
-**Underwater (water, next option; DadCraft, Nov 2: "yes, add it to the plan"):** PLAN ONLY; Water Leaves a
-Trail is liked, so it is next if he wants it. While water is heard, generated music (pad, chimes, room bells, beat, tones; never the
+**Underwater (water, next option; DadCraft, Nov 2: "yes, add it to the plan"):** BUILT (both styles, Nov 2), his listen next.
+While water is heard, generated music (pad, chimes, room bells, beat, tones; never the
 dry mic) eases into a muffled low-pass with a slow pitch wobble/light chorus, fading in and out over seconds.
-Options written (Codex, Nov 2), DadCraft's pick next: gentle muffling/light chorus (recommended) or deeper
-muffling/pitch sway, each with its own switch. See design/sound-kinds.md "Step 8 options: Underwater".
+Options written (Codex, Nov 2); DadCraft: "can we build both?" BUILT both (Nov 2) as one Dev Music setting,
+Underwater: Off / Gentle / Deeper; his side-by-side listen next, then keep one. design/sound-kinds.md "Step 8".
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.

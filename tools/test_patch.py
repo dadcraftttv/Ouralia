@@ -96,8 +96,8 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room", "rm_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
-    "step", "sk_on", "room_music", "voice_talk", "water_trail", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
+    "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2981,6 +2981,44 @@ wn = [water_notes(water=0), water_notes(), water_notes(n=4),
       water_notes(n=1, cancel=("voice_talk", 1)), water_notes(n=4, cancel=("water_trail", 0))]
 check(wn == [1, 3, 5, 1, 1, 0, 2, 5],
       "water leaves a trail: dry, water, selected 4, talk cancel, water leaves, Music off, ordinary 1/4 survive: %s" % wn)
+
+# ---- 7z6. underwater: while water is heard the music and beat go muffled and wobbly, never the mic (Nov 2) ----
+from patchgen.constants import UW_IN_MS, UW_OUT_MS
+def uw_amt(style, back=0):   # the amount halfway and fully in, then (back) halfway and fully out
+    e = fresh(wet=0, dry=0, music_on=1); e.listen("uw_level")
+    def at(t):
+        e.run(e.silence(t)); e.send_msg("uw_probe", "bang"); return e.heard["uw_level"][-1]
+    a0 = at(0.1); e.send("underwater", style)
+    got = [a0, at(UW_IN_MS[style] / 2000), at(UW_IN_MS[style] / 2000 + 0.2)]
+    e.send("underwater", 0)
+    return got + [at(UW_OUT_MS[style] / 2000), at(UW_OUT_MS[style] / 2000 + 0.2)]
+for st in (1, 2):
+    a = uw_amt(st)
+    check(a[0] == 0 and abs(a[1] - 0.5) < 0.03 and a[2] > 0.999 and abs(a[3] - 0.5) < 0.03 and a[4] < 1e-3,
+          "underwater %d: in over %d ms, out over %d ms (0, half, full, half, gone: %s)"
+          % (st, UW_IN_MS[st], UW_OUT_MS[st], " ".join("%.3f" % v for v in a)))
+def uw_out(style, secs=4, **over):
+    e = fresh(wet=0, **over); r = np.random.default_rng(1)
+    e.send("underwater", style); e.run((r.standard_normal(6 * SR) * 0.01).astype(np.float32))
+    return e.run((r.standard_normal(secs * SR) * 0.01).astype(np.float32))[:, 0]
+mic = [uw_out(st, dry=1, music_on=0, beat_level=0) for st in (0, 2)]
+check(rms(mic[0]) > 1e-3 and np.array_equal(mic[0], mic[1]), "underwater: the mic alone comes out sample-identical (rms %.4f)" % rms(mic[0]))
+def uw_hf(y, lo=2500):   # dB of the energy above lo, relative to all of it
+    X = np.abs(np.fft.rfft(y * np.hanning(len(y)))) ** 2; f = np.fft.rfftfreq(len(y), 1 / SR)
+    return 10 * np.log10(X[f > lo].sum() / X.sum())
+mu = [uw_out(st, dry=0, music_on=1, music_pad=0.33, music_arp=0.4, beat_level=0) for st in (0, 1, 2)]
+mh = [uw_hf(y) for y in mu]; ml = [20 * np.log10(rms(y) / rms(mu[0])) for y in mu]
+check(mh[1] < mh[0] - 10 and mh[2] < mh[1] - 5 and all(abs(v) < 3 for v in ml),
+      "underwater: the music above 2.5 kHz off/gentle/deeper %s dB, level %s dB" % (["%.1f" % v for v in mh], ["%.1f" % v for v in ml]))
+def uw_beat(style):
+    e = fresh(wet=0, dry=0, beat_level=1); e.send("underwater", style); e.run(e.silence(6)); out = []
+    for k in range(8):
+        e.send("step", 0.5); out.append(e.run(e.silence(0.5))[:, 0])
+    return np.concatenate(out)
+bt = [uw_beat(st) for st in (0, 1, 2)]
+bh = [uw_hf(y) for y in bt]; bl = [20 * np.log10(rms(y) / rms(bt[0])) for y in bt]
+check(bh[1] < bh[0] - 10 and bh[2] < bh[1] - 5 and all(abs(v) < 4 for v in bl),
+      "underwater: the beat above 2.5 kHz off/gentle/deeper %s dB, level %s dB" % (["%.1f" % v for v in bh], ["%.1f" % v for v in bl]))
 
 # ---- 7z4. answer in the gaps: while people talk the chimes wait, then answer in the pauses (Nov 1, step 6) ----
 from patchgen.constants import TALK_GAP_MS, TALK_NOTE_MS

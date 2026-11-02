@@ -380,3 +380,37 @@ music to judge pitch conflict, and try talk/pauses with Mind the Gap plus Make R
 actually detected. Check both switches off during the effect and music off/on for clicks or delayed leftovers.
 Before DadCraft's listen, a build must verify mic-only parity with World in Stereo on/off, both musical paths,
 level/headroom, release/reversal/mute behaviour, and measured Moto DSP cost. No new audio recording is needed.
+
+## Step 8: Underwater, both styles (Nov 2, Dev only; his side-by-side listen next)
+
+DadCraft (Nov 2), after reading the two options: "can we build both? just so i could test them side by side and let
+you knwo which one works better?" So both are built behind one Music setting, **Underwater: Off / Gentle / Deeper**
+(`underwater`, Off by default, Dev only, outside presets and dice; listening starts by itself like the other sound-kind
+settings). The numbers are the options' (constants.py `UW_*`, index 1 gentle, 2 deeper):
+
+| | Gentle | Deeper |
+|---|---|---|
+| two cascaded `lop~` | 1600 Hz | 900 Hz |
+| wobbling delayed copy | 20% (light chorus) | 100% (pitch sway) |
+| delay, +/- depth, rate | 10 ms, 1 ms, 0.20 Hz | 12 ms, 3 ms, 0.25 Hz |
+| fade in / out | 4 s / 6 s | 5 s / 8 s |
+
+- **App:** `SoundKindsRunner.uwTick()` sends `underwater` = the style while `SoundKinds.water()` holds (the same
+  13/32-on, 4/32-off window as the trail, its own send), Music is on and the listener runs; 0 otherwise. Sent outside
+  the runner's lock, like `water_trail`. Changing the style while water is heard switches at once.
+- **Patch:** `add_underwater()` and `uw_path()` in build.py. Two paths, `music_rm` (before `filtered_mix`) and
+  `beat_rm` (before `mix_out`): neither carries mic audio, so the dry mic and World in Stereo's side are untouched.
+  Linear crossfade from the untouched path to the processed one; 0 keeps the last style for the fade out, a new
+  value reverses from wherever the fade is. A style change glides the delay over 500 ms (no jump in its read
+  position). Always running, not in a `[switch~]` block: 4 `lop~`, 2 `delread4~`, an `osc~` and some `*~`/`+~`.
+  The Moto's cost isn't measured yet; the minute's "Health:" CPU line in events.log will show it.
+- **Measured in the patch** (test_patch 7z6): fade halves and ends on time for both styles; the mic alone comes out
+  sample-identical with Deeper fully in; above 2.5 kHz the music drops from -45.7 dB (share of its energy) to
+  -60.8 (gentle) and -69.3 (deeper), the beat from -9.6 to -31.4 and -41.6. Level: music -1.4 dB gentle, -0.1
+  deeper; beat -3.1 dB gentle, -0.6 deeper (gentle's 20% copy partly cancels; no makeup gain added yet).
+
+**His listen (side by side):** headphones, Underwater on Gentle, the music playing (pad/chimes, a found beat if
+walking). Run the tap for ten seconds or so: the music should go muffled over about 4 s while the real water
+stays clear; stop the tap and it should come back over about 6 s. Then Deeper, the same way: duller, with a slow
+pitch sway. Hum along to hear whether the sway sounds out of tune. Switching between the two mid-water should not
+click. Tell us which one, and whether it is too strong, too weak or too slow.
