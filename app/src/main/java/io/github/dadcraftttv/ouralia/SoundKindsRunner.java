@@ -39,6 +39,8 @@ final class SoundKindsRunner {
     private static int judged;
     private static volatile boolean roomOn, gapsOn, waterOn;
     private static boolean waterSent;
+    private static volatile int uwStyle;
+    private static int uwSent;
 
     private SoundKindsRunner() { }
 
@@ -95,6 +97,32 @@ final class SoundKindsRunner {
         }
     }
 
+    /** Underwater (DadCraft, Nov 2: "can we build both?"): 0 Off, 1 Gentle, 2 Deeper. While settled water is heard
+     *  the music and beat (never the mic) turn muffled and wobble; its own setting, independent of the trail. */
+    static final String UW_ID = "underwater";
+
+    static int uwEnabled() {
+        return available() ? Math.max(0, Math.min(2, Math.round(ParamStore.get(UW_ID)))) : 0;
+    }
+
+    /** Called with lock held, like {@link #waterTick}: the style to send if it changed (0 = water over, Music off,
+     *  no ears or the setting off), else -1. Sent with {@link #sendUw} after letting go of the lock. */
+    private static int uwTick() {
+        int next = thread != null && uwStyle > 0 && ParamStore.get("music_on") >= 0.5f
+                && kinds != null && kinds.water() ? uwStyle : 0;
+        if (next == uwSent) {
+            return -1;
+        }
+        uwSent = next;
+        return next;
+    }
+
+    private static void sendUw(int u) {
+        if (u >= 0) {
+            PdBase.sendFloat("underwater", u);
+        }
+    }
+
     /** The old Diagnostics switch's stored value moves to the setting, once (stored values are kept). */
     static void carryRoomSwitch(Context c) {
         android.content.SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -109,13 +137,16 @@ final class SoundKindsRunner {
      *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
     static void settingsTick() {
         boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled();
+        int uw = uwEnabled();
         boolean music, talk, listen, same;
-        int w;
+        int w, u;
         synchronized (lock) {
-            boolean waterChanged = waterOn != water;
+            boolean waterChanged = waterOn != water, uwChanged = (uwStyle > 0) != (uw > 0);
             waterOn = water;
+            uwStyle = uw;
             w = waterTick();
-            same = (room == roomOn && gaps == gapsOn && !waterChanged) || app == null;
+            u = uwTick();
+            same = (room == roomOn && gaps == gapsOn && !waterChanged && !uwChanged) || app == null;
             if (same) {
                 music = talk = listen = false;
             } else {
@@ -123,10 +154,11 @@ final class SoundKindsRunner {
                 gapsOn = gaps;
                 music = kinds != null && kinds.roomMusic();
                 talk = kinds != null && kinds.talking();
-                listen = room || gaps || water || enabled(app);
+                listen = room || gaps || water || uw > 0 || enabled(app);
             }
         }
         sendWater(w);
+        sendUw(u);
         if (same) {
             return;
         }
@@ -135,7 +167,7 @@ final class SoundKindsRunner {
         if (listen) {
             start();
         } else {
-            stop("Make Room for Music, Mind the Gap and Water Leaves a Trail off");
+            stop("Make Room for Music, Mind the Gap, Water Leaves a Trail and Underwater off");
         }
     }
 
@@ -149,7 +181,7 @@ final class SoundKindsRunner {
         }
         if (on) {
             start();
-        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled()) {   // (any of the Music sound-kind settings keeps listening)
+        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled() && uwEnabled() == 0) {   // (any of the Music sound-kind settings keeps listening)
             stop("switched off");
         }
     }
@@ -164,8 +196,9 @@ final class SoundKindsRunner {
             roomOn = roomEnabled();
             gapsOn = gapsEnabled();
             waterOn = waterEnabled();
+            uwStyle = uwEnabled();
         }
-        if (enabled(c) || roomOn || gapsOn || waterOn) {
+        if (enabled(c) || roomOn || gapsOn || waterOn || uwStyle > 0) {
             start();
         }
     }
@@ -217,7 +250,7 @@ final class SoundKindsRunner {
         HandlerThread t;
         Handler w;
         Consumer<String> l;
-        int water;
+        int water, uw;
         synchronized (lock) {
             if (thread == null) {
                 return;
@@ -228,8 +261,10 @@ final class SoundKindsRunner {
             thread = null;
             worker = null;
             water = waterTick();
+            uw = uwTick();
         }
         sendWater(water);
+        sendUw(uw);
         PdBase.sendFloat("sk_on", 0);
         PdBase.sendFloat("room_music", 0);   // (no ears: the music comes back)
         PdBase.sendFloat("voice_talk", 0);
@@ -301,7 +336,7 @@ final class SoundKindsRunner {
         float[] scores = m.scores(wave);
         long took = System.nanoTime() - t0;
         boolean changed, roomChanged, room, talkChanged, talk;
-        int water;
+        int water, uw;
         String line;
         synchronized (lock) {
             if (judged < nanos.length) {
@@ -315,8 +350,10 @@ final class SoundKindsRunner {
             talk = ks.talking();
             talkChanged = talk != wasTalk;
             water = waterTick();
+            uw = uwTick();
         }
         sendWater(water);
+        sendUw(uw);
         if (changed && l != null) {
             l.accept(line);
         }

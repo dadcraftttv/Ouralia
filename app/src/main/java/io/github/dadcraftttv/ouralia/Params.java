@@ -238,6 +238,10 @@ final class Params {
             // Water only extends a chime already earned by a sudden sound. Independent of presets and dice.
             new Param("water_trail", "Water Leaves a Trail (water heard: at least two softer notes follow a chime)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
+            // Underwater (DadCraft, Nov 2: "can we build both? just so i could test them side by side"): while water is
+            // heard the music and beat, never the mic, turn muffled with a slow wobble. Gentle and Deeper to compare.
+            new Param("underwater", "Underwater (water heard: the music goes muffled and wobbly)", 0f, 2f, 0f, "",
+                    Param.Curve.LINEAR).choices("Off", "Gentle", "Deeper").inSection("music").noPd().noPreset().soundKinds(),
             // Notes only for bigger sounds (DadCraft, Oct 30: typing "just sounds like it's random notes responding with
             // no musical semblance"): small sudden sounds get no chime or found bell, only the found drums and groove.
             // On by default at his 20.5 dB (Oct 31), still a slider: "each manufacturer could set mic values differently".
