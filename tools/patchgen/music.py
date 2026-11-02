@@ -610,7 +610,7 @@ def add_music(P):
     P.obj("mu_nb_r", "r note_big", x + 480, 470); P.obj("mu_nb_v", "value nbig", x + 480, 485); P.c("mu_nb_r", "mu_nb_v")
     P.obj("mu_nb_t", "t b", x + 400, 505)
     nbt = f"(nbig*(nbig>0)+{RM_BIG_DB}*rmus)"   # (+RM_BIG_DB while music plays in the room: Make Room for Music)
-    ex("mu_nb_chk", f"(({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt}))*(vtalk<0.5)+$f1*0", x + 400, 515)   # (people talking: Answer in the Gaps)
+    ex("mu_nb_chk", f"(({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt}))*(vtalk<0.5)+$f1*0", x + 400, 515)   # (people talking: Mind the Gap)
     P.obj("mu_nb_sel", "sel 1", x + 400, 525)
     P.c(handling_gate(P, "mu_ons_hg", "mu_onset_sel", x + 400, 480, wait=False), "mu_nb_t")   # not handling noise
     P.c("mu_nb_t", "mu_nb_chk"); P.c("mu_nb_chk", "mu_nb_sel"); P.c("mu_nb_sel", "mu_ons_gate")
@@ -660,8 +660,11 @@ def add_music(P):
     P.obj("tr_start", "t b b b b", tx, ty + 45); P.c("tr_in", "tr_start", 0, 0)
     P.obj("tr_del", "del", tx, ty + 150)
     P.msg("tr_stop", "stop", tx + 180, ty + 60); P.c("tr_start", "tr_stop", 3, 0); P.c("tr_stop", "tr_del")
-    P.obj("tr_rc", "value ctrail", tx + 120, ty + 60); ex("tr_n0", "int($f1+0.5)", tx + 120, ty + 75)
+    P.obj("tr_rc", "value ctrail", tx + 120, ty + 60); ex("tr_n0", f"max(int($f1+0.5), {WATER_TRAIL_MIN}*(wtrail>0)*(vtalk==0))", tx + 120, ty + 75)
     P.obj("tr_wn", "value trn", tx + 120, ty + 90)
+    # Keep the ordinary remaining count separately, so cancelling water never changes the selected trail.
+    ex("tr_ord", "int($f1+0.5)", tx + 260, ty + 75); P.obj("tr_ow", "value tro", tx + 260, ty + 90)
+    P.c("tr_rc", "tr_ord"); P.c("tr_ord", "tr_ow")
     P.c("tr_start", "tr_rc", 2, 0); P.c("tr_rc", "tr_n0"); P.c("tr_n0", "tr_wn")
     P.msg("tr_g0", str(TRAIL_GAP_MS), tx + 60, ty + 60); P.obj("tr_wg", "value trg", tx + 60, ty + 75)
     P.c("tr_start", "tr_g0", 1, 0); P.c("tr_g0", "tr_wg")
@@ -673,6 +676,8 @@ def add_music(P):
     P.obj("tr_fire", "t b b b", tx, ty + 170); P.c("tr_del", "tr_fire")
     P.obj("tr_dn", "value trn", tx + 120, ty + 185); P.obj("tr_dn1", "- 1", tx + 120, ty + 200)
     P.obj("tr_dnw", "value trn", tx + 120, ty + 215)
+    ex("tr_od", "max(0, tro-1)+$f1*0", tx + 260, ty + 200)
+    P.c("tr_fire", "tr_od", 2, 0); P.c("tr_od", "tr_ow")
     P.c("tr_fire", "tr_dn", 2, 0); P.c("tr_dn", "tr_dn1"); P.c("tr_dn1", "tr_dnw")
     P.obj("tr_pv", "value trv", tx + 60, ty + 185); P.obj("tr_pvt", "t f f", tx + 60, ty + 200)
     P.obj("tr_pv2", f"* {TRAIL_VEL}", tx + 80, ty + 215); P.obj("tr_pvw", "value trv", tx + 80, ty + 230)
@@ -682,6 +687,19 @@ def add_music(P):
     P.obj("tr_ngt", "t f f", tx, ty + 215); P.obj("tr_ngw", "value trg", tx + 30, ty + 230)
     P.c("tr_fire", "tr_ng", 0, 0); P.c("tr_ng", "tr_ng2"); P.c("tr_ng2", "tr_ngt"); P.c("tr_ngt", "tr_ngw", 1, 0)
     P.c("tr_ngt", "tr_chk", 0, 0)
+    # Water and talk changes trim only the extra notes. With no ordinary notes left, stop the delay too.
+    P.obj("tr_water", "r water_trail", tx + 360, ty)
+    P.obj("tr_wt", "t f f", tx + 360, ty + 15); P.c("tr_water", "tr_wt")
+    P.obj("tr_water_v", "value wtrail", tx + 420, ty + 30); P.c("tr_wt", "tr_water_v", 1, 0)
+    P.obj("tr_leave", "sel 0", tx + 360, ty + 30); P.c("tr_wt", "tr_leave", 0, 0)
+    P.obj("tr_talk", "r voice_talk", tx + 500, ty)
+    P.obj("tr_talkon", "sel 1", tx + 500, ty + 15); P.c("tr_talk", "tr_talkon")
+    ex("tr_trim", "min(trn, tro)", tx + 360, ty + 50)
+    P.c("tr_leave", "tr_trim"); P.c("tr_talkon", "tr_trim")
+    P.obj("tr_trim_t", "t f f", tx + 360, ty + 65); P.c("tr_trim", "tr_trim_t")
+    P.c("tr_trim_t", "tr_wn", 1, 0)
+    P.obj("tr_empty", "sel 0", tx + 360, ty + 80); P.c("tr_trim_t", "tr_empty", 0, 0)
+    P.c("tr_empty", "tr_stop")
     add_talk_gaps(P, x + 450, 1120, ex)
 
     # Path 2, a slow pattern while you are still: now and then a chime, more often in a livelier room.
@@ -1244,7 +1262,7 @@ def add_music(P):
     return "mu_out"
 
 def add_talk_gaps(P, gx, gy, ex):
-    """Answer in the Gaps (DadCraft, Nov 1, step 6): "voice_talk 1" from the app (sound kinds hears people talking)
+    """Mind the Gap (DadCraft, Nov 1, step 6): "voice_talk 1" from the app (sound kinds hears people talking)
     holds the chimes (their checks read vtalk); here, every TALK_TICK_MS, the level above the room's quiet tells
     speech from a pause. A pause of TALK_GAP_MS after at least TALK_SPEECH_MS of speech gets an answer: 2 or 3
     chimes into mu_deg (in key, a step or two apart like any chime), each softer and a little later."""

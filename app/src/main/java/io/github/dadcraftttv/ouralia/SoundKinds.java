@@ -31,11 +31,14 @@ final class SoundKinds {
     static final int MUSIC = 1, ROOM_N = 80;
     static final float ROOM_ON = 0.4f, ROOM_OFF = 0.15f;
     /**
-     * Answer in the Gaps (Nov 1, step 6): people talking when voices were the kind for TALK_ON of the last TALK_N
+     * Mind the Gap (Nov 1, step 6): people talking when voices were the kind for TALK_ON of the last TALK_N
      * judgements (~8 s: talk starts and stops more often than a song), over again under TALK_OFF.
      */
     static final int VOICES = 0, TALK_N = 32;
     static final float TALK_ON = 0.4f, TALK_OFF = 0.15f;
+
+    static final int WATER = 4, WATER_N = 32;
+    static final float WATER_ON = 0.4f, WATER_OFF = 0.15f;
 
     /** The model, only in the Dev build (src/dev YamNet: LiteRT). */
     interface Model {
@@ -53,6 +56,10 @@ final class SoundKinds {
     private final boolean[] wasTalk = new boolean[TALK_N];
     private int talkN, talkI;
     private boolean talking;
+    private final boolean[] wasWater = new boolean[WATER_N];
+    private int waterN, waterI;
+    private boolean water;
+
 
     /** {@code kinds}: kinds.txt's lines ("voices 0 1 2 ...", "#" comments), one per name, in NAMES' order. */
     SoundKinds(String kinds) {
@@ -162,6 +169,15 @@ final class SoundKinds {
         } else if (talking && talkN <= TALK_OFF * TALK_N) {
             talking = false;
         }
+        boolean w = kind == WATER;
+        waterN += (w ? 1 : 0) - (wasWater[waterI] ? 1 : 0);
+        wasWater[waterI] = w;
+        waterI = (waterI + 1) % WATER_N;
+        if (!water && waterN >= WATER_ON * WATER_N) {
+            water = true;
+        } else if (water && waterN <= WATER_OFF * WATER_N) {
+            water = false;
+        }
         return kind != was;
     }
 
@@ -178,6 +194,11 @@ final class SoundKinds {
     /** True while people have been talking (see TALK_N). */
     boolean talking() {
         return talking;
+    }
+
+    /** True while settled water fills the window (about eight seconds). */
+    boolean water() {
+        return water;
     }
 
     /** The last judgement's numbers, one per kind. */
@@ -211,5 +232,8 @@ final class SoundKinds {
         Arrays.fill(wasTalk, false);
         talkN = talkI = 0;
         talking = false;
+        Arrays.fill(wasWater, false);
+        waterN = waterI = 0;
+        water = false;
     }
 }

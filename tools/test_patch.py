@@ -97,7 +97,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 jp = java_params()
 patch_text = open(PATCH).read()
 receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room", "rm_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
-    "step", "sk_on", "room_music", "voice_talk", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+    "step", "sk_on", "room_music", "voice_talk", "water_trail", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2964,6 +2964,23 @@ def rm_count(amp, rm):
 rm_c = [(amp, rm_count(amp, 0), rm_count(amp, 1)) for amp in (0.02, 0.04, 0.08, 0.5)]
 rm_ok = rm_c[2][1][0] > 0 and rm_c[2][2] == (0, 0) and rm_c[3][2][0] > 0 and all(c[2][0] <= c[1][0] for c in rm_c)
 check(rm_ok, "make room for music: knocks need %d dB more to get a chime or bell (amp, off, on: %s)" % (RM_BIG_DB, rm_c))
+
+# ---- 7z5. water leaves a trail: extra notes only after an earned chime ----
+def water_notes(n=0, water=1, cancel=None, on=1):
+    e = fresh(music_on=on, music_pad=0, music_arp=1, wet=0, beat_level=0, mix_walk=0, chime_trail=n)
+    e.listen("chime_deg"); e.run(e.silence(4)); e.heard.pop("chime_deg", None)
+    e.send("water_trail", water)
+    knock = (np.random.default_rng(3).standard_normal(int(0.15 * SR)) * 0.3).astype(np.float32)
+    e.run(knock); e.run(e.silence(0.15))
+    if cancel:
+        e.send(*cancel)
+    e.run(e.silence(6))
+    return len(e.heard.get("chime_deg", []))
+wn = [water_notes(water=0), water_notes(), water_notes(n=4),
+      water_notes(cancel=("voice_talk", 1)), water_notes(cancel=("water_trail", 0)), water_notes(on=0),
+      water_notes(n=1, cancel=("voice_talk", 1)), water_notes(n=4, cancel=("water_trail", 0))]
+check(wn == [1, 3, 5, 1, 1, 0, 2, 5],
+      "water leaves a trail: dry, water, selected 4, talk cancel, water leaves, Music off, ordinary 1/4 survive: %s" % wn)
 
 # ---- 7z4. answer in the gaps: while people talk the chimes wait, then answer in the pauses (Nov 1, step 6) ----
 from patchgen.constants import TALK_GAP_MS, TALK_NOTE_MS

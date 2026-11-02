@@ -206,9 +206,9 @@ short window (~8 s, faster than Make Room's ~20 s, as talk starts and stops more
    when the talk ends. Least intrusive, closest to how a mix makes room for a singer.
 Recommended first: 3 (fits a talking walk without hiding the music); 2 after it if he wants the music to take part.
 
-## Step 6: Answer in the Gaps (Nov 1, branch `sound-kinds`, Dev only; his listen next)
+## Step 6: Mind the Gap (Nov 1, branch `sound-kinds`, Dev only; heard and liked Nov 2)
 
-DadCraft (Nov 1: "go with 2"). A Music setting, "Answer in the Gaps" (`voice_gaps`, off by default, not in presets
+DadCraft (Nov 1: "go with 2"). A Music setting, "Mind the Gap" (originally Answer in the Gaps) (`voice_gaps`, off by default, not in presets
 or the dice, only where sound kinds can run; on, it listens by itself, like Make Room for Music).
 - **When:** `SoundKinds.talking()`: voices the kind for at least 40% of the last 32 judgements (~8 s), over under
   15%: on after ~3.5 s of talk, over ~7 s after it stops. Java tests J. Replayed on his runs: on 93% of the walk
@@ -248,7 +248,7 @@ in memory and never touches disk. The windows below count the settled `water` ki
    setting supplies the two-note minimum even with Trailing Melody Off; a higher selected or moving count still
    wins, and its stored setting stays unchanged. Risk: taps may be too smooth to trigger chimes, especially with
    Notes Only for Bigger Sounds high; splashing may instead become busy, and distant water may lose its trail.
-   With Make Room for Music, keep its 6 dB dip and raised trigger threshold. With Answer in the Gaps, talk takes
+   With Make Room for Music, keep its 6 dB dip and raised trigger threshold. With Mind the Gap, talk takes
    priority: cancel water-added tails when `voice_talk` is on, including notes already queued, and add no water
    tail to the voice answer. That arbitration needs new wiring; the current trail scheduler does not check talk.
 
@@ -261,7 +261,7 @@ in memory and never touches disk. The windows below count the settled `water` ki
    `room_music` events. Keep dry mic and effects untouched. Risk: this may feel like ordinary ducking, with a
    late return after a short tap; far water can release it even while still running. If Make Room for Music is
    also active, take the stronger dip (6 dB), never add them into 10 dB; keep its bigger-sound threshold tied to
-   music. Answer in the Gaps keeps its holds and pause answers, with those answers subject to the shared dip.
+   music. Mind the Gap keeps its holds and pause answers, with those answers subject to the shared dip.
 
 **Recommended first: 1, Water Leaves a Trail.** It gives the confirmed sink sounds a recognisable musical answer
 using an existing voice, without a new clock-driven layer. First listen: tap running smoothly, then a few
@@ -275,3 +275,28 @@ a small local replay can hold each logged kind until the next change, sample at 
 boundaries, and report each window's active share and changes as an estimate (judgements are not exactly 0.25 s
 apart). That needs no audio. It estimates availability, not splash-triggered phrase counts or audibility; those
 need a live listen, and rain/waves still need their own phone check.
+
+## Step 7: Water Leaves a Trail (Nov 2, Dev only; his listen next)
+
+DadCraft picked option 1: "Water Leaves a Trail, hand the build to Codex." The Music switch `water_trail` is
+independent, off by default, outside presets and dice, and starts listening without the Diagnostics switch.
+The settled water kind must fill 13 of the last 32 judgements to turn on (at least 40%); it turns off at 4 or
+fewer (at most 15%). Music off, setting off, or stopping the listener sends water off, only when state changes.
+
+While active, an existing sudden-sound chime starts at least two softer, increasingly spaced trailing notes.
+A higher selected or mover count wins; the stored `chime_trail` value is untouched. The gate, threshold and
+Make Room for Music behaviour stay as before. No sound earns a new trigger merely by being water.
+
+Mind the Gap wins: talk starting removes the water-added notes still queued. Leaving water does the same.
+The scheduler remembers the ordinary count taken at the chime and subtracts notes already played, so an ordinary
+Trailing Melody tail survives either event. This preserves the sound DadCraft liked in step 6. Voice pause
+answers use their own scheduler and acquire no water notes. Ringing notes decay naturally.
+
+The rename to Mind the Gap rides with this build; `voice_gaps` is unchanged so saved settings survive.
+Underwater is planned in ROADMAP, with no effect built yet. No audio is recorded or stored.
+
+First listen after review: Music on, Water Leaves a Trail on, Trailing Melody Off, Notes and Chimes audible.
+Let a tap run for a few seconds, splash enough to earn a chime, then stop the tap and wait about eight seconds.
+Compare with the switch off at the same level and bigger-sound threshold. Smooth water need not trigger anything.
+Then try Mind the Gap alongside it: speech should stop the water-added tail; pause answers stay as before.
+Rain and waves remain untested on the phone. DadCraft's listen decides the sound.
