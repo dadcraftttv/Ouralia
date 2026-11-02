@@ -83,21 +83,21 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
 - **Release:** rc5.2 (0.9.0-rc5.2, versionCode 15, Oct 30; DadCraft chose rc5.2) = rc5.1 + everything since Oct 22
   (Shimmer, Wind Guard, World in Stereo, Clear Catches, Room listener, Sleep Timer, Tap Tempo, Session Log, New
-  Pieces) and Session logs in About (email them as one zip or delete them, cap 50 MB). GitHub pre-release
-  v0.9.0-rc5.2, ~/Downloads/Ouralia-0.9.0-rc5.2.apk.
+  Pieces) and Session logs in About (email them as one zip or delete them, cap 50 MB). ~/Downloads/Ouralia-0.9.0-rc5.2.apk. Its GitHub
+  pre-release is gone with the Nov 2 repo remake (see GitHub below).
 - **rc5.1** (0.9.0-rc5.1, versionCode 14, Oct 21; DadCraft: a hotfix of rc5, not rc6) = rc5 + presets that save
   The Band, Intensity and the effects' voices, the Kit menus refreshing after a preset loads, and the cards'
   on/off switches back, Notes and Chimes Level in Mix (its APK was replaced twice on the release for those, before
   any download, DadCraft's choice). Release APK, debug
-  key, ~/Downloads/Ouralia-0.9.0-rc5.1.apk; GitHub pre-releases v0.9.0-rc5 and v0.9.0-rc5.1, not advertised until
-  GitHub purges the old commits. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 16.
+  key, ~/Downloads/Ouralia-0.9.0-rc5.1.apk; its GitHub pre-releases (and rc5's) are gone with the Nov 2 repo
+  remake. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 16.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). World in Stereo (Oct 22): DadCraft likes it,
   an option for phones that support it, never the default ("as close to universal as possible"). Clear Catches
   (`fs_clean`, 0-30 dB, Oct 22): default 0 (off); DadCraft at 10.4 dB, verdict pending. Back pocket, no setting but code kept: glitch kinds Ratchet and Spray
   (`GC_POCKET` in tools/patchgen/constants.py).
-- **Plan (DadCraft, Oct 21):** rc5 = the first public beta, renamed to Ouralia, posted under GitHub Releases but not
-  advertised until GitHub purges the old commits. The rename is done (Oct 21); the found-sound rhythm section (ROADMAP 16) was
+- **Plan (DadCraft, Oct 21):** rc5 = the first public beta, renamed to Ouralia, posted under GitHub Releases. The rc5
+  releases were never advertised and were dropped on Nov 2 (see GitHub). The rename is done (Oct 21); the found-sound rhythm section (ROADMAP 16) was
   already built (DadCraft will walk-test it). Everything else waits for wider testers' feedback.
 - **DadCraft's verdicts (Oct 21):** Evolving stays opt-in (not the default). Hooks That Grow (`mel_dev`), Living
   Grooves (`pat_gen`), Chord Colours (`chord_color`): "all good". The Band Plays good with Intensity 50 (he is
@@ -110,8 +110,10 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **New look (Oct 19):** the Ouralia redesign is built (DESIGN-NOTES "The look"; mockups: claude.ai canvas
   https://claude.ai/artifact/3yEsxCthrK6Dornte1VG5R). Finished Oct 20 after a last review against the
   mockups (DadCraft: "looks and feels great"); the "ouralia" wordmark came with the rename.
-- **GitHub:** the repo is dadcraftttv/Ouralia since Oct 21 (renamed from PdScenes; old links redirect). DadCraft asked Support to purge the old commits that held his name. When they answer, check that
-  `gh api repos/dadcraftttv/Ouralia/commits/c193786cad2b75e94f01912ec5b3c7b4a1dd26e0` no longer finds it.
+- **GitHub:** the repo is dadcraftttv/Ouralia since Oct 21 (renamed from PdScenes; the old PdScenes links stopped redirecting with the remake). Remade Nov 2 (DadCraft: "as much of a clean
+  slate as possible"): he deleted the repo so GitHub dropped the old commits that held his name, and the new one got
+  `main`, `reactive` and `sound-kinds` as they were, with no releases or tags. The rc5, rc5.1 and rc5.2 builds aren't
+  reposted (they predate the kits and the music work); the tags stay local. The next release starts fresh.
 - Push only when DadCraft asks (`git log origin/main..HEAD` shows what is unpushed). Releases: `docs/RELEASING.md`
   (`tools/release_apk.sh` builds one).
 
