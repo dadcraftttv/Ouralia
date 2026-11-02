@@ -447,3 +447,13 @@ RM_BIG_DB = 6           # dB added to the chimes' and room bells' "bigger sounds
 RM_DOWN_MS = 4000       # the dip's ramp: slow, so it reads as making room, not as a cut
 RM_UP_MS = 8000         # coming back is slower still
 SK_N = 5
+# Answer in the Gaps (DadCraft, Nov 1, step 6: "go with 2"): while people talk (voice_talk 1, from sound kinds) the
+# chimes and room bells hold and the composer's bars wait; in a pause after speech a short phrase answers in key
+TALK_GAP_DB = 8         # quieter than this many dB above the room's quiet = a pause
+TALK_GAP_MS = 600       # a pause this long gets the answer...
+TALK_SPEECH_MS = 800    # ...if there was at least this much speech since the last answer
+TALK_LONG_MS = 2000     # this much speech or more gets 3 notes, less gets 2
+TALK_TICK_MS = 50       # how often the level is looked at
+TALK_VEL = 0.45         # the answer's first note (then x TALK_VEL_STEP each)
+TALK_VEL_STEP = 0.75
+TALK_NOTE_MS = 260      # the first gap between the answer's notes (then x TRAIL_SLOW)

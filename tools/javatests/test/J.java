@@ -35,6 +35,12 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     k.reset(); for(int i=0;i<200;i++){ k.judge(sc(i%2==0?2:1,40)); } check(!k.roomMusic(),"room music: flipping with voices every judgement stays off (two in a row never names music)");
     k.reset(); for(int i=0;i<400;i++){ k.judge(i%8<4?sc(2,30):sc(1,30)); } check(k.roomMusic(),"room music: half the time music, half voices: on");
     k.reset(); check(!k.roomMusic(),"reset forgets room music");
+    int tn=0; while(!k.talking()&&tn<200){ k.judge(sc(0,40)); tn++; }
+    check(tn==14,"talk: on after "+tn+" judgements of voices (13 of 32, ~3.5 s: the first only proposes it)");
+    int tq=0; while(k.talking()&&tq<200){ k.judge(sc(6,40)); tq++; }
+    check(tq==29,"talk: over "+tq+" judgements (~7 s) after the voices stop (the window lets 9 of its 13 go: 4 = 0.15 of 32)");
+    k.reset(); for(int i=0;i<400;i++){ k.judge(i%12<8?sc(0,40):sc(6,4)); } check(k.talking(),"talk: speech with pauses stays on");
+    k.reset(); check(!k.talking(),"reset forgets talk");
     boolean threw=false; try{ new SoundKinds("voices 1\n"); }catch(IllegalArgumentException e){ threw=true; }
     check(threw,"kinds.txt missing a kind is refused");
     check(SoundKinds.costLine(new long[]{3000000,1000000,2000000},3).equals("Sound kinds: 3 judgements, YAMNet median 2.0 ms, slowest 3.0 ms"),"the minute's cost line");

@@ -30,6 +30,12 @@ final class SoundKinds {
      */
     static final int MUSIC = 1, ROOM_N = 80;
     static final float ROOM_ON = 0.4f, ROOM_OFF = 0.15f;
+    /**
+     * Answer in the Gaps (Nov 1, step 6): people talking when voices were the kind for TALK_ON of the last TALK_N
+     * judgements (~8 s: talk starts and stops more often than a song), over again under TALK_OFF.
+     */
+    static final int VOICES = 0, TALK_N = 32;
+    static final float TALK_ON = 0.4f, TALK_OFF = 0.15f;
 
     /** The model, only in the Dev build (src/dev YamNet: LiteRT). */
     interface Model {
@@ -44,6 +50,9 @@ final class SoundKinds {
     private final boolean[] wasMusic = new boolean[ROOM_N];
     private int musicN, roomI;
     private boolean roomMusic;
+    private final boolean[] wasTalk = new boolean[TALK_N];
+    private int talkN, talkI;
+    private boolean talking;
 
     /** {@code kinds}: kinds.txt's lines ("voices 0 1 2 ...", "#" comments), one per name, in NAMES' order. */
     SoundKinds(String kinds) {
@@ -144,6 +153,15 @@ final class SoundKinds {
         } else if (roomMusic && musicN <= ROOM_OFF * ROOM_N) {
             roomMusic = false;
         }
+        boolean v = kind == VOICES;   // the talk window, the same way
+        talkN += (v ? 1 : 0) - (wasTalk[talkI] ? 1 : 0);
+        wasTalk[talkI] = v;
+        talkI = (talkI + 1) % TALK_N;
+        if (!talking && talkN >= TALK_ON * TALK_N) {
+            talking = true;
+        } else if (talking && talkN <= TALK_OFF * TALK_N) {
+            talking = false;
+        }
         return kind != was;
     }
 
@@ -155,6 +173,11 @@ final class SoundKinds {
     /** True while music has been playing in the room (see ROOM_N). */
     boolean roomMusic() {
         return roomMusic;
+    }
+
+    /** True while people have been talking (see TALK_N). */
+    boolean talking() {
+        return talking;
     }
 
     /** The last judgement's numbers, one per kind. */
@@ -185,5 +208,8 @@ final class SoundKinds {
         Arrays.fill(wasMusic, false);
         musicN = roomI = 0;
         roomMusic = false;
+        Arrays.fill(wasTalk, false);
+        talkN = talkI = 0;
+        talking = false;
     }
 }

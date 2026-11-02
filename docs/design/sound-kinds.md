@@ -189,7 +189,7 @@ it only works with Sound kinds on).
   reset or a preset switches it at once.
 
 
-## Step 6 options: voices (Nov 1, his pick next)
+## Step 6 options: voices (Nov 1, he picked 2)
 
 DadCraft (Nov 1: "yes, write up the voice options"). Voices were 79% of his walk and 13% at home, and the model
 names them best (13/13). Each option sits behind its own switch, off by default, decided by the voices share of a
@@ -205,3 +205,22 @@ short window (~8 s, faster than Make Room's ~20 s, as talk starts and stops more
    (about 300 Hz-3 kHz, 6 dB), so voices stay clear and the bass, beat and chime shimmer stay full. Comes back
    when the talk ends. Least intrusive, closest to how a mix makes room for a singer.
 Recommended first: 3 (fits a talking walk without hiding the music); 2 after it if he wants the music to take part.
+
+## Step 6: Answer in the Gaps (Nov 1, branch `sound-kinds`, Dev only; his listen next)
+
+DadCraft (Nov 1: "go with 2"). A Music setting, "Answer in the Gaps" (`voice_gaps`, off by default, not in presets
+or the dice, only where sound kinds can run; on, it listens by itself, like Make Room for Music).
+- **When:** `SoundKinds.talking()`: voices the kind for at least 40% of the last 32 judgements (~8 s), over under
+  15%: on after ~3.5 s of talk, over ~7 s after it stops. Java tests J. Replayed on his runs: on 93% of the walk
+  (19 changes), 14% at home (79 changes, about one a minute), 34% of the music run (sung words heard as voices).
+  Events log: "Talk: heard, the chimes wait for the gaps" / "Talk: over, the chimes play again".
+- **What:** the app sends `voice_talk 1/0`. While 1: the sudden-sound chimes, the still pattern and the room bells
+  hold (their checks read `vtalk`), and the composer's bars wait (`cmp_talk_g`: the chord and section stay). The
+  walking notes, the beat and the pad's sound go on. Every `TALK_TICK_MS` 50 ms the level above the room's quiet
+  tells speech (>= `TALK_GAP_DB` 8 dB) from a pause; a pause of `TALK_GAP_MS` 600 ms after at least
+  `TALK_SPEECH_MS` 800 ms of speech gets an answer into `mu_deg` (in key, the melody's own steps): 2 chimes, 3
+  after `TALK_LONG_MS` 2 s of speech (no [random]: one would reshuffle every later one), the first at `TALK_VEL`
+  0.45 x the pocket hush, each x0.75, `TALK_NOTE_MS` 260 ms apart then x1.3. Nothing with Music off.
+  test_patch "answer in the gaps": four rounds of 1.5 s speech and a pause get 4 answers and 8 chimes (2.5 s of
+  speech: 12); none without talk, in 0.3 s pauses or with Music off; knocks during talk 0 chimes and 0 bells
+  (6 and 8 without).
