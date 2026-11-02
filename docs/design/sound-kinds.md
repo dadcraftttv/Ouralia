@@ -276,7 +276,7 @@ boundaries, and report each window's active share and changes as an estimate (ju
 apart). That needs no audio. It estimates availability, not splash-triggered phrase counts or audibility; those
 need a live listen, and rain/waves still need their own phone check.
 
-## Step 7: Water Leaves a Trail (Nov 2, Dev only; his listen next)
+## Step 7: Water Leaves a Trail (Nov 2, Dev only; heard and liked Nov 2)
 
 DadCraft picked option 1: "Water Leaves a Trail, hand the build to Codex." The Music switch `water_trail` is
 independent, off by default, outside presets and dice, and starts listening without the Diagnostics switch.
@@ -299,4 +299,6 @@ First listen after review: Music on, Water Leaves a Trail on, Trailing Melody Of
 Let a tap run for a few seconds, splash enough to earn a chime, then stop the tap and wait about eight seconds.
 Compare with the switch off at the same level and bigger-sound threshold. Smooth water need not trigger anything.
 Then try Mind the Gap alongside it: speech should stop the water-added tail; pause answers stay as before.
-Rain and waves remain untested on the phone. DadCraft's listen decides the sound.
+Rain and waves remain untested on the phone.
+
+His listen (Nov 2): "i just tested it and it sounds good." No tuning asked for.
