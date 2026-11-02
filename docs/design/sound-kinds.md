@@ -302,3 +302,81 @@ Then try Mind the Gap alongside it: speech should stop the water-added tail; pau
 Rain and waves remain untested on the phone.
 
 His listen (Nov 2): "i just tested it and it sounds good." No tuning asked for.
+
+
+## Step 8 options: Underwater (Nov 2)
+
+DadCraft: "hand underwater to codex, options first." Write-up only; neither option is built. Water Leaves a
+Trail was heard and liked. These choices change the colour of music already responding to the room; water
+alone starts no notes. Sink evidence carries over from step 7; rain and waves still need a phone listen.
+
+**Shared placement and control:** `add_music()` returns `mu_out` (pad/bass, chimes, room bells and harmony/tones).
+In `build.py`, process `music_rm` after Make Room for Music's gain, before it joins `filtered_dry` at
+`filtered_mix`. Separately process `beat_rm` before it joins `mix_pre` at `mix_out`. Those are two mono effect
+paths with shared control, not a filter on the final output. Never feed `filtered_dry`, `voice`, `mix_out` or
+the final stereo sum into Underwater: they contain mic audio. Leave `add_stereo_out()` and `stereo_plain`
+alone too; World in Stereo's mic side stays as before. Found instruments and room resonators count as musical
+voices even though the mic supplies their material. Existing downstream chorus/echo/reverb/spatial effects
+still apply normally, including to the newly coloured music; old reverb tails need not darken instantly.
+
+Both options propose an independent **Underwater** Music switch: off by default, Dev only, outside presets and
+dice, listening by itself. Share `SoundKinds.water()`'s settled window (13/32 on, 4/32 off, ~8 s), but add a
+separate Underwater receiver/state: today's `water_trail` send requires the trail switch, so reusing that send
+would wrongly couple the settings. Extend the runner's start/stop/reset logic for either switch, sending Pd
+messages outside its lock as step 7 now does. Music off, Underwater off or listener stop releases this effect;
+turning the trail off does not. No audio is recorded or stored.
+
+1. **Underwater, gentle:** after a tap has run for a few seconds, the pad and bells lose their bright edge,
+   percussion softens, and sustained tones have a faint swimming shimmer. The real water stays clear. Stopping
+   the tap gradually restores the usual sound. Start with two cascaded `lop~ 1600` filters per path, followed
+   by a light chorus: 80% filtered signal plus 20% of its delayed copy, delay 10 ms +/- 1 ms at 0.20 Hz, no
+   feedback. One shared `osc~`, two small `delwrite~` / `vd~` pairs (one per path), four `lop~`, and a handful
+   of `*~` / `+~` plus smoothed control/crossfade objects. Crossfade the unchanged input to that whole processed
+   branch over **4 s in / 6 s out**; keep the cutoff fixed initially. From an empty/full water window, entry is
+   roughly 3.25 s and exit 7 s before the ramps, plus classifier settling delay. **Tune cutoff first** (try
+   1.2-2.4 kHz if needed), leaving wobble and timings fixed for the first comparison.
+   Expected added DSP cost on the Moto: low relative to the existing effect chain, with short delays and no
+   FFT, new model or extra reverb; unmeasured, so no CPU percentage promised. A separate switch lets DadCraft
+   hear this alone or with the trail; a trail style would hide that choice. Make Room for Music's 6 dB dip and
+   trigger threshold still apply; Underwater adds colour, no deliberate second volume dip or makeup boost.
+   Mind the Gap keeps its holds, chord wait and cancellation priority; its pause answers get the underwater
+   colour if water remains active. Main risks: bells/beat lose definition on small headphones (and on a phone
+   speaker if speaker output is ever supported; Ouralia currently uses headphones only), chorus comb filtering
+   makes some notes hollow, or detuning clashes with an audible sung tone in the dry mic. Existing chorus can
+   make the combined effect stronger. Lower the chorus share if that clash is heard.
+
+2. **Underwater, deeper:** the same music seems farther below the surface, with a clearly audible slow pitch
+   sway rather than a faint shimmer; beats soften more and sway with the tones. Use the same two insertion
+   points and water window, but two `lop~ 900` filters per path and a fully delayed filtered branch, 12 ms
+   +/- 3 ms at 0.25 Hz, no feedback or undelayed chorus share at full depth. Crossfade **5 s in / 8 s out**;
+   water-window delays are the same as option 1. **Tune delay modulation depth first** (1-3 ms); leave cutoff
+   at 900 Hz for that listen. Objects and expected Moto cost are similar to option 1 (four filters, two short
+   variable delays, shared oscillator and fades); still unmeasured. Keep its own Underwater switch for the same
+   independent comparison; making it a trail style would also colour pad and beat, an unclear fit for a chime
+   setting. Make Room's dip stacks with this colour, without a new gain reduction; Mind the Gap still decides
+   when notes may play, including its usual pause answers, which are coloured while water stays on. Risks:
+   more pitch conflict against the dry voice, blurred found-drum attacks, loss of chime identity, and music
+   becoming too dull beside Make Room's dip. The added 12 ms delay affects musical attacks, never mic latency.
+
+**Switching for either option:** use complementary linear gain ramps for bypass/processed audio (no equal-power
+boost on correlated signals), initialise bypass on, and never jump a delay read position or hard-switch live DSP.
+If wet branches are suspended to save CPU when bypassed, start and prime their delay buffers silently before
+fading them in; suspend only after the release reaches zero. Reversing a water decision mid-fade continues from
+the current amount. Test this for clicks and stale-buffer bursts. Music off must retain its existing mute and
+must not leak buffered notes. Filtering changes perceived loudness: measure it against bypass before adding any
+compensation. Neither option guarantees that all existing effect tails sound uniformly submerged.
+
+**Recommendation: option 1, gentle, with its own switch.** It gives water a recognisable colour while keeping
+DadCraft's found percussion and the musical pitch relationship easier to hear. It can accompany the liked trail
+without requiring it. Option 2 is a later choice if the gentle treatment feels too slight, after a listen rather
+than building both now.
+
+**First listen (after a separate build brief):** headphones, fixed levels/effects, Make Room for Music and Mind
+the Gap off initially. With Underwater off, run the tap smoothly, make a few splashes, stop, and wait 15 seconds;
+repeat with it on. Keep an already responsive pad and audible found beat/chimes so there is music to colour;
+water should not create a pad or beat by itself. Listen for clearer real water, softer but recognisable musical
+attacks, and a smooth return. Then compare the trail off/on alongside Underwater, hum against the coloured
+music to judge pitch conflict, and try talk/pauses with Mind the Gap plus Make Room's dip when room music is
+actually detected. Check both switches off during the effect and music off/on for clicks or delayed leftovers.
+Before DadCraft's listen, a build must verify mic-only parity with World in Stereo on/off, both musical paths,
+level/headroom, release/reversal/mute behaviour, and measured Moto DSP cost. No new audio recording is needed.

@@ -52,7 +52,8 @@ liked (DadCraft, Nov 2: "it sounds good"). Water in 40% of 32 judgements supplie
 **Underwater (water, next option; DadCraft, Nov 2: "yes, add it to the plan"):** PLAN ONLY; Water Leaves a
 Trail is liked, so it is next if he wants it. While water is heard, generated music (pad, chimes, room bells, beat, tones; never the
 dry mic) eases into a muffled low-pass with a slow pitch wobble/light chorus, fading in and out over seconds.
-Its own switch or a "watery" style for the trail; implementation and tuning still to choose.
+Options written (Codex, Nov 2), DadCraft's pick next: gentle muffling/light chorus (recommended) or deeper
+muffling/pitch sway, each with its own switch. See design/sound-kinds.md "Step 8 options: Underwater".
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.
