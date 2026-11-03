@@ -72,6 +72,13 @@ final class SoundKinds {
     private boolean water;
     private final boolean[] wasBirds = new boolean[BIRDS_N];
     private int birdsN, birdsI;
+    /** Traffic Flow (Nov 3): a settled traffic scene, the room-music window's length (~20 s) so a short lull
+     *  at a red light holds it: traffic the kind for TRAFFIC_SCENE_ON of the last TRAFFIC_SCENE_N, gone under OFF. */
+    static final int TRAFFIC_SCENE_N = 80;
+    static final float TRAFFIC_SCENE_ON = 0.4f, TRAFFIC_SCENE_OFF = 0.15f;
+    private final boolean[] wasTraffic = new boolean[TRAFFIC_SCENE_N];
+    private int trafficSceneN, trafficI;
+    private boolean trafficScene;
     private boolean birds;
 
 
@@ -225,6 +232,15 @@ final class SoundKinds {
         } else if (birds && birdsN <= BIRDS_OFF * BIRDS_N) {
             birds = false;
         }
+        boolean tr = kind == TRAFFIC;
+        trafficSceneN += (tr ? 1 : 0) - (wasTraffic[trafficI] ? 1 : 0);
+        wasTraffic[trafficI] = tr;
+        trafficI = (trafficI + 1) % TRAFFIC_SCENE_N;
+        if (!trafficScene && trafficSceneN >= TRAFFIC_SCENE_ON * TRAFFIC_SCENE_N) {
+            trafficScene = true;
+        } else if (trafficScene && trafficSceneN <= TRAFFIC_SCENE_OFF * TRAFFIC_SCENE_N) {
+            trafficScene = false;
+        }
         return kind != was;
     }
 
@@ -251,6 +267,11 @@ final class SoundKinds {
     /** True while settled birds fill the window (about eight seconds), like {@link #water}. */
     boolean birds() {
         return birds;
+    }
+
+    /** True while settled traffic fills the window (about twenty seconds). */
+    boolean trafficScene() {
+        return trafficScene;
     }
 
     /** Fast score permission, independent of the optional Mind the Gap switch. */
@@ -296,6 +317,9 @@ final class SoundKinds {
         waterN = waterI = 0;
         water = false;
         Arrays.fill(wasBirds, false);
+        Arrays.fill(wasTraffic, false);
+        trafficSceneN = trafficI = 0;
+        trafficScene = false;
         birdsN = birdsI = 0;
         birds = false;
     }

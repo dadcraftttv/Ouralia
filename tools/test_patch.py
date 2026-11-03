@@ -96,7 +96,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "traffic_state", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "traffic_state", "traffic_flow_state", "btf_probe", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
     "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "birds_lift", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
@@ -3405,6 +3405,33 @@ for stereo in (0,1):
     check(np.array_equal(*ys),'traffic pass: off sample-identical to old direct path, stereo %d'%stereo)
 
 
+
+from patchgen.constants import TRAFFIC_FLOW_DIP_DB
+# ---- 7z9. traffic flow: a lull in a settled scene dips the beat, activity/leaving/talk restore it ----
+def flow_fresh(variant=''):
+    e = traffic_fresh(variant, state=0); e.listen('btf_level','traffic_lull'); e.send('traffic_flow_state', 2); return e
+def flow_gain(e, amp, secs):
+    e.run(sine(800, amp, secs)); e.send_msg('btf_probe', 'bang'); return e.heard['btf_level'][-1]
+dip = 10 ** (-TRAFFIC_FLOW_DIP_DB / 20)
+e = flow_fresh(); g_settle = flow_gain(e, .005, 3.5)
+g_lull = flow_gain(e, .005, 6)
+check(g_settle == 1 and abs(g_lull - dip) < .01, 'traffic flow: no dip while settling, a steady lull dips 12 dB (%.3f, %.3f)' % (g_settle, g_lull))
+check(max(e.heard.get('traffic_lull', [0])) == 1, 'traffic flow: the lull is reported')
+g_act = flow_gain(e, .015, 3.5)
+check(g_act > .99, 'traffic flow: 3 dB activity for a second restores the beat within 2 s (%.3f)' % g_act)
+e = flow_fresh(); flow_gain(e, .005, 10); e.send('traffic_flow_state', 1)
+g_mid = flow_gain(e, .005, 4); g_end = flow_gain(e, .005, 4.5)
+check(.4 < g_mid < .9 and g_end > .99, 'traffic flow: leaving the scene returns over 8 s (%.3f at 4 s, %.3f at 8.5 s)' % (g_mid, g_end))
+e = flow_fresh(); flow_gain(e, .005, 10); e.send('traffic_flow_state', 3)
+check(flow_gain(e, .005, 2.5) > .99, 'traffic flow: settled talk restores the beat over 2 s')
+e = flow_fresh(); flow_gain(e, .005, 10); e.send('room_music', 1)
+g_both = flow_gain(e, .005, 9)
+check(abs(g_both - dip) < .01, 'traffic flow: with Make Room the stronger dip wins, not both (%.3f)' % g_both)
+e = flow_fresh('wind'); check(flow_gain(e, .005, 10) == 1, 'traffic flow: wind vetoes the lull')
+e = flow_fresh(); e.send('traffic_flow_state', 0)
+check(flow_gain(e, .005, 10) == 1, 'traffic flow: off never dips')
+e = flow_fresh(); e.send('music_on', 0)
+check(flow_gain(e, .005, 10) == 1, 'traffic flow: Music off never dips')
 
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)

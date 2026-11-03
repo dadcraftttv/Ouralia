@@ -11,12 +11,14 @@ def _ex(P, name, formula):
 def add_traffic(P):
     """50 ms control state, 2 s scalar history. Baseline freezes during candidate/pass.
     traffic_state: 0 reset, 1 listening, 2 permitted, 3 talk (independent of Mind the Gap).
+    traffic_flow_state (Traffic Flow): 0 off, 1 no scene, 2 settled traffic scene, 3 talk. Either switch runs
+    the shared level detector; passes still need traffic_state 2, so Flow alone uses level activity only.
     Windiness is dcs_dewind~'s third outlet, 0..1 even with audible Wind Guard off.
     """
     dt = TRAFFIC_TICK_MS
     ticks = lambda ms: int(ms / dt)
     for recv, var in (('traffic_state', 'tp_state'), ('music_on', 'tp_music'),
-                      ('music_stereo', 'tp_stereo')):
+                      ('music_stereo', 'tp_stereo'), ('traffic_flow_state', 'tf_state')):
         P.obj('tp_r_' + var, 'r ' + recv, 15500, 10)
         P.obj('tp_v_' + var, 'value ' + var, 15500, 25)
         P.c('tp_r_' + var, 'tp_v_' + var)
@@ -46,7 +48,7 @@ def add_traffic(P):
     # Wire each next step from the previous trigger's left, calculation from its right.
     P.obj('tp_sample', 't b b', 15500, 100); P.c(prev, 'tp_sample'); P.c('tp_sample', 'tp_wind', 1)
     prev = 'tp_sample'
-    step('enabled', '(tp_state>0)&&(tp_music>0.5)', 'tp_enabled')
+    step('enabled', '((tp_state>0)||(tf_state>0))&&(tp_music>0.5)', 'tp_enabled')
     step('init', 'if(tp_enabled,tp_init+1,0)', 'tp_init')
     a = 1 - math.exp(-dt / TRAFFIC_LEVEL_MS)
     step('level', f'if(tp_init<=1,tp_raw,tp_level+{a}*(tp_raw-tp_level))', 'tp_level')
@@ -81,6 +83,24 @@ def add_traffic(P):
     step('target', f'if(tp_active>0,min(1,max(0,(tp_level-tp_base)/{TRAFFIC_SPAN_DB})),0)', 'tp_target')
     attack, release = (1-math.exp(-dt/t) for t in (TRAFFIC_ATTACK_MS, TRAFFIC_RELEASE_MS))
     step('amount', f'tp_amount+if(tp_target>tp_amount,{attack},{release})*(tp_target-tp_amount)', 'tp_amount')
+    # Traffic Flow: a reference at the low recent level; a lull dips the beat, activity or a pass restores it.
+    up = 1 - math.exp(-dt / TRAFFIC_FLOW_REF_MS)
+    step('f_on', '(tf_state==2)&&tp_enabled', 'tf_on')
+    step('f_init', 'if(tf_on,tf_init+1,0)', 'tf_init')
+    step('f_ref', f'if(tf_init<={ticks(TRAFFIC_FLOW_SETTLE_MS)},tp_level,min(tp_level,tf_ref+{up}*(tp_level-tf_ref)))', 'tf_ref')
+    step('f_hi', f'if(tf_on&&(tp_level-tf_ref>={TRAFFIC_FLOW_ACTIVE_DB}),tf_hi+1,0)', 'tf_hi')
+    step('f_lo', f'if(tf_on&&(tp_level-tf_ref<{TRAFFIC_FLOW_LULL_DB})&&(tp_active==0),tf_lo+1,0)', 'tf_lo')
+    step('f_lull', f'if(!tf_on||tp_veto||tf_init<={ticks(TRAFFIC_FLOW_SETTLE_MS)}||tp_active>0||tf_hi>={ticks(TRAFFIC_FLOW_ACTIVE_MS)},0,if(tf_lo>={ticks(TRAFFIC_FLOW_LULL_MS)},1,tf_lull))', 'tf_lull')
+    step('f_dip', f'tf_lull*{1 - 10 ** (-TRAFFIC_FLOW_DIP_DB / 20):.5f}', 'tf_dip')
+    # Ramp only on a change; the time comes from the new target (not the value, whose fan-out order is undefined).
+    P.obj('tpf_change', 'change', 15700, 100); P.c('tp_c_f_dip', 'tpf_change')
+    P.obj('tpf_t', 't f f', 15700, 115); P.c('tpf_change', 'tpf_t')
+    _ex(P, 'tpf_time', f'if($f1>0,{TRAFFIC_FLOW_DOWN_MS},if(tf_state==1,{TRAFFIC_FLOW_LEAVE_MS},{TRAFFIC_FLOW_UP_MS}))')
+    P.c('tpf_t', 'tpf_time', 1)
+    P.obj('tpf_pk', 'pack f f', 15700, 130); P.c('tpf_time', 'tpf_pk', 0, 1); P.c('tpf_t', 'tpf_pk', 0, 0)
+    P.obj('tpf_ln', 'line~', 15700, 145); P.c('tpf_pk', 'tpf_ln')   # the beat's dip (0 = none), build.py
+    P.obj('tp_s_flow', 's traffic_flow_dip', 15700, 160); P.c('tpf_change', 'tp_s_flow')
+    P.obj('tp_s_lull', 's traffic_lull', 15700, 160); P.c('tp_c_f_lull', 'tp_s_lull')
     # Release on pass end, talk, switch, listener/Music stop, or stereo off.
     P.obj('tp_release_t', 't b b', 15500, 160); P.c(prev, 'tp_release_t'); prev = 'tp_release_t'
     _ex(P, 'tp_release_c', '(tp_active==0)||(tp_stereo<0.5)'); P.c(prev, 'tp_release_c', 1)

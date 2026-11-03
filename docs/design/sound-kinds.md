@@ -775,7 +775,7 @@ listener's earlier +3.1 core-percentage-point A/B is context, not a new traffic 
 
 DadCraft picked "1 and 2, build 1 first", after Music in Stereo sounded good. Built option 1 only, Dev Music
 switch **Traffic Passes Through** (`traffic_pass`), off by default, outside presets/dice. It starts the listener
-without Diagnostics. Traffic Flow's scene latch and response are still unbuilt. The options above are the original
+without Diagnostics. Traffic Flow (option 2) followed the same day: see "Step 11: Traffic Flow" below. The options above are the original
 proposal; the implementation below supersedes its stereo range, fade and routing suggestions.
 
 **Permission and talk:** `SoundKinds` uses traffic's group score on each judgement, including unchanged kinds:
@@ -842,3 +842,28 @@ rise/permission combinations, late/expired candidates, all vetoes, max duration/
 return, off/stop/re-enable, mono with Music in Stereo off, finite audio and sample-identical off bypass. Runner tests
 cover independent listener start, unchanged-kind judgements, talk with Mind the Gap off, Music/switch stop,
 queued startup/cleanup/judgements across restart, and startup failure. No install; Claude review/Moto/listen next.
+
+## Step 11: Traffic Flow (Claude Code, Nov 3)
+
+DadCraft: "lets get the other traffic done" (roadside listen for option 1 deferred). Built option 2 as its own
+Dev Music switch **Traffic Flow** (`traffic_flow`, `.dcs()`), off by default, outside presets/dice, starting the
+listener without Diagnostics. Turning it on alone does not turn on option 1.
+- **Scene latch (Java):** `SoundKinds.trafficScene()`: traffic the settled kind for 40% of the last 80 judgements
+  (~20 s, Make Room's window, so a red-light lull of ~15 s keeps it), gone at 15%. `SoundKindsRunner` sends
+  `traffic_flow_state` (0 off, 1 no scene, 2 scene, 3 settled talk) through the same tick as `traffic_state`
+  (one code, pass + 4 x flow), so every start/stop/reset/failure path Codex guarded covers it too.
+- **Lull/activity (patch, `traffic.py`):** either switch runs the shared 50 ms level detector; passes still need
+  `traffic_state` 2, so Flow alone uses level activity only. Reference: follows the level for the first 4 s of a
+  scene (no dip), then the low recent level (falls at once, rises with a 20 s time constant). Activity: 3 dB above
+  it for 1 s, or an active pass. Lull: within 1 dB for 4 s. Wind/handling/pocket vetoes, talk, Music off and the
+  scene ending clear the lull.
+- **Beat dip (`build.py`):** a lull ramps the beat 12 dB down over 4 s (`TRAFFIC_FLOW_DIP_DB`, tune first);
+  activity, talk or a veto bring it back over 2 s, the scene ending over 8 s. Combined with Make Room as the
+  stronger dip (`max~` of the two dips), never both; off is exactly the old `rm_gain`. Beat clock untouched.
+- **Checks:** test_patch "7z9. traffic flow" (settle 1.000, lull 0.251, activity back to 1.000; scene leaving
+  0.626 at 4 s, 1.000 at 8.5 s; with Make Room 0.251; wind, off and Music off never dip). J2: Flow alone starts the
+  listener, latches after the window fills, keeps pass state 0, holds through a 15 s lull, leaves, stops.
+- **Known weakness (as proposed):** a steady engine or motorway reads as a lull after 4 s and thins the beat;
+  idling engines may read as activity. Judge it at a real stop-and-go street; set it aside if lull/return
+  doesn't track the road convincingly.
+
