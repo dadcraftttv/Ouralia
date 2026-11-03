@@ -49,9 +49,9 @@ it can also play the original RjDj scenes. It will be free on Google Play. (Its 
 
 ## Status
 
-In beta, tested by a small group. The latest test build is **0.9.0-rc4**, and what's new since then is listed at
-the top of the [tester guide](docs/TESTER-GUIDE.md). Made by DadCraft, a hobbyist musician, with an AI coding
-assistant.
+In beta, tested by a small group. No test build is posted on GitHub right now: the repository was remade on
+Nov 2, 2026, and the next release starts fresh. What testers should know is in the [tester guide](docs/TESTER-GUIDE.md).
+Made by DadCraft, a hobbyist musician, with AI coding assistants.
 
 ## Documents
 

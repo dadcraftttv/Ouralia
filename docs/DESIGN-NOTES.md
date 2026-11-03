@@ -165,7 +165,8 @@ This file is the index. Each feature's notes live in one of these (`grep -rn <fe
 - **Verdicts and the rc5 plan (DadCraft, Oct 21):** Song Shape Evolving stays opt-in. Hooks That Grow, Living Grooves
   and Chord Colours: "all good". The Band Plays sounds good with Intensity at 50 (he is comparing it off with Intensity
   100). The renames, effect families and rounded icons: good. rc5 is to be the first public beta, renamed to Ouralia,
-  posted under GitHub Releases but not advertised until GitHub purges the old commits (still found Oct 21). Before rc5:
+  posted under GitHub Releases but not advertised until GitHub purges the old commits (still found Oct 21; gone Nov 2,
+  when DadCraft deleted and remade the repo with no releases: the rc builds predate the kits). Before rc5:
   the rename and the found-sound rhythm section (ROADMAP 16); everything else after rc5's feedback.
 - **What is open lives in one place: ROADMAP "Open now"** (Oct 22, after the ChatGPT / Grok / Kimi reviews kept
   suggesting things already built and showed the docs disagreeing: this section said the Oct 17 objects list was

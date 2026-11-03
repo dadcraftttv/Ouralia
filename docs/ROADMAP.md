@@ -71,7 +71,7 @@ after the knock/chirp fixes): "knocking during birdsong now gives a high glass c
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.
 
-**Before advertising rc5 (item 22):** GitHub repo topics, maybe a short demo GIF.
+**Before advertising the next release (item 22):** GitHub repo topics, maybe a short demo GIF.
 
 **Code health (item 22):** a cost per feature, so new sounds land with a known CPU price (the health line's CPU,
 a feature on and off; DadCraft's phone). (The long session: done Oct 22. DESIGN-NOTES and make_patch.py split the way
