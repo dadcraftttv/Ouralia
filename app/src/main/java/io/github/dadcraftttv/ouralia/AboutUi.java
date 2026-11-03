@@ -212,23 +212,31 @@ final class AboutUi {
     }
 
     /** Licence texts shipped inside the app (assets/licenses), as the GPL requires. */
+    static final String YAMNET_NOTICE = "sound_kinds/NOTICE.txt";
+
     private void showLicenses() {
-        String[][] docs = {
-                {"Notice", "NOTICE.txt"},
-                {"GNU GPL v3", "GPL-3.0.txt"},
-                {"RjDj library (rjlib)", "rjlib-LICENSE.txt"},
-                {"Pure Data (BSD)", "pure-data-LICENSE.txt"},
-                {"PdParty helper objects (BSD)", "pdparty-LICENSE.txt"},
-                {"Oboe and libpd (Apache 2.0)", "Apache-2.0.txt"},
-                {"Fonts: Sora, Inter, JetBrains Mono (OFL)", "fonts-OFL.txt"},
-        };
-        String[] names = new String[docs.length];
-        for (int i = 0; i < docs.length; i++) {
-            names[i] = docs[i][0];
+        java.util.List<String[]> docs = new java.util.ArrayList<>(java.util.Arrays.asList(new String[][]{
+                {"Notice", "licenses/NOTICE.txt"},
+                {"GNU GPL v3", "licenses/GPL-3.0.txt"},
+                {"RjDj library (rjlib)", "licenses/rjlib-LICENSE.txt"},
+                {"Pure Data (BSD)", "licenses/pure-data-LICENSE.txt"},
+                {"PdParty helper objects (BSD)", "licenses/pdparty-LICENSE.txt"},
+                {"Oboe and libpd (Apache 2.0)", "licenses/Apache-2.0.txt"},
+                {"Fonts: Sora, Inter, JetBrains Mono (OFL)", "licenses/fonts-OFL.txt"},
+        }));
+        // Ouralia Dev only: the sound classifier's model (YAMNet, Apache 2.0) and its class names (CC BY-SA 4.0)
+        try (InputStream in = a.getAssets().open(YAMNET_NOTICE)) {
+            docs.add(1, new String[]{"Sound kinds: YAMNet and LiteRT (Apache 2.0)", YAMNET_NOTICE});
+        } catch (IOException e) {
+            // the normal build has no classifier, so nothing to list
+        }
+        String[] names = new String[docs.size()];
+        for (int i = 0; i < docs.size(); i++) {
+            names[i] = docs.get(i)[0];
         }
         a.new LookDialog()
                 .setTitle(R.string.show_licenses)
-                .setItems(names, (d, which) -> showAssetText(docs[which][0], "licenses/" + docs[which][1]))
+                .setItems(names, (d, which) -> showAssetText(docs.get(which)[0], docs.get(which)[1]))
                 .setNegativeButton(R.string.close, null)
                 .show();
     }

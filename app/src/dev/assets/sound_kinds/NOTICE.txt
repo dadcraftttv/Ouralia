@@ -7,3 +7,6 @@ https://www.apache.org/licenses/LICENSE-2.0
 The class names inside it come from the AudioSet ontology, Google, licensed under Creative Commons
 Attribution-ShareAlike 4.0 (https://creativecommons.org/licenses/by-sa/4.0/), used here under GPLv3 by CC's one-way
 compatibility declaration. kinds.txt groups those classes into Ouralia's kinds (tools/sound_kinds/bench.py).
+
+The model runs on LiteRT (com.google.ai.edge.litert:litert 1.4.2, Google), also licensed under the Apache License,
+Version 2.0 (the full text is under "Oboe and libpd (Apache 2.0)" in this list).
