@@ -3010,6 +3010,33 @@ check(500 < f0_of(bd_on) < 1100 and abs(lvl(bd_on) - 20 * np.log10(1 - BIRDS_TRI
       % (f0_of(bd_off), f0_of(bd_on), lvl(bd_on), bar_b(bd_on), bar_b(bd_off), f0_of(bd_talk), lvl(bd_talk),
          f0_of(bd_back), lvl(bd_back), f0_of(bd_glass), alone))
 
+# ...and while birds lift (DadCraft's first listen, Nov 2): no new hats for the found beat (chirps; reported as 5), kicks
+# and snares still caught; Notes Only for Bigger Sounds asks BIRDS_NB_DB less, so a knock over birdsong gets its chime
+from patchgen.constants import BIRDS_NB_DB
+def birds_catch(birds):
+    thump, clap, tick = fs_sounds()
+    x = (np.random.default_rng(3).standard_normal(7 * SR) * 0.0005).astype(np.float32)
+    for t, f in ((1.0, "k"), (2.0, "s"), (3.0, "h"), (4.0, "h"), (5.0, "k")):
+        s_ = {"k": thump, "s": clap, "h": tick}[f](); i = int(t * SR); x[i:i + len(s_)] += s_.astype(np.float32)
+    e = fresh(dry=0, wet=0, beat_level=1, beat_follow=1, beat_when=1, rhythm_src=1); e.listen("fs_caught")
+    e.send("birds_lift", birds); e.run(x); return [int(v) for v in e.heard.get("fs_caught", [])]
+def birds_nb(birds, amp=0.5, nb=25):
+    e = fresh(music_on=1, music_pad=0, music_arp=0.2, music_res=0.8, res_src=1, wet=0, beat_level=0, note_big=nb, chime_answer=1)
+    e.listen("chime_deg", "rnf_note"); e.send("birds_lift", birds); r = np.random.default_rng(9)
+    e.run((r.standard_normal(4 * SR) * 0.0005).astype(np.float32))
+    for k in ("chime_deg", "rnf_note"):
+        e.heard.pop(k, None)
+    x = (r.standard_normal(10 * SR) * 0.0005).astype(np.float32); m = int(0.03 * SR)
+    for k in range(8):
+        i = int((1 + 1.1 * k) * SR); x[i:i + m] += r.standard_normal(m) * np.exp(-np.arange(m) / (m / 5)) * amp
+    e.run(x); return len(e.heard.get("chime_deg", [])), len(e.heard.get("rnf_note", []))
+bc0, bc1 = birds_catch(0), birds_catch(1)
+bn = [(amp, birds_nb(0, amp), birds_nb(1, amp)) for amp in (0.05, 0.1, 0.2, 0.5)]
+bn_more = any(c[2][0] > c[1][0] for c in bn) and all(c[2][0] >= c[1][0] for c in bn)
+check(bc0 == [0, 1, 2, 2, 0] and bc1 == [0, 1, 5, 5, 0] and bn_more,
+      "birds lift the chimes: catches off %s, while birds %s (5 = a chirp skipped); bigger sounds ask %d dB less"
+      " (amp, chimes/bells off, birds: %s)" % (bc0, bc1, BIRDS_NB_DB, bn))
+
 # ---- 7z6. underwater: while water is heard the music and beat go muffled and wobbly, never the mic (Nov 2) ----
 from patchgen.constants import UW_IN_MS, UW_OUT_MS
 def uw_amt(style, back=0):   # the amount halfway and fully in, then (back) halfway and fully out

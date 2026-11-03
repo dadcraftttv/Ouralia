@@ -142,6 +142,9 @@ GLASS_LEVEL = 1.612              # matches Classic's loudness over each note's f
 BIRDS_IN_MS, BIRDS_OUT_MS = 3000, 5000
 BIRDS_TRIM = 0.29                # velocity x 0.71 at full (about -3 dB)
 BIRDS_MIDI = (72, 84)            # C5-C6 (523-1047 Hz): the knob to tune first (an octave lower if shrill)
+# (DadCraft's first listen, Nov 2: a knock over birdsong got no chime, and chirps were caught as hats: 31 in a minute)
+BIRDS_NB_DB = 8                  # while birds lift, Notes Only for Bigger Sounds asks this much less (never under 1 dB)
+                                 # and the found beat catches no new hats (bright and thin: chirps); kicks/snares still
 # Trailing Melody (DadCraft, Oct 31: chimes "should continue for a bit after they've stopped receiving stimuli, so
 # there's a little trailing melody"): after a sudden-sound chime (standing still), chime_trail more notes walk on
 WATER_TRAIL_MIN = 2              # minimum tail while settled water is heard, unless people are talking

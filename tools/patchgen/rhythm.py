@@ -231,7 +231,7 @@ def add_found_kit(P, x):
     P.obj("fs_bg_init", "value fsfloor", x + 760, y + 190); P.c("fs_bg_lb", "fs_bg_40"); P.c("fs_bg_40", "fs_bg_init")
     P.obj("fs_st_r", "r st_side", x + 860, y + 160); P.obj("fs_st_v", "value fsstereo", x + 860, y + 175)
     P.c("fs_st_r", "fs_st_v")   # (st_side: above 0 with the room in stereo)
-    ex("fs_role", f"if($f1<{fs_min(FS_MIN_DB)}||(fsclean>0&&$f1<fsfloor+fsclean),-1,if(fs_jv>0,-3,if($f1>{FS_POP_DB}&&$f2-$f1>-6,-2,if($f2-$f1>-6,0,if($f3-$f1>-6&&$f2-$f1<-15,2,1)))))", x + 400, y + 220)
+    ex("fs_role", f"if($f1<{fs_min(FS_MIN_DB)}||(fsclean>0&&$f1<fsfloor+fsclean),-1,if(fs_jv>0,-3,if($f1>{FS_POP_DB}&&$f2-$f1>-6,-2,if($f2-$f1>-6,0,if($f3-$f1>-6&&$f2-$f1<-15,if(blift>0.5,-4,2),1)))))", x + 400, y + 220)
     # inlets: $f1 overall (hot, last), $f2 lows, $f3 highs
     P.c("fs_d_t", "fs_max_hi", 2, 0); P.c("fs_max_hi", "fs_role", 0, 2)
     P.c("fs_d_t", "fs_max_lo", 2, 0); P.c("fs_max_lo", "fs_role", 0, 1)
@@ -241,7 +241,8 @@ def add_found_kit(P, x):
     P.obj("fs_lv_pk", "pack f f f", x + 300, y + 250); P.obj("fs_lv_s", "s fs_levels", x + 300, y + 270)
     P.c("fs_all_t", "fs_lv_pk", 1, 0); P.c("fs_max_lo", "fs_lv_pk", 0, 1); P.c("fs_max_hi", "fs_lv_pk", 0, 2); P.c("fs_lv_pk", "fs_lv_s")
     P.obj("fs_keep", "moses 0", x + 400, y + 250); P.c("fs_role", "fs_keep")
-    P.obj("fs_pop", "sel -2 -3", x + 300, y + 290); P.c("fs_keep", "fs_pop", 0, 0)   # (a dropped pop is reported as 3)
+    P.obj("fs_pop", "sel -2 -3 -4", x + 300, y + 290); P.c("fs_keep", "fs_pop", 0, 0)   # (a dropped pop is reported as 3)
+    P.msg("fs_chirp5", "5", x + 380, y + 310); P.c("fs_pop", "fs_chirp5", 2, 0); P.c("fs_chirp5", "fs_pop_s")   # (a hat while birds lift: 5)
     P.msg("fs_pop3", "3", x + 300, y + 310); P.obj("fs_pop_s", "s fs_caught", x + 300, y + 330)
     P.c("fs_pop", "fs_pop3"); P.c("fs_pop3", "fs_pop_s")
     P.msg("fs_hnd4", "4", x + 340, y + 310); P.c("fs_pop", "fs_hnd4", 1, 0); P.c("fs_hnd4", "fs_pop_s")
