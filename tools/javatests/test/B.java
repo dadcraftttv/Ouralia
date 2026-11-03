@@ -9,7 +9,7 @@ public class B {
   public static void main(String[] a){
     Param cb=Params.byId("calm_build");
     check(cb!=null && cb.def==0f && cb.inPreset && !cb.resetWhenAbsent && !cb.sendToPd,"Calm builds: off by default, in presets (not reset by one without it), app-only");
-    CalmBuild.reset(); Modulation.reset();
+    CalmBuild.wait01=()->0; CalmBuild.reset(); Modulation.reset();   // the shortest wait (30 s), as before Nov 2
     ParamStore.set("music_pad",0.3f); ParamStore.set("reverb_mix",0f); ParamStore.set("music_harm",0.5f); ParamStore.set("music_res",0.5f);
     run(29,true);
     check(CalmBuild.level()==0 && CalmBuild.phase()==CalmBuild.Phase.WAITING && !started,"nothing in the first 30 s of calm");
@@ -36,6 +36,14 @@ public class B {
     check(before>0.3f && CalmBuild.level()==0f && CalmBuild.phase()==CalmBuild.Phase.WAITING,"walking or a lively room: gone within 5 s ("+before+" -> "+CalmBuild.level()+")");
     run(20,true);
     check(CalmBuild.level()==0f,"...and it waits for calm again");
+    CalmBuild.wait01=()->1; CalmBuild.reset(); started=false;
+    run(59,true);
+    check(!started,"the longest wait: nothing in the first minute of calm");
+    run(2,true);
+    check(started,"...then a build starts");
+    double lo=99, hi=0; CalmBuild.wait01=Math::random;
+    for(int i=0;i<200;i++){ CalmBuild.reset(); lo=Math.min(lo,CalmBuild.waitS()); hi=Math.max(hi,CalmBuild.waitS()); }
+    check(lo>=30 && hi<=60 && hi-lo>20,"each wait is new, between 30 s and 1 min ("+Math.round(lo)+"-"+Math.round(hi)+" s)");
     if(fails==0) System.out.println("ALL PASSED");
   }
 }
