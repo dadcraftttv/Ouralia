@@ -561,3 +561,24 @@ knock once: the chime should be a higher, lighter glass note, no louder. Stop th
 again: the ordinary chime should be back. Tell us if it is too shrill (the first knob: an octave lower), too
 subtle, or if birds alone never get a note. Outdoors later, near real birds and in wind.
 
+**His first listen (Nov 2, indoors, birdsong from another device):** "knocking while bird sounds are playing
+produced no chime. knocking after bird sounds stopped produced a normal chime. it sounds fine to me so far but i
+wonder if there is a way to keep the birdsong from hitting the found sound rhythm grid." The event log: birds held
+for about a minute, so the lift was on; the knock got no chime because Notes Only for Bigger Sounds (20.5 dB) is
+measured above the room's floor, which the birdsong raised. In that minute the found beat caught 31 hats, all
+bright with no lows (chirps). So he had not heard the high Glass yet. His call: "yes, tie both to birds lift".
+
+**Built (Nov 2), both only while `birds_lift` is 1** (`blift`, at once, no fade):
+- Notes Only for Bigger Sounds asks `BIRDS_NB_DB` = 8 dB less (never under 1 dB; off stays off), for the chimes and
+  the room bells alike.
+- The found beat catches no new hats: a slice that would file as a hat is dropped and reported as 5, "Skipped a
+  chirp for the found-sound beat (birds heard)" in events.log. Kicks and snares are still caught; hats already
+  caught keep playing. Real taps that read as hats are skipped too while birds are heard.
+- Measured (test_patch 7z5b): thump, clap, tick, tick, thump are caught as kick, snare, hat, hat, kick; while birds
+  lift, as kick, snare, 5, 5, kick. Knocks at amplitudes 0.05 / 0.1 / 0.2 / 0.5 with the threshold at 25 dB: chimes
+  0 / 4 / 5 / 6 without birds, 5 / 5 / 6 / 7 with them.
+
+**His next listen:** the same as before. Over the birdsong, a knock should now get a chime, and it should be the
+high glass one. The found beat should stop gathering chirps (events.log shows "Skipped a chirp"). If chirps now
+earn chimes by themselves too often, 8 dB is the knob.
+

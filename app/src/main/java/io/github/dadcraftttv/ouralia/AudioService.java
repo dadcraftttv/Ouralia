@@ -709,6 +709,9 @@ public class AudioService extends Service {
                     if (role == 3) {
                         logEvent("Skipped a mic pop" + fsLevels);
                     }
+                    if (role == 5) {   // (Birds Lift the Chimes: while birds are heard, bright thin sounds are chirps)
+                        logEvent("Skipped a chirp for the found-sound beat (birds heard)" + fsLevels);
+                    }
                     if (role == 4) {
                         synchronized (handlingSkips) {
                             handlingSkips.addLast(SystemClock.uptimeMillis());

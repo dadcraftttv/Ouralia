@@ -428,6 +428,7 @@ def add_music(P):
     P.c("mu_bl_t", "mu_bl_ms", 1, 0); P.c("mu_bl_ms", "mu_bl_pk", 0, 1); P.c("mu_bl_t", "mu_bl_to", 0, 0); P.c("mu_bl_to", "mu_bl_pk")
     P.obj("mu_bl_ln", "line 0 50", cx - 200, cy + 145); P.c("mu_bl_pk", "mu_bl_ln")
     P.obj("mu_bl_v", "value bamt", cx - 200, cy + 160); P.c("mu_bl_ln", "mu_bl_v")
+    P.obj("mu_bl_on", "value blift", cx - 260, cy + 115); P.c("mu_bl_r", "mu_bl_on")   # (at once: bigger sounds, hats)
     lo, hi = BIRDS_MIDI
     midi = "(12*log(max($f1,1)/440)/log(2)+69)"
     fold = f"pow(2,max(ceil(({lo}-{midi})/12-0.001),0)-max(ceil(({midi}-{hi})/12-0.001),0))"
@@ -635,7 +636,7 @@ def add_music(P):
     # sound gets a note only this many dB above the room's quiet; smaller ones still feed the found drums and groove
     P.obj("mu_nb_r", "r note_big", x + 480, 470); P.obj("mu_nb_v", "value nbig", x + 480, 485); P.c("mu_nb_r", "mu_nb_v")
     P.obj("mu_nb_t", "t b", x + 400, 505)
-    nbt = f"(nbig*(nbig>0)+{RM_BIG_DB}*rmus)"   # (+RM_BIG_DB while music plays in the room: Make Room for Music)
+    nbt = f"(max(nbig-{BIRDS_NB_DB}*(blift>0.5),1)*(nbig>0)+{RM_BIG_DB}*rmus)"   # (+RM_BIG_DB while music plays in the room: Make Room for Music)
     ex("mu_nb_chk", f"(({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt}))*(vtalk<0.5)+$f1*0", x + 400, 515)   # (people talking: Mind the Gap)
     P.obj("mu_nb_sel", "sel 1", x + 400, 525)
     P.c(handling_gate(P, "mu_ons_hg", "mu_onset_sel", x + 400, 480, wait=False), "mu_nb_t")   # not handling noise
@@ -1667,7 +1668,7 @@ def add_room_notes(P, rx, ex, degree_to_hz):
     P.obj("rnf_lb", "loadbang", fx + 320, fy); P.msg("rnf_open1", "1", fx + 320, fy + 15)
     P.obj("rnf_v_open", "value rnf_open", fx + 320, fy + 30); P.c("rnf_lb", "rnf_open1"); P.c("rnf_open1", "rnf_v_open")
     P.obj("rnf_det", "t b", fx, fy + 50); P.c(handling_gate(P, "rnf_hg", "fs_det_sel", fx + 60, fy + 20, wait=False), "rnf_det")
-    nbt = f"(nbig*(nbig>0)+{RM_BIG_DB}*rmus)"   # (Make Room for Music, as for the chimes)
+    nbt = f"(max(nbig-{BIRDS_NB_DB}*(blift>0.5),1)*(nbig>0)+{RM_BIG_DB}*rmus)"   # (Make Room for Music, as for the chimes)
     ex("rnf_chk", f"(vtalk<0.5)*(rnf_src>=1)*(rnf_pk==0)*(rnf_on>0)*(rnf_open==1)*(({nbt}<=0)+({nbt}>0)*(mlev-min(max(mfloor,46),58)>={nbt}))+$f1*0", fx, fy + 65)   # (note_big too)
     # (this detector hears 5 ms readings, the level `mlev` comes ~30 times a second: with note_big on, wait for it)
     ex("rnf_nb_on", "(nbig>0)+(rmus>0)>0", fx - 60, fy + 50); P.obj("rnf_nb_sel", "sel 0 1", fx - 60, fy + 57)
