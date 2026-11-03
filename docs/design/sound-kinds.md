@@ -590,9 +590,9 @@ answered as sung phrases (not asked about). Outdoors later.
 ## Step 10 options: traffic (Nov 3)
 
 DadCraft: "hand traffic to codex, options first, let's aim for 1 and two, but ask Codex for what it thinks would
-work well in addition." Write-up only; none of these responses is built. His earlier idea is included in 1:
+work well in addition." Originally a write-up only; option 1 is now built (Step 10 below). His earlier idea is included in 1:
 "could traffic send the glass/synth bells/chimes from one ear to the other smoothly?" Options 1 and 2 follow
-Claude's list; 3 is Codex's addition. Names and numbers below are proposals for a first experiment.
+Claude's list; 3 is Codex's addition. Names and numbers below are the original proposals; Step 10 below records the built option 1.
 
 **Evidence and limits:** YAMNet named traffic on 12/12 phone-level bench clips, but only 1/12 at -50 dBFS. The
 "fires on 8 of 91 others" figure is the non-ML fallback's result, not YAMNet's false-positive rate. The bench
@@ -770,3 +770,73 @@ record DadCraft's mic to obtain test material. Before his listen, check lifecycl
 late-score expiry, no new notes/hits, off-path equivalence and mic isolation, stereo levels and no duplicate
 chime, gain composition, then incremental Moto CPU. The budgets above are estimates, not measurements; the
 listener's earlier +3.1 core-percentage-point A/B is context, not a new traffic benchmark.
+
+## Step 10: Traffic Passes Through (Codex, Nov 3)
+
+DadCraft picked "1 and 2, build 1 first", after Music in Stereo sounded good. Built option 1 only, Dev Music
+switch **Traffic Passes Through** (`traffic_pass`), off by default, outside presets/dice. It starts the listener
+without Diagnostics. Traffic Flow's scene latch and response are still unbuilt. The options above are the original
+proposal; the implementation below supersedes its stereo range, fade and routing suggestions.
+
+**Permission and talk:** `SoundKinds` uses traffic's group score on each judgement, including unchanged kinds:
+enter after two successive leads over every other non-quiet group at >=0.20; leave after <0.10 or another group
+leading continuously for 2000 monotonic ms. Scores between 0.10 and 0.20 hold an existing permission. Settled talk
+(the existing independent talk window) vetoes passes even with Mind the Gap off. `SoundKindsRunner` sends one
+`traffic_state`: 0 off/reset, 1 listening without permission, 2 permitted, 3 settled talk. State is read under its
+lock and sent outside it; Music off, switch off, stop/detach and startup failure clear it. Stop clears the model's
+logic immediately; queued old startup/judgement work is discarded and old cleanup closes only its own model.
+
+**Pass detector (`tools/patchgen/traffic.py`, tuning in `constants.py`):** raw `st_mid`, the same pre-effect feed
+as classification, through `env~ 1024 512` then a 150 ms envelope at 50 ms ticks. On enabling, a **500 ms warm-up**
+seeds the baseline from the current room; this prevents a constant sound from looking like a pass while the meter
+fills. The baseline follows with a 12 s time constant and freezes during a pending candidate or accepted pass.
+Forty scalar levels keep 2 s of history (no mic recording). A >=4 dB rise against both baseline and history
+starts a candidate; it must remain >=4 dB for 300 ms. Permission can arrive up to 1.5 s after that rise; an expired
+candidate cannot be revived. A fall within 2 dB cancels a pending candidate. A pass ends after 1 s within 2 dB,
+a veto/permission loss, or 10 s maximum, followed by a 2 s re-arm gap. Flat rumble supplies no new rising edge.
+The 0–10 dB excess maps to 0–1 with 250 ms attack / 1.5 s release; the multiplier interpolates between ticks.
+
+**Vetoes:** reuse `dcs_dewind~`'s third signal outlet. Inspection of `dcs/src/dcs_dewind_tilde.c` confirms it is
+0–1 independently of `amount`/Wind Guard: >0.6 for 500 ms latches the veto, <0.3 for 2 s clears it. Handling above
+0.15, an active jolt, or pocket state veto candidates and release passes too. This is conservative: the existing
+wind detector can also call deep noisy traffic rumble windy, so some real cars may be missed. No classifier or
+Wind Guard tuning changed.
+
+**What changes in the music:** apply `1 + envelope` to the **live** `mu_cut_pad` after Music Tone/Calm builds,
+up to 2x and capped at 6 kHz (an already higher resting cutoff stays unchanged). No saved setting, pad level,
+chord, bass, or gain changes. The pad's existing steady-sound condition still decides whether it sounds at all.
+
+On the first earned Synth/Glass note of an accepted pass, use the existing `music_pan0..3` hook: ±0.6, a 3 s
+control glide, first left to right then alternating per accepted pass. The ordinary per-note place lands first;
+the traffic override follows it. Found-only notes with an available catch leave this opportunity pending for an audible Synth/Glass note. Later notes retain their normal places. Voice reuse stops its old glide before
+placing the new note. Talk/pass/switch/listener/Music stop returns a moving voice to its latched ordinary place
+in 500 ms. No extra voice fade: the ordinary ring remains, and a short bell may die before reaching the far ear.
+No stereo branch, oscillator or Pd `[random]` was added. The hook's existing equal-power gains and 5 ms smoothing
+remain. **Music in Stereo must be on for the crossing**; off, only the pad opening is audible. Stereo off clears
+pending motion and returns a moving voice. Re-enabling begins neutral; no old candidate/pass is replayed.
+
+Make Room, Underwater, Birds Lift the Chimes, Trailing Melody and found sounds retain their existing paths and
+settings. Direction is staged, never inferred from the mono input. Classification alone generates no note;
+a passing car can yield a pad opening without a bell, and muted pad plus no earned chime yields no audible change.
+
+**Listening/checks:** compare the switch Off/On at fixed settings with Music in Stereo on, first steady traffic
+then separated passes, followed by talk/handling/wind. Listen for the pad opening on the rise and at most one earned
+bell crossing; check that a continuous engine does not keep retriggering. Claude Code review, Moto CPU A/B
+(target <2 extra points beyond the running listener) and DadCraft's roadside verdict remain open. Desktop checks
+and measurements are recorded in the handoff and below once complete; these do not establish roadside accuracy.
+
+Rough desktop patch-only CPU A/B (three repetitions, median process time, 24 s synthetic audio each): old
+0.778 s, traffic off 0.807 s, on 0.823 s. About 0.19 percentage points of a desktop core beyond the old path,
+0.07 beyond Off; this excludes YAMNet and is not a phone estimate. Actual pre-change 421f9bf versus the new patch
+with traffic off: fixed-seed synthetic pad/chime passage sample-identical in mono and stereo, peak difference 0.
+
+**Verification:** full tier passed, 185 Pd sections plus all Java, desktop, release and eight supporting Pd suites
+(445 s); Dev build and Java runner lifecycle tests passed. The first full run exposed a test-layout issue:
+adjacent top-level comments were splitting sequential traffic checks into separate workers. Kept the checks in
+one section, and measured toggle release with 5 ms channel projection (maximum ratio step 0.060), rather than
+pointwise division near waveform zero crossings. The passing traffic checks include startup neutrality,
+rise/permission combinations, late/expired candidates, all vetoes, max duration/re-arm, live cutoff and 6 kHz cap,
+~3 s alternating glide within ±0.6 and equal power within 1 dB, later/Found-only notes, voice reuse, talk's 500 ms
+return, off/stop/re-enable, mono with Music in Stereo off, finite audio and sample-identical off bypass. Runner tests
+cover independent listener start, unchanged-kind judgements, talk with Mind the Gap off, Music/switch stop,
+queued startup/cleanup/judgements across restart, and startup failure. No install; Claude review/Moto/listen next.

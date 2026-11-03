@@ -4,6 +4,7 @@ from .constants import *  # noqa: F401,F403 (the tuning numbers)
 from .core import *  # noqa: F401,F403
 from .stereo import add_stereo_in, add_stereo_out
 from .rhythm import add_tempo_clock, add_beat
+from .traffic import add_traffic
 from .music import add_music
 from .music_fx import add_music_fx
 from .glitch import add_glitch_cloud, add_onset_switch, add_reverse_reverb
@@ -525,6 +526,7 @@ def build():
     dry = smoothed(P, "dry", "dry", 1500, 300)
     P.sig2("filtered_dry", "*~", "filtered_pre", dry, 1600, 325)
     music = add_music(P)
+    add_traffic(P)
     rm_gain = add_room_music(P, 1750, 300)
     P.sig2("music_rm", "*~", music, rm_gain, 1700, 335)                # Make Room for Music: the music steps back
     add_underwater(P, 2000, 200)                                       # Underwater: the music only, never filtered_dry

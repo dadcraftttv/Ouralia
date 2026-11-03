@@ -238,6 +238,8 @@ final class Params {
             // Fixed music places (DadCraft, Nov 3), independent of presets and dice. No classifier needed.
             new Param("music_stereo", "Music in Stereo", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().soundKinds(),
+            new Param("traffic_pass", "Traffic Passes Through", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().dcs(),
             // Water only extends a chime already earned by a sudden sound. Independent of presets and dice.
             new Param("water_trail", "Water Leaves a Trail (water heard: at least two softer notes follow a chime)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
