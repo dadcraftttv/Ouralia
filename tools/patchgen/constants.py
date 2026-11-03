@@ -516,6 +516,13 @@ TRAFFIC_CUTOFF_MAX = 6000
 TRAFFIC_GLIDE_MS = 3000
 TRAFFIC_RETURN_MS = 500
 
+# Calm builds, the quiet tune (Nov 3, calm.py): the app's level and phrase on the drum grid.
+CALM_NOTES = 6              # notes in the two-bar phrase (CalmBuild.NOTES)
+CALM_DRUM_DB = -60          # the drums are sounding: the beat's output above this (dBFS)...
+CALM_DRUM_HOLD_MS = 3000    # ...within this long (a bar's gaps keep it)
+CALM_VEL_MIN = 0.2          # the first note's velocity...
+CALM_VEL_MAX = 0.45         # ...grows to this in full: gentle
+
 # Traffic Flow (Nov 3): inside a settled traffic scene, a sustained lull eases the beat down.
 TRAFFIC_FLOW_SETTLE_MS = 4000   # the reference settles first, no dip
 TRAFFIC_FLOW_REF_MS = 20000     # the low recent level rises this slowly (falls at once)

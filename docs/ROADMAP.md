@@ -28,6 +28,10 @@ sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUIL
 
 **New Pieces (item 21, step 5, Oct 29):** BUILT; since Nov 1 always on with Song Shape Evolving, Chord Colours, The Band Plays and Wandering Home, no switches (DadCraft: "what they bring makes the sound we're currently getting a bit more alive"; design/music.md "Removed and restored").
 
+**Calm Builds, the quiet tune (DadCraft, Nov 3):** REWORKED on `sound-kinds` (item 7): after 30-60 s of quiet a two-bar
+chime phrase grows over the drums that are already playing, trails off over 15 s on steady noise. DadCraft's listen next
+(quiet room with drums -> knock -> steady noise -> quiet again); bass is the next layer after it.
+
 **Reactive first (DadCraft, Oct 30):** Ouralia re-anchored on RjDj's rule, the world drives the music. Step 1 was a
 listening baseline of what already reacts (Singing Room, Harmony, sudden-sound chimes, Call and Response) with the
 clock-driven layers off; no code. Then one reactive response made convincing, only where the baseline falls short.
@@ -148,7 +152,7 @@ Oct 22, back pocket: DadCraft, "if users report wanting something like that".) (
    as the chime queue already does.
    DadCraft's pick (Oct 9): sudden sounds as the trigger first, then the free clock (walking still locks to steps).
 6. **(Built 2026-10-09 as a Scratch glitch kind, then removed with tape stop on Oct 10: DadCraft didn't want them) Collective world.** Capture a buffer and "scratch" it back and forth like a turntablist. A new scratch effect.
-7. **(BUILT 2026-10-14: the "Calm builds" switch in Music, off by default; CalmBuild.java, DESIGN-NOTES "Calm builds")
+7. **(BUILT 2026-10-14: the "Calm builds" switch in Music, off by default; CalmBuild.java, DESIGN-NOTES "Calm builds". REWORKED 2026-11-03 into the quiet tune: a two-bar chime phrase over sounding drums after 30-60 s of quiet, 15 s trail-off on steady noise; `docs/design/music.md`. DadCraft's listen next; bass after.)
    Optional: "calm builds" mode.** Dimensions' Tranquil adds layers the longer you stay quiet and lets noise make the music
    shrink away. Opposite of the current behavior (quiet room = quiet notes), so only as an option, if DadCraft wants it.
 8. **(BUILT 2026-10-09: chimes thin out when lots was played in the last ~8 s) Density memory.** Generative rule sets that look at how dense the recent music has been and adapt (avoids too many

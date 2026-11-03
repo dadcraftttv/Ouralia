@@ -1,50 +1,55 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 package io.github.dadcraftttv.ouralia;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.DoubleSupplier;
+import java.util.Arrays;
+import java.util.Random;
 
 /**
- * Calm builds (roadmap item 7, DadCraft Oct 14; "Calm builds" switch in Music, off by default, the user's own, not in
- * presets): standing still in a calm room for a while, the music slowly grows a layer at a time, holds, eases back,
- * then rests. Walking or a lively, loud room fades it away within seconds. Like Intensity it never changes a stored
- * value: {@link #apply} lifts what is sent to Pd (only what is already on), and the patch hears {@code calm_chimes}
- * for a gentle extra chance of standing-still chimes. Fed once per service tick. Pure logic (test B).
+ * Calm builds, the quiet tune (DadCraft, Nov 3; "Calm builds" switch in Music, off by default, the user's own, not in
+ * presets). Replaces the Oct 14 layer lift. DadCraft: "I'd like the chimes, bells, bass, etc to play along with the
+ * drums when a room has been quiet for ... 30 seconds to a minute. it should be a slow build up ... can trail off
+ * over 15 seconds once a consistent amount of noise has been detected."
+ * <p>
+ * After a quiet wait (30-60 s, new each time) a two-bar chime phrase, picked fresh for each build, grows a note at a
+ * time over {@link #RISE_S}, then plays while the room stays quiet. Quiet is judged from the pre-effect mic level
+ * against a reference that follows the room's low level while waiting (a steady fan below {@link #GUARD_DB} becomes
+ * the reference, so it counts as quiet). A knock or a cough is short and changes nothing (the found drums still catch
+ * it). Noise for {@link #NOISE_S} of the last {@link #WINDOW_S} s, or walking, starts a {@link #FADE_S} trail-off that
+ * always finishes; then a fresh wait. The patch plays the phrase on the drum grid only while the drums are sounding
+ * (calm.py). Nothing stored is changed. Fed once per service tick. Pure logic (test B).
  */
 final class CalmBuild {
 
     static final String ID = "calm_build";
-    // standing still in a calm room this long before a build starts: a new wait between the two each time
-    // (DadCraft, Nov 2: "kick in after 30 seconds to 1 minute"; was always 30 s)
-    static final double WAIT_MIN_S = 30, WAIT_MAX_S = 60;
-    static final double RISE_S = 180;     // then it grows over this long...
-    static final double HOLD_S = 60;      // ...holds...
-    static final double FALL_S = 120;     // ...and eases back over this long
-    static final double REST_S = 180;     // after a whole build, at least this long before the next one
-    static final double DROP_S = 5;       // walking or a lively room: gone in about this long
+    static final double WAIT_MIN_S = 30, WAIT_MAX_S = 60;   // DadCraft, Nov 2: "kick in after 30 seconds to 1 minute"
+    static final double RISE_S = 120;   // a note at a time: six notes over two minutes
+    static final double FADE_S = 15;    // DadCraft: "trail off over 15 seconds"
+    static final float NOISE_DB = 8f;   // noisy: this far above the quiet reference...
+    static final float GUARD_DB = -40f; // ...or louder than this at all (dBFS: a room this loud is never quiet)
+    static final double NOISE_S = 3, WINDOW_S = 5;   // consistent noise: noisy for 3 of the last 5 s
+    static final double REF_UP_S = 60;  // while waiting the reference rises this slowly toward a new steady sound
+    static final double REF_DOWN_S = 1; // and follows a quieter room within about a second
+    /** The phrase: NOTES chime steps in time order, at 16ths 0, 6, 12 of each of two bars (calm.py). */
+    static final int NOTES = 6, LOW = 7, HIGH = 14;
 
-    enum Phase { WAITING, RISING, HOLDING, FALLING, RESTING }
-
-    /** Layers join one after another: {where along the build it starts (0..1)} per layer. */
-    static final float PAD = 0f, ROOM = 0.25f, CHIMES = 0.5f, OPEN = 0.75f;
-
-    /** {layer start, lift at the peak} per parameter. */
-    private static final Map<String, float[]> RULES = new HashMap<>();
-
-    static {
-        RULES.put("music_pad", new float[]{PAD, 0.4f});
-        RULES.put("music_res", new float[]{ROOM, 0.4f});
-        RULES.put("music_harm", new float[]{OPEN, 0.4f});
-        RULES.put("reverb_mix", new float[]{OPEN, 0.4f});
-    }
+    enum Phase { WAITING, RISING, PLAYING, FADING }
 
     private static Phase phase = Phase.WAITING;
-    private static double phaseS;          // time in the current phase (WAITING: calm time so far)
-    private static float level;            // 0..1: how far the build has grown
-    private static double waitS = WAIT_MIN_S;   // this wait's length
+    private static double phaseS;          // time in the current phase (WAITING: quiet time so far)
+    private static float level;            // 0..1: how far the tune has grown
+    private static float fadeFrom;
+    private static double waitS = WAIT_MIN_S;
+    private static float ref;
+    private static boolean refSet;
+    private static final double[] noisy = new double[(int) WINDOW_S];   // noisy seconds per one-second bucket
+    private static int bucket;
+    private static double bucketS;
+    private static final float[] phrase = new float[NOTES];
+    private static boolean phraseNew;
     /** 0..1 picks where in WAIT_MIN_S..WAIT_MAX_S a wait falls (tests pin it). */
-    static DoubleSupplier wait01 = Math::random;
+    static java.util.function.DoubleSupplier wait01 = Math::random;
+    /** The phrase's dice (tests seed it). */
+    static Random dice = new Random();
 
     private CalmBuild() { }
 
@@ -52,6 +57,9 @@ final class CalmBuild {
         phase = Phase.WAITING;
         phaseS = 0;
         level = 0;
+        refSet = false;
+        Arrays.fill(noisy, 0);
+        bucketS = 0;
         newWait();
     }
 
@@ -64,61 +72,105 @@ final class CalmBuild {
     }
 
     /**
-     * One tick: {@code calm} = standing still in a calm room with the music on and the switch on.
-     * Returns true when a build has just started or just ended (for the event log).
+     * One tick. {@code on}: the switch and Music on. {@code walking}: counts as noise. {@code micDb}: the
+     * pre-effect mic level in dBFS. Returns true when the tune has just started or just ended (for the event log).
      */
-    static synchronized boolean tick(double dt, boolean calm) {
+    static synchronized boolean tick(double dt, boolean on, boolean walking, float micDb) {
         Phase before = phase;
-        if (!calm && phase != Phase.RESTING) {
-            // interrupted (or switched off): fade away fast, then wait for calm again
-            if (phase != Phase.WAITING) {
-                newWait();
-            }
-            level = (float) Math.max(0, level - dt / DROP_S);
+        if (!on) {
+            boolean was = phase != Phase.WAITING;
             phase = Phase.WAITING;
             phaseS = 0;
-            return before != Phase.WAITING && before != Phase.RESTING;
+            level = 0;
+            Arrays.fill(noisy, 0);
+            if (was) {
+                newWait();
+            }
+            return was;
         }
+        if (!refSet) {
+            ref = micDb;
+            refSet = true;
+        }
+        boolean loud = walking || micDb > GUARD_DB || micDb > ref + NOISE_DB;
+        if (micDb < ref) {
+            ref += (micDb - ref) * (float) Math.min(1, dt / REF_DOWN_S);
+        } else if (phase == Phase.WAITING) {   // (held while the tune plays and fades: noise can't become the floor)
+            ref += (micDb - ref) * (float) Math.min(1, dt / REF_UP_S);
+        }
+        bucketS += dt;
+        if (loud) {
+            noisy[bucket] += dt;
+        }
+        while (bucketS >= 1) {
+            bucketS -= 1;
+            bucket = (bucket + 1) % noisy.length;
+            noisy[bucket] = 0;
+        }
+        double sum = 0;
+        for (double s : noisy) {
+            sum += s;
+        }
+        boolean noise = sum >= NOISE_S;
         phaseS += dt;
         switch (phase) {
             case WAITING:
-                level = (float) Math.max(0, level - dt / DROP_S);
-                if (phaseS >= waitS && level == 0) {
+                if (noise) {
+                    phaseS = 0;
+                } else if (phaseS >= waitS) {
+                    pickPhrase();
                     next(Phase.RISING);
                 }
                 break;
             case RISING:
-                level = (float) Math.min(1, phaseS / RISE_S);
-                if (phaseS >= RISE_S) {
-                    next(Phase.HOLDING);
+            case PLAYING:
+                if (noise) {
+                    fadeFrom = level;
+                    next(Phase.FADING);
+                } else if (phase == Phase.RISING) {
+                    level = (float) Math.min(1, phaseS / RISE_S);
+                    if (phaseS >= RISE_S) {
+                        next(Phase.PLAYING);
+                    }
                 }
                 break;
-            case HOLDING:
-                level = 1;
-                if (phaseS >= HOLD_S) {
-                    next(Phase.FALLING);
-                }
-                break;
-            case FALLING:
-                level = (float) Math.max(0, 1 - phaseS / FALL_S);
-                if (phaseS >= FALL_S) {
-                    next(Phase.RESTING);
-                }
-                break;
-            case RESTING:
-                level = 0;
-                if (phaseS >= REST_S) {
+            case FADING:
+                level = (float) Math.max(0, fadeFrom * (1 - phaseS / FADE_S));
+                if (phaseS >= FADE_S) {
+                    level = 0;
                     newWait();
                     next(Phase.WAITING);
                 }
                 break;
         }
-        return (before == Phase.WAITING && phase == Phase.RISING) || (before == Phase.FALLING && phase == Phase.RESTING);
+        return (before == Phase.WAITING && phase == Phase.RISING) || (before == Phase.FADING && phase == Phase.WAITING);
     }
 
     private static void next(Phase p) {
         phase = p;
         phaseS = 0;
+    }
+
+    /** A gentle phrase: starts on a chord tone, moves a step or two, the second bar answers and comes home. */
+    private static void pickPhrase() {
+        int[] chord = {LOW, LOW + 2, LOW + 4};
+        int start = chord[dice.nextInt(chord.length)];
+        int at = start;
+        for (int i = 0; i < NOTES; i++) {
+            if (i == 0) {
+                at = start;
+            } else if (i == 3) {
+                at = chord[dice.nextInt(chord.length)] + (dice.nextBoolean() ? 0 : 7);   // the second bar's downbeat
+                at = Math.min(at, HIGH);
+            } else if (i == NOTES - 1) {
+                at = start;   // home
+            } else {
+                int move = dice.nextInt(4) + 1;   // 1..4 -> -2, -1, +1, +2
+                at = Math.max(LOW, Math.min(HIGH, at + (move <= 2 ? move - 3 : move - 2)));
+            }
+            phrase[i] = at;
+        }
+        phraseNew = true;
     }
 
     static synchronized float level() {
@@ -129,27 +181,16 @@ final class CalmBuild {
         return phase;
     }
 
-    /** How far one layer has joined (0..1) at the current build level. */
-    static float layer(float start) {
-        float l = level();
-        return start >= 1 ? 0 : Math.max(0, Math.min(1, (l - start) / (1 - start)));
+    static synchronized float reference() {
+        return ref;
     }
 
-    static boolean scales(String id) {
-        return RULES.containsKey(id);
-    }
-
-    static Iterable<String> scaled() {
-        return RULES.keySet();
-    }
-
-    /** The value to send for {@code p}: lifted by its layer, only if it is already on, never past the slider's top. */
-    static float apply(Param p, float value) {
-        float[] r = RULES.get(p.id);
-        if (r == null || value <= p.min) {
-            return value;
+    /** The phrase once after a new one is picked (the service sends it), else null. */
+    static synchronized float[] takePhrase() {
+        if (!phraseNew) {
+            return null;
         }
-        float lift = r[1] * layer(r[0]);
-        return lift <= 0 ? value : Math.min(p.max, value * (1 + lift));
+        phraseNew = false;
+        return phrase.clone();
     }
 }

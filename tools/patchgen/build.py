@@ -5,6 +5,7 @@ from .core import *  # noqa: F401,F403
 from .stereo import add_stereo_in, add_stereo_out
 from .rhythm import add_tempo_clock, add_beat
 from .traffic import add_traffic
+from .calm import add_calm_tune
 from .music import add_music
 from .music_fx import add_music_fx
 from .glitch import add_glitch_cloud, add_onset_switch, add_reverse_reverb
@@ -650,6 +651,7 @@ def build():
     P.obj("btf_probe_s", "s btf_level", 400, 430)
     P.c("btf_gain", "btf_probe"); P.c("btf_probe_r", "btf_probe"); P.c("btf_probe", "btf_probe_s")
     P.sig2("beat_rm", "*~", beat, "btf_gain", 300, 440)                # (the beat steps back with the music)
+    add_calm_tune(P)                                                # (Calm builds: its tune joins sounding drums)
     beat_uw = uw_path(P, "bt", "beat_rm", 400, 440)                 # (Underwater: the beat on its own, before the mic joins)
     P.sig2("mix_out", "+~", "mix_pre", beat_uw, 250, 450)       # the beat joins here, so reverb and pan apply to it
 
