@@ -39,6 +39,8 @@
     No [random] in the patch. Only while the drums are sounding: the beat's own output (`beat_out`) above -60 dBFS
     within the last 3 s, so it never starts the drums and stops with them. No new voice; bass is the next layer,
     after DadCraft's first listen.
+  - **Moto CPU (Nov 3, Ouralia Dev playing, Music + Music in Stereo on, `top` 30 x 2 s):** Calm Builds on median
+    56.25% of a core, off 58.5%: no measurable cost.
   - The patch's `calm_chimes` receiver stays (the tests use it to make standing-still chimes come); the app no
     longer sends it.
 - **Call and response** (roadmap 12, Oct 14; `CallResponse.java`, test L; `music_answer` Music 0..1 default 0.5, in
