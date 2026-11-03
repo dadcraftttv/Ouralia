@@ -16,8 +16,8 @@
   their own preset, the mix too; "What it changes" keeps a part).
 - **Calm builds** (roadmap item 7, Oct 14; `CalmBuild.java`, test B; `calm_build` toggle in Music, off by default,
   noPd; in presets since Oct 21, see "How the band plays in presets"): calm = switch on, music on, not walking, room not
-  loud-and-lively. After `WAIT_S` 30 s of calm, the level rises over 180 s, holds 60, falls over 120, then rests 180
-  before another; not calm -> it fades within `DROP_S` 5 s and waits for 30 s of calm again. Layers join along the
+  loud-and-lively. After a wait of calm (`WAIT_MIN_S`..`WAIT_MAX_S`, a new 30-60 s each time; DadCraft, Nov 2: "kick in after 30 seconds to 1 minute", was always 30 s), the level rises over 180 s, holds 60, falls over 120, then rests 180
+  before another; not calm -> it fades within `DROP_S` 5 s and waits for calm again. Layers join along the
   rise (pad from 0, room notes from 0.25, standing-still chimes from 0.5, harmony and reverb from 0.75) and each is
   lifted up to +40% at the top in `Modulation.output` after Intensity (only what is on, never past the slider's top;
   resent on a change > 0.005). The chimes layer goes to Pd as `calm_chimes`: an extra still-pattern chance of

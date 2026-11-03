@@ -3,6 +3,7 @@ package io.github.dadcraftttv.ouralia;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 
 /**
  * Calm builds (roadmap item 7, DadCraft Oct 14; "Calm builds" switch in Music, off by default, the user's own, not in
@@ -14,7 +15,9 @@ import java.util.Map;
 final class CalmBuild {
 
     static final String ID = "calm_build";
-    static final double WAIT_S = 30;      // this long standing still in a calm room before a build starts
+    // standing still in a calm room this long before a build starts: a new wait between the two each time
+    // (DadCraft, Nov 2: "kick in after 30 seconds to 1 minute"; was always 30 s)
+    static final double WAIT_MIN_S = 30, WAIT_MAX_S = 60;
     static final double RISE_S = 180;     // then it grows over this long...
     static final double HOLD_S = 60;      // ...holds...
     static final double FALL_S = 120;     // ...and eases back over this long
@@ -39,6 +42,9 @@ final class CalmBuild {
     private static Phase phase = Phase.WAITING;
     private static double phaseS;          // time in the current phase (WAITING: calm time so far)
     private static float level;            // 0..1: how far the build has grown
+    private static double waitS = WAIT_MIN_S;   // this wait's length
+    /** 0..1 picks where in WAIT_MIN_S..WAIT_MAX_S a wait falls (tests pin it). */
+    static DoubleSupplier wait01 = Math::random;
 
     private CalmBuild() { }
 
@@ -46,6 +52,15 @@ final class CalmBuild {
         phase = Phase.WAITING;
         phaseS = 0;
         level = 0;
+        newWait();
+    }
+
+    private static void newWait() {
+        waitS = WAIT_MIN_S + (WAIT_MAX_S - WAIT_MIN_S) * Math.max(0, Math.min(1, wait01.getAsDouble()));
+    }
+
+    static synchronized double waitS() {
+        return waitS;
     }
 
     /**
@@ -56,6 +71,9 @@ final class CalmBuild {
         Phase before = phase;
         if (!calm && phase != Phase.RESTING) {
             // interrupted (or switched off): fade away fast, then wait for calm again
+            if (phase != Phase.WAITING) {
+                newWait();
+            }
             level = (float) Math.max(0, level - dt / DROP_S);
             phase = Phase.WAITING;
             phaseS = 0;
@@ -65,7 +83,7 @@ final class CalmBuild {
         switch (phase) {
             case WAITING:
                 level = (float) Math.max(0, level - dt / DROP_S);
-                if (phaseS >= WAIT_S && level == 0) {
+                if (phaseS >= waitS && level == 0) {
                     next(Phase.RISING);
                 }
                 break;
@@ -90,6 +108,7 @@ final class CalmBuild {
             case RESTING:
                 level = 0;
                 if (phaseS >= REST_S) {
+                    newWait();
                     next(Phase.WAITING);
                 }
                 break;
