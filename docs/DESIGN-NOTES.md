@@ -5,6 +5,52 @@ session). Search it for the feature you are touching (`grep -rn "Glitch cloud" d
 since Oct 22 this file is the index and each area has its file, see "The design notes' parts" below) and keep it up
 to date in the same commit when behaviour changes.
 
+## Music in Stereo (Codex, Nov 3, 2026)
+
+DadCraft: "can we make the music/bells/chimes/drums/etc run in stereo? i think that wider field would help liven
+things up, too"; "stereo first, have codex build it." Dev Music switch `music_stereo`, off by default, outside
+presets and dice. It needs no sound classification. Built on `sound-kinds`; Claude Code review, Moto CPU and
+DadCraft's listen next. Traffic Passes Through follows later.
+
+The world stays put. Only generated music gains fixed places: room notes -0.3, harmony +0.3, Classic and found
+hats +0.35; kick, snare and bass remain centred (snare 0 is within the proposed +/-0.1 range). Each Synth/Glass
+chime voice takes a place within +/-0.5 at note start, held throughout its ring. Independent golden-ratio sequences
+supply varied places without adding Pd `[random]` objects, which would reshuffle every later musical random seed.
+`music_pan0` through `music_pan3` override each voice until its next note; every input is clamped to +/-0.6, with
+5 ms coefficient ramps. These are hooks for traffic, with no glide or autonomous motion built yet.
+
+`tools/patchgen/music_stereo.py` uses sqrt(2)-scaled equal-power gains: centre reproduces today's dual mono, and
+total L²+R² stays at the old stereo power. Keep the mono sum, add the difference to the mid and form a side;
+Music in Stereo ramps those differences over 50 ms, independently of the Smooth setting. No parallel mono copy
+is added to the stereo output. The pad alone gets a quiet delayed difference (13 ms, 0.12) in opposite ears;
+its L+R fold keeps the original level and tone, with no comb notch in that fold. Bass stays out of that widening.
+All starting numbers are in `constants.py`.
+
+The side takes the same music master, pad hold/stop gates, chime tone cutoff and levels, Make Room and Underwater
+as the mid. `music_fx.py` extracts the existing chorus/flanger/phaser/tremolo/reverse/freeze chain, used unchanged
+for the mid and with private buffers for the side. Both paths run continuously, keeping effect phases aligned
+when width changes; this has an off-state processing cost as well. Beat side takes its own existing level,
+pattern/step gains, Make Room and Underwater. L = mid + side, R = mid - side, before the existing spatial stage.
+Echo, stereo/reverse reverb retain their shared mono sends from the mid, so ambience surrounds the fixed direct
+places. Wind Guard, input mic mid/side and World in Stereo are unchanged. Water/Birds/Trailing Melody and Mind the
+Gap still act upstream, and earn no extra notes from this switch.
+
+Checks: `test_patch.py` section "stereo music" pins existing random seeds only in its temporary generated fixture
+so comparisons use the same ring and colour; the shipped patch adds no randoms. Hat-only measurements disconnect
+the centred kick/snare lane in that fixture (the found snare shares a limiter and has no separate output trim).
+Covers all three chime voices,
+held places and voice reuse, equal power, bounded external pan, smooth toggling, Classic/found drums, pad fold,
+mic-only effects and World in Stereo, Make Room/Underwater on both ears, and finite decaying tails. Java checks
+default/visibility/send/preset/dice flags. A saved pre-change real patch and the new patch, with the switch off,
+produced sample-identical output on a synthetic pad/chime passage (max difference 0). Quick stereo + patch-load
+checks and Java/release passed (37 s); full suite passed (184 patch sections, all suites, 397 s), after correcting
+the pan-hook receiver allowlist, retaining Gain-first default ordering for the existing parser, and isolating
+the found-hat test from centred found snare.
+
+Desktop timing (one rough A/B, synthetic input, 36 s processed): old patch 0.416 s CPU, new Off 0.509 s, new On
+0.508 s. About 22% extra patch CPU in that passage, or 0.26% of a desktop core; On versus Off is effectively equal.
+This is not a phone estimate. Claude Code measures the Moto before DadCraft's listen.
+
 ## How we work
 - You can build and install yourself now: `./gradlew assembleDebug`, then `adb install -r app/build/outputs/apk/debug/app-debug.apk`
   (adb wireless debugging is fine). Read crashes with `adb logcat`. Do this instead of asking DadCraft to copy files.

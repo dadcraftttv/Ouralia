@@ -50,8 +50,8 @@ def java_params():
 
 L = 2   # ms of fixed latency from the spatial stage (1.5 ms, rounded in peak reports)
 
-def fresh(**over):
-    e = Engine(LIB, test_patch_path())
+def fresh(_patch=None, **over):
+    e = Engine(LIB, _patch or test_patch_path())
     base = dict(gain=1, dry=1, echo_on=1, echo_time=350, feedback=0.4, wet=0.5,
                 ring_on=1, ring_freq=80, ring_mix=0, smooth=30,
                 pitch_on=1, pitch_semi=0, pitch_mix=0, pitch_window=60,
@@ -96,7 +96,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
     "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "birds_lift", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
@@ -3104,6 +3104,158 @@ def tg_hold(talk):   # knocks while people talk: no chime or bell of their own (
     e.run(x); return len(e.heard.get("chime_deg", [])), len(e.heard.get("rnf_note", [])), len(e.heard.get("talk_answer", []))
 th = (tg_hold(0), tg_hold(1))
 check(th[0][0] > 0 and th[1][1] == 0 and th[1][0] <= 3 * th[1][2], "answer in the gaps: talk holds the chimes, the still pattern and the room bells (chimes, bells, answers: off %s, on %s)" % th)
+
+# ---- 7z7. stereo music: fixed note places, equal power, shared shaping, mic unchanged ----
+_stereo_patch = {}
+def stereo_fresh(_hats_only=False, **args):
+    if _hats_only not in _stereo_patch:
+        import tempfile
+        from patchgen.build import build
+        p = build()
+        if _hats_only:
+            # Isolate the hat lane: found snare has no separate trim after its
+            # shared kick/snare limiter, and can play even with beat_snare = 0.
+            p.conns = [c for c in p.conns if not (c[0]=="beat_kick_snare" and c[2]=="beat_sum00")]
+        # Only this section pins existing randoms, to compare the same note's ring/colour.
+        # No new [random] objects: the shipped patch keeps its old random sequence.
+        for i, n in enumerate(n for n in list(p.index) if " random " in p.lines[p.index[n]]):
+            seed = p.msg(f"ms_test_seed{i}", f"seed {100+i}", 0, 0)
+            p.c("loadbang", seed); p.c(seed, n)
+        text = p.text()
+        for k in OLD_DEFAULTS:
+            text = text.replace("\\; %s 1 " % k, "\\; %s 0 " % k)
+        path = os.path.join(tempfile.mkdtemp(prefix="ouralia_stereo_"), "stereo.pd")
+        with open(path,"w") as f: f.write(text)
+        _stereo_patch[_hats_only] = path
+    return fresh(_patch=_stereo_patch[_hats_only], **args)
+
+def stereo_note(stereo=1, pan=None, cv=2, **over):
+    args = dict(wet=0, dry=0, music_key=0, music_on=1, music_pad=0, music_arp=0.6,
+                music_res=0, music_harm=0, beat_level=0, music_react=0, chime_answer=1,
+                melody_src=0, chime_voice=cv, music_stereo=stereo, mix_walk=0)
+    args.update(over)
+    e = stereo_fresh(**args)
+    e.listen(*(f"music_place{k}" for k in range(4)))
+    e.send_list("motif", 9, 0.5)
+    e.run(e.silence(0.1))
+    if pan is not None:
+        for k in range(4):
+            e.send(f"music_pan{k}", pan)
+    e.run(e.silence(0.01))
+    return e, e.run(e.silence(1.5))
+
+def stereo_ratio(y):
+    # Projection is insensitive to zero crossings and tiny rounding differences.
+    return float(np.sum(y[:, 0] * y[:, 1]) / max(np.sum(y[:, 0] ** 2), 1e-25))
+
+for cv in (0, 1, 2):
+    e, off = stereo_note(0, cv=cv)
+    e, on = stereo_note(1, cv=cv)
+    db = 10 * np.log10(np.sum(on ** 2) / max(np.sum(off ** 2), 1e-25))
+    ratios = [stereo_ratio(part) for part in np.array_split(on[int(0.04 * SR):int(0.8 * SR)], 4)]
+    places = [v for values in e.heard.values() for v in values]
+    check(rms(off) > 1e-4 and np.max(np.abs(off[:, 0]-off[:, 1])) < 1e-7
+          and rms(on[:, 0]-on[:, 1]) > 1e-4 and abs(db) < 1
+          and max(ratios)-min(ratios) < 0.002 and places and max(map(abs, places)) <= 0.5,
+          "stereo music: voice %d mono off, stereo on, power %+.3f dB, place holds (ratios %s)" % (cv, db, ratios))
+    e, centre = stereo_note(1, pan=0, cv=cv)
+    check(np.max(np.abs(centre-off)) < 1e-6,
+          "stereo music: voice %d centre reproduces the mono path" % cv)
+
+for pan in (-99, 99):
+    e, y = stereo_note(pan=pan)
+    r = stereo_ratio(y[SR//10:])
+    expected = np.tan((np.clip(pan,-0.6,0.6)+1)*np.pi/4)
+    check(abs(r-expected)<0.002,
+          "stereo music: external pan %s clamps at 0.6 (R/L %.4f)" % (pan, r))
+
+# A held note gets no new place until another note starts, including voice reuse.
+e, y = stereo_note()
+n = sum(len(v) for v in e.heard.values()); e.run(e.silence(2))
+check(sum(len(v) for v in e.heard.values()) == n, "stereo music: no pan motion during a ring")
+for i in range(12):
+    e.send_list("motif", 9, 0.5); e.run(e.silence(0.1))
+places = [v for values in e.heard.values() for v in values]
+check(len(set(round(v,3) for v in places)) > 8 and max(map(abs,places)) <= 0.5,
+      "stereo music: successive notes get varied bounded places, across voice reuse")
+
+# Classic and caught hats use the same place; kick/snare/bass stay in the middle.
+def stereo_drums(found, hats):
+    e = stereo_fresh(_hats_only=bool(hats),dry=0,wet=0,music_on=0,music_stereo=1,beat_level=0.6,
+                     beat_follow=1,beat_when=1,rhythm_src=found,beat_hats=hats,
+                     beat_snare=0 if hats else 0.6,mix_kick=0 if hats else 1)
+    if found:
+        x=e.silence(2); clip=fs_sounds()[2 if hats else 0]()
+        x[SR:SR+len(clip)]+=clip
+        e.run(x)
+    else:
+        e.run(e.silence(2))
+    return e.run(e.silence(4))
+for found in (0,1):
+    hats = stereo_drums(found,1); centre = stereo_drums(found,0)
+    r = stereo_ratio(hats)
+    check(rms(hats)>1e-4 and abs(r-np.tan(1.35*np.pi/4))<0.01,
+          "stereo music: %s hats at +0.35 (R/L %.4f)" % ("found" if found else "Classic",r))
+    check(rms(centre)>1e-4 and np.max(np.abs(centre[:,0]-centre[:,1]))<1e-6,
+          "stereo music: %s kick/snare stay centred" % ("found" if found else "Classic"))
+
+def stereo_pad(stereo):
+    e=stereo_fresh(dry=0,wet=0,music_on=1,music_stereo=stereo,music_pad=0.3,
+                   music_arp=0,music_res=0,music_harm=0,mix_bass=0,chime_answer=1)
+    e.run(e.silence(2));return e.run(e.silence(2))
+pad0,pad1=stereo_pad(0),stereo_pad(1)
+check(rms(pad1[:,0]-pad1[:,1])>1e-4 and np.max(np.abs(pad1.mean(axis=1)-pad0[:,0]))<1e-6,
+      "stereo music: pad widens, mono fold keeps its original level and tone")
+
+# Effects on the mic must be identical with width on and off, including World in Stereo.
+def stereo_mic(stereo):
+    e = stereo_fresh(music_on=0, music_stereo=stereo, wet=0.25, reverb_mix=0.2,
+              chorus_mix=0.4, flange_mix=0.2, phaser_mix=0.2, trem_depth=0.3)
+    return e.run(sine(317,0.03,1.5))
+sm0, sm1 = stereo_mic(0), stereo_mic(1)
+check(rms(sm0)>1e-3 and np.max(np.abs(sm1-sm0)) < 1e-7,
+      "stereo music: mic-only output unchanged through effects")
+
+st_mic=np.stack([sine(317,0.03,1),sine(479,0.04,1)],axis=1)
+st0=fresh_st(True,music_stereo=0).run(st_mic)
+st1=fresh_st(True,music_stereo=1).run(st_mic)
+check(rms(st0[:,0]-st0[:,1])>1e-3 and np.max(np.abs(st1-st0))<1e-7,
+      "stereo music: World in Stereo retains the two mics' placement")
+
+# Make Room and Underwater must reach the side as well as the mid.
+def stereo_shaped(room=0, uw=0):
+    e = stereo_fresh(dry=0, wet=0, music_on=1, music_stereo=1, music_pad=0, music_arp=0.6,
+              music_res=0, music_harm=0, music_react=0, chime_answer=1, chime_voice=2)
+    e.send("room_music",room); e.send("underwater",uw)
+    e.run(e.silence(5)); e.send_list("motif",9,0.5)
+    e.run(e.silence(0.1))
+    for k in range(4): e.send(f"music_pan{k}",0.5)
+    e.run(e.silence(0.01))
+    return e.run(e.silence(1.5))
+raw, dipped, submerged = stereo_shaped(), stereo_shaped(room=1), stereo_shaped(uw=2)
+cuts = [20*np.log10(rms(dipped[:,k])/rms(raw[:,k])) for k in (0,1)]
+check(all(abs(v+6)<0.15 for v in cuts), "stereo music: Make Room dips both ears 6 dB (%s)" % cuts)
+check(all(rms(submerged[:,k]-raw[:,k])>0.001 for k in (0,1))
+      and abs(stereo_ratio(submerged[SR//10:])-stereo_ratio(raw[SR//10:]))<0.01,
+      "stereo music: Underwater shapes both sides equally")
+
+# Measure the switch against the same continuing waveform. Centre / side ratio
+# removes the oscillator's own slopes, so a click cannot hide in a high note.
+e, y = stereo_note(0, pan=0.5)
+e.send_list("motif",9,0.5)
+for k in range(4): e.send(f"music_pan{k}",0.5)
+e.run(e.silence(0.08)); e.send("music_stereo",1)
+y = e.run(e.silence(0.1))
+m = (y[:,0]+y[:,1])*0.5; side = (y[:,0]-y[:,1])*0.5
+valid = np.abs(m)>0.0005
+indices = np.flatnonzero(valid); ratio = side[valid]/m[valid]
+slopes = np.abs(np.diff(ratio))/np.diff(indices)
+check(len(slopes)>100 and slopes.max()<0.001 and abs(np.median(ratio[-500:]))>0.2,
+      "stereo music: toggle ramps without a pan step (max slope %.6f/sample)" % slopes.max())
+e.send("music_stereo",0); e.run(e.silence(1))
+tail = e.run(e.silence(12))
+check(np.isfinite(tail).all() and np.max(np.abs(tail))<1 and rms(tail[-SR:])<1e-6,
+      "stereo music: switch back and long tail remain finite and decay")
 
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)

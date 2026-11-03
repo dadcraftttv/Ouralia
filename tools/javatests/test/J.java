@@ -41,6 +41,10 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     check(tq==29,"talk: over "+tq+" judgements (~7 s) after the voices stop (the window lets 9 of its 13 go: 4 = 0.15 of 32)");
     k.reset(); for(int i=0;i<400;i++){ k.judge(i%12<8?sc(0,40):sc(6,4)); } check(k.talking(),"talk: speech with pauses stays on");
     k.reset(); check(!k.talking(),"reset forgets talk");
+    Param stereo=Params.byId("music_stereo");
+    check(stereo!=null&&stereo.def==0f&&stereo.toggle&&stereo.sendToPd&&stereo.soundKinds
+        &&"music".equals(stereo.section)&&!stereo.inPreset&&!stereo.randomizable,
+        "Music in Stereo: Dev Music switch, off, sent to Pd, outside presets and dice");
     Param waterSetting=Params.byId("water_trail");
     check(waterSetting!=null&&waterSetting.def==0f&&waterSetting.toggle&&!waterSetting.sendToPd
         &&!waterSetting.inPreset&&!waterSetting.randomizable,"water switch: off, app-controlled, outside presets and dice");
