@@ -21,6 +21,10 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 
 ## Open now (checked against the code, 2026-10-22)
 
+**Project review (Codex, Nov 3):** review complete; fixes and proposals await triage. See
+[branch/code/performance review](PROJECT-REVIEW-2026-11-03.md): stereo/Freeze transition, classifier lifecycle,
+scene import bounds, test/CI gaps, inactive DSP cost and reactive-first additions. Review only; no fixes built.
+
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
 **Session Log (item 23, Oct 29):** BUILT; DadCraft's first sessions, phone and desktop, for Maestro's R.1 (what
