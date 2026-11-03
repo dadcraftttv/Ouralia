@@ -150,7 +150,7 @@ public class AudioService extends Service {
     /** When the found sounds last skipped a handling noise (uptime ms), for the diagnostics' "last minute". */
     private static final java.util.ArrayDeque<Long> handlingSkips = new java.util.ArrayDeque<>();
     private float handlingSent;
-    private float calmChimesSent;
+    private float calmTuneSent;
 
     /** Sounds skipped as handling noise in the last minute. */
     static int handlingSkipsLastMinute() {
@@ -253,17 +253,24 @@ public class AudioService extends Service {
                 double nowS = SystemClock.elapsedRealtimeNanos() / 1e9;   // the sensors' clock
                 Worlds.tick(dt, Modulation.micLevelDb(), StepDetector.walking(nowS),
                         PhoneContext.inPocket(), minuteOfDay, PhoneContext.secondsSinceShake(nowS));
-                // calm builds: standing still in a calm room, the music grows a layer at a time (if switched on)
-                boolean calm = ParamStore.get(CalmBuild.ID) >= 0.5f && ParamStore.get("music_on") >= 0.5f
-                        && !StepDetector.walking(nowS) && !(Worlds.roomLoud() && Worlds.roomLively());
                 SoundKindsRunner.settingsTick();   // Make Room for Music or Mind the Gap switched (row, preset, reset)
-                if (CalmBuild.tick(dt, calm)) {
-                    logEvent(CalmBuild.phase() == CalmBuild.Phase.RISING ? "Calm build starts" : "Calm build ends");
+                // calm builds, the quiet tune: a quiet room grows a two-bar chime phrase over the drums (CalmBuild.java)
+                boolean calmOn = ParamStore.get(CalmBuild.ID) >= 0.5f && ParamStore.get("music_on") >= 0.5f;
+                if (CalmBuild.tick(dt, calmOn, StepDetector.walking(nowS), Modulation.micLevelDb())) {
+                    logEvent(CalmBuild.phase() == CalmBuild.Phase.RISING ? "Calm tune starts" : "Calm tune ends");
                 }
-                float chimes = CalmBuild.layer(CalmBuild.CHIMES);
-                if (Math.abs(chimes - calmChimesSent) > 0.01f || (chimes == 0f) != (calmChimesSent == 0f)) {
-                    calmChimesSent = chimes;
-                    PdBase.sendFloat("calm_chimes", chimes);
+                float[] phrase = CalmBuild.takePhrase();   // (before its level, so the first note has its phrase)
+                if (phrase != null) {
+                    Object[] steps = new Object[phrase.length];
+                    for (int k = 0; k < phrase.length; k++) {
+                        steps[k] = phrase[k];
+                    }
+                    PdBase.sendList("calm_phrase", steps);
+                }
+                float tune = CalmBuild.level();
+                if (Math.abs(tune - calmTuneSent) > 0.01f || (tune == 0f) != (calmTuneSent == 0f)) {
+                    calmTuneSent = tune;
+                    PdBase.sendFloat("calm_tune", tune);
                 }
                 int scale = Math.round(ParamStore.get("music_scale"));
                 if (noteRegister.tick(dt, PhoneContext.brightness(), PhoneContext.inPocket(), PhoneContext.climb(),
@@ -883,7 +890,7 @@ public class AudioService extends Service {
             handlingSkips.clear();
         }
         handlingSent = 0f;
-        calmChimesSent = 0f;
+        calmTuneSent = 0f;
         CalmBuild.reset();
         synchronized (kitCaught) {
             java.util.Arrays.fill(kitCaught, 0);   // a fresh patch starts with an empty kit

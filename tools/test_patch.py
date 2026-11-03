@@ -96,7 +96,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "traffic_state", "traffic_flow_state", "btf_probe", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "traffic_state", "calm_tune", "calm_phrase", "traffic_flow_state", "btf_probe", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
     "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "birds_lift", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
@@ -3432,6 +3432,29 @@ e = flow_fresh(); e.send('traffic_flow_state', 0)
 check(flow_gain(e, .005, 10) == 1, 'traffic flow: off never dips')
 e = flow_fresh(); e.send('music_on', 0)
 check(flow_gain(e, .005, 10) == 1, 'traffic flow: Music off never dips')
+
+# ---- 7z10. calm builds, the quiet tune: the phrase on the drum grid, only while the drums sound ----
+def calm_fresh(**over):
+    e = fresh(**dict(dict(dry=0, wet=0, beat_level=1, beat_follow=1, beat_when=1, rhythm_src=0, music_on=1,
+                          music_pad=0, music_arp=0.6, chime_answer=1), **over))
+    e.listen('calm_note', 'calm_vel'); e.send_list('calm_phrase', 9, 10, 11, 7, 8, 9); return e
+def calm_notes(e, secs):
+    e.heard['calm_note'] = []; e.run(e.silence(secs)); return [round(v, 2) for v in e.heard['calm_note']]
+def calm_vel(e): return round(e.heard['calm_vel'][-1], 2)
+e = calm_fresh(); e.run(e.silence(2))
+silent = calm_notes(e, 4)
+e.send('calm_tune', 1); bar = 60 / 100 * 4; full = calm_notes(e, bar * 4)
+steps = sorted(set(full)); vels = [calm_vel(e)]
+check(silent == [] and abs(len(full) - 12) <= 1 and steps == [7, 8, 9, 10, 11] and vels == [0.45],
+      'calm tune: nothing at level 0, in full all six notes every two bars, the phrase\'s steps at 0.45 (%d notes, %s, %s)'
+      % (len(full), steps, vels))
+e.send('calm_tune', 0.2); low = calm_notes(e, bar * 4)
+check(abs(len(low) - 4) <= 1 and sorted(set(low)) == [7, 9],
+      'calm tune: early in the build only the two downbeats play (%d notes, %s)' % (len(low), sorted(set(low))))
+e.send('calm_tune', 1); e.send('beat_on', 0); e.run(e.silence(3.5))
+check(calm_notes(e, bar * 2) == [], 'calm tune: the drums stopped, the tune stops with them')
+e = calm_fresh(beat_on=0); e.send('calm_tune', 1)
+check(calm_notes(e, bar * 4) == [], 'calm tune: never starts drums, never plays without them')
 
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)

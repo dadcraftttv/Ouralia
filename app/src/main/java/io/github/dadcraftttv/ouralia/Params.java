@@ -220,9 +220,9 @@ final class Params {
                     Param.Curve.LINEAR).inSection("music").toggle(),
             new Param("music_follow", "Sway with the World (light, pocket and stairs move the notes higher or lower)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd(),
-            // Calm builds (DadCraft, Oct 14): standing still in a calm room, the music slowly grows a layer at a time,
-            // then eases back (CalmBuild.java). Off by default.
-            new Param("calm_build", "Slow Bloom (standing still, the music slowly grows)", 0f, 1f, 0f, "",
+            // Calm builds (DadCraft, Oct 14, the quiet tune since Nov 3): after 30-60 s of quiet a two-bar chime phrase
+            // slowly grows over the drums, trailing off over 15 s when steady noise comes (CalmBuild.java). Off by default.
+            new Param("calm_build", "Calm Builds (a quiet room grows a gentle tune over the drums)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd(),
             // Make Room for Music (Nov 1, step 5): while sound kinds hears music in the room, the music and beat step
             // back 6 dB and chimes need bigger sounds. A setting since Nov 1 (DadCraft: "i'm fine with that level of pull

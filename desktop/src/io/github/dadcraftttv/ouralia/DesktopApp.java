@@ -61,7 +61,7 @@ final class DesktopApp {
     private static final CallResponse callResponse = new CallResponse(new Random());
     private static volatile float tempoBpm;
     private static String worldShown;
-    private static float calmChimesSent;
+    private static float calmTuneSent;
     private static int minuteOfDay = Worlds.minuteOfDayNow();
     private static long lastTick = System.nanoTime(), lastClock;
     /** Our own Pd objects loaded (Oct 19): the patch's [dcs_loaded] sends dcs_ok as it opens. Without them nothing
@@ -200,7 +200,7 @@ final class DesktopApp {
         callResponse.reset();
         Worlds.reset();
         CalmBuild.reset();
-        calmChimesSent = 0f;
+        calmTuneSent = 0f;
         worldShown = null;
         ParamStore.sendAllToPd();
     }
@@ -310,15 +310,23 @@ final class DesktopApp {
                 lastClock = now;
             }
             Worlds.tick(dt, Modulation.micLevelDb(), false, false, minuteOfDay, Double.MAX_VALUE);
-            boolean calm = ParamStore.get(CalmBuild.ID) >= 0.5f && ParamStore.get("music_on") >= 0.5f
-                    && !(Worlds.roomLoud() && Worlds.roomLively());
-            if (CalmBuild.tick(dt, calm)) {
-                say.accept(CalmBuild.phase() == CalmBuild.Phase.RISING ? "Calm build starts." : "Calm build ends.");
+            // calm builds, the quiet tune: a quiet room grows a two-bar chime phrase over the drums (CalmBuild.java)
+            boolean calmOn = ParamStore.get(CalmBuild.ID) >= 0.5f && ParamStore.get("music_on") >= 0.5f;
+            if (CalmBuild.tick(dt, calmOn, false, Modulation.micLevelDb())) {
+                say.accept(CalmBuild.phase() == CalmBuild.Phase.RISING ? "Calm tune starts." : "Calm tune ends.");
             }
-            float chimes = CalmBuild.layer(CalmBuild.CHIMES);
-            if (Math.abs(chimes - calmChimesSent) > 0.01f || (chimes == 0f) != (calmChimesSent == 0f)) {
-                calmChimesSent = chimes;
-                PdBase.sendFloat("calm_chimes", chimes);
+            float[] phrase = CalmBuild.takePhrase();   // (before its level, so the first note has its phrase)
+            if (phrase != null) {
+                Object[] steps = new Object[phrase.length];
+                for (int k = 0; k < phrase.length; k++) {
+                    steps[k] = phrase[k];
+                }
+                PdBase.sendList("calm_phrase", steps);
+            }
+            float tune = CalmBuild.level();
+            if (Math.abs(tune - calmTuneSent) > 0.01f || (tune == 0f) != (calmTuneSent == 0f)) {
+                calmTuneSent = tune;
+                PdBase.sendFloat("calm_tune", tune);
             }
             int scaleSize = SCALE_SIZES[Math.max(0, Math.min(SCALE_SIZES.length - 1,
                     Math.round(Modulation.output(Params.byId("music_scale"), ParamStore.get("music_scale")))))];

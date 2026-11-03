@@ -14,15 +14,33 @@
   the groove note), `mix_ring` / `mix_bells` (`rn_out` / `rnf_out`). At 0 a part is silent but still runs (no extra
   switch~ factors). Turning Auto realms on asks first ("Let Realms change your sound?": they set the sliders from
   their own preset, the mix too; "What it changes" keeps a part).
-- **Calm builds** (roadmap item 7, Oct 14; `CalmBuild.java`, test B; `calm_build` toggle in Music, off by default,
-  noPd; in presets since Oct 21, see "How the band plays in presets"): calm = switch on, music on, not walking, room not
-  loud-and-lively. After a wait of calm (`WAIT_MIN_S`..`WAIT_MAX_S`, a new 30-60 s each time; DadCraft, Nov 2: "kick in after 30 seconds to 1 minute", was always 30 s), the level rises over 180 s, holds 60, falls over 120, then rests 180
-  before another; not calm -> it fades within `DROP_S` 5 s and waits for calm again. Layers join along the
-  rise (pad from 0, room notes from 0.25, standing-still chimes from 0.5, harmony and reverb from 0.75) and each is
-  lifted up to +40% at the top in `Modulation.output` after Intensity (only what is on, never past the slider's top;
-  resent on a change > 0.005). The chimes layer goes to Pd as `calm_chimes`: an extra still-pattern chance of
-  `CALM_CHIME_P` (40 in 1000 per 0.25 s at the top, about one soft chime every ~6 s in a quiet room). Event log
-  "Calm build starts/ends"; the Now line says "building".
+- **Calm builds, the quiet tune** (roadmap item 7, Oct 14; reworked Nov 3; `CalmBuild.java`, test B; `calm.py`, test_patch
+  "7z10"; `calm_build` toggle in Music, "Calm Builds", off by default, noPd, in presets since Oct 21). DadCraft (Nov 3):
+  "I'd like the chimes, bells, bass, etc to play along with the drums when a room has been quiet for ... 30 seconds to
+  a minute. it should be a slow build up ... can trail off over 15 seconds once a consistent amount of noise has been
+  detected. ... I don't want to bring back the kits." He chose to replace the Oct 14 layer lift (pad/room/harmony/
+  reverb +40% and the `calm_chimes` still-pattern chance) rather than keep both; Codex's review in Conductor
+  `.handoff/to-claude-quiet.md`.
+  - **Quiet** is judged in Java from the pre-effect mic level (`Modulation.micLevelDb`, dBFS) against a reference
+    that follows the room's low level while waiting (falls within ~1 s, rises with a 60 s time constant). Noisy:
+    `NOISE_DB` 8 above it, or over `GUARD_DB` -40 at all, or walking. Consistent noise: noisy for 3 of the last 5 s.
+    A knock or cough changes nothing (and the found drums still catch it: nothing here gates catching). A steady fan
+    under the guard becomes the reference, so it counts as quiet; a louder room never does.
+  - **Lifecycle:** a quiet wait (30-60 s, new each time; noise restarts it) -> a fresh phrase, rising over
+    `RISE_S` 120 s -> plays in full while quiet, indefinitely -> consistent noise starts a `FADE_S` 15 s trail-off
+    that always finishes (quiet mid-fade doesn't revive it), then a fresh full wait. The reference is held while it
+    plays and fades, so the noise that ended it cannot become the floor and revive it. Switch or Music off: gone at
+    once. Event log "Calm tune starts/ends"; the Now line still says "building".
+  - **The tune (patch, `calm.py`):** the app sends `calm_phrase` (six chime steps 7..14, picked per build: starts
+    on a chord tone, moves a step or two, the second bar's downbeat a chord tone, ends home) and `calm_tune` 0..1.
+    Notes fall on 16ths 0, 6 and 12 of each of two bars (`tick16`); they join downbeats first (ranks 0..5, note
+    joins past rank/6), velocity 0.2 -> 0.45. They go through `motif` (a chime at a scale step: key, register,
+    chime voice, Mix level, Music in Stereo places all apply; Chimes Only When Something Happens doesn't block it).
+    No [random] in the patch. Only while the drums are sounding: the beat's own output (`beat_out`) above -60 dBFS
+    within the last 3 s, so it never starts the drums and stops with them. No new voice; bass is the next layer,
+    after DadCraft's first listen.
+  - The patch's `calm_chimes` receiver stays (the tests use it to make standing-still chimes come); the app no
+    longer sends it.
 - **Call and response** (roadmap 12, Oct 14; `CallResponse.java`, test L; `music_answer` Music 0..1 default 0.5, in
   presets): the Harmony tracker (now also run for it: `fpc_run` includes music_answer) sends `heard_deg <step>` at each
   note-on and `heard_off` at note-off; a phrase = notes with pauses < 1.5 s (max 6); after `ANSWER_AFTER_S` 1.6 s of

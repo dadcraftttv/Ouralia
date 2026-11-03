@@ -106,7 +106,7 @@ There are two ways to use it:
 - **Call and response** (Music): sing, hum or whistle a short phrase, pause, and the app answers it with chimes, a third away, in key.
 - **Send feedback** (Setup, About): writes an email to Dad with your phone and app details and, if you like, the app's event log.
 - **Stem packs** (The Band tab; removed in rc4, the kits replace them): your own loops, playing with the built-in sound and arranged by where you are and how you move.
-- **Slow Bloom** (Music, off at first): standing still somewhere calm, the music slowly grows a layer at a time, then eases back.
+- **Calm Builds** (Music, off at first; was Slow Bloom): when the room has been quiet for 30 seconds to a minute and the drums are playing, a gentle two-bar chime tune joins them, a note at a time over two minutes, and keeps playing while it stays quiet. A knock or a cough doesn't stop it; steady noise (talking, a loud fan) makes it trail off over 15 seconds, and it waits for quiet again before coming back.
 - **The music follows the room** (always, no setting): the pad stays silent until the room holds a sound (a hum, traffic, wind), comes in under it and fades out a few seconds after it stops, with no bass; and a chime plays only right after something you can hear caused it, never on its own in a quiet room.
 - **Chime Voice** (Music, Classic at first): Glass plays the chimes and walking notes as a softly struck glass bar, its bright overtones fading first, instead of Classic's soft tones; Both blends the two.
 - **Mind the Gap** (Music, Dev only, off at first; formerly Answer in the Gaps): while people talk, chimes and room bells wait and chords hold; in the pauses, 2-3 chimes answer. It starts listening by itself. Existing saved settings keep working.
