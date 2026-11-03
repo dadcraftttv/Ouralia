@@ -381,7 +381,7 @@ actually detected. Check both switches off during the effect and music off/on fo
 Before DadCraft's listen, a build must verify mic-only parity with World in Stereo on/off, both musical paths,
 level/headroom, release/reversal/mute behaviour, and measured Moto DSP cost. No new audio recording is needed.
 
-## Step 8: Underwater, both styles (Nov 2, Dev only; his side-by-side listen next)
+## Step 8: Underwater, both styles (Nov 2, Dev only; both kept while he keeps testing)
 
 DadCraft (Nov 2), after reading the two options: "can we build both? just so i could test them side by side and let
 you knwo which one works better?" So both are built behind one Music setting, **Underwater: Off / Gentle / Deeper**
@@ -414,3 +414,6 @@ walking). Run the tap for ten seconds or so: the music should go muffled over ab
 stays clear; stop the tap and it should come back over about 6 s. Then Deeper, the same way: duller, with a slow
 pitch sway. Hum along to hear whether the sway sounds out of tune. Switching between the two mid-water should not
 click. Tell us which one, and whether it is too strong, too weak or too slow.
+
+**His first listen (Nov 2):** "i can't tell which i like better. i'll keep testing with the two options." Both stay
+in, no tuning; his pick (or a change) when he has one.
