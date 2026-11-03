@@ -417,3 +417,117 @@ click. Tell us which one, and whether it is too strong, too weak or too slow.
 
 **His first listen (Nov 2):** "i can't tell which i like better. i'll keep testing with the two options." Both stay
 in, no tuning; his pick (or a change) when he has one.
+
+## Step 9 options: birds (Nov 2)
+
+DadCraft: "hand birds to codex, options first." Write-up only; neither option is built. DadCraft cannot test
+outdoors tonight: "i can't test it now as it's late and i'm inside. can't get out to test." No listen is needed
+now. These are two different responses to weigh against the original high Glass idea, before any build.
+
+**Evidence and limits:** birds passed 12/12 phone-level benchmark clips and held at the far level; the walk named
+birds for 1% of its time. Dawn birdsong flickered with quiet between calls in the phone check, while the sunny-day
+clip held. The bench's "fires on 7 of 91" belongs to the **non-ML fallback**, not YAMNet. YAMNet named four wind
+clips as birds (three woodland clips likely contained birds); steps/handling also had one birds result. Squeaks
+are a listen case, not a measured error rate. A birds kind identifies a sound scene, not individual calls or their
+pitch. Neither proposal claims to copy a bird's tune or reliably separate birds from wind.
+
+**Shared detection and switch proposal:** add a separate settled-birds window to `SoundKinds`, following
+`water()`/`talking()`: last 32 settled-kind judgements (~8 s), on at 13 birds, off at 4 or fewer. From an empty
+window, continuous birds need about 3.25 s of birds judgements after classification; a full window needs about
+7 s without birds to release. Classification itself adds latency (the tested clips changed in ~1.5 s). Gaps of
+a few seconds usually hold an established response, but sparse isolated calls may never enter. Do not retrigger
+on every raw birds/quiet flip. These counts are starting proposals, not replayed performance claims.
+
+Each option would have its **own Dev Music setting**, off by default, outside presets and dice, starting the
+listener without Diagnostics. Build only DadCraft's pick initially; the two options are alternatives, not a pair
+of stacked dips/voices. Extend `SoundKindsRunner.settingsTick()`, start/stop and judgement handling with an
+independent birds send outside its lock. Music off, switch off or listener stop releases it; reset clears the
+window. No dependency on Water Leaves a Trail or Underwater being enabled. No mic audio is saved.
+
+1. **Birds Lift the Chimes — high Glass on earned notes.** After birds have settled, chimes already earned by
+   sounds or walking gradually become lighter, higher Glass notes. Birds classification alone plays nothing.
+   A distant chorus below Notes Only for Bigger Sounds may therefore make no chime: the classification is colour
+   permission, not a new trigger. Once birds leave, later notes ease back to the selected Chime Voice and register;
+   notes already ringing finish naturally. This can feel like the surroundings changing the instrument rather
+   than a second bird trying to sing over them.
+
+   **Starting sound:** keep the current key and scale; use octave moves to fold affected notes into MIDI 72-84
+   (C5-C6, about 523-1047 Hz), never snap the bird's pitch to the scale. At full effect use Glass only, with note
+   velocity multiplied by 0.71 (about -3 dB). Fade the colour/trim amount over 3 s in and 5 s out, sampled at each
+   new note. For pitch, choose the ordinary or octave-folded register once per note, increasingly favouring the
+   latter across the fade; never slide a ringing bell's pitch. **Tune the register first** if too shrill or too
+   close to the real birds; start by lowering the range an octave rather than adding more notes. Birdsong's gaps
+   are bridged by the shared window; no new tail or phrase is scheduled at a gap.
+
+   **Where/cost:** Java window plus patch control in `tools/patchgen/music.py` (the chime voices live here, not
+   directly in build.py). Add per-note effective frequency, voice mix and velocity before the four existing
+   chime voices fire; reuse `GLASS_*` and the existing oscillators. The shared voices also serve walking, trailing
+   notes and talk answers, so apply one consistent colour rule to them, with talk priority below. Don't write
+   `chime_voice` or its stored value: take a per-note blend from the user's Classic/Both/Glass selection toward
+   Glass. Ring length must use that effective voice too. Rough Moto budget: a small control addition with no new
+   audio voices; Classic-only users will activate existing Glass oscillators, so incremental DSP is not guaranteed
+   zero. Tentative target under 1 percentage point of a core beyond the already-running listener, unmeasured.
+
+   **Stacking:** Mind the Gap keeps all holds, cancellations and answer timing; during settled talk, suspend the
+   bird colour for new notes, including pause answers. Water Leaves a Trail and Trailing Melody keep their exact
+   counts/timing; their notes use the effective bird colour when talk is not holding it. Make Room for Music's
+   existing dip and bigger-sound gate still win (the bird trim adds about 3 dB of attenuation at full effect).
+   Underwater processes these notes downstream as it does other music, so it can muffle the Glass cue. Chime Voice
+   remains the underlying selection and returns after release; Glass-selected users mostly hear register/trim.
+
+   **Risks:** persistent wind/squeaks could colour unrelated earned chimes; a single knock in birds is still a
+   knock-triggered note, not proof a bird called. Quiet birds may produce no audible difference at all. High Glass
+   partials may compete with real birds or sound sharp on small transducers; test phone-speaker harshness only in
+   an offline render/other playback setup, since Ouralia itself remains headphones-only. No loudness boost or
+   pitch following is proposed. Per-note transitions need level and voice-lifetime checks before a listen.
+
+2. **Make Room for Birds — let the real birds lead.** Once birds have settled, generated music and beat ease
+   down 3 dB; the real birds and their existing mic effects remain at their current level. After the last calls,
+   the window holds through the gaps and the music slowly returns. No added notes, pitch change or Glass switch.
+   **Starting numbers:** the same 13/32-on, 4/32-off window, 3 s down / 6 s back, unchanged pitch range and existing
+   Chime Voice. **Tune the dip first** (3 dB initially); making detection faster would not solve a dip too subtle
+   to hear. Long gaps eventually release it smoothly rather than chopping the level per call.
+
+   **Where/cost:** Java birds window/send plus a control ramp in build.py feeding the existing Make Room gain
+   stages for `music_rm` and `beat_rm`, before the mic joins. Combine requests by the stronger attenuation:
+   birds alone 3 dB, music alone or both 6 dB, rather than adding to 9 dB. Keep the bigger-sound threshold tied to
+   Make Room for Music alone. One gain envelope/control combination, no new oscillators or audio buffers; rough
+   incremental Moto DSP target under 1 percentage point of a core, unmeasured, beyond the listener's cost.
+
+   **Stacking:** Mind the Gap retains its timing/holds; answers are subject to the current dip. Water Leaves a
+   Trail and Trailing Melody keep their notes and counts, now quieter. Underwater independently colours the
+   generated paths; neither changes the other's detection. Chime Voice stays exactly the user's choice. Dry mic and
+   its effects keep their current level. Singing Room is inside the musical sum and dips too, even though the
+   mic supplies its material; this is not a master-volume dip.
+   **Risks:** false birds can cause needless ducking, and frequent sparse calls may make a delayed swell feel
+   unrelated. It gives birds space but may sound like Make Room for Music again rather than a distinct response.
+   It adds no shrill voice or competing pitch; existing chimes may still sit close to the birds' pitch.
+
+**Recommendation: 1, Birds Lift the Chimes, first.** It gives birds a distinct musical consequence using the
+existing Glass voice, while keeping the world responsible for note starts. It is a limited experiment in colour
+and register, not bird imitation. The deciding limitation is audibility with the current bigger-sound threshold:
+if normal birds never earn notes and the change needs artificial knocks to be heard, judge that openly before
+considering any new trigger. Pick 2 instead if making the actual birds easier to hear matters more than a new
+musical colour. No classifier tuning or automatic bird melody is part of either proposal.
+
+**First listen (after DadCraft picks and a build is reviewed):** indoors first, at any convenient time. Ouralia
+output stays in headphones; play an existing birdsong recording from another device/speaker into the phone mic,
+without recording the mic. Use a clip with short gaps and another with continuous calls if available; compare the
+switch off/on at the same playback, Notes and Chimes level and bigger-sound threshold. Start with Music on and
+Mind the Gap, Make Room for Music, Water Leaves a Trail and Underwater off; Trailing Melody Off. Diagnostics can
+show the heard kind, but is not required to run the response.
+- For option 1, listen to birds alone first: note whether they actually earn chimes. After roughly 10 s of birds,
+  make one modest knock that already earns an ordinary chime in the off pass; it should reveal the high Glass
+  colour without more notes or higher level. Short recording gaps should not reset the instrument. Stop playback,
+  wait roughly 12-15 s, then make the same knock: ordinary colour should return. This knock checks colour only;
+  it does not establish that birds alone make a convincing response.
+- For option 2, have an already-responsive pad or other audible generated music: it should dip gently without the
+  recording itself being turned down, then return after playback stops. No new notes should appear.
+- Then enable the other settings one at a time, checking talk's priority and ordinary trail counts. Try a quiet
+  non-bird passage or a squeak too; report any wrong colour/dip rather than raising the volume to force detection.
+
+Outdoors later, repeat off/on while standing near real birds, then in a windy spot with no obvious calls. Check
+whether sparse birds enter at all, whether the response survives normal gaps, and whether it leaves the real
+birds clear. Indoor playback proves the route, not outdoor usefulness. Before DadCraft's listen, verify window
+edges/reset, switch independence, no notes from classification alone, voice/level transitions (option 1) or
+strongest-dip composition (option 2), mic isolation and incremental Moto CPU. No audio needs saving for any check.
