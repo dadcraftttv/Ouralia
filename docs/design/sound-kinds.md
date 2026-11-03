@@ -587,3 +587,186 @@ log for that run: 13 chirps skipped and none caught once birds had settled; 3 ha
 or so of birds, before the window turned on (it needs about 3 s of birds judgements). A few chirps were still
 answered as sung phrases (not asked about). Outdoors later.
 
+## Step 10 options: traffic (Nov 3)
+
+DadCraft: "hand traffic to codex, options first, let's aim for 1 and two, but ask Codex for what it thinks would
+work well in addition." Write-up only; none of these responses is built. His earlier idea is included in 1:
+"could traffic send the glass/synth bells/chimes from one ear to the other smoothly?" Options 1 and 2 follow
+Claude's list; 3 is Codex's addition. Names and numbers below are proposals for a first experiment.
+
+**Evidence and limits:** YAMNet named traffic on 12/12 phone-level bench clips, but only 1/12 at -50 dBFS. The
+"fires on 8 of 91 others" figure is the non-ML fallback's result, not YAMNet's false-positive rate. The bench
+found one wind clip and one water clip named traffic. Including YAMNet's plain Vehicle class fixed several
+misses; Vehicle still does not mean a moving car. DadCraft's walk contained no classified traffic, so we have no
+roadside verdict from him. None of these options claims to measure speed, count cars, recognise a red light,
+separate an idling bus reliably, or locate the real direction of travel.
+
+**Two speeds of control:** `SoundKinds.scores()[2]` already exposes the latest traffic group score (maximum of
+its classes), every ~0.25 s, using 0.975 s of mono audio. There is no `traffic()` scene window yet. Scores are
+available even when traffic loses to another kind; they are model scores, not calibrated probabilities. An
+8 s settled window alone would be too slow to shape a short pass. Use the score to grant permission, and a
+faster mic envelope to shape the rise/fall. The existing `mlev`/`mfloor` describe overall room level, not isolated
+engines: another sound over traffic can move them. Prefer a dedicated short envelope on the same pre-effect mic
+feed used for classification, so playback effects and generated music cannot drive it internally.
+
+**Shared proposed detector:** in Java, permit traffic after its score is at least 0.20 and leads the other
+non-quiet groups for 2 successive judgements; release after the score stays below 0.10, or another kind leads,
+for 2 s. Keep a separate scene latch for option 2: 32 settled-kind judgements (~8 s), enter at 13 traffic,
+leave at 4 or fewer. These are untested starting thresholds, with overlapping input windows, not independent
+votes. Talk has priority: settled talk suspends new traffic passes/accents and returns option 2 toward unity.
+Do not depend on Mind the Gap being enabled to obtain that priority.
+
+In the patch, smooth mic level over about 150 ms; keep a slow baseline (~12 s, held during a candidate pass),
+and look for a rise of **4 dB within 2 s**, held for 300 ms, while permission is valid. Save a 2 s history of
+level values only: the score may arrive after the audible rise. A candidate expires if permission does not
+arrive within 1.5 s; never play a delayed pass after it has ended. Follow its excess above baseline, mapping
+0-10 dB to 0-1, with 250 ms attack / 1.5 s release. End when it falls within 2 dB of baseline for 1 s, with a
+10 s maximum and a 2 s re-arm gap. Constant rumble may grant permission but supplies no new rise. This deliberately
+misses some cars rather than inventing repeated passes on a motorway.
+
+Wind Guard's existing windiness measurement is available from `dcs_dewind~`; a proposed high-wind veto (above
+0.6 for 0.5 s, clear below 0.3 for 2 s) would freeze new candidates and release current ones. Wire that measurement
+independently of the audible Wind Guard switch if needed, and verify its range before adopting these thresholds.
+Handling/pocket-rustle indications also veto new candidates. This reduces mistakes; steady wind classified as
+traffic and footsteps over a real road remain failure cases. Do not retune the classifier to force a response.
+
+**Shared setting/lifecycle:** each numbered option has its own Dev Music setting, off by default, outside presets
+and dice, starting the listener without Diagnostics. Proposed IDs: `traffic_pass`, `traffic_flow`, `traffic_accent`.
+Extend `SoundKindsRunner.settingsTick()`, start/stop and each judgement (including judgements with no kind change).
+Read scores/state under its lock and send controls outside it, as the water/birds paths do. Add the scene latch
+to `SoundKinds`; keep fast envelope/pass state in the patch, with tuning numbers in `constants.py`. Share one
+pass detector between 1 and 3. Turning a switch or Music off, listener failure/stop, or input restart releases
+its contribution and clears pending passes; re-enable starts neutral. No stored level/tone/voice/pan setting is
+rewritten. All analysis is in memory; no mic audio is saved or requested for testing.
+
+1. **Traffic Passes Through — the pad opens and an earned chime crosses.** A car's rising sound gently opens
+   the pad's tone; its departure lets the pad settle. A synth bell/Glass chime earned during that pass fades in
+   toward one ear, glides across and fades away at the other. Traffic classification alone starts no chime.
+   There may therefore be a pad swell without a bell, or no audible change if the pad is muted and no note is
+   earned. That limitation should be heard before deciding whether a car should earn a new note of its own.
+
+   **Starting sound and one knob:** multiply the pad's current effective cutoff by up to 2 (one octave), capped
+   at 6 kHz; at an already higher cutoff, leave it there. This preserves the user's tone as the resting sound.
+   The actual pad cutoff is `mu_cut_pad` into `mu_pad_lp` in `music.py`, derived from Music Tone, rather than a
+   new filter in build.py. Follow the shared pass envelope; no added gain initially, since opening the filter
+   already changes perceived level. Tune **maximum opening** first (2x); do not compensate with master volume.
+   Pad Only With a Steady Sound still decides whether the pad exists; this option does not force it on or add bass.
+
+   Alternate the staged direction per accepted pass (first left-to-right, next right-to-left). The mono input
+   provides no real direction, including when World in Stereo is selected: this proposal uses no stereo direction
+   estimator. On the first earned synth chime in a pass, start a 3 s equal-power glide from pan -0.75 to +0.75
+   (reverse next pass), with a 250 ms fade-in and a final 1 s fade-out. Multiply its ordinary ring envelope,
+   never lengthen or amplify it; a short bell may die before reaching the far ear. Latch its direction and motion
+   for that voice. Later notes in the same pass stay ordinary initially, avoiding a cluster of crossing bells.
+   If talk starts, fade the traffic motion contribution away in 500 ms without scheduling a note.
+
+   **Where/cost:** Java permission plus the patch pass detector and cutoff control in `music.py`. Chime voices
+   currently sum to mono (`mu_v{k}_out`); a true isolated pan needs per-voice stereo gains and a stereo chime
+   branch carried through the generated-music processing to the stereo output. Do not use build.py's global
+   `space_pan`: that would pan the mic, pad and drums too. Apply Make Room/Underwater and relevant output effects
+   consistently to the new branch, avoiding a second centre copy of the same bell. Found melody/Singing Room
+   stay where they are; this moves the existing Synth bells/Glass mix without selecting a new Chime Voice.
+   No new oscillators, but stereo routing/filtering can add DSP. Rough planning budget: under 2 percentage points
+   of a Moto core beyond an already-running listener; unmeasured. The stereo path makes this the largest option.
+
+   **Stacking/risks:** Mind the Gap owns chime holds and answers; a talk-pause answer is not captured for traffic
+   motion. Water Leaves a Trail and Trailing Melody retain their counts/timing; at most one eligible earned note
+   per pass moves. Birds Lift the Chimes still sets per-note register/voice/trim; traffic only supplies motion.
+   Make Room for Music still attenuates; Underwater can hide the brightening and needs equivalent stereo treatment.
+   Calm builds still supplies its own slow level/tone changes; apply the traffic multiplier to the resulting pad
+   cutoff, not a stale saved value. The swell/pan may feel late on fast cars; a knock over a road may look like a
+   pass. A constant motorway yields no repeated sweeps. Pocket filtering may remove both the rise and its identity.
+   Global spatial processing can weaken the glide; a mono output cannot demonstrate it. Keep one setting for the
+   first combined experiment, with pad-only and pan-only isolation available to the developer's checks.
+
+2. **Traffic Flow — the beat recedes when the road settles.** Once a traffic scene is established, louder
+   renewed activity restores the existing beat; a sustained lull eases it down, leaving the pad and other music.
+   The beat clock continues silently and returns in place, without a new fill, tempo change or automatic pad.
+   This is a response to *audible activity*, not proof that vehicles stopped. Idling engines may still sound
+   busy, and a smooth moving stream may sound steady: both are important tests, not solved classifications.
+
+   **Driver/numbers and one knob:** only operate inside the shared settled-traffic latch. Establish an initial
+   reference for 4 s without changing gain. Track a low recent level over ~20 s while the scene holds; activity
+   is level at least **3 dB above that reference** for 1 s, or a valid pass. Require below 1 dB excess for 4 s to
+   call a lull; the gap between thresholds prevents rapid flipping. Repeated passes keep flow active. A steady
+   engine or motorway will eventually settle toward the lull state, an honest weakness of this simple detector.
+   Start with a 12 dB beat dip over 4 s, restore over 2 s; this is a soft first trial of "thins to the pad", not
+   a complete mute. **Tune lull depth first** (12 dB); try a full mute only if DadCraft wants a clearer stop.
+   When traffic leaves, return to ordinary beat level over 8 s, so a distant missed car cannot leave the beat
+   permanently down. That return may itself feel wrong at a quiet red light; note it in the first listen.
+
+   **Where/cost:** Java scene/permission sends plus patch level history and a gain ramp on the generated beat
+   path in build.py, next to `beat_rm` and before the beat's Underwater processing. Combine with existing Make
+   Room attenuation by the stronger requested dip, rather than multiplying 12 dB and 6 dB into 18 dB. No audio
+   buffer or oscillator, no beat-pattern rewriting. Rough incremental DSP budget under 1 percentage point of a
+   Moto core beyond the listener, unmeasured; turning this on alone also incurs the listener's cost.
+
+   **Stacking/risks:** Mind the Gap, Water Leaves a Trail, Birds Lift the Chimes and Trailing Melody retain their
+   chime rules; this ducks drums only. Make Room still dips other generated music and keeps its bigger-sound
+   threshold; Underwater colours the remaining beat downstream. Calm builds and Pad Only With a Steady Sound
+   keep their normal decisions, so there may be neither an audible pad nor a "hold" in silence. With 1 on,
+   the first departure can open the pad while restoring the beat; use the slower 2 s beat return so it does not
+   leap over the car. Strong wind/handling veto or settled talk releases toward normal gain over 2 s, rather
+   than interpreting them as stopped traffic. A bus idling, quiet electric traffic, overlapping engines and a
+   phone pocket can all defeat the flow inference. If roadside A/B cannot distinguish lull/return convincingly,
+   set this option aside rather than label rumble as vehicle motion.
+
+3. **Road Accents — a pass changes the found beat's emphasis (Codex's addition).** The found-sound rhythm grid
+   DadCraft loves stays in place. As a car approaches, its existing low hits gain prominence because the high
+   hits soften; as it recedes, the normal balance returns. No new drum hit, recording, note, tempo or pattern is
+   created. A passing car shapes sounds already gathered from the surroundings instead of becoming another synth.
+
+   **Driver/numbers and one knob:** use the same accepted-pass envelope as 1, with the same traffic permission,
+   wind/handling veto, talk priority and re-arm. At its peak attenuate found hats by 3 dB, snares by 1.5 dB and
+   kicks by 0 dB, smoothing over 300 ms in / 1.5 s out. Tune **hat trim** first (3 dB); snare trim stays half that.
+   This is deliberately a darkening of the percussion against option 1's opening pad, without boosting bass.
+   Stationary rumble starts no accents; on a busy road merged passes may produce only one long change.
+
+   **Where/cost:** gains on existing found kick/snare/hat playback lanes in `rhythm.py`, before the beat sum;
+   leave capture, assignment and playback timing intact. Classic drums keep their current sound. It adds three
+   smoothed gains, no new voices/buffers; rough incremental Moto DSP budget under 1 percentage point of a core
+   beyond the shared listener/detector, unmeasured. With no found hats/snare playing, it may be inaudible.
+
+   **Stacking/risks:** 1 and 3 share a car arc but change different parts; 2 applies its final beat gain after
+   these trims and can hide them in a lull. Make Room/Underwater further attenuate or muffle the result. Mind
+   the Gap, Water Leaves a Trail and Trailing Melody keep chime counts and timing; Calm builds stays independent.
+   Birds Lift the Chimes can prevent new hats being caught while old ones still play; this option neither
+   reinstates those catches nor overwrites them. It could sound merely dull, or be imperceptible under effects.
+   Judge it after 1 alone, at the normal found-beat mix, before spending time on more elaborate car responses.
+
+**Recommendation:** build **1 and 2 as two independent settings**, one at a time, starting with 1. Share the
+analysis, not the on/off decision: a clear pass-by swell and a convincing stop-and-go response may have different
+verdicts. Option 1 includes DadCraft's pan on earned chimes; validate the isolated stereo route before listening.
+If ordinary cars never earn chimes, explicitly bring that result back to DadCraft before adding a pass-triggered
+bell. Option 2 is the weaker inference and should earn its place in a real roadside A/B. Keep 3 as an optional
+next experiment after 1 is convincing; it complements the found rhythm without adding more autonomous music,
+but should not delay hearing DadCraft's idea. No new user-facing tuning sliders are needed for the first builds.
+
+**First listen (after a pick/build/review):** stationary, safely back from a road, with headphones and normal mic
+input; do not walk into traffic to test. No recording. Begin with the normal found-beat sounds/levels already
+established, Music on, an audible pad, and the other sound-kind responses, Trailing Melody and Calm builds off.
+Leave the normal bigger-sound threshold in place. Diagnostics may show kind/score; it does not have to be enabled
+for the response. Use a short off/on comparison of each chosen option separately, then together.
+- For 1: several isolated cars, gaps, then steady traffic. Does the pad arc belong to the car despite classifier
+  delay? Do cars earn any chime, and if so does one bell fade across without moving the room? A modest knock
+  during an established pass can check the pan route, but cannot prove cars themselves earn notes. After the
+  road quiets, the normal tone/position should return. Constant rumble must not schedule periodic crossings.
+- For 2: a street with real stop-and-go if convenient. Compare pull-away, a lull with engines still idling, and
+  moving steady traffic. Does the beat thin/return at useful times, or just react to loudness? Wait through a
+  long quiet stop to reveal the 8 s scene-release return. Note false "stops" instead of calling them successful.
+- For 3, if picked later: use an already audible found hat/snare/kick pattern, comparing the same three trims off
+  and on. Does the car reshape its emphasis recognisably without sounding like a volume fault?
+- Then add Mind the Gap, the two water responses, Birds Lift the Chimes, Make Room for Music, Trailing Melody and
+  Calm builds individually. Check talk priority, unchanged trail counts and a swell not lost under Underwater.
+  Compare exposed phone, ordinary pocket use, wind without cars, and a steady fan indoors. Report missed passes
+  and wrong ones; no need to lower thresholds simply to make the feature always respond.
+
+An indoor traffic video/recording played from another device is an honest **routing/timing stand-in** if it has
+isolated passes and gaps, no music/narration, and is played at a fixed volume with enough low end for detection.
+No Ouralia output goes to the speaker. Stereo direction in the video does not supply direction to the mono
+classifier; the proposed alternation remains staged. A video with authentic idling/pull-away can expose obvious
+option-2 mistakes, but cannot establish outdoor reliability, wind rejection or distance sensitivity. Do not
+record DadCraft's mic to obtain test material. Before his listen, check lifecycle/reset, stale permission and
+late-score expiry, no new notes/hits, off-path equivalence and mic isolation, stereo levels and no duplicate
+chime, gain composition, then incremental Moto CPU. The budgets above are estimates, not measurements; the
+listener's earlier +3.1 core-percentage-point A/B is context, not a new traffic benchmark.
