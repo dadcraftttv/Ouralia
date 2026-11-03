@@ -13,6 +13,7 @@ LEGACY_FX = "--legacy-fx" in sys.argv
 # tools/test_patch.py checks these against Params.java so they cannot drift.
 DEFAULTS = [
     ("gain", 1), ("dry", 1), ("echo_on", 1), ("echo_time", 350), ("echo_sync", 2), ("feedback", 0.4),
+    ("music_stereo", 0),
     ("wet", 0), ("ring_on", 1), ("ring_freq", 80), ("ring_mix", 0), ("smooth", 30),
     ("pitch_on", 1), ("pitch_semi", 0), ("pitch_mix", 0), ("pitch_window", 60),
     ("crush_on", 1), ("crush_mix", 0), ("crush_bits", 8), ("crush_rate", 8000), ("crush_style", 0), ("tune_amount", 0), ("tune_glide", 40),
@@ -479,3 +480,13 @@ TALK_TICK_MS = 50       # how often the level is looked at
 TALK_VEL = 0.45         # the answer's first note (then x TALK_VEL_STEP each)
 TALK_VEL_STEP = 0.75
 TALK_NOTE_MS = 260      # the first gap between the answer's notes (then x TRAIL_SLOW)
+
+# Music in Stereo (DadCraft, Nov 3): fixed places, no autonomous motion.
+MUSIC_STEREO_MS = 50
+MUSIC_PAN_CAP = 0.6
+MUSIC_CHIME_PAN = 0.5
+MUSIC_ROOM_PAN = -0.3
+MUSIC_HARM_PAN = 0.3
+MUSIC_HAT_PAN = 0.35
+MUSIC_PAD_SIDE = 0.12
+MUSIC_PAD_DELAY_MS = 13

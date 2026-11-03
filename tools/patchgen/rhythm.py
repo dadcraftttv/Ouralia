@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """The Rhythm: the tempo clock, the beat and its patterns, the found-sound kit, glitch loops."""
 from .constants import *  # noqa: F401,F403 (the tuning numbers)
+from .music_stereo import image, apply_image
 from .core import *  # noqa: F401,F403
 
 
@@ -914,4 +915,15 @@ def add_beat(P):
     P.sig2("beat_lvl", "*~", "beat_sum", "beat_gain", x, 560)
     P.obj("beat_out", "*~ 0.6", x, 590)
     P.c("beat_lvl", "beat_out")
-    return "beat_out"
+    # Kick, bass and snare stay centred (snare pan 0 is inside its +/-0.1 range).
+    # The found kick/snare share a nonlinear limiter, so leave both at the centre.
+    hm, hs = image(P, "ms_hat", "beat_hats_all", MUSIC_HAT_PAN)
+    paths = []
+    for suffix, src in (("m", hm), ("s", hs)):
+        for i, gain in enumerate(("rh_gain", "beat_gain")):
+            src = P.sig2(f"ms_bt_{suffix}{i}", "*~", src, gain, x, 610)
+        P.obj(f"ms_bt_{suffix}", "*~ 0.6", x, 630); P.c(src, f"ms_bt_{suffix}")
+        paths.append(f"ms_bt_{suffix}")
+    mid, side = apply_image(P, "ms_bt", "beat_out", *paths)
+    P.obj("beat_side", "*~ 1", x, 650); P.c(side, "beat_side")
+    return mid

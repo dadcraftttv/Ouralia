@@ -235,6 +235,9 @@ final class Params {
             // speaks 2-3 chimes answer in key. Off by default, only where sound kinds can run, like Make Room.
             new Param("voice_gaps", "Mind the Gap (people talking: the chimes wait, then answer in the pauses)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
+            // Fixed music places (DadCraft, Nov 3), independent of presets and dice. No classifier needed.
+            new Param("music_stereo", "Music in Stereo", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPreset().soundKinds(),
             // Water only extends a chime already earned by a sudden sound. Independent of presets and dice.
             new Param("water_trail", "Water Leaves a Trail (water heard: at least two softer notes follow a chime)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),

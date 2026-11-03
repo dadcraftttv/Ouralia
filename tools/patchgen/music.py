@@ -2,6 +2,7 @@
 """The Music: melody rhythm, phrases, the composer, the pad/bass/melody voices, Harmony and Room notes."""
 from .constants import *  # noqa: F401,F403 (the tuning numbers)
 from .core import *  # noqa: F401,F403
+from .music_stereo import add_width, image, sum_image, apply_image
 from .found import add_found_note, add_found_pad
 
 
@@ -546,6 +547,7 @@ def add_music(P):
         P.sig2(f"mu_v{k}_gls", "*~", gsum, f"mu_v{k}_gat", gx + 200, cy + 760)
         P.sig2(f"mu_v{k}_out", "+~", f"mu_v{k}_ck", f"mu_v{k}_gls", vx + 60, cy + 770)
         voices.append(f"mu_v{k}_out")
+        image(P, f"ms_ch{k}", f"mu_v{k}_out", trigger=f"mu_v{k}_trig", voice=k)
     acc = voices[0]
     for i, v in enumerate(voices[1:]):
         acc = P.sig2(f"mu_chime_acc{i}", "+~", acc, v, cx + 600, cy + 280 + 30 * i)
@@ -1282,10 +1284,33 @@ def add_music(P):
     P.sig2("mu_pad_br", "*~", "mu_pad_rm", "mu_br_ln", px, 890)
     P.sig2("mu_pad_out", "*~", "mu_pad_br", pad_lvl, px, 900)
     P.sig2("mu_chime_out", "*~", "mu_chime_lp", arp_lvl, px + 200, 900)
+    room = add_room_notes(P, x + 2500, ex, degree_to_hz)
+    harmony = add_harmony(P, x + 3400, ex, degree_to_hz)
     P.sig2("mu_mix0", "+~", "mu_pad_out", "mu_chime_out", px, 930)
-    P.sig2("mu_mix1", "+~", "mu_mix0", add_room_notes(P, x + 2500, ex, degree_to_hz), px, 940)
-    P.sig2("mu_mix", "+~", "mu_mix1", add_harmony(P, x + 3400, ex, degree_to_hz), px, 945)
-    P.sig2("mu_out", "*~", "mu_mix", mon, px, 960)
+    P.sig2("mu_mix1", "+~", "mu_mix0", room, px, 940)
+    P.sig2("mu_mix", "+~", "mu_mix1", harmony, px, 945)
+    add_width(P)
+    mids, sides = [], []
+    for suffix, target in (("m", mids), ("s", sides)):
+        ch = sum_image(P, f"ms_chsum_{suffix}", [f"ms_ch{k}_{suffix}" for k in range(4)])
+        P.obj(f"ms_chscale_{suffix}", "*~ 0.22", px, 950); P.c(ch, f"ms_chscale_{suffix}")
+        P.obj(f"ms_chlp_{suffix}", "lop~ 3000", px, 950); P.c(f"ms_chscale_{suffix}", f"ms_chlp_{suffix}")
+        P.c("mu_cut_warm", f"ms_chlp_{suffix}", 0, 1)
+        target.append(P.sig2(f"ms_chlevel_{suffix}", "*~", f"ms_chlp_{suffix}", arp_lvl, px, 950))
+    for name, src, pan in (("room", room, MUSIC_ROOM_PAN), ("harm", harmony, MUSIC_HARM_PAN)):
+        m, side = image(P, "ms_" + name, src, pan)
+        mids.append(m); sides.append(side)
+    # Only the pad (Classic and Found), never bass. Opposite delayed copies cancel in the mono fold.
+    P.sig2("ms_pad_gate", "*~", "mu_pad_mrm", "mu_br_ln", px, 950)
+    P.sig2("ms_pad_level", "*~", "ms_pad_gate", pad_lvl, px, 950)
+    P.obj("ms_pad_wr", "delwrite~ ms_pad_buf 30", px, 950); P.c("ms_pad_level", "ms_pad_wr")
+    P.obj("ms_pad_rd", f"delread~ ms_pad_buf {MUSIC_PAD_DELAY_MS}", px, 950)
+    P.sig2("ms_pad_diff", "-~", "ms_pad_rd", "ms_pad_level", px, 950)
+    P.obj("ms_pad_side", f"*~ {MUSIC_PAD_SIDE}", px, 950); P.c("ms_pad_diff", "ms_pad_side")
+    sides.append("ms_pad_side")
+    mid, side = apply_image(P, "ms_mu", "mu_mix", sum_image(P, "ms_msum", mids), sum_image(P, "ms_ssum", sides))
+    P.sig2("mu_out", "*~", mid, mon, px, 960)
+    P.sig2("mu_side", "*~", side, mon, px, 980)
     return "mu_out"
 
 def add_talk_gaps(P, gx, gy, ex):

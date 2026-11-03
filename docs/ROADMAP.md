@@ -60,7 +60,9 @@ testing with the two options." Both kept; his pick when he has one. design/sound
 (Dev): Birds Lift the Chimes, earned chimes turn to high Glass while birds are heard. Indoor listen (Nov 2,
 after the knock/chirp fixes): "knocking during birdsong now gives a high glass chime". Outdoors later. design/sound-kinds.md "Step 9".
 
-**Traffic (DadCraft, Nov 2-3):** options written (Codex, Nov 3), DadCraft's pick next. `docs/design/sound-kinds.md` "Step 10 options: traffic": 1 Traffic Passes Through (pad opens with a pass; his earned Glass/Synth chime fades across alternating ears), 2 Traffic Flow (beat thins in audible lulls), 3 Road Accents (Codex: passing traffic reshapes existing found-beat emphasis). Recommend separate switches for 1 and 2, build 1 first; 3 later if wanted. Mono analysis cannot infer real direction or reliably distinguish stopped engines from moving traffic; no traffic on his walk, far traffic misses. Docs only; no build.
+**Music in Stereo (DadCraft, Nov 3):** DONE (Codex built, Claude Code reviewed, Nov 3): independent Dev Music switch, off by default, outside presets/dice. Fixed music places, per-note chime pan and a per-voice traffic hook; mic unchanged. Moto CPU: no measurable change (off ~57.5%, on ~58% of a core, no dropouts). DadCraft's listen: "sounds good". Traffic 1 next. DESIGN-NOTES "Music in Stereo".
+
+**Traffic (DadCraft, Nov 2-3):** DadCraft picked **1 and 2, build 1 first**, then "stereo first, have codex build it." The stereo groundwork is built (above). After review/listen, build Traffic Passes Through (pad opens with a pass; earned Glass/Synth chimes fade across alternating ears), then Traffic Flow (beat thins in audible lulls), as separate switches. Road Accents stays optional. Mono analysis cannot infer real direction or reliably distinguish stopped engines from moving traffic; no traffic on his walk, far traffic misses. `docs/design/sound-kinds.md` "Step 10 options: traffic".
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.
