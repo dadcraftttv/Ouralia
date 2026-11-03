@@ -1,7 +1,8 @@
-# RjDj format and licensing notes (for stage 2: the scene loader)
+# RjDj format and licensing notes (the research behind the scene loader)
 
 Researched from the public repos `rjdj/rjlib` (Reality Jockey's own library) and `danomatika/PdParty`
-(open-source iOS player with RjDj compatibility). Nothing here has been run on Android yet.
+(open-source iOS player with RjDj compatibility). Written before the loader; the loader and the four bundled scenes
+have run on Android since (DESIGN-NOTES, Scenes).
 
 ## What a scene is
 A folder ending in `.rj` (often distributed zipped) containing:

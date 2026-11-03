@@ -173,7 +173,7 @@ Start with the volume low. Some settings can get loud.
 
 The screen has five tabs. Two things stay at the bottom on every tab, in reach of your thumb when you walk:
 
-- **The tab bar:** icons for **Sound**, **Music**, **Realms**, **Scenes** and **Setup**. The tab you are on widens and shows its name. Each tab keeps its own place when you scroll, and the app opens on the tab you used last.
+- **The tab bar:** icons for **Sound**, **The Band**, **Realms**, **Scenes** and **Setup**. The tab you are on widens and shows its name. Each tab keeps its own place when you scroll, and the app opens on the tab you used last.
 - **The player**, just above it: the round **Start / Stop** button inside a small ring that shows Intensity, a line saying what is happening (the Realm playing, if one is, and Intensity; warnings show in red), and **Save sound** (the bookmark button: keeps the sound you are hearing as a preset in one tap). **Tap the middle of the player** to open it full size. Close it by dragging it down, tapping outside it, or Back.
 
 The full player shows:
@@ -192,7 +192,7 @@ Inside a tab, settings are grouped in cards. Tap a card's heading to open or fol
 | Tab | What is on it |
 | --- | --- |
 | Sound | Presets and shortcuts, the XY pad, Input & output, and all the effects |
-| Music | Rhythm and Music |
+| The Band | Rhythm and Music |
 | Realms | Realm Hopper: the sound changing by itself to fit where you are |
 | Scenes | Choosing and importing scenes, the scene's touch pad, its volume sliders |
 | Setup | Audio devices, diagnostics, appearance, behavior, Reset everything, About |
@@ -445,7 +445,7 @@ This adds a soft, drifting musical layer that reacts to the world around you, in
 - **Hooks That Grow:** off by default. Switched on, the chimes stop wandering at random and play a short tune (a motif) instead, like a theme and its variations: the motif, then again or answered (ending on the chord's home note), then changed (moved up or down, upside down, backwards, cut short or carried a note further), then the motif back. Each section of Evolving music has its own motif, and it comes back when the section does. A pause of about two seconds starts the tune over. It works with Classic or Evolving, but it's best with Evolving. The walking notes are not changed yet.
 - **Living Grooves:** off by default. Switched on, the walking notes and the drums stop picking from a few fixed patterns. Each bar is made by rules instead: the drums spread their hits evenly over the bar (more kicks and hats the faster you walk, the snare on 2 and 4), and the walking notes play a figure of the chord's notes. Every bar keeps most of the last one and changes one thing (a kick moves, a ghost note or a hat comes or goes, a walking note moves), and every 4th bar is the section's own pattern again; now and then the walking figure plays backwards. Fills, breakbeat, Kick drum pitch and the rest still work on top. With **Melody rhythm** on, its rhythm is made the same way: straight is halves, quarters and 8ths spread evenly, dotted is 3+3+2-like groupings, as many notes as the pace or the room asks, a little change each bar. Best with Evolving, where each section has its own patterns.
 - **Sway with the World:** in a bright place the chimes and walking notes sit a little higher, in a dark room a little lower and warmer, in a pocket an octave lower, and climbing stairs lifts them. The pad and bass stay put. On by default.
-- **Slow Bloom:** off at first. Switch it on and, when you stand still in a calm place for half a minute to a minute, the music slowly grows on its own, one layer at a time: the pad warms up, the room notes ring a little more, a few soft chimes start to come, then harmony and reverb open up. It takes about three minutes to reach the top, holds for a minute, eases back over two, then rests for at least three minutes before the next one. Walk, or step into a loud, lively place, and it fades away within a few seconds. It only grows parts that are already on, and never moves your sliders. The Now line says "building" while it happens. It is your own setting: presets don't save or change it.
+- **Calm Builds:** off at first. Switch it on and, once the room has been quiet for half a minute to a minute while the drums play, a gentle two-bar chime tune joins them, a note at a time over two minutes, and keeps playing while it stays quiet. A knock or a cough doesn't stop it; steady noise (talk, a loud fan, walking) makes it trail off over 15 seconds, and then it waits for quiet again. It never starts the drums itself.
 - **Soft Steps:** on at first (switch it off for the old, louder walking notes). The walking notes are softer (quieter than the chimes when you stand still), come in gently over your first few steps, and glide to a new loudness when your pace changes instead of jumping.
 - **Key and Scale:** the home note and the mood. It starts in C Major. Major sounds bright, Minor sounds sad or serious, Major pentatonic and Minor pentatonic are simple and open, Dorian and Mixolydian are folky, Lydian is dreamy, and Whole tone is floaty and unresolved. Try them all.
 - **The pad:** a very soft, slow background of gentle chords. It blends smoothly from one chord into the next. It is meant to be the glue, never the star. Its level (Pad level) is in the Mix section; keep it low.
@@ -477,7 +477,7 @@ What to expect:
 - When a lot has been played lately, the music holds back and leaves more room, so a busy room doesn't turn into a wall of notes.
 - The music remembers the last little run of chimes. When the room goes quiet for a while and you are standing still, it may play that phrase back with a twist, like a theme returning.
 - The music passes through your other effects, so Echo, Reverb, Chorus, Stereo Space and the rest all shape it. The Pitch, Ring, Bit-crush, Distortion and Filter effects do not touch it.
-- In Realms, Tranquil keeps the music very soft, Flux keeps the notes light but lets the loud room ring in key, Kinetic lets the notes grow with your pace, and Pocket switches Room notes off. Realms never switch the music on or off for you.
+- In Realms, Tranquil keeps the music very soft, Flux keeps the notes light but lets the loud room ring in key, Kinetic lets the notes grow with your pace, and Pocket switches the Singing Room off. Realms never switch the music on or off for you.
 
 ### Mix
 
@@ -485,7 +485,7 @@ One place to set how loud each part of the music and rhythm is, so you can turn 
 
 - **Kick, Snare, Hi-hat:** each drum on its own, synth and found alike. **Glitch loops woven into the beat:** the glitch bars in the beat.
 - **Pad level:** the soft chords. **Bass:** the low note under the pad.
-- **Notes and chimes level:** the Lead's own volume: all the melody notes (the chimes and the walking notes). Turn it to 0 to hear only the pad.
+- **Notes and Chimes Level:** all the melody notes (the chimes and the walking notes). Turn it to 0 to hear only the pad.
 - **Chimes:** the notes set off by sudden sounds, the slow standing-still pattern and remembered phrases coming back. **Walking notes:** the run of notes with your steps and the groove note.
 - **Singing Room: Ring** and **Singing Room: Found Bells:** the two kinds of room notes (see Singing Room Sound), each on its own.
 - **Harmony:** the answering note.
@@ -616,13 +616,13 @@ Thank you for trying this. Anything you notice is useful, even "it felt weird." 
 - **Movers:** do the tilt, shake, spin, compass, light, pocket and stairs movements feel right? Does a sensor seem to be missing on your phone?
 - **Intensity:** try both ends while you walk. Is the left end calm without going dead, and the right end busy without turning into a mess? Is the middle the sound you set up?
 - **Scenes with pictures:** if you have scenes that draw on screen (Smile, Moogarina, MoonBootSynthPad, Showtime, TouchVocoder, Atsuke), do their pictures and words appear in the right places and change as you play?
-- **Slow Bloom:** switch it on and stand somewhere calm for five minutes or so. Does the build feel gradual and natural? Is the top too much or too little? Does it get out of the way quickly when you start walking?
+- **Calm Builds:** switch it on with the drums playing and stay somewhere quiet for a few minutes. Does the build feel gradual and natural? Is it a tune or just chimes? Too loud or too quiet beside the drums? Does a knock leave it playing, and does steady noise fade it out over about 15 seconds?
 - **Handling:** tap, grip and rub the phone while it plays. Are those sounds quieter, and do they stay out of the beat and the chimes (Diagnostics counts the skipped ones)? Walk holding the phone: does the found-sound beat still pick up the sounds around you? Clap and knock nearby with the phone still: are those still caught?
 - **Pocket:** with the phone in a pocket, both mic end up and mic end down, how much cloth noise do you hear? Can you still hear the world around you? Which Pocket hush and Mic-down protection settings worked for you?
 - **Presets:** does Export then Import bring back the same sound?
 - **Favorites:** which effects or presets did you enjoy, and which did you ignore?
 - **Music:** does it stay quiet in a quiet room, answer when something happens, and swell as you walk faster? Is the pad too loud, or the notes too busy? Do the chimes fall in time with the beat?
-- **Found sounds:** do the drums, chimes and room notes sound like the sounds around you? Is the beat too predictable, or too random? Where on the Chime character slider do you like the chimes? Does anything loud or harsh come back from the kit (a boom, a squeal)?
+- **Found sounds:** do the drums, chimes and Singing Room sound like the sounds around you? Is the beat too predictable, or too random? Where on the Chime character slider do you like the chimes? Does anything loud or harsh come back from the kit (a boom, a squeal)?
 - **Harmony:** does your voice copy sound like you and stay in tune? Does it sound natural when you sing low and when you sing high? Does it leave ordinary talking alone?
 - **Found pad:** after you hum a steady note, does the pad sound like your voice holding the chord?
 - **Rhythm:** does the beat stay steady while you walk and follow a change of pace? With Tempo set to Set, does it settle on your tempo, and does walking pull it the right amount? Do the occasional sparse bars and the drifting swing feel musical? With Melody rhythm on, do the walking notes and chimes feel like they have a rhythm, and do long and short notes sound right? With Melody phrases on, can you hear the line repeat and come back? With Breakbeat up, do the chops, rolls and fills feel like a breakbeat, and is the top of the slider too much or not enough? Does the beat still land on your steps as you walk?
