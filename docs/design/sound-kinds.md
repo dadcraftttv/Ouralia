@@ -863,6 +863,8 @@ listener without Diagnostics. Turning it on alone does not turn on option 1.
 - **Checks:** test_patch "7z9. traffic flow" (settle 1.000, lull 0.251, activity back to 1.000; scene leaving
   0.626 at 4 s, 1.000 at 8.5 s; with Make Room 0.251; wind, off and Music off never dip). J2: Flow alone starts the
   listener, latches after the window fills, keeps pass state 0, holds through a 15 s lull, leaves, stops.
+- **Moto CPU (Nov 3, Ouralia Dev playing, Music + Music in Stereo on, `top` 30 x 2 s):** Birds Lift the Chimes on
+  (listener running) median 57.75% of a core, plus Traffic Flow 57.0%: no measurable cost; 0 underruns.
 - **Known weakness (as proposed):** a steady engine or motorway reads as a lull after 4 s and thins the beat;
   idling engines may read as activity. Judge it at a real stop-and-go street; set it aside if lull/return
   doesn't track the road convincingly.
