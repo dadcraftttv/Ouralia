@@ -43,6 +43,30 @@ final class SoundKindsRunner {
     private static int uwSent;
     private static volatile boolean birdsOn;
     private static boolean birdsSent;
+    private static volatile boolean trafficOn;
+    private static int trafficSent;
+    static final String TRAFFIC_ID = "traffic_pass";
+
+    static boolean trafficEnabled() {
+        return available() && ParamStore.get(TRAFFIC_ID) >= 0.5f;
+    }
+
+    /** 0 off/reset, 1 listening, 2 permitted, 3 settled talk. Read under lock, send outside it. */
+    private static int trafficTick() {
+        int next = thread != null && trafficOn && ParamStore.get("music_on") >= 0.5f && kinds != null
+                ? (kinds.talking() ? 3 : kinds.trafficAllowed() ? 2 : 1) : 0;
+        if (next == trafficSent) {
+            return -1;
+        }
+        trafficSent = next;
+        return next;
+    }
+
+    private static void sendTraffic(int state) {
+        if (state >= 0) {
+            PdBase.sendFloat("traffic_state", state);
+        }
+    }
 
     private SoundKindsRunner() { }
 
@@ -163,11 +187,13 @@ final class SoundKindsRunner {
     /** Called each tick of the sound's loop: Make Room for Music, Mind the Gap or Water Leaves a Trail changed (row, preset, reset):
      *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
     static void settingsTick() {
-        boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled(), birds = birdsEnabled();
+        boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled(), birds = birdsEnabled(), traffic = trafficEnabled();
         int uw = uwEnabled();
         boolean music, talk, listen, same;
-        int w, u, b;
+        int w, u, b, tr;
         synchronized (lock) {
+            boolean trafficChanged = trafficOn != traffic;
+            trafficOn = traffic;
             boolean waterChanged = waterOn != water, uwChanged = (uwStyle > 0) != (uw > 0), birdsChanged = birdsOn != birds;
             waterOn = water;
             uwStyle = uw;
@@ -175,7 +201,8 @@ final class SoundKindsRunner {
             w = waterTick();
             u = uwTick();
             b = birdsTick();
-            same = (room == roomOn && gaps == gapsOn && !waterChanged && !uwChanged && !birdsChanged) || app == null;
+            tr = trafficTick();
+            same = (room == roomOn && gaps == gapsOn && !waterChanged && !uwChanged && !birdsChanged && !trafficChanged) || app == null;
             if (same) {
                 music = talk = listen = false;
             } else {
@@ -183,12 +210,13 @@ final class SoundKindsRunner {
                 gapsOn = gaps;
                 music = kinds != null && kinds.roomMusic();
                 talk = kinds != null && kinds.talking();
-                listen = room || gaps || water || uw > 0 || birds || enabled(app);
+                listen = room || gaps || water || uw > 0 || birds || traffic || enabled(app);
             }
         }
         sendWater(w);
         sendUw(u);
         sendBirds(b);
+        sendTraffic(tr);
         if (same) {
             return;
         }
@@ -197,7 +225,7 @@ final class SoundKindsRunner {
         if (listen) {
             start();
         } else {
-            stop("Make Room for Music, Mind the Gap, Water Leaves a Trail, Underwater and Birds Lift the Chimes off");
+            stop("Make Room for Music, Mind the Gap, Water Leaves a Trail, Underwater, Birds Lift the Chimes and Traffic Passes Through off");
         }
     }
 
@@ -211,7 +239,7 @@ final class SoundKindsRunner {
         }
         if (on) {
             start();
-        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled() && uwEnabled() == 0 && !birdsEnabled()) {   // (any of the Music sound-kind settings keeps listening)
+        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled() && uwEnabled() == 0 && !birdsEnabled() && !trafficEnabled()) {   // (any of the Music sound-kind settings keeps listening)
             stop("switched off");
         }
     }
@@ -228,8 +256,9 @@ final class SoundKindsRunner {
             waterOn = waterEnabled();
             uwStyle = uwEnabled();
             birdsOn = birdsEnabled();
+            trafficOn = trafficEnabled();
         }
-        if (enabled(c) || roomOn || gapsOn || waterOn || uwStyle > 0 || birdsOn) {
+        if (enabled(c) || roomOn || gapsOn || waterOn || uwStyle > 0 || birdsOn || trafficOn) {
             start();
         }
     }
@@ -252,24 +281,44 @@ final class SoundKindsRunner {
             thread.start();
             worker = new Handler(thread.getLooper());
             ticks = 0;
+            seg = 0;
+            HandlerThread owner = thread;
             Context c = app;
             Consumer<String> l = log;
             Log.i(TAG, "starting at " + rate + " Hz");
             worker.post(() -> {
                 try {
-                    SoundKinds.Model m = (SoundKinds.Model) Class.forName(MODEL_CLASS)
-                            .getConstructor(Context.class).newInstance(c);
                     SoundKinds k = new SoundKinds(asset(c, "sound_kinds/kinds.txt"));
                     int size = PdBase.arraySize("sk_ring");
+                    if (size < SoundKinds.SEGS) {
+                        throw new IOException("sound kinds ring unavailable");
+                    }
+                    SoundKinds.Model m = (SoundKinds.Model) Class.forName(MODEL_CLASS)
+                            .getConstructor(Context.class).newInstance(c);
                     synchronized (lock) {
+                        if (thread != owner) {
+                            m.close();
+                            return;
+                        }
                         model = m;
                         kinds = k;
                         seg = size / SoundKinds.SEGS;
                         judged = dropped = 0;
                     }
+                    int traffic;
+                    synchronized (lock) {
+                        traffic = trafficTick();
+                    }
+                    sendTraffic(traffic);
                     PdBase.sendFloat("sk_on", 1);
                     l.accept(String.format(java.util.Locale.US, "Sound kinds: on (YAMNet, ring %d samples at %d Hz)", size, rate));
                 } catch (Throwable e) {   // (no model, no LiteRT for this ABI, no ring in the patch)
+                    synchronized (lock) {
+                        if (thread != owner) {
+                            return;
+                        }
+                    }
+                    stop(null);
                     Log.w(TAG, "Sound kinds could not start", e);
                     l.accept("Sound kinds: could not start (" + e.getClass().getSimpleName() + ")");
                 }
@@ -281,7 +330,8 @@ final class SoundKindsRunner {
         HandlerThread t;
         Handler w;
         Consumer<String> l;
-        int water, uw, birds;
+        int water, uw, birds, traffic;
+        SoundKinds.Model stoppedModel;
         synchronized (lock) {
             if (thread == null) {
                 return;
@@ -291,23 +341,28 @@ final class SoundKindsRunner {
             l = log;
             thread = null;
             worker = null;
+            stoppedModel = model;
+            model = null;
+            if (kinds != null) {
+                kinds.reset();
+            }
+            kinds = null;
+            seg = 0;
             water = waterTick();
             uw = uwTick();
             birds = birdsTick();
+            traffic = trafficTick();
         }
         sendWater(water);
         sendUw(uw);
         sendBirds(birds);
+        sendTraffic(traffic);
         PdBase.sendFloat("sk_on", 0);
         PdBase.sendFloat("room_music", 0);   // (no ears: the music comes back)
         PdBase.sendFloat("voice_talk", 0);
         w.post(() -> {
-            synchronized (lock) {
-                if (model != null) {
-                    model.close();
-                }
-                model = null;
-                kinds = null;
+            if (stoppedModel != null) {
+                stoppedModel.close();
             }
             t.quitSafely();
         });
@@ -334,19 +389,22 @@ final class SoundKindsRunner {
         busy = true;
         w.post(() -> {
             try {
-                judge(k);
+                judge(k, w);
             } finally {
                 busy = false;
             }
         });
     }
 
-    private static void judge(int k) {
+    private static void judge(int k, Handler owner) {
         SoundKinds.Model m;
         SoundKinds ks;
         int s, r;
         Consumer<String> l;
         synchronized (lock) {
+            if (worker != owner) {
+                return;
+            }
             m = model;
             ks = kinds;
             s = seg;
@@ -369,9 +427,12 @@ final class SoundKindsRunner {
         float[] scores = m.scores(wave);
         long took = System.nanoTime() - t0;
         boolean changed, roomChanged, room, talkChanged, talk;
-        int water, uw, birds;
+        int water, uw, birds, traffic;
         String line;
         synchronized (lock) {
+            if (worker != owner || ks != kinds) {
+                return;
+            }
             if (judged < nanos.length) {
                 nanos[judged++] = took;
             }
@@ -385,10 +446,12 @@ final class SoundKindsRunner {
             water = waterTick();
             uw = uwTick();
             birds = birdsTick();
+            traffic = trafficTick();
         }
         sendWater(water);
         sendUw(uw);
         sendBirds(birds);
+        sendTraffic(traffic);
         if (changed && l != null) {
             l.accept(line);
         }

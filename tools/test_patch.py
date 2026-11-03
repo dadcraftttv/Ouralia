@@ -96,7 +96,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "traffic_state", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
     "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "birds_lift", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
@@ -3256,6 +3256,155 @@ e.send("music_stereo",0); e.run(e.silence(1))
 tail = e.run(e.silence(12))
 check(np.isfinite(tail).all() and np.max(np.abs(tail))<1 and rms(tail[-SR:])<1e-6,
       "stereo music: switch back and long tail remain finite and decay")
+
+# ---- 7z8. traffic pass: envelope, vetoes, one earned glide, lifecycle and off identity ----
+_tp_patches = {}
+def traffic_fresh(variant='', state=2, stereo=1):
+    if variant not in _tp_patches:
+        import tempfile
+        from patchgen.build import build
+        p = build()
+        if variant == 'neutral':
+            # Recreate the old direct connections and omit the detector and per-note overrides.
+            keep = [n for n in p.index if not n.startswith('tp')]
+            lines = [p.lines[p.index[n]] for n in keep]
+            p.index = {n:i for i,n in enumerate(keep)}; p.lines = lines
+            p.conns = [c for c in p.conns if c[0] in p.index and c[2] in p.index]
+            p.c('mu_cut_pad','mu_pad_lp',0,1)
+            for k in range(4): p.c(f'ms_ch{k}_pick',f'ms_ch{k}_clip')
+        if variant == 'wind':
+            p.conns.remove(('dw',2,'tp_wind',0))
+            p.obj('test_wind','sig~ 1',0,0); p.c('test_wind','tp_wind')
+        for i,n in enumerate(n for n in list(p.index) if ' random ' in p.lines[p.index[n]]):
+            p.msg(f'tp_seed{i}',f'seed {100+i}',0,0); p.c('loadbang',f'tp_seed{i}'); p.c(f'tp_seed{i}',n)
+        text = p.text()
+        for k in OLD_DEFAULTS: text = text.replace('\\; %s 1 ' % k, '\\; %s 0 ' % k)
+        path = os.path.join(tempfile.mkdtemp(prefix='ouralia_traffic_'),'traffic.pd')
+        with open(path,'w') as f: f.write(text)
+        _tp_patches[variant] = path
+    e = fresh(_patch=_tp_patches[variant], dry=0, wet=0, music_on=1, music_pad=0,
+              music_arp=0.6, music_res=0, music_harm=0, music_react=0, melody_src=0,
+              chime_answer=1, note_big=30, music_stereo=stereo, chime_voice=2, mix_walk=0)
+    e.listen('traffic_active','traffic_accept','traffic_cutoff','traffic_amount',*(f'music_place{k}' for k in range(4)))
+    e.send('traffic_state',state)
+    e.run(sine(800,0.001,3))
+    e.traffic_start_count = sum(v>0.5 for v in e.heard.get('traffic_accept',[]))
+    e.heard = {k:[] for k in e.heard}
+    return e
+
+def traffic_high(e, secs=1): return e.run(sine(800,0.005,secs))
+def traffic_count(e): return sum(v>0.5 for v in e.heard.get('traffic_accept',[]))
+def traffic_places(e): return [v for k in range(4) for v in e.heard.get(f'music_place{k}',[])]
+
+e = traffic_fresh(); check(e.traffic_start_count==0,'traffic pass: enabling into constant sound starts neutral'); traffic_high(e)
+cut = e.heard['traffic_cutoff']; amount = e.heard['traffic_amount']
+check(traffic_count(e)==1 and max(amount)>0.7 and max(cut)<=min(6000,2*min(cut))+0.01,
+      'traffic pass: rise accepts once, pad within 2x / 6 kHz (passes %d, amount %.3f, cutoff %.1f..%.1f)' % (traffic_count(e),max(amount),min(cut),max(cut)))
+# Live Music Tone (including Calm builds' value) still sets the resting cutoff.
+
+e.send('music_tone',1); traffic_high(e,.1)
+check(5999<max(e.heard['traffic_cutoff'])<=6000.01, 'traffic pass: live tone updates reach and respect the 6 kHz cap')
+e.send('traffic_state',0); e.run(sine(800,0.001,12))
+check(e.heard['traffic_active'][-1]==0 and e.heard['traffic_amount'][-1]<0.001,
+      'traffic pass: off releases and clears the pass')
+for variant,state,label in [('',1,'no permission'),('wind',2,'wind veto')]:
+    e=traffic_fresh(variant,state); traffic_high(e,3)
+    check(traffic_count(e)==0 and max(e.heard['traffic_amount'])==0, 'traffic pass: '+label+' blocks rise')
+e=traffic_fresh(); e.run(sine(800,0.001,5))
+check(traffic_count(e)==0,'traffic pass: permission without a rise stays neutral')
+e=traffic_fresh(state=1); traffic_high(e,1.8); e.send('traffic_state',2); traffic_high(e,2)
+check(traffic_count(e)==0,'traffic pass: late permission cannot revive an expired candidate')
+e=traffic_fresh(state=1); traffic_high(e,.6); e.send('traffic_state',2); traffic_high(e,.3)
+check(traffic_count(e)==1,'traffic pass: history keeps an unexpired rise for late classifier permission')
+for recv in ('handling','pocket','jolt'):
+    e=traffic_fresh(); e.send(recv,1); traffic_high(e,2)
+    check(traffic_count(e)==0,'traffic pass: '+recv+' vetoes candidates')
+e=traffic_fresh(); traffic_high(e,13)
+check(traffic_count(e)==1 and e.heard['traffic_active'][-1]==0,
+      'traffic pass: constant rumble ends at ten seconds and never repeats')
+# End at the floor, then a new rise during the 2 s re-arm must be ignored.
+
+e=traffic_fresh(); traffic_high(e); e.run(sine(800,.001,1.5)); traffic_high(e,.8)
+check(traffic_count(e)==1,'traffic pass: re-arm gap blocks an early second rise')
+
+# Isolated control motion and audio: 3 s sweep, energy is unchanged at matched note age.
+
+def traffic_note_sequence(stereo=1, state=2):
+    e=traffic_fresh(state=state,stereo=stereo); traffic_high(e)
+    e.send_list('motif',9,.5); y=traffic_high(e,3.2)
+    return e,y
+
+e,moving=traffic_note_sequence(); places=traffic_places(e)
+check(145<=len(places)<=160 and abs(min(places)+.6)<1e-5 and abs(max(places)-.6)<1e-5
+      and max(abs(v) for v in places)<=.600001 and places[-1]>.59,
+      'traffic pass: first earned Glass chime glides left to right within +/-0.6 in three seconds')
+# Later earned note in the same pass stays in its ordinary place.
+
+before=len(traffic_places(e)); e.send_list('motif',11,.5); traffic_high(e,.7)
+check(len(traffic_places(e))-before==1,'traffic pass: later note in pass gets one ordinary place')
+e.run(sine(800,.001,5)); traffic_high(e); e.send_list('motif',9,.5); traffic_high(e,3.2)
+check(any(v>.59 for v in e.heard['music_place2']) and e.heard['music_place2'][-1]<-.59,
+      'traffic pass: next accepted pass reverses direction')
+_,ordinary=traffic_note_sequence(state=1)
+# Equal power on a moving voice vs its ordinary fixed place, before the short bell dies away.
+
+ratio=10*np.log10(np.sum(moving[:SR]**2)/max(np.sum(ordinary[:SR]**2),1e-25))
+check(abs(ratio)<1 and np.isfinite(moving).all(),'traffic pass: glide keeps L^2+R^2 within 1 dB (%+.3f dB), finite audio'%ratio)
+e,mono=traffic_note_sequence(stereo=0)
+check(np.max(np.abs(mono[:,0]-mono[:,1]))<1e-7,'traffic pass: Music in Stereo off stays mono')
+# Talk returns to the note's original place over 500 ms. Reuse must cancel the old ramp.
+
+e=traffic_fresh(); traffic_high(e); e.send_list('motif',9,.5); traffic_high(e,.7)
+home=e.heard['music_place0'][0]; was=e.heard['music_place0'][-1]
+e.send('traffic_state',3); traffic_high(e,.3); halfway=e.heard['music_place0'][-1]
+traffic_high(e,.3); returned=e.heard['music_place0'][-1]
+check(abs(halfway-home)<abs(was-home) and abs(halfway-home)>.02 and abs(returned-home)<1e-5,
+      'traffic pass: talk returns moving voice to its latched place over 500 ms')
+for recv in ('traffic_state','music_on','sk_on','music_stereo'):
+    e=traffic_fresh(); traffic_high(e); e.send_list('motif',9,.5); traffic_high(e,.4)
+    home=e.heard['music_place0'][0]; e.send(recv,0); traffic_high(e,.7)
+    check(abs(e.heard['music_place0'][-1]-home)<1e-5,'traffic pass: '+recv+' stop releases voice')
+# Found-only notes do not consume the first audible Synth/Glass opportunity.
+
+e=traffic_fresh(); traffic_high(e); e.send('melody_src',1); e.send_msg('fs_filled','const',1)
+e.send_list('motif',9,.5); traffic_high(e,.2); first=len(traffic_places(e))
+e.send('melody_src',0); e.send_list('motif',10,.5); traffic_high(e,.4)
+check(first==1 and len(e.heard['music_place1'])>10,
+      'traffic pass: Found-only note keeps its place and leaves the first Synth/Glass glide pending')
+# Reusing a ringing voice cancels its old glide before the new note's normal placement.
+
+e=traffic_fresh(); traffic_high(e)
+for degree in (9,10,11,12,13):
+    e.send_list('motif',degree,.5); traffic_high(e,.1)
+n=len(e.heard['music_place0']); place=e.heard['music_place0'][-1]; traffic_high(e,.6)
+check(len(e.heard['music_place0'])==n and abs(place)<=.5,
+      'traffic pass: voice reuse cancels old motion before the new place')
+# A reset followed by the same steady level must not bring an old candidate back.
+
+e=traffic_fresh(); traffic_high(e); e.send('traffic_state',0); traffic_high(e,.2)
+e.send('traffic_state',2); traffic_high(e,3)
+check(traffic_count(e)==1 and e.heard['traffic_active'][-1]==0,
+      'traffic pass: re-enable into same level cannot revive stale pass')
+# A switch release interpolates pan rather than jumping at the audio output.
+
+e=traffic_fresh(); traffic_high(e); e.send_list('motif',9,.5); traffic_high(e,.25)
+e.send('traffic_state',0); y=traffic_high(e,.6)
+# Windowed channel projection avoids dividing by individual waveform zero crossings.
+
+ratios=[stereo_ratio(part) for part in np.array_split(y[:int(.55*SR)],110) if rms(part)>1e-5]
+slope=max(np.abs(np.diff(ratios)))
+check(len(ratios)>50 and slope<0.08 and np.isfinite(y).all(),
+      'traffic pass: toggle smoothly releases pan (projection step %.6f per 5 ms)'%slope)
+# Fixed-seed old-path comparison includes the pad, earned chimes, and mono/stereo.
+
+for stereo in (0,1):
+    ys=[]
+    for variant in ('neutral',''):
+        e=traffic_fresh(variant,state=0,stereo=stereo); e.send('music_pad',.4)
+        e.run(sine(800,.001,2)); e.send_list('motif',9,.5); ys.append(traffic_high(e,3))
+    check(np.array_equal(*ys),'traffic pass: off sample-identical to old direct path, stereo %d'%stereo)
+
+
 
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)

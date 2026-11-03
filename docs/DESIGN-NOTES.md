@@ -9,15 +9,15 @@ to date in the same commit when behaviour changes.
 
 DadCraft: "can we make the music/bells/chimes/drums/etc run in stereo? i think that wider field would help liven
 things up, too"; "stereo first, have codex build it." Dev Music switch `music_stereo`, off by default, outside
-presets and dice. It needs no sound classification. Built on `sound-kinds`; Claude Code review, Moto CPU and
-DadCraft's listen next. Traffic Passes Through follows later.
+presets and dice. It needs no sound classification. Built on `sound-kinds`, reviewed by Claude Code, full tier passed; Moto CPU off ~57.5%, on ~58% of a core.
+DadCraft: "sounds good". Traffic Passes Through now uses its hook (see `design/sound-kinds.md`, Step 10).
 
 The world stays put. Only generated music gains fixed places: room notes -0.3, harmony +0.3, Classic and found
 hats +0.35; kick, snare and bass remain centred (snare 0 is within the proposed +/-0.1 range). Each Synth/Glass
 chime voice takes a place within +/-0.5 at note start, held throughout its ring. Independent golden-ratio sequences
 supply varied places without adding Pd `[random]` objects, which would reshuffle every later musical random seed.
 `music_pan0` through `music_pan3` override each voice until its next note; every input is clamped to +/-0.6, with
-5 ms coefficient ramps. These are hooks for traffic, with no glide or autonomous motion built yet.
+5 ms coefficient ramps. Traffic Passes Through now drives these hooks for the first earned note of a pass; ordinary music retains fixed places.
 
 `tools/patchgen/music_stereo.py` uses sqrt(2)-scaled equal-power gains: centre reproduces today's dual mono, and
 total L²+R² stays at the old stereo power. Keep the mono sum, add the difference to the mid and form a side;
@@ -49,7 +49,7 @@ the found-hat test from centred found snare.
 
 Desktop timing (one rough A/B, synthetic input, 36 s processed): old patch 0.416 s CPU, new Off 0.509 s, new On
 0.508 s. About 22% extra patch CPU in that passage, or 0.26% of a desktop core; On versus Off is effectively equal.
-This is not a phone estimate. Claude Code measures the Moto before DadCraft's listen.
+This is not a phone estimate. The later Moto A/B and DadCraft's verdict are recorded above.
 
 ## How we work
 - You can build and install yourself now: `./gradlew assembleDebug`, then `adb install -r app/build/outputs/apk/debug/app-debug.apk`

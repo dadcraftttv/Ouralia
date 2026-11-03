@@ -39,6 +39,14 @@ final class SoundKinds {
 
     static final int WATER = 4, WATER_N = 32;
     static final float WATER_ON = 0.4f, WATER_OFF = 0.15f;
+    /** Traffic Passes Through (Nov 3): fast score permission, released after 2 s of losing. */
+    static final int TRAFFIC = 2;
+    static final float TRAFFIC_ENTER = 0.20f, TRAFFIC_LEAVE = 0.10f;
+    static final long TRAFFIC_RELEASE_MS = 2000;
+    private int trafficN;
+    private long trafficBadSince = -1;
+    private boolean traffic;
+
     /** Birds Lift the Chimes (Nov 2): the same ~8 s window as water, so the gaps between calls hold it. */
     static final int BIRDS = 3, BIRDS_N = 32;
     static final float BIRDS_ON = 0.4f, BIRDS_OFF = 0.15f;
@@ -131,6 +139,11 @@ final class SoundKinds {
 
     /** One judgement from YAMNet's scores; true when what is heard changed. */
     boolean judge(float[] scores) {
+        return judge(scores, System.nanoTime() / 1_000_000);
+    }
+
+    /** Monotonic milliseconds, explicit for threshold/lifecycle tests. */
+    boolean judge(float[] scores, long now) {
         int lead = 0;
         for (int k = 0; k < NAMES.length; k++) {
             float m = 0;
@@ -141,6 +154,25 @@ final class SoundKinds {
             if (k != QUIET && m > last[lead]) {
                 lead = k;
             }
+        }
+        boolean trafficLeads = last[TRAFFIC] >= TRAFFIC_ENTER;
+        boolean trafficLoses = last[TRAFFIC] < TRAFFIC_LEAVE;
+        for (int k = 0; k < QUIET; k++) {
+            if (k != TRAFFIC) {
+                trafficLeads &= last[TRAFFIC] > last[k];
+                trafficLoses |= last[k] > last[TRAFFIC];
+            }
+        }
+        trafficN = trafficLeads ? trafficN + 1 : 0;
+        if (!traffic && trafficN >= ENTER_N) {
+            traffic = true;
+        }
+        if (!trafficLoses) {
+            trafficBadSince = -1;
+        } else if (trafficBadSince < 0) {
+            trafficBadSince = now;
+        } else if (now - trafficBadSince >= TRAFFIC_RELEASE_MS) {
+            traffic = false;
         }
         int top = 0;   // YAMNet's own top class
         for (int c = 1; c < scores.length; c++) {
@@ -221,6 +253,11 @@ final class SoundKinds {
         return birds;
     }
 
+    /** Fast score permission, independent of the optional Mind the Gap switch. */
+    boolean trafficAllowed() {
+        return traffic && !talking;
+    }
+
     /** The last judgement's numbers, one per kind. */
     float[] scores() {
         return last.clone();
@@ -243,6 +280,9 @@ final class SoundKinds {
     }
 
     void reset() {
+        traffic = false;
+        trafficN = 0;
+        trafficBadSince = -1;
         Arrays.fill(last, 0);
         kind = candidate = -1;
         candidateN = 0;

@@ -1230,7 +1230,7 @@ def add_music(P):
     P.c("mu_r_tone", "mu_cut")
     ex("mu_cut_pad", "$f1*0.6", x + 800, 360)
     P.c("mu_cut", "mu_cut_pad")
-    P.c("mu_cut_pad", "mu_pad_lp", 0, 1)
+    # Traffic applies its bounded multiplier to this live cutoff (traffic.py).
     P.obj("mu_warm_r", "r music_warm", x + 900, 330)
     P.obj("mu_warm_t", "t b f", x + 900, 345)
     P.obj("mu_cut_last", "f 1600", x + 860, 360)

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Fixed music places as mid corrections and a side, with the old mono sum kept."""
 from .constants import *  # noqa: F401,F403
+from .traffic import traffic_voice
 from .core import *  # noqa: F401,F403
 
 
@@ -28,7 +29,7 @@ def image(P, name, src, pan=0, trigger=None, voice=None):
         P.c(name + "_next", name + "_pick")
         P.obj(name + "_recv", f"r music_pan{voice}", x, y)
         P.obj(name + "_clip", f"clip {-MUSIC_PAN_CAP} {MUSIC_PAN_CAP}", x, y)
-        P.c(name + "_pick", name + "_clip"); P.c(name + "_recv", name + "_clip")
+        traffic_voice(P, name, voice); P.c(name + "_recv", name + "_clip")
         P.obj(name + "_report", f"s music_place{voice}", x, y); P.c(name + "_clip", name + "_report")
         # Coefficients are control-rate, held throughout each note. 5 ms smooths voice reuse / future glide.
         for suffix, formula in (("m", "(cos(($f1+1)*0.7853981634)+sin(($f1+1)*0.7853981634))/sqrt(2)-1"),

@@ -77,6 +77,28 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     Param uw=Params.byId("underwater");
     check(uw!=null&&uw.def==0f&&uw.max==2f&&uw.choices!=null&&uw.choices.length==3&&!uw.sendToPd
         &&!uw.inPreset&&!uw.randomizable&&uw.soundKinds,"underwater: Off/Gentle/Deeper, off, app-controlled, outside presets and dice");
+    Param trafficSetting=Params.byId("traffic_pass");
+    check(trafficSetting!=null&&trafficSetting.def==0f&&trafficSetting.toggle&&!trafficSetting.sendToPd
+        &&trafficSetting.soundKinds&&trafficSetting.dcs&&"music".equals(trafficSetting.section)&&!trafficSetting.inPreset&&!trafficSetting.randomizable,
+        "traffic pass: independent Dev Music switch, off, outside presets and dice");
+    k.reset(); k.judge(sc(3,19),0); k.judge(sc(3,19),250);
+    check(!k.trafficAllowed(),"traffic: 0.19 cannot enter");
+    k.judge(sc(3,20),500); check(!k.trafficAllowed(),"traffic: one qualifying lead cannot enter");
+    k.judge(sc(3,20),750); check(k.trafficAllowed(),"traffic: two leads at 0.20 enter");
+    k.judge(sc(3,10),1000); k.judge(sc(3,10),4000);
+    check(k.trafficAllowed(),"traffic: exactly 0.10 holds");
+    k.judge(sc(3,9),4250); k.judge(sc(3,9),6249);
+    check(k.trafficAllowed(),"traffic: below 0.10 holds for less than two seconds");
+    k.judge(sc(3,9),6250); check(!k.trafficAllowed(),"traffic: releases at two seconds");
+    k.reset(); k.judge(sc(3,60),0); k.judge(sc(3,60),250);
+    k.judge(sc(3,60,4,70),500); k.judge(sc(3,60,4,70),2500);
+    check(!k.trafficAllowed(),"traffic: another kind leading for two seconds releases even at high score");
+    k.reset(); for(int i=0;i<32;i++) k.judge(sc(0,60),i*250);
+    k.judge(sc(3,80),8000); k.judge(sc(3,80),8250);
+    check(k.talking()&&!k.trafficAllowed(),"traffic: settled talk has priority without Mind the Gap");
+    k.reset(); check(!k.trafficAllowed()&&!k.talking(),"traffic: stop/reset clears permission and talk");
+    k.judge(sc(3,80),9000); check(!k.trafficAllowed(),"traffic: restart needs fresh evidence");
+    k.judge(sc(3,80),9250); check(k.trafficAllowed(),"traffic: restart enters from two fresh judgements");
     boolean threw=false; try{ new SoundKinds("voices 1\n"); }catch(IllegalArgumentException e){ threw=true; }
     check(threw,"kinds.txt missing a kind is refused");
     check(SoundKinds.costLine(new long[]{3000000,1000000,2000000},3).equals("Sound kinds: 3 judgements, YAMNet median 2.0 ms, slowest 3.0 ms"),"the minute's cost line");
