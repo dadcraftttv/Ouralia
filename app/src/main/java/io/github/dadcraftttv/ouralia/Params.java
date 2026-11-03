@@ -242,6 +242,10 @@ final class Params {
             // heard the music and beat, never the mic, turn muffled with a slow wobble. Gentle and Deeper to compare.
             new Param("underwater", "Underwater (water heard: the music goes muffled and wobbly)", 0f, 2f, 0f, "",
                     Param.Curve.LINEAR).choices("Off", "Gentle", "Deeper").inSection("music").noPd().noPreset().soundKinds(),
+            // Birds Lift the Chimes (DadCraft, Nov 2: "do birds lift the Chimes"): while sound kinds hears birds, the
+            // chimes already earned turn to high Glass, a little softer. Birds alone play nothing. Independent.
+            new Param("birds_lift", "Birds Lift the Chimes (birds heard: earned chimes turn to high glass)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
             // Notes only for bigger sounds (DadCraft, Oct 30: typing "just sounds like it's random notes responding with
             // no musical semblance"): small sudden sounds get no chime or found bell, only the found drums and groove.
             // On by default at his 20.5 dB (Oct 31), still a slider: "each manufacturer could set mic values differently".
