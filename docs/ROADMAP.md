@@ -60,6 +60,8 @@ testing with the two options." Both kept; his pick when he has one. design/sound
 (Dev): Birds Lift the Chimes, earned chimes turn to high Glass while birds are heard. Indoor listen (Nov 2,
 after the knock/chirp fixes): "knocking during birdsong now gives a high glass chime". Outdoors later. design/sound-kinds.md "Step 9".
 
+**Traffic, an idea (DadCraft, Nov 2: "could traffic send the glass/synth bells/chimes from one ear to the other smoothly? like a face in on one side, pan to the other and fade out?"):** IDEA, not designed. While traffic is heard, chimes (Glass, Synth bells) would pass by like a car: fade in on one side, glide across, fade out on the other. To settle in its options: which side a pass starts (alternate or random; the mic can't tell where a car is, except maybe with World in Stereo), how long a pass takes, whether only earned chimes pass or every chime while traffic lasts, and talk's priority. Known: traffic was never heard on his Oct 31 walk, and far traffic (-50 dBFS) drops to quiet (1/12 clips), so testing needs a street. Output is headphones only, so a pan is always heard.
+
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.
 
