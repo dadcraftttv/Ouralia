@@ -821,8 +821,10 @@ a passing car can yield a pad opening without a bell, and muted pad plus no earn
 
 **Listening/checks:** compare the switch Off/On at fixed settings with Music in Stereo on, first steady traffic
 then separated passes, followed by talk/handling/wind. Listen for the pad opening on the rise and at most one earned
-bell crossing; check that a continuous engine does not keep retriggering. Claude Code review, Moto CPU A/B
-(target <2 extra points beyond the running listener) and DadCraft's roadside verdict remain open. Desktop checks
+bell crossing; check that a continuous engine does not keep retriggering. Claude Code reviewed it (Nov 3, 74dc295).
+Moto CPU A/B (Nov 3, Ouralia Dev playing, Music + Music in Stereo + Birds Lift the Chimes on so the listener runs;
+`top` 2 s samples, a flaky USB link kept 14 and 20 of 30): Traffic off median 62.0% of a core, on 59.25%, ranges
+54-67% both: no measurable cost (target <2 extra points), 0 underruns in logcat. DadCraft's roadside verdict remains open. Desktop checks
 and measurements are recorded in the handoff and below once complete; these do not establish roadside accuracy.
 
 Rough desktop patch-only CPU A/B (three repetitions, median process time, 24 s synthetic audio each): old
