@@ -582,3 +582,8 @@ bright with no lows (chirps). So he had not heard the high Glass yet. His call: 
 high glass one. The found beat should stop gathering chirps (events.log shows "Skipped a chirp"). If chirps now
 earn chimes by themselves too often, 8 dB is the knob.
 
+**His re-listen (Nov 2, 2878343, indoors):** "knocking during birdsong now gives a high glass chime". The event
+log for that run: 13 chirps skipped and none caught once birds had settled; 3 hats were caught in the first second
+or so of birds, before the window turned on (it needs about 3 s of birds judgements). A few chirps were still
+answered as sung phrases (not asked about). Outdoors later.
+

@@ -57,8 +57,8 @@ Underwater: Off / Gentle / Deeper. First listen (Nov 2): "i can't tell which i l
 testing with the two options." Both kept; his pick when he has one. design/sound-kinds.md "Step 8".
 
 **Birds (step 9, Nov 2):** options written (Codex, Nov 2); DadCraft: "do birds lift the Chimes". BUILT Nov 2
-(Dev): Birds Lift the Chimes, earned chimes turn to high Glass while birds are heard. His listen next (indoors
-with a birdsong recording, outdoors later). design/sound-kinds.md "Step 9".
+(Dev): Birds Lift the Chimes, earned chimes turn to high Glass while birds are heard. Indoor listen (Nov 2,
+after the knock/chirp fixes): "knocking during birdsong now gives a high glass chime". Outdoors later. design/sound-kinds.md "Step 9".
 
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.
