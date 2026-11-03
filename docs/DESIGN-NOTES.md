@@ -59,7 +59,7 @@ This is not a phone estimate. The later Moto A/B and DadCraft's verdict are reco
 
 ## Layout
 - `app/src/main/java/io/github/dadcraftttv/ouralia/` — Java, plain Views (no Compose; do not rewrite).
-  Param/Params/ParamStore/PresetManager/Modulation (slider registry, presets, movers), Worlds/WorldSelector (Auto Worlds),
+  Param/Params/ParamStore/PresetManager/Modulation (slider registry, presets, movers), Worlds/WorldSelector (Realm Hopper),
   StepDetector (walking beat), AudioService/AudioDevices/AudioSettings (audio engine and devices), SceneSettings, MainActivity.
   **MainActivity's split** (Oct 22, ROADMAP 22, DadCraft's pick from the outside reviews; 3,753 -> 1,237 lines, no
   behaviour change, each step checked on the phone): one class per feature, each holding the activity (`a`) and
@@ -70,7 +70,7 @@ This is not a phone estimate. The later Moto A/B and DadCraft's verdict are reco
   player, its sheet content, the status and Realm lines), ChoiceUi (Key/Scale tiles and sheets, segment buttons,
   choice sheets), RealmsUi (the Realms tab, Realm sheets, ingredients), DevicesUi (Audio Devices pickers, the mic
   hint, Diagnostics), AppearanceUi (theme, accent swatches, the colour ring), PresetUi (presets, Save, snapshot,
-  export/import, Reset everything), KitUi (Your Kits card, kit import/delete), SceneUi (the Scenes tab and the
+  export/import, Reset everything), SceneUi (the Scenes tab and the
   shared pad), AboutUi (About, feedback, licences). A new screen part gets its own class the same way.
 - `app/src/main/assets/patches/test_scene.pd` — the built-in effects patch. **Generated.** Edit `tools/patchgen/` (split from
   make_patch.py on Oct 22, the output byte for byte the same: constants.py, core.py, build.py and one module per area),
@@ -107,9 +107,10 @@ This is not a phone estimate. The later Moto A/B and DadCraft's verdict are reco
 - **pd-core is our own build** (Oct 16; 1.4.2-pdscenes.2 since Oct 22: `PdAudio.setInputPreset` and `inputChannels` in
   `audioRuntimeInfo`, for the room in stereo): `io.github.libpd.android:pd-core` from `third_party/maven` (committed;
   `settings.gradle.kts` takes the libpd group only from there, exclusiveContent). `tools/build_pdcore.sh` rebuilds it from
-  our public forks at a pinned commit: **dadcraftttv/pd-for-android `pdscenes`** (2eb5545 = upstream master d3ec6c9 +
-  PR #198 setAutoReopen, version bumped, libpd submodule -> our fork) and **dadcraftttv/libpd `pdscenes`** (ebc0b83 = libpd
-  3fc60ea, Pd 0.55.2, the commit pd-core 1.4.2-SNAPSHOT used, on no upstream branch, + PR #428 the Oboe race fix).
+  our public forks at a pinned commit: **dadcraftttv/pd-for-android `pdscenes`** (abb05f5 = 1.4.2-pdscenes.2: upstream master d3ec6c9 +
+  PR #198 setAutoReopen + PdAudio.setInputPreset, libpd submodule -> our fork; 2eb5545 was pdscenes.1) and
+  **dadcraftttv/libpd `pdscenes`** (0956118 = libpd 3fc60ea, Pd 0.55.2, the commit pd-core 1.4.2-SNAPSHOT used, on no
+  upstream branch, + PR #428 the Oboe race fix (ebc0b83) + the Oboe input preset option).
   NDK 29.0.14206865 (pinned in the fork's libs.versions.toml), JDK 21; clones live in `tools/.pdcore` (gitignored).
   Same .so set as the snapshot (only libpdnativeoboe grew ~600 bytes), 64-bit libs 16 KB-aligned. Why: pd-for-android's
   last numbered release is 1.2.1-rc6 (2021), the snapshot can change under us, and the fix isn't merged upstream yet.
@@ -127,14 +128,16 @@ This file is the index. Each feature's notes live in one of these (`grep -rn <fe
 "DESIGN-NOTES \"Kits\"" and the like in code comments mean a heading or bold name in any of them):
 
 - `docs/design/audio-io.md`: **Audio in and out**: the speaker rule, Bluetooth mics, the mic's shaping, Diagnostics and the health line, the phone's mics, World in Stereo, calls and other apps' audio, the start path.
-- `docs/design/sensing.md`: **What the phone senses**: Realm Hopper (Auto Worlds), pockets, pocket hush and rustle, handling noise, mic-down, Flux.
+- `docs/design/sensing.md`: **What the phone senses**: Realm Hopper, pockets, pocket hush and rustle, handling noise, mic-down, Flux.
 - `docs/design/rhythm.md`: **The Rhythm**: the walking beat, Tempo and the tempo clock (Tap Tempo), patterns, breakbeats, the found-sound kit, Clear Catches, the learned groove, glitch loops.
-- `docs/design/music.md`: **The Music**: Mix, Slow Bloom, call and response, the found melody, and the Music section (kits, chords, Song Shape, The Band...).
+- `docs/design/music.md`: **The Music**: Mix, Calm Builds (the quiet tune), call and response, the found melody, and the Music section (chords, Song Shape, The Band...).
 - `docs/design/effects.md`: **Effects and CPU**: reverse reverb, echo and its scatter, dice morph, the glitch cloud, switchable DSP, the CPU work.
 - `docs/design/app.md`: **The app**: Intensity, first run, the removed stems player, Send feedback, dropdowns, tabs, the screen, Reset everything, presets.
 - `docs/design/dcs-objects.md`: **Our own Pd objects** (`dcs/`): each object, its numbers and tests.
 - `docs/design/look.md`: **The look**: the Ouralia redesign, colours, cards, the player, icons.
 - `docs/design/desktop.md`: **Desktop stream mode** (`desktop/`).
+- `docs/design/sound-kinds.md`: **Sound kinds** (Ouralia Dev): YAMNet on the phone and the responses to what it hears
+  (Make Room for Music, Mind the Gap, water, birds, Music in Stereo, Traffic Passes Through, Traffic Flow).
 - `docs/design/status-log.md`: **Status log**: what happened when, newest last.
 
 ## Tests (run these after touching patch or Java logic)

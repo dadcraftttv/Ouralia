@@ -1,5 +1,10 @@
 # Ouralia: overview for an outside review
 
+> **A snapshot from Oct 22, 2026**, written for an outside review, and not kept up to date since. Many of its "ideas
+> not built yet" are built, Auto Worlds became Realm Hopper, the screen became five tabs, and much has been added
+> since (found-sound drums, sound kinds, the reactive-first switches). For the app as it is now, read the [README](../README.md), the
+> [tester guide](TESTER-GUIDE.md) and the [design notes](DESIGN-NOTES.md).
+
 Ouralia (first called PdScenes) is an open-source Android app (GPLv3-or-later) that turns the world around you into music
 through headphones. It is in the spirit of RjDj, the 2008-2013 "reactive music" iPhone app, and Dimensions, its successor.
 The phone's mic, motion sensors and light sensor feed a Pure Data patch that runs inside the app through libpd. What you

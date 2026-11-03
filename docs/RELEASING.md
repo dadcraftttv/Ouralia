@@ -41,8 +41,9 @@ ouraliaKeyPassword=...
 
 From then on, release builds are signed with it (`tools/release_apk.sh` prints the signer). With **Play App
 Signing** (Play's default), this key only uploads, and Google holds the key that signs what phones install, so a lost
-upload key can be replaced. The GitHub APKs so far are signed with the debug key: an APK signed with the new key
-can't install over them, so testers uninstall once (exporting presets first).
+upload key can be replaced. The test APKs so far (rc4-rc5.2, none on GitHub since the Nov 2
+repo remake) are signed with the debug key: an APK signed with the new key can't install over them, so testers
+uninstall once (exporting presets first).
 
 **Play Console forms**, drafted from what the app does (check them against Play's current wording):
 
