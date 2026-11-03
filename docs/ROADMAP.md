@@ -56,6 +56,10 @@ Options written (Codex, Nov 2); DadCraft: "can we build both?" BUILT both (Nov 2
 Underwater: Off / Gentle / Deeper. First listen (Nov 2): "i can't tell which i like better. i'll keep
 testing with the two options." Both kept; his pick when he has one. design/sound-kinds.md "Step 8".
 
+**Birds (step 9, Nov 2):** options written (Codex, Nov 2), DadCraft's pick next. High Glass on earned
+chimes (recommended) or Make Room for Birds; neither built. Indoor first listen, outdoors later.
+See design/sound-kinds.md "Step 9 options: birds".
+
 **Sounds with character (item 24):** SET ASIDE Oct 30 (DadCraft: "turning into live constant generative things
 when it's supposed to be reactionary"). Its `dev` branch is deleted, never merged.
 
