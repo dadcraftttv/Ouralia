@@ -642,11 +642,18 @@ def build():
     P.obj("mix_pre", "+~", 250, 420); P.c("dry_sig", "mix_pre")      # the echo joins both ears later, scattered
     add_tempo_clock(P)
     beat = add_beat(P)
-    P.sig2("beat_rm", "*~", beat, "rm_gain", 300, 440)                # (the beat steps back with the music)
+    # Traffic Flow's lull dip and Make Room's dip: the stronger one, never both (off: exactly rm_gain).
+    P.sig2("btf_dip", "max~", "rm_ln", "tpf_ln", 300, 400)
+    P.obj("btf_neg", "*~ -1", 300, 410); P.obj("btf_gain", "+~ 1", 300, 420)
+    P.c("btf_dip", "btf_neg"); P.c("btf_neg", "btf_gain")
+    P.obj("btf_probe_r", "r btf_probe", 400, 410); P.obj("btf_probe", "snapshot~", 400, 420)   # (for the tests)
+    P.obj("btf_probe_s", "s btf_level", 400, 430)
+    P.c("btf_gain", "btf_probe"); P.c("btf_probe_r", "btf_probe"); P.c("btf_probe", "btf_probe_s")
+    P.sig2("beat_rm", "*~", beat, "btf_gain", 300, 440)                # (the beat steps back with the music)
     beat_uw = uw_path(P, "bt", "beat_rm", 400, 440)                 # (Underwater: the beat on its own, before the mic joins)
     P.sig2("mix_out", "+~", "mix_pre", beat_uw, 250, 450)       # the beat joins here, so reverb and pan apply to it
 
-    P.sig2("ms_beat_rm", "*~", "beat_side", "rm_gain", 700, 440)
+    P.sig2("ms_beat_rm", "*~", "beat_side", "btf_gain", 700, 440)
     beat_side = uw_path(P, "bs", "ms_beat_rm", 800, 440)
     P.sig2("ms_side", "+~", side_voice, beat_side, 800, 600)
     P.obj("ms_neg", "*~ -1", 800, 620); P.c("ms_side", "ms_neg")

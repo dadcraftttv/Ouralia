@@ -17,6 +17,10 @@ public class J2 {
         for(int i=PdBase.sent.size()-1;i>=0;i--)if(PdBase.sent.get(i).startsWith("traffic_state="))return PdBase.sent.get(i);
         return "";
     }
+    static String lastFlow() {
+        for(int i=PdBase.sent.size()-1;i>=0;i--)if(PdBase.sent.get(i).startsWith("traffic_flow_state="))return PdBase.sent.get(i);
+        return "";
+    }
     static void trafficJudgement() {
         for(int i=0;i<5;i++)SoundKindsRunner.ready(0);
         Handler.drain();
@@ -58,6 +62,24 @@ public class J2 {
         Handler.jobs.remove(Handler.jobs.size()-1).run();Handler.drain();
         check(SoundKindsRunner.on()&&((Integer)field("judged"))==0,
             "old queued judgement cannot infer on the restarted model");
+        SoundKindsRunner.detach();Handler.drain();
+        // Traffic Flow alone: starts the listener, latches the settled scene, leaves pass permission neutral.
+        ParamStore.set("traffic_pass",0);ParamStore.set("traffic_flow",1);ParamStore.set("music_on",1);
+        SoundKindsRunner.attach(c,48000,s->{});Handler.drain();
+        check(SoundKindsRunner.on(),"Traffic Flow alone starts the listener");
+        for(int i=0;i<10;i++)trafficJudgement();
+        check(lastFlow().equals("traffic_flow_state=1.0"),"no scene before the window fills: "+lastFlow());
+        for(int i=0;i<30;i++)trafficJudgement();
+        check(lastFlow().equals("traffic_flow_state=2.0")&&lastTraffic().equals("traffic_state=0.0"),
+            "settled traffic latches the scene, pass state stays off: "+lastFlow()+" "+lastTraffic());
+        SoundKinds kf=(SoundKinds)field("kinds"); float[] quiet=new float[521]; quiet[494]=.8f;
+        for(int i=0;i<60;i++)kf.judge(quiet,i*250);
+        check(kf.trafficScene(),"a 15 s lull keeps the scene (red light)");
+        for(int i=0;i<20;i++)kf.judge(quiet,i*250);
+        SoundKindsRunner.settingsTick();
+        check(!kf.trafficScene()&&lastFlow().equals("traffic_flow_state=1.0"),"the scene leaves after the window empties");
+        ParamStore.set("traffic_flow",0);SoundKindsRunner.settingsTick();Handler.drain();
+        check(!SoundKindsRunner.on()&&lastFlow().equals("traffic_flow_state=0.0"),"Traffic Flow off stops the runner, neutral state");
         SoundKindsRunner.detach();Handler.drain();
         YamNet.fail=true; SoundKindsRunner.attach(c,48000,s->{});Handler.drain();
         check(!SoundKindsRunner.on()&&field("thread")==null,"startup failure clears runner and contribution");

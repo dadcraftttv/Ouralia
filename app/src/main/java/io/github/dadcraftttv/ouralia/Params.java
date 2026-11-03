@@ -240,6 +240,9 @@ final class Params {
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().soundKinds(),
             new Param("traffic_pass", "Traffic Passes Through", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().dcs(),
+            // Traffic Flow (Nov 3): in a settled traffic scene a sustained lull eases the beat down 12 dB.
+            new Param("traffic_flow", "Traffic Flow", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().dcs(),
             // Water only extends a chime already earned by a sudden sound. Independent of presets and dice.
             new Param("water_trail", "Water Leaves a Trail (water heard: at least two softer notes follow a chime)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),

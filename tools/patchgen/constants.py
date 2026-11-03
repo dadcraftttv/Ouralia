@@ -515,3 +515,15 @@ TRAFFIC_OPEN = 2
 TRAFFIC_CUTOFF_MAX = 6000
 TRAFFIC_GLIDE_MS = 3000
 TRAFFIC_RETURN_MS = 500
+
+# Traffic Flow (Nov 3): inside a settled traffic scene, a sustained lull eases the beat down.
+TRAFFIC_FLOW_SETTLE_MS = 4000   # the reference settles first, no dip
+TRAFFIC_FLOW_REF_MS = 20000     # the low recent level rises this slowly (falls at once)
+TRAFFIC_FLOW_ACTIVE_DB = 3      # activity: this far above the reference ...
+TRAFFIC_FLOW_ACTIVE_MS = 1000   # ... for this long (or a pass)
+TRAFFIC_FLOW_LULL_DB = 1        # a lull: within this of the reference ...
+TRAFFIC_FLOW_LULL_MS = 4000     # ... for this long
+TRAFFIC_FLOW_DIP_DB = 12        # tune first: how far the beat recedes
+TRAFFIC_FLOW_DOWN_MS = 4000
+TRAFFIC_FLOW_UP_MS = 2000       # activity, talk, wind or handling bring it back
+TRAFFIC_FLOW_LEAVE_MS = 8000    # the scene ended: back slowly

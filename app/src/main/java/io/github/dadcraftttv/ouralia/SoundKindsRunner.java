@@ -43,18 +43,25 @@ final class SoundKindsRunner {
     private static int uwSent;
     private static volatile boolean birdsOn;
     private static boolean birdsSent;
-    private static volatile boolean trafficOn;
+    private static volatile boolean trafficOn, flowOn;
     private static int trafficSent;
-    static final String TRAFFIC_ID = "traffic_pass";
+    static final String TRAFFIC_ID = "traffic_pass", FLOW_ID = "traffic_flow";
+
+    static boolean flowEnabled() {
+        return available() && ParamStore.get(FLOW_ID) >= 0.5f;
+    }
 
     static boolean trafficEnabled() {
         return available() && ParamStore.get(TRAFFIC_ID) >= 0.5f;
     }
 
-    /** 0 off/reset, 1 listening, 2 permitted, 3 settled talk. Read under lock, send outside it. */
+    /** Both traffic states in one: pass + 4 * flow, each 0 off/reset, 1 listening, 2 permitted (pass) or settled
+     *  scene (flow), 3 settled talk. -1 when neither changed. Read under lock, send outside it. */
     private static int trafficTick() {
-        int next = thread != null && trafficOn && ParamStore.get("music_on") >= 0.5f && kinds != null
-                ? (kinds.talking() ? 3 : kinds.trafficAllowed() ? 2 : 1) : 0;
+        boolean live = thread != null && ParamStore.get("music_on") >= 0.5f && kinds != null;
+        int pass = live && trafficOn ? (kinds.talking() ? 3 : kinds.trafficAllowed() ? 2 : 1) : 0;
+        int flow = live && flowOn ? (kinds.talking() ? 3 : kinds.trafficScene() ? 2 : 1) : 0;
+        int next = pass + 4 * flow;
         if (next == trafficSent) {
             return -1;
         }
@@ -64,7 +71,8 @@ final class SoundKindsRunner {
 
     private static void sendTraffic(int state) {
         if (state >= 0) {
-            PdBase.sendFloat("traffic_state", state);
+            PdBase.sendFloat("traffic_state", state % 4);
+            PdBase.sendFloat("traffic_flow_state", state / 4);
         }
     }
 
@@ -187,13 +195,15 @@ final class SoundKindsRunner {
     /** Called each tick of the sound's loop: Make Room for Music, Mind the Gap or Water Leaves a Trail changed (row, preset, reset):
      *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
     static void settingsTick() {
-        boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled(), birds = birdsEnabled(), traffic = trafficEnabled();
+        boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled(), birds = birdsEnabled(), traffic = trafficEnabled(),
+                flow = flowEnabled();
         int uw = uwEnabled();
         boolean music, talk, listen, same;
         int w, u, b, tr;
         synchronized (lock) {
-            boolean trafficChanged = trafficOn != traffic;
+            boolean trafficChanged = trafficOn != traffic || flowOn != flow;
             trafficOn = traffic;
+            flowOn = flow;
             boolean waterChanged = waterOn != water, uwChanged = (uwStyle > 0) != (uw > 0), birdsChanged = birdsOn != birds;
             waterOn = water;
             uwStyle = uw;
@@ -210,7 +220,7 @@ final class SoundKindsRunner {
                 gapsOn = gaps;
                 music = kinds != null && kinds.roomMusic();
                 talk = kinds != null && kinds.talking();
-                listen = room || gaps || water || uw > 0 || birds || traffic || enabled(app);
+                listen = room || gaps || water || uw > 0 || birds || traffic || flow || enabled(app);
             }
         }
         sendWater(w);
@@ -225,7 +235,7 @@ final class SoundKindsRunner {
         if (listen) {
             start();
         } else {
-            stop("Make Room for Music, Mind the Gap, Water Leaves a Trail, Underwater, Birds Lift the Chimes and Traffic Passes Through off");
+            stop("Make Room for Music, Mind the Gap, Water Leaves a Trail, Underwater, Birds Lift the Chimes and the traffic switches off");
         }
     }
 
@@ -239,7 +249,8 @@ final class SoundKindsRunner {
         }
         if (on) {
             start();
-        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled() && uwEnabled() == 0 && !birdsEnabled() && !trafficEnabled()) {   // (any of the Music sound-kind settings keeps listening)
+        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled() && uwEnabled() == 0 && !birdsEnabled() && !trafficEnabled()
+                && !flowEnabled()) {   // (any of the Music sound-kind settings keeps listening)
             stop("switched off");
         }
     }
@@ -257,8 +268,9 @@ final class SoundKindsRunner {
             uwStyle = uwEnabled();
             birdsOn = birdsEnabled();
             trafficOn = trafficEnabled();
+            flowOn = flowEnabled();
         }
-        if (enabled(c) || roomOn || gapsOn || waterOn || uwStyle > 0 || birdsOn || trafficOn) {
+        if (enabled(c) || roomOn || gapsOn || waterOn || uwStyle > 0 || birdsOn || trafficOn || flowOn) {
             start();
         }
     }
