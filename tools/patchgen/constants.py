@@ -136,6 +136,12 @@ GLASS_PARTIALS = ((1, 1.0, 0, 1.0), (2.76, 0.24, 0.6, 0.35), (5.40, 0.072, 0.18,
 GLASS_RING_X = 1.2               # the glass rings this much longer than a Classic chime of the same note
 GLASS_ATTACK_MS = 6              # the slower rise (a click at 1 ms)
 GLASS_LEVEL = 1.612              # matches Classic's loudness over each note's first 300 ms
+# Birds Lift the Chimes (DadCraft, Nov 2: "do birds lift the Chimes"): while settled birds are heard, chimes already
+# earned turn to high Glass. The bird amount eases in and out; each new note takes it once (ringing notes keep theirs):
+# that share toward Glass, that share of the trim, that chance of folding by octaves into the high range.
+BIRDS_IN_MS, BIRDS_OUT_MS = 3000, 5000
+BIRDS_TRIM = 0.29                # velocity x 0.71 at full (about -3 dB)
+BIRDS_MIDI = (72, 84)            # C5-C6 (523-1047 Hz): the knob to tune first (an octave lower if shrill)
 # Trailing Melody (DadCraft, Oct 31: chimes "should continue for a bit after they've stopped receiving stimuli, so
 # there's a little trailing melody"): after a sudden-sound chime (standing still), chime_trail more notes walk on
 WATER_TRAIL_MIN = 2              # minimum tail while settled water is heard, unless people are talking

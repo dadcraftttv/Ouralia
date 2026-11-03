@@ -419,13 +419,37 @@ def add_music(P):
     ex("mu_v_trim", "$f1*mixc", cx - 60, cy + 30)
     # Chime Voice (chime_voice: 0 Classic, 1 Both, 2 Glass): Classic x (1 - voice/2), Glass x voice/2, starting only when on
     P.obj("mu_cv_r", "r chime_voice", cx - 200, cy + 60); P.obj("mu_cv_v", "value cvoice", cx - 200, cy + 75)
-    P.c("mu_cv_r", "mu_cv_v"); ex("mu_cv_cl", "1-$f1/2", cx - 200, cy + 90); P.c("mu_cv_r", "mu_cv_cl")
+    P.c("mu_cv_r", "mu_cv_v")
+    # Birds Lift the Chimes (Nov 2): birds_lift 1/0 from the app eases bamt to 1 over BIRDS_IN_MS, back over BIRDS_OUT_MS
+    P.obj("mu_bl_r", "r birds_lift", cx - 200, cy + 100)
+    P.obj("mu_bl_t", "t f f", cx - 200, cy + 110); P.c("mu_bl_r", "mu_bl_t")
+    ex("mu_bl_to", "$f1>0.5", cx - 200, cy + 120); ex("mu_bl_ms", f"if($f1>0.5,{BIRDS_IN_MS},{BIRDS_OUT_MS})", cx - 140, cy + 120)
+    P.obj("mu_bl_pk", "pack f f", cx - 200, cy + 130)
+    P.c("mu_bl_t", "mu_bl_ms", 1, 0); P.c("mu_bl_ms", "mu_bl_pk", 0, 1); P.c("mu_bl_t", "mu_bl_to", 0, 0); P.c("mu_bl_to", "mu_bl_pk")
+    P.obj("mu_bl_ln", "line 0 50", cx - 200, cy + 145); P.c("mu_bl_pk", "mu_bl_ln")
+    P.obj("mu_bl_v", "value bamt", cx - 200, cy + 160); P.c("mu_bl_ln", "mu_bl_v")
+    lo, hi = BIRDS_MIDI
+    midi = "(12*log(max($f1,1)/440)/log(2)+69)"
+    fold = f"pow(2,max(ceil(({lo}-{midi})/12-0.001),0)-max(ceil(({midi}-{hi})/12-0.001),0))"
     P.c("mu_deg", "mu_v_trim", 3, 0); P.c("mu_v_trim", "mu_v_vel")
     voices = []
     for k in range(4):
         vx = cx + 600 + k * 260
-        P.obj(f"mu_v{k}_trig", "t b b b b", vx, cy)
+        P.obj(f"mu_v{k}_trig", "t b b b b b", vx, cy)
         P.c("mu_rr_sel", f"mu_v{k}_trig", k, 0)
+        # Birds Lift the Chimes, first of all: this note takes the bird amount once (0 while people talk), bcb<k>,
+        # and folds into the high range if a golden-ratio step (no [random]: it would reshuffle the others) is under it
+        bcb, ev = f"bcb{k}", f"(cvoice+(2-cvoice)*bcb{k})"   # (the note's voice: the user's Chime Voice, toward Glass)
+        P.obj(f"mu_v{k}_bt", "t b b", vx - 120, cy + 5); P.c(f"mu_v{k}_trig", f"mu_v{k}_bt", 4, 0)
+        P.obj(f"mu_v{k}_bp", "value bphase", vx - 60, cy + 10); P.c(f"mu_v{k}_bt", f"mu_v{k}_bp", 1, 0)
+        ex(f"mu_v{k}_bpn", "fmod($f1+0.618034,1)", vx - 60, cy + 15); P.c(f"mu_v{k}_bp", f"mu_v{k}_bpn")
+        P.obj(f"mu_v{k}_bpw", "value bphase", vx - 60, cy + 20); P.c(f"mu_v{k}_bpn", f"mu_v{k}_bpw")
+        P.obj(f"mu_v{k}_bb", "value bamt", vx - 120, cy + 10); P.c(f"mu_v{k}_bt", f"mu_v{k}_bb", 0, 0)
+        ex(f"mu_v{k}_bx", "$f1*(vtalk<0.5)", vx - 120, cy + 15); P.c(f"mu_v{k}_bb", f"mu_v{k}_bx")
+        P.obj(f"mu_v{k}_bxt", "t f f", vx - 120, cy + 20); P.c(f"mu_v{k}_bx", f"mu_v{k}_bxt")
+        ex(f"mu_v{k}_bf", "$f1>bphase", vx - 90, cy + 25); P.c(f"mu_v{k}_bxt", f"mu_v{k}_bf", 0, 0)
+        P.obj(f"mu_v{k}_bfv", f"value bcf{k}", vx - 90, cy + 30); P.c(f"mu_v{k}_bf", f"mu_v{k}_bfv")
+        P.obj(f"mu_v{k}_bv", f"value {bcb}", vx - 120, cy + 30); P.c(f"mu_v{k}_bxt", f"mu_v{k}_bv", 1, 0)
         P.obj(f"mu_v{k}_f", "value cfreq", vx + 60, cy + 30)
         P.obj(f"mu_v{k}_ft", "t f f f", vx + 60, cy + 60)
         P.obj(f"mu_v{k}_f2", "* 2", vx + 100, cy + 90)
@@ -442,7 +466,8 @@ def add_music(P):
         P.c(f"mu_v{k}_br", f"mu_v{k}_g2", 0, 1); P.c(f"mu_v{k}_br", f"mu_v{k}_br3"); P.c(f"mu_v{k}_br3", f"mu_v{k}_g3", 0, 1)
         P.obj(f"mu_v{k}_dec", "value cdec", vx + 30, cy + 15)
         P.c(f"mu_v{k}_trig", f"mu_v{k}_dec", 1, 0)
-        P.c(f"mu_v{k}_f", f"mu_v{k}_ft")
+        ex(f"mu_v{k}_fold", f"$f1*if(bcf{k}>0,{fold},1)", vx + 60, cy + 45); P.c(f"mu_v{k}_f", f"mu_v{k}_fold")
+        P.c(f"mu_v{k}_fold", f"mu_v{k}_ft")
         P.c(f"mu_v{k}_ft", f"mu_v{k}_o1", 2, 0)
         P.c(f"mu_v{k}_ft", f"mu_v{k}_f2", 1, 0); P.c(f"mu_v{k}_f2", f"mu_v{k}_o2")
         P.c(f"mu_v{k}_ft", f"mu_v{k}_f3", 0, 0); P.c(f"mu_v{k}_f3", f"mu_v{k}_o3")
@@ -457,7 +482,7 @@ def add_music(P):
         P.obj(f"mu_v{k}_env", "vline~", vx, cy + 90)
         # Melody sounds: the synth plays unless found only and something is caught; the found twin plays unless synth
         caught = "(fs_filled[0]+fs_filled[1]+fs_filled[2]>0)"
-        ex(f"mu_v{k}_vsyn", f"$f1*if(mel_src[0]==1&&{caught},0,1)", vx, cy + 38)
+        ex(f"mu_v{k}_vsyn", f"$f1*if(mel_src[0]==1&&{caught},0,1)*(1-{BIRDS_TRIM}*{bcb})", vx, cy + 38)
         P.obj(f"mu_v{k}_vt", "t f f", vx, cy + 34); P.c(f"mu_v{k}_vel", f"mu_v{k}_vt")
         P.c(f"mu_v{k}_vt", f"mu_v{k}_vsyn", 1, 0)
         # its audio runs only while it rings (its own switch~ group chv<k>): on at the note, off after the fade
@@ -466,7 +491,7 @@ def add_music(P):
         P.obj(f"mu_v{k}_vbt", "t b b", vx + 30, cy + 42); P.c(f"mu_v{k}_von", f"mu_v{k}_vbt", 1, 0)
         P.msg(f"mu_v{k}_swon", f"{BS}; sw_chv{k} 1", vx + 30, cy + 43); P.c(f"mu_v{k}_vbt", f"mu_v{k}_swon", 1, 0)
         P.obj(f"mu_v{k}_swdc", "value cdec", vx + 60, cy + 43)
-        ex(f"mu_v{k}_swt", f"$f1*if(cvoice>0,{GLASS_RING_X},1)+300", vx + 60, cy + 44)   # (Glass rings longer)
+        ex(f"mu_v{k}_swt", f"$f1*if({ev}>0,{GLASS_RING_X},1)+300", vx + 60, cy + 44)   # (Glass rings longer)
         P.obj(f"mu_v{k}_swdl", "del", vx + 60, cy + 45); P.msg(f"mu_v{k}_swoff", f"{BS}; sw_chv{k} 0", vx + 60, cy + 46)
         P.c(f"mu_v{k}_vbt", f"mu_v{k}_swdc", 0, 0); P.c(f"mu_v{k}_swdc", f"mu_v{k}_swt"); P.c(f"mu_v{k}_swt", f"mu_v{k}_swdl")
         P.c(f"mu_v{k}_swdl", f"mu_v{k}_swoff")
@@ -480,11 +505,12 @@ def add_music(P):
         P.c(f"mu_v{k}_vcf", f"mu_v{k}_vmn")
         P.c(f"mu_v{k}_pk", f"mu_v{k}_env_msg"); P.c(f"mu_v{k}_env_msg", f"mu_v{k}_env")
         P.sig2(f"mu_v{k}_cls", "*~", f"mu_v{k}_s", f"mu_v{k}_env", vx + 60, cy + 240)
-        P.obj(f"mu_v{k}_ck", "*~ 1", vx + 60, cy + 250); P.c(f"mu_v{k}_cls", f"mu_v{k}_ck"); P.c("mu_cv_cl", f"mu_v{k}_ck", 0, 1)
+        P.obj(f"mu_v{k}_ck", "*~ 1", vx + 60, cy + 250); P.c(f"mu_v{k}_cls", f"mu_v{k}_ck")
+        ex(f"mu_v{k}_cl", f"1-{ev}/2", vx + 120, cy + 245); P.c(f"mu_v{k}_trig", f"mu_v{k}_cl", 2, 0); P.c(f"mu_v{k}_cl", f"mu_v{k}_ck", 0, 1)   # (per note since birds)
         # Glass: a shared fade in dB below full (0 to -60 over the ring, then gone); partial i is 100 + fade / its
         # share in Pd's dB, so the high partials reach -60 first. The rise and the level ride on a second line.
         gx = vx + 120
-        ex(f"mu_v{k}_gv", f"$f1*cvoice/2*{GLASS_LEVEL}", gx, cy + 500); P.c(f"mu_v{k}_vst", f"mu_v{k}_gv", 0, 0)
+        ex(f"mu_v{k}_gv", f"$f1*{ev}/2*{GLASS_LEVEL}", gx, cy + 500); P.c(f"mu_v{k}_vst", f"mu_v{k}_gv", 0, 0)
         P.obj(f"mu_v{k}_gon", "moses 0.0001", gx, cy + 515); P.c(f"mu_v{k}_gv", f"mu_v{k}_gon")
         P.obj(f"mu_v{k}_gt", "t f b b", gx, cy + 530); P.c(f"mu_v{k}_gon", f"mu_v{k}_gt", 1, 0)
         P.obj(f"mu_v{k}_gdc", "value cdec", gx + 60, cy + 545); P.obj(f"mu_v{k}_gdx", f"* {GLASS_RING_X}", gx + 60, cy + 560)
@@ -503,7 +529,7 @@ def add_music(P):
             if ratio == 1:
                 osc = f"mu_v{k}_o1"   # (the fundamental is Classic's own)
             else:
-                P.obj(f"mu_v{k}_gf{i}", f"* {ratio}", px, cy + 620); P.c(f"mu_v{k}_f", f"mu_v{k}_gf{i}")
+                P.obj(f"mu_v{k}_gf{i}", f"* {ratio}", px, cy + 620); P.c(f"mu_v{k}_fold", f"mu_v{k}_gf{i}")
                 osc = P.obj(f"mu_v{k}_go{i}", "osc~", px, cy + 635); P.c(f"mu_v{k}_gf{i}", osc)
             P.obj(f"mu_v{k}_gs{i}", f"*~ {1 / share:.6g}", px, cy + 650); P.c(f"mu_v{k}_gfd", f"mu_v{k}_gs{i}")
             P.obj(f"mu_v{k}_gd{i}", "+~ 100", px, cy + 665); P.c(f"mu_v{k}_gs{i}", f"mu_v{k}_gd{i}")

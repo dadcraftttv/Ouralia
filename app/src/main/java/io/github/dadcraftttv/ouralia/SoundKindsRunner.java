@@ -41,6 +41,8 @@ final class SoundKindsRunner {
     private static boolean waterSent;
     private static volatile int uwStyle;
     private static int uwSent;
+    private static volatile boolean birdsOn;
+    private static boolean birdsSent;
 
     private SoundKindsRunner() { }
 
@@ -123,6 +125,31 @@ final class SoundKindsRunner {
         }
     }
 
+    /** Birds Lift the Chimes (DadCraft, Nov 2: "do birds lift the Chimes"): while settled birds are heard, chimes
+     *  already earned turn to high Glass. Birds alone play nothing. Its own setting, like the water ones. */
+    static final String BIRDS_ID = "birds_lift";
+
+    static boolean birdsEnabled() {
+        return available() && ParamStore.get(BIRDS_ID) >= 0.5f;
+    }
+
+    /** Called with lock held, like {@link #waterTick}: the value to send if it changed, else -1. */
+    private static int birdsTick() {
+        boolean next = thread != null && birdsOn && ParamStore.get("music_on") >= 0.5f
+                && kinds != null && kinds.birds();
+        if (next == birdsSent) {
+            return -1;
+        }
+        birdsSent = next;
+        return next ? 1 : 0;
+    }
+
+    private static void sendBirds(int b) {
+        if (b >= 0) {
+            PdBase.sendFloat("birds_lift", b);
+        }
+    }
+
     /** The old Diagnostics switch's stored value moves to the setting, once (stored values are kept). */
     static void carryRoomSwitch(Context c) {
         android.content.SharedPreferences p = c.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -136,17 +163,19 @@ final class SoundKindsRunner {
     /** Called each tick of the sound's loop: Make Room for Music, Mind the Gap or Water Leaves a Trail changed (row, preset, reset):
      *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
     static void settingsTick() {
-        boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled();
+        boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled(), birds = birdsEnabled();
         int uw = uwEnabled();
         boolean music, talk, listen, same;
-        int w, u;
+        int w, u, b;
         synchronized (lock) {
-            boolean waterChanged = waterOn != water, uwChanged = (uwStyle > 0) != (uw > 0);
+            boolean waterChanged = waterOn != water, uwChanged = (uwStyle > 0) != (uw > 0), birdsChanged = birdsOn != birds;
             waterOn = water;
             uwStyle = uw;
+            birdsOn = birds;
             w = waterTick();
             u = uwTick();
-            same = (room == roomOn && gaps == gapsOn && !waterChanged && !uwChanged) || app == null;
+            b = birdsTick();
+            same = (room == roomOn && gaps == gapsOn && !waterChanged && !uwChanged && !birdsChanged) || app == null;
             if (same) {
                 music = talk = listen = false;
             } else {
@@ -154,11 +183,12 @@ final class SoundKindsRunner {
                 gapsOn = gaps;
                 music = kinds != null && kinds.roomMusic();
                 talk = kinds != null && kinds.talking();
-                listen = room || gaps || water || uw > 0 || enabled(app);
+                listen = room || gaps || water || uw > 0 || birds || enabled(app);
             }
         }
         sendWater(w);
         sendUw(u);
+        sendBirds(b);
         if (same) {
             return;
         }
@@ -167,7 +197,7 @@ final class SoundKindsRunner {
         if (listen) {
             start();
         } else {
-            stop("Make Room for Music, Mind the Gap, Water Leaves a Trail and Underwater off");
+            stop("Make Room for Music, Mind the Gap, Water Leaves a Trail, Underwater and Birds Lift the Chimes off");
         }
     }
 
@@ -181,7 +211,7 @@ final class SoundKindsRunner {
         }
         if (on) {
             start();
-        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled() && uwEnabled() == 0) {   // (any of the Music sound-kind settings keeps listening)
+        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled() && uwEnabled() == 0 && !birdsEnabled()) {   // (any of the Music sound-kind settings keeps listening)
             stop("switched off");
         }
     }
@@ -197,8 +227,9 @@ final class SoundKindsRunner {
             gapsOn = gapsEnabled();
             waterOn = waterEnabled();
             uwStyle = uwEnabled();
+            birdsOn = birdsEnabled();
         }
-        if (enabled(c) || roomOn || gapsOn || waterOn || uwStyle > 0) {
+        if (enabled(c) || roomOn || gapsOn || waterOn || uwStyle > 0 || birdsOn) {
             start();
         }
     }
@@ -250,7 +281,7 @@ final class SoundKindsRunner {
         HandlerThread t;
         Handler w;
         Consumer<String> l;
-        int water, uw;
+        int water, uw, birds;
         synchronized (lock) {
             if (thread == null) {
                 return;
@@ -262,9 +293,11 @@ final class SoundKindsRunner {
             worker = null;
             water = waterTick();
             uw = uwTick();
+            birds = birdsTick();
         }
         sendWater(water);
         sendUw(uw);
+        sendBirds(birds);
         PdBase.sendFloat("sk_on", 0);
         PdBase.sendFloat("room_music", 0);   // (no ears: the music comes back)
         PdBase.sendFloat("voice_talk", 0);
@@ -336,7 +369,7 @@ final class SoundKindsRunner {
         float[] scores = m.scores(wave);
         long took = System.nanoTime() - t0;
         boolean changed, roomChanged, room, talkChanged, talk;
-        int water, uw;
+        int water, uw, birds;
         String line;
         synchronized (lock) {
             if (judged < nanos.length) {
@@ -351,9 +384,11 @@ final class SoundKindsRunner {
             talkChanged = talk != wasTalk;
             water = waterTick();
             uw = uwTick();
+            birds = birdsTick();
         }
         sendWater(water);
         sendUw(uw);
+        sendBirds(birds);
         if (changed && l != null) {
             l.accept(line);
         }

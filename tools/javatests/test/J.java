@@ -56,6 +56,20 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     for(int i=0;i<300;i++){ k.judge(sc(i%2==0?5:0,60)); held &= k.water(); }
     check(held,"water: half the window holds on without flapping");
     k.reset(); check(!k.water(),"reset forgets water");
+    Param birdsSetting=Params.byId("birds_lift");
+    check(birdsSetting!=null&&birdsSetting.def==0f&&birdsSetting.toggle&&!birdsSetting.sendToPd
+        &&!birdsSetting.inPreset&&!birdsSetting.randomizable,"birds switch: off, app-controlled, outside presets and dice");
+    for(int i=0;i<12;i++) k.judge(sc(4,60));
+    check(!k.birds(),"birds: 12/32 below 40 percent");
+    k.judge(sc(4,60)); check(k.birds()&&!k.water(),"birds: 13/32 turns on (water stays off)");
+    for(int i=0;i<32;i++) k.judge(sc(4,60));
+    for(int i=0;i<27;i++) k.judge(sc(6,60));
+    check(k.birds(),"birds: 5/32 stays on above 15 percent");
+    k.judge(sc(6,60)); check(!k.birds(),"birds: 4/32 turns off");
+    held=true; for(int i=0;i<32;i++) k.judge(sc(4,60));
+    for(int i=0;i<300;i++){ k.judge(i%3==0?sc(4,60):sc(494,60)); held &= k.birds(); }
+    check(held,"birds: calls with quiet gaps (a third of the window) hold on without flapping");
+    k.reset(); check(!k.birds(),"reset forgets birds");
     Param uw=Params.byId("underwater");
     check(uw!=null&&uw.def==0f&&uw.max==2f&&uw.choices!=null&&uw.choices.length==3&&!uw.sendToPd
         &&!uw.inPreset&&!uw.randomizable&&uw.soundKinds,"underwater: Off/Gentle/Deeper, off, app-controlled, outside presets and dice");

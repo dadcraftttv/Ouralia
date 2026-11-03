@@ -39,6 +39,9 @@ final class SoundKinds {
 
     static final int WATER = 4, WATER_N = 32;
     static final float WATER_ON = 0.4f, WATER_OFF = 0.15f;
+    /** Birds Lift the Chimes (Nov 2): the same ~8 s window as water, so the gaps between calls hold it. */
+    static final int BIRDS = 3, BIRDS_N = 32;
+    static final float BIRDS_ON = 0.4f, BIRDS_OFF = 0.15f;
 
     /** The model, only in the Dev build (src/dev YamNet: LiteRT). */
     interface Model {
@@ -59,6 +62,9 @@ final class SoundKinds {
     private final boolean[] wasWater = new boolean[WATER_N];
     private int waterN, waterI;
     private boolean water;
+    private final boolean[] wasBirds = new boolean[BIRDS_N];
+    private int birdsN, birdsI;
+    private boolean birds;
 
 
     /** {@code kinds}: kinds.txt's lines ("voices 0 1 2 ...", "#" comments), one per name, in NAMES' order. */
@@ -178,6 +184,15 @@ final class SoundKinds {
         } else if (water && waterN <= WATER_OFF * WATER_N) {
             water = false;
         }
+        boolean b = kind == BIRDS;
+        birdsN += (b ? 1 : 0) - (wasBirds[birdsI] ? 1 : 0);
+        wasBirds[birdsI] = b;
+        birdsI = (birdsI + 1) % BIRDS_N;
+        if (!birds && birdsN >= BIRDS_ON * BIRDS_N) {
+            birds = true;
+        } else if (birds && birdsN <= BIRDS_OFF * BIRDS_N) {
+            birds = false;
+        }
         return kind != was;
     }
 
@@ -199,6 +214,11 @@ final class SoundKinds {
     /** True while settled water fills the window (about eight seconds). */
     boolean water() {
         return water;
+    }
+
+    /** True while settled birds fill the window (about eight seconds), like {@link #water}. */
+    boolean birds() {
+        return birds;
     }
 
     /** The last judgement's numbers, one per kind. */
@@ -235,5 +255,8 @@ final class SoundKinds {
         Arrays.fill(wasWater, false);
         waterN = waterI = 0;
         water = false;
+        Arrays.fill(wasBirds, false);
+        birdsN = birdsI = 0;
+        birds = false;
     }
 }

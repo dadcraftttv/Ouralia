@@ -531,3 +531,33 @@ whether sparse birds enter at all, whether the response survives normal gaps, an
 birds clear. Indoor playback proves the route, not outdoor usefulness. Before DadCraft's listen, verify window
 edges/reset, switch independence, no notes from classification alone, voice/level transitions (option 1) or
 strongest-dip composition (option 2), mic isolation and incremental Moto CPU. No audio needs saving for any check.
+
+## Step 9: Birds Lift the Chimes (Nov 2, Dev only; DadCraft's listen next)
+
+DadCraft (Nov 2), after the options: "do birds lift the Chimes". Built as option 1, one Music setting **Birds Lift
+the Chimes** (`birds_lift`, off by default, Dev only, outside presets and dice; listening starts by itself).
+
+- **App:** `SoundKinds.birds()`, the same 13/32-on, 4/32-off window as water (~8 s; calls with quiet gaps hold it);
+  `SoundKindsRunner.birdsTick()` sends `birds_lift` 1 while it holds, Music is on and the listener runs, else 0.
+  Sent outside the runner's lock, like the water sends.
+- **Patch** (music.py, the chime voices; constants.py `BIRDS_*`): `birds_lift` eases `bamt` to 1 over 3 s, back
+  over 5 s. Each new note on the four shared chime voices takes it once (0 while Mind the Gap hears talk): its
+  voice moves that share from the user's Chime Voice toward Glass, its velocity is trimmed by up to 0.29 (-3 dB),
+  and it folds by octaves into MIDI 72-84 (523-1047 Hz) when a golden-ratio step is under the amount (so half-way
+  through a fade about half the notes fold; no `[random]`, which would reshuffle the patch's other random
+  sequences). Ringing notes keep what they took. Only the synth chime changes: found melody notes and the
+  vocoder's note stay as they were. Birds alone start nothing. Chime Voice's Classic level is now set per note
+  (it was a shared level that changed ringing notes too); with birds off the sound is the same.
+- **Cost:** control objects only, no new oscillators; a Classic user's notes now start the Glass partials that were
+  already there while birds are in. Moto cost unmeasured (events.log "Health:" CPU).
+- **Measured in the patch** (test_patch 7z5b): a motif chime at 328 Hz plays at 660 Hz with birds in, -2.4 dB,
+  the 2.76x Glass partial at -12 dB (off: -85); with talk held, and 5.5 s after birds leave, it is the plain
+  328 Hz chime again (-0.1, -0.5 dB); a Glass user's chime folds up too; birds alone, no chimes.
+
+**His listen (indoors, any time):** headphones, Music on, Birds Lift the Chimes on; Mind the Gap, Make Room for
+Music, Water Leaves a Trail and Underwater off. Play birdsong from another device near the phone (no recording).
+First birds alone: do they earn any chimes at the normal bigger-sound setting? Then, after about 10 s of birds,
+knock once: the chime should be a higher, lighter glass note, no louder. Stop the birdsong, wait about 15 s, knock
+again: the ordinary chime should be back. Tell us if it is too shrill (the first knob: an octave lower), too
+subtle, or if birds alone never get a note. Outdoors later, near real birds and in wind.
+

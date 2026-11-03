@@ -97,7 +97,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 jp = java_params()
 patch_text = open(PATCH).read()
 receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
-    "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
+    "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "birds_lift", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
 check(pd_ids == receivers, "Params.java ids == patch receivers (java-only %s, patch-only %s)"
@@ -2981,6 +2981,34 @@ wn = [water_notes(water=0), water_notes(), water_notes(n=4),
       water_notes(n=1, cancel=("voice_talk", 1)), water_notes(n=4, cancel=("water_trail", 0))]
 check(wn == [1, 3, 5, 1, 1, 0, 2, 5],
       "water leaves a trail: dry, water, selected 4, talk cancel, water leaves, Music off, ordinary 1/4 survive: %s" % wn)
+
+# ---- 7z5b. birds lift the chimes: while birds are heard, an earned chime turns to high Glass, a little softer (Nov 2) ----
+from patchgen.constants import BIRDS_IN_MS, BIRDS_OUT_MS, BIRDS_TRIM
+def birds_chime(birds, cv=0, talk=0, after=None, knock=False):
+    e = fresh(wet=0, dry=0, music_key=0, music_on=1, music_arp=1, melody_src=0, music_res=0, music_react=0, chime_answer=1, mix_walk=0,
+              music_pad=0, music_harm=0, beat_level=0, chime_voice=cv)
+    e.listen("chime_deg"); e.send("voice_talk", talk); e.send("birds_lift", birds); e.run(e.silence(BIRDS_IN_MS / 1000 + 0.5))
+    if after is not None:
+        e.send("birds_lift", after); e.run(e.silence(BIRDS_OUT_MS / 1000 + 0.5))
+    n = len(e.heard.get("chime_deg", []))
+    if knock:
+        return n
+    e.send_list("motif", 9, 0.5); y = e.run(e.silence(2.5))[:, 0]
+    return y[np.argmax(np.abs(y) > 1e-4):]
+def f0_of(y):
+    S_ = np.abs(np.fft.rfft(y[:SR // 4])); fr = np.fft.rfftfreq(SR // 4, 1 / SR); return fr[np.argmax(S_ * (fr > 150) * (fr < 2500))]
+bd_off, bd_on, bd_glass = birds_chime(0), birds_chime(1), birds_chime(1, cv=2)
+bd_talk, bd_back = birds_chime(1, talk=1), birds_chime(1, after=0)
+lvl = lambda y: 20 * np.log10(rms(y[:int(0.3 * SR)]) / rms(bd_off[:int(0.3 * SR)]))
+bar_b = lambda y: partial_db(y, 2.76 * f0_of(y), 0.02, 0.12) - partial_db(y, f0_of(y), 0.02, 0.12)
+plain = lambda y: f0_of(y) == f0_of(bd_off) and abs(lvl(y)) < 1 and bar_b(y) < -40   # (each run's chime has its own random timbre)
+alone = birds_chime(1, knock=True)
+check(500 < f0_of(bd_on) < 1100 and abs(lvl(bd_on) - 20 * np.log10(1 - BIRDS_TRIM)) < 1.5 and bar_b(bd_on) > -30 and bar_b(bd_off) < -40
+      and plain(bd_talk) and plain(bd_back) and 500 < f0_of(bd_glass) < 1100 and alone == 0,
+      "birds lift the chimes: %.0f Hz -> %.0f Hz, %+.1f dB, 2.76x partial %.0f dB (off %.0f); while talking %.0f Hz %+.1f dB,"
+      " after birds %.0f Hz %+.1f dB; Glass users high too (%.0f Hz); birds alone %d chimes"
+      % (f0_of(bd_off), f0_of(bd_on), lvl(bd_on), bar_b(bd_on), bar_b(bd_off), f0_of(bd_talk), lvl(bd_talk),
+         f0_of(bd_back), lvl(bd_back), f0_of(bd_glass), alone))
 
 # ---- 7z6. underwater: while water is heard the music and beat go muffled and wobbly, never the mic (Nov 2) ----
 from patchgen.constants import UW_IN_MS, UW_OUT_MS
