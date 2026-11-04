@@ -108,7 +108,82 @@ final class SoundKinds {
      * windowed-sinc low-pass at 7.2 kHz, then read at 16 kHz with linear steps. Null if there is too little.
      */
     static float[] to16k(float[] x, int n, int rate) {
+        return to16k(x, n, rate, null);
+    }
+
+    /** The same into {@code out} (SAMPLES long; null: a new one), so the runner reuses one buffer (review, Nov 4). */
+    static float[] to16k(float[] x, int n, int rate, float[] out) {
         double step = (double) rate / RATE;
+        float[] h = lowPass(rate);
+        int taps = (h.length - 1) / 2;
+        double first = n - 2 - taps - (SAMPLES - 1) * step;   // where the oldest output sample falls (its next one in reach)
+        if (first < taps) {
+            return null;
+        }
+        if (out == null || out.length != SAMPLES) {
+            out = new float[SAMPLES];
+        }
+        for (int j = 0; j < SAMPLES; j++) {
+            double at = first + j * step;
+            int i0 = (int) at;
+            double f = at - i0;
+            float a = filtered(x, i0, h, taps);
+            // (at 48 kHz the step is exactly 3, so f is always 0: the second point would only be multiplied by 0)
+            out[j] = f == 0 ? a : (float) ((1 - f) * a + f * filtered(x, i0 + 1, h, taps));
+        }
+        return out;
+    }
+
+    /**
+     * Resampling that keeps what the last judgement already computed (review, Nov 4). Consecutive judgements read the
+     * ring shifted by exactly one segment, and when a segment is a whole number of 16 kHz steps (48 kHz: always) the
+     * output grid shifts with it: the older part of the new output is the old output moved along, sample for sample,
+     * and only the newest segment's part is computed. Anything else (the first time, a skipped judgement, a new rate
+     * or segment size) computes it all. One per worker thread.
+     */
+    static final class Resampler {
+        private final float[] out = new float[SAMPLES];
+        private int lastK = -1, lastRate, lastSeg, lastN;
+        int fresh;   // (how many output samples the last call computed: for the tests)
+
+        /** As {@link #to16k}, for the window ending before ring segment {@code k} of {@code seg} samples. */
+        float[] next(float[] x, int n, int rate, int k, int seg) {
+            double step = (double) rate / RATE;
+            int istep = (int) step, d = istep == step && seg % istep == 0 ? seg / istep : -1;
+            boolean shift = d > 0 && d < SAMPLES && k == (lastK + 1) % SEGS && rate == lastRate && seg == lastSeg
+                    && n == lastN;
+            lastK = k;
+            lastRate = rate;
+            lastSeg = seg;
+            lastN = n;
+            if (!shift) {
+                fresh = SAMPLES;
+                if (to16k(x, n, rate, out) == null) {
+                    lastK = -1;
+                    return null;
+                }
+                return out;
+            }
+            float[] h = lowPass(rate);
+            int taps = (h.length - 1) / 2;
+            int first = n - 2 - taps - (SAMPLES - 1) * istep;   // (whole: the step is)
+            System.arraycopy(out, d, out, 0, SAMPLES - d);
+            for (int j = SAMPLES - d; j < SAMPLES; j++) {
+                out[j] = filtered(x, first + j * istep, h, taps);
+            }
+            fresh = d;
+            return out;
+        }
+    }
+
+    private static int cachedRate;
+    private static float[] cachedH;
+
+    /** The windowed-sinc low-pass at 7.2 kHz for {@code rate}, 32 taps each side; made once per rate. */
+    private static synchronized float[] lowPass(int rate) {
+        if (cachedH != null && cachedRate == rate) {
+            return cachedH;
+        }
         int taps = 32;                                    // each side
         double cut = 7200.0 / rate;                       // cycles per sample
         float[] h = new float[2 * taps + 1];
@@ -122,18 +197,9 @@ final class SoundKinds {
         for (int i = 0; i < h.length; i++) {
             h[i] /= (float) sum;
         }
-        double first = n - 2 - taps - (SAMPLES - 1) * step;   // where the oldest output sample falls (its next one in reach)
-        if (first < taps) {
-            return null;
-        }
-        float[] out = new float[SAMPLES];
-        for (int j = 0; j < SAMPLES; j++) {
-            double at = first + j * step;
-            int i0 = (int) at;
-            double f = at - i0;
-            out[j] = (float) ((1 - f) * filtered(x, i0, h, taps) + f * filtered(x, i0 + 1, h, taps));
-        }
-        return out;
+        cachedRate = rate;
+        cachedH = h;
+        return h;
     }
 
     private static float filtered(float[] x, int i, float[] h, int taps) {
@@ -291,13 +357,35 @@ final class SoundKinds {
 
     /** The minute's cost for the event log: how many judgements and how long YAMNet took (median, slowest). */
     static String costLine(long[] nanos, int n) {
+        return costLine(nanos, null, n);
+    }
+
+    /** "; <what> median X ms, slowest Y ms" over the first {@code n}, or "" when there are none. */
+    static String medianLine(String what, long[] nanos, int n) {
+        if (n == 0) {
+            return "";
+        }
+        long[] s = Arrays.copyOf(nanos, n);
+        Arrays.sort(s);
+        return String.format(Locale.US, "; %s median %.1f ms, slowest %.1f ms", what, s[n / 2] / 1e6, s[n - 1] / 1e6);
+    }
+
+    /** With {@code whole}: each judgement from reading the ring to the scores, i.e. the copy and resampling too. */
+    static String costLine(long[] nanos, long[] whole, int n) {
         if (n == 0) {
             return "Sound kinds: no judgements this minute";
         }
         long[] s = Arrays.copyOf(nanos, n);
         Arrays.sort(s);
-        return String.format(Locale.US, "Sound kinds: %d judgements, YAMNet median %.1f ms, slowest %.1f ms",
+        String line = String.format(Locale.US, "Sound kinds: %d judgements, YAMNet median %.1f ms, slowest %.1f ms",
                 n, s[n / 2] / 1e6, s[n - 1] / 1e6);
+        if (whole != null) {
+            long[] w = Arrays.copyOf(whole, n);
+            Arrays.sort(w);
+            line += String.format(Locale.US, "; whole judgement median %.1f ms, slowest %.1f ms", w[n / 2] / 1e6,
+                    w[n - 1] / 1e6);
+        }
+        return line;
     }
 
     void reset() {
