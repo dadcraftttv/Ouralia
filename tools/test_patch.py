@@ -3257,6 +3257,19 @@ tail = e.run(e.silence(12))
 check(np.isfinite(tail).all() and np.max(np.abs(tail))<1 and rms(tail[-SR:])<1e-6,
       "stereo music: switch back and long tail remain finite and decay")
 
+# Stereo music off with Freeze held (review finding 1, Nov 4): the side used to stay.
+def side_rms(y): return rms((y[:,0]-y[:,1])*0.5)
+e, y = stereo_note(1, pan=0.5)
+e.send("glitch_on", 1); e.send("glitch_len", 300); e.send("glitch_hold", 1); e.run(e.silence(0.3))
+held = side_rms(e.run(e.silence(0.5)))
+e.send("music_stereo", 0); e.run(e.silence(0.2))
+off = side_rms(e.run(e.silence(1.8)))
+e.send("music_stereo", 1); e.run(e.silence(0.2))
+back = side_rms(e.run(e.silence(0.5)))
+check(held > 1e-5 and off < 0.01 * held and back > 0.5 * held,
+      "stereo music: off closes the side even with Freeze held, on opens it again (side rms held %.2g, off %.2g, on %.2g)"
+      % (held, off, back))
+
 # ---- 7z8. traffic pass: envelope, vetoes, one earned glide, lifecycle and off identity ----
 _tp_patches = {}
 def traffic_fresh(variant='', state=2, stereo=1):
