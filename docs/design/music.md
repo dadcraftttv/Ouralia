@@ -290,7 +290,11 @@
   the old patch against itself too). Pd test 10u: tones in key, none at 2.71x, eases in (0.14 of Synth at 0.4-0.9 s,
   1.05 at 5-6.5 s), asleep with Synth, awake with Glass Bowl, switching smooth. Clips `~/Downloads/glass-bowl-clips/`
   (40 s, all sources Synth, a quiet room with soft knocks as the mic, one gain for all): 1 Synth, 2 Glass Bowl, 3
-  Synth + Glass chimes, 4 Glass Bowl + Glass chimes. Waiting on his listen.
+  Synth + Glass chimes, 4 Glass Bowl + Glass chimes. DadCraft: "its deeper than i expected but i guess it's ok";
+  asked whether lower notes or a deeper wobble, "higher notes, try it an octave up". So the bowls now sound
+  `PAD_BOWL_UP` (2) x the pad's notes (C4-C5 for a C3-C4 chord), with their own tone oscillator (o5, no longer Synth's
+  o1); the twin keeps its Hz offset (as the recordings: the wobble rate is the bowl's, not a ratio). Level kept at
+  x1.15 (0.7 dB under Synth by RMS, louder to the ear an octave up). Clips re-rendered. Waiting on his listen.
   **Motif memory removed (Oct 31):** with Chimes Only When Something Happens fixed its comebacks never play, so
   MotifMemory.java and its tests are gone; its Note type moved to CallResponse. The patch's `chime_note` report stays
   (the tests count chimes with it).

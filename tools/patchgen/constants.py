@@ -163,12 +163,13 @@ BASS_DUCK_MS = 220      # ...and it comes back over this
 # almost pure tone (overtones 38-60 dB down, the octave the strongest), a deep slow swell and dip (0.15-0.56 Hz, 86-100%
 # deep: two near-equal tones a fraction of a Hz apart) and a slow rise as the rim is rubbed (DadCraft: "there really
 # isn't a stike, just a soft attack/easeing inkind of start").
+PAD_BOWL_UP = 2                 # the bowls sound this x the pad's notes (DadCraft: "higher notes, try it an octave up")
 PAD_BOWL_BEATS_HZ = (0.23, 0.38, 0.29, 0.53)   # each note's twin this far above it: each bowl wobbles at its own pace
 PAD_BOWL_TWIN_LEVEL = 0.9       # near-equal: the dip goes ~25 dB down, never quite silent
 PAD_BOWL_OCTAVE = 0.012         # a whisper of the octave (-38 dB, the strongest overtone in the recordings)
 PAD_BOWL_SWELL_MS = 4000        # each note eases in over this, from silence, when its set takes a chord...
 PAD_BOWL_STAGGER_MS = 700       # ...one after another, this far apart (the bowls are played in turn)
-PAD_BOWL_LEVEL = 1.15           # the bowl x this: Synth's loudness over a minute (C, F, A; its notes ease in)
+PAD_BOWL_LEVEL = 1.15           # the bowl x this: Synth's loudness over a minute (an octave up it measures 0.7 dB under, ears hear it louder)
 PAD_BOWL_SWITCH_MS = 300        # switching the voice crossfades over this long
 PAD_GLIDE_MS = 3500     # the pad crossfades from one chord to the next over this time (no pitch slides)
 

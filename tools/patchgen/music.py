@@ -1137,17 +1137,23 @@ def add_music(P):
             P.c(f"mu_pad{i}_{k}_gate", f"mu_pad{i}_{k}_t")
             P.c(f"mu_pad{i}_{k}_t", f"mu_pad{i}_{k}_o1", 0, 0)
             P.c(f"mu_pad{i}_{k}_t", f"mu_pad{i}_{k}_det", 1, 0); P.c(f"mu_pad{i}_{k}_det", f"mu_pad{i}_{k}_o2")
-            # Glass Bowl: the tone (o1, shared), its twin PAD_BOWL_BEATS_HZ[i] above and a whisper of the octave
-            # (their oscillators: group bowl{k}, running only while chosen and heard)
-            P.obj(f"mu_pad{i}_{k}_o3f", f"+ {PAD_BOWL_BEATS_HZ[i]}", kx + 40, 515)
-            P.obj(f"mu_pad{i}_{k}_o4f", "* 2", kx + 40, 515)
-            for o in ("o3", "o4"):
+            # Glass Bowl, PAD_BOWL_UP x the pad's note (DadCraft, Nov 4: "higher notes, try it an octave up"): its tone
+            # (o5), a twin PAD_BOWL_BEATS_HZ[i] above it and a whisper of the octave above (oscillators: group bowl{k},
+            # running only while chosen and heard)
+            up = PAD_BOWL_UP
+            P.obj(f"mu_pad{i}_{k}_o5f", f"* {up}", kx + 40, 515)
+            P.obj(f"mu_pad{i}_{k}_o3u", f"* {up}", kx + 40, 515); P.obj(f"mu_pad{i}_{k}_o3f", f"+ {PAD_BOWL_BEATS_HZ[i]}", kx + 40, 515)
+            P.c(f"mu_pad{i}_{k}_o3u", f"mu_pad{i}_{k}_o3f")
+            P.obj(f"mu_pad{i}_{k}_o4f", f"* {2 * up}", kx + 40, 515)
+            for o, first in (("o5", "o5f"), ("o3", "o3u"), ("o4", "o4f")):
                 P.obj(f"mu_pad{i}_{k}_{o}", "osc~", kx + 40, 520)
-                P.c(f"mu_pad{i}_{k}_t", f"mu_pad{i}_{k}_{o}f", 1, 0); P.c(f"mu_pad{i}_{k}_{o}f", f"mu_pad{i}_{k}_{o}")
+                P.c(f"mu_pad{i}_{k}_t", f"mu_pad{i}_{k}_{first}", 1, 0)
+            for o in ("o5", "o3", "o4"):
+                P.c(f"mu_pad{i}_{k}_{o}f", f"mu_pad{i}_{k}_{o}")
             P.obj(f"mu_pad{i}_{k}_b3", f"*~ {PAD_BOWL_TWIN_LEVEL}", kx + 40, 525); P.c(f"mu_pad{i}_{k}_o3", f"mu_pad{i}_{k}_b3")
             P.obj(f"mu_pad{i}_{k}_b4", f"*~ {PAD_BOWL_OCTAVE}", kx + 40, 525); P.c(f"mu_pad{i}_{k}_o4", f"mu_pad{i}_{k}_b4")
             P.sig2(f"mu_pad{i}_{k}_bs1", "+~", f"mu_pad{i}_{k}_b3", f"mu_pad{i}_{k}_b4", kx + 40, 527)
-            P.sig2(f"mu_pad{i}_{k}_bo", "+~", f"mu_pad{i}_{k}_o1", f"mu_pad{i}_{k}_bs1", kx + 40, 528)
+            P.sig2(f"mu_pad{i}_{k}_bo", "+~", f"mu_pad{i}_{k}_o5", f"mu_pad{i}_{k}_bs1", kx + 40, 528)
             P.sig2(f"mu_pad{i}_{k}_bpv", "*~", f"mu_pad{i}_{k}_bo", f"mu_pv{k}_w{i}b", kx + 40, 529)
             P.sig2(f"mu_pad{i}_{k}_o1a", "*~", f"mu_pad{i}_{k}_o1", f"mu_pv{k}_syn", kx, 529)
             P.sig2(f"mu_pad{i}_{k}_o2c", "*~", f"mu_pad{i}_{k}_o2", f"mu_pv{k}_syn", kx, 529)
