@@ -535,6 +535,12 @@ CALM_DRUM_DB = -60          # the drums are sounding: the beat's output above th
 CALM_DRUM_HOLD_MS = 3000    # ...within this long (a bar's gaps keep it)
 CALM_VEL_MIN = 0.2          # the first note's velocity...
 CALM_VEL_MAX = 0.45         # ...grows to this in full: gentle
+CALM_BASS_FROM = 0.4        # the bass joins once the tune passes this (48 s into the 120 s rise; leaves first in the fade)
+CALM_BASS_TICK = 10         # its pickup: the 16th in the second bar (the other notes are each bar's downbeat)
+CALM_BASS_VEL_MIN = 0.5     # its first note's velocity...
+CALM_BASS_VEL_MAX = 1.0     # ...grows to this in full
+CALM_BASS_DECAY_MS = 1400   # a plucked note dies away over this (the envelope is squared)
+CALM_BASS_GAIN = 0.16       # level (measured against the held bass, design/music.md)
 
 # Traffic Flow (Nov 3): inside a settled traffic scene, a sustained lull eases the beat down.
 TRAFFIC_FLOW_SETTLE_MS = 4000   # the reference settles first, no dip

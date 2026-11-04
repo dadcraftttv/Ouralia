@@ -4,6 +4,7 @@ from .constants import *  # noqa: F401,F403 (the tuning numbers)
 from .core import *  # noqa: F401,F403
 from .music_stereo import add_width, image, sum_image, apply_image
 from .found import add_found_note, add_found_pad
+from .calm import add_calm_bass
 
 
 def add_melody_rhythm(P, x, ex):
@@ -1321,7 +1322,9 @@ def add_music(P):
     P.obj("mu_pr_bsig", "sig~ 1", px + 720, 855); P.obj("mu_pr_blp", "lop~ 2", px + 720, 870)
     P.c("mu_pr_bg", "mu_pr_bsig"); P.c("mu_pr_bsig", "mu_pr_blp")
     P.sig2("mu_pad_mrm", "*~", "mu_pad_mid", "mu_pr_lp", px, 880)
-    P.sig2("mu_pad_brm", "*~", "ba_out", "mu_pr_blp", px + 60, 880)
+    calm_bass, calm_way = add_calm_bass(P, ex, degree_to_hz, mixb, pad_lvl, bx, 1000)   # (Calm Builds' bass)
+    P.sig2("ba_way", "*~", "ba_out", calm_way, bx, 870)                      # the held bass makes way for it
+    P.sig2("mu_pad_brm", "*~", "ba_way", "mu_pr_blp", px + 60, 880)
     P.sig2("mu_pad_rm", "+~", "mu_pad_mrm", "mu_pad_brm", px, 885)
     P.sig2("mu_pad_br", "*~", "mu_pad_rm", "mu_br_ln", px, 890)
     P.sig2("mu_pad_out", "*~", "mu_pad_br", pad_lvl, px, 900)
@@ -1330,7 +1333,8 @@ def add_music(P):
     harmony = add_harmony(P, x + 3400, ex, degree_to_hz)
     P.sig2("mu_mix0", "+~", "mu_pad_out", "mu_chime_out", px, 930)
     P.sig2("mu_mix1", "+~", "mu_mix0", room, px, 940)
-    P.sig2("mu_mix", "+~", "mu_mix1", harmony, px, 945)
+    P.sig2("mu_mix2", "+~", "mu_mix1", harmony, px, 945)
+    P.sig2("mu_mix", "+~", "mu_mix2", calm_bass, px, 948)
     add_width(P)
     mids, sides = [], []
     for suffix, target in (("m", mids), ("s", sides)):

@@ -3540,6 +3540,32 @@ check(calm_notes(e, bar * 2) == [], 'calm tune: the drums stopped, the tune stop
 e = calm_fresh(beat_on=0); e.send('calm_tune', 1)
 check(calm_notes(e, bar * 4) == [], 'calm tune: never starts drums, never plays without them')
 
+e = calm_fresh(); e.listen('calm_bass', 'calm_way'); e.run(e.silence(2))
+def calm_bass(e, tune, secs):
+    e.send('calm_tune', tune); e.run(e.silence(1)); e.heard['calm_bass'] = []; e.run(e.silence(secs))
+    return [round(v, 2) for v in e.heard['calm_bass']], round(e.heard['calm_way'][-1], 2)
+early, way_early = calm_bass(e, 0.3, bar * 4)
+first, _ = calm_bass(e, 0.55, bar * 4)
+two, _ = calm_bass(e, 0.75, bar * 4)
+full, way_full = calm_bass(e, 1, bar * 4)
+fifths = [b - a for a, b in zip(full, full[1:])]
+check(early == [] and way_early == 1 and abs(len(first) - 2) <= 1 and abs(len(two) - 4) <= 1
+      and abs(len(full) - 6) <= 1 and 4 in fifths and way_full == 0,
+      'calm bass: out until the tune passes 0.4, then downbeats first, in full three notes every two bars with the '
+      'fifth as the pickup; the held bass makes way (%d/%d/%d/%d notes, steps %s, way %s -> %s)'
+      % (len(early), len(first), len(two), len(full), fifths, way_early, way_full))
+e.send('beat_on', 0); e.run(e.silence(3.5)); quiet, way_off = calm_bass(e, 1, bar * 2)
+check(quiet == [] and way_off == 1, 'calm bass: stops with the drums, the held bass comes back (%s, way %s)' % (quiet, way_off))
+def calm_low(tune, pad):
+    e = calm_fresh(music_pad=pad, music_arp=0, pad_room=1); e.run(e.silence(2)); e.send('calm_tune', tune)
+    e.run(e.silence(3)); y = e.run(e.silence(bar * 4)).mean(axis=1)
+    f = np.fft.rfft(y); fr = np.fft.rfftfreq(len(y), 1 / SR); f[(fr > 300) | (fr < 30)] = 0
+    return float(np.mean(np.fft.irfft(f, len(y)) ** 2))
+lo_a, lo_b, lo_c, lo_d = calm_low(0.3, 0.33), calm_low(1, 0.33), calm_low(0.3, 0), calm_low(1, 0)
+check(lo_b / lo_a > 1.2 * lo_d / lo_c and lo_d / lo_c < 1.05,   # (the tune itself moves the drums' low band a little)
+      'calm bass: heard under the drums in a quiet room (low band x%.2f), silent at Pad level 0 (x%.2f)'
+      % (lo_b / lo_a, lo_d / lo_c))
+
 # ---- 8. safety: loud input, max feedback, max gain ----
 e = fresh(gain=10, feedback=0.85, wet=1, dry=1.5, echo_time=50)
 rng = np.random.default_rng(1)
