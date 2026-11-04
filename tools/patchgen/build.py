@@ -657,7 +657,16 @@ def build():
 
     P.sig2("ms_beat_rm", "*~", "beat_side", "btf_gain", 700, 440)
     beat_side = uw_path(P, "bs", "ms_beat_rm", 800, 440)
-    P.sig2("ms_side", "+~", side_voice, beat_side, 800, 600)
+    P.sig2("ms_side_fx", "+~", side_voice, beat_side, 800, 600)
+    # Music in Stereo off closes the side after its effects too (review finding 1, Nov 4): a held Freeze or an effect
+    # tail kept the earlier side signal. Opens at once (the width ramp still shapes switching on, unchanged), closes
+    # over the width's own ramp; on and off settled are exactly the old law.
+    P.obj("ms_gate_r", "r music_stereo", 700, 560); P.obj("ms_gate_on", "> 0", 700, 570)
+    P.obj("ms_gate_sel", "sel 0", 700, 580); P.c("ms_gate_r", "ms_gate_on"); P.c("ms_gate_on", "ms_gate_sel")
+    P.msg("ms_gate_close", f"0 {MUSIC_STEREO_MS}", 700, 590); P.msg("ms_gate_open", "1", 760, 590)
+    P.c("ms_gate_sel", "ms_gate_close"); P.c("ms_gate_sel", "ms_gate_open", 1)
+    P.obj("ms_gate", "line~", 700, 600); P.c("ms_gate_close", "ms_gate"); P.c("ms_gate_open", "ms_gate")
+    P.sig2("ms_side", "*~", "ms_side_fx", "ms_gate", 800, 610)
     P.obj("ms_neg", "*~ -1", 800, 620); P.c("ms_side", "ms_neg")
     P.sig2("ms_mix_l", "+~", "mix_out", "ms_side", 800, 640)
     P.sig2("ms_mix_r", "+~", "mix_out", "ms_neg", 900, 640)

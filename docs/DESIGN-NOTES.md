@@ -31,6 +31,10 @@ as the mid. `music_fx.py` extracts the existing chorus/flanger/phaser/tremolo/re
 for the mid and with private buffers for the side. Both paths run continuously, keeping effect phases aligned
 when width changes; this has an off-state processing cost as well. Beat side takes its own existing level,
 pattern/step gains, Make Room and Underwater. L = mid + side, R = mid - side, before the existing spatial stage.
+The summed side passes one more gate after its effects (review finding 1, Nov 4): a held Freeze or an effect tail
+kept the side wide after the switch went off (Codex measured side RMS 0.0102 staying put). Switching on opens it at
+once (the 50 ms width ramp still shapes the entry, unchanged); off closes it over the same 50 ms. Settled on or off
+is the old law exactly; test_patch checks off-with-Freeze-held goes to silence and back on restores it.
 Echo, stereo/reverse reverb retain their shared mono sends from the mid, so ambience surrounds the fixed direct
 places. Wind Guard, input mic mid/side and World in Stereo are unchanged. Water/Birds/Trailing Melody and Mind the
 Gap still act upstream, and earn no extra notes from this switch.
