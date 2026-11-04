@@ -52,6 +52,14 @@ public class B {
     check(!started,"a loud room (over -40 dBFS) never counts as quiet");
     CalmBuild.reset(); started=false; quiet(10); run(110,true,false,-50f);
     check(started,"a steady fan under the guard becomes the room's quiet");
+    // DadCraft, Nov 4: "it was quiet in my house for several minutes but Calm Builds did nothing". His session log: a
+    // steady -56 dBFS room with the Moto's level dropping to about -100 for a moment every 10-20 s. Each dropout pulled
+    // the reference down, the room then read as 40 dB of noise, and the wait never finished.
+    CalmBuild.reset(); started=false;
+    for(int i=0;i<8 && !started;i++){ run(14,true,false,-56f); run(1,true,false,-100f); }
+    check(started,"a quiet room with the phone's brief level dropouts still grows the tune (by 2 minutes)");
+    CalmBuild.reset(); started=false; quiet(20); run(0.3,true,false,-75f); quiet(60);
+    check(started,"a brief real dip doesn't restart the wait");
     CalmBuild.reset(); started=false; run(120,true,true,-60f);
     check(!started,"walking counts as noise");
     CalmBuild.reset(); quiet(40); run(1,false,false,-60f);

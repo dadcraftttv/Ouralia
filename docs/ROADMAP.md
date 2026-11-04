@@ -29,7 +29,8 @@ Freeze no longer keeps it wide. Finding 2 DONE Nov 4: the classifier runner's Pd
 the order their state was read, so a stop can't be overtaken. Findings 3 and 4 DONE Nov 4: scene imports share one
 budget (bytes, files, depth), Info.plist is bounded, provider failures fail the scene, not the app. Next in the saved
 Nov 3 sequence: Underwater gating DONE Nov 4 (paths asleep while off: 14.4% less patch time on the desktop, below
-the Moto's noise). The review's six steps are done; its other performance items (classifier resampling and
+the Moto's noise). Calm Builds FIXED Nov 4: the Moto's brief level dropouts
+kept restarting its quiet wait (design/music.md). The review's six steps are done; its other performance items (classifier resampling and
 allocations, inference without a consumer, the music side FX chain) wait for DadCraft's pick. Reactive-first additions remain proposals for DadCraft to choose.
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.

@@ -28,7 +28,11 @@ final class CalmBuild {
     static final float GUARD_DB = -40f; // ...or louder than this at all (dBFS: a room this loud is never quiet)
     static final double NOISE_S = 3, WINDOW_S = 5;   // consistent noise: noisy for 3 of the last 5 s
     static final double REF_UP_S = 60;  // while waiting the reference rises this slowly toward a new steady sound
-    static final double REF_DOWN_S = 1; // and follows a quieter room within about a second
+    static final double REF_DOWN_S = 3; // and follows a quieter room within a few seconds (1 s until Nov 4)
+    /** Below this the level is a dropout, not a room (DadCraft's Moto, Nov 4: a steady -56 dBFS room read about -100
+     *  for a moment every 10-20 s). A dropout counts as quiet and never moves the reference: before, each one pulled
+     *  the reference down, the room then read as noise and the wait never finished. Even a mic's own hiss is above. */
+    static final float DROPOUT_DB = -80f;
     /** The phrase: NOTES chime steps in time order, at 16ths 0, 6, 12 of each of two bars (calm.py). */
     static final int NOTES = 6, LOW = 7, HIGH = 14;
 
@@ -88,12 +92,15 @@ final class CalmBuild {
             }
             return was;
         }
-        if (!refSet) {
+        boolean dropout = micDb < DROPOUT_DB;
+        if (!refSet && !dropout) {
             ref = micDb;
             refSet = true;
         }
-        boolean loud = walking || micDb > GUARD_DB || micDb > ref + NOISE_DB;
-        if (micDb < ref) {
+        boolean loud = walking || (!dropout && (micDb > GUARD_DB || micDb > ref + NOISE_DB));
+        if (dropout || !refSet) {
+            // (the reference stays where the room put it)
+        } else if (micDb < ref) {
             ref += (micDb - ref) * (float) Math.min(1, dt / REF_DOWN_S);
         } else if (phase == Phase.WAITING) {   // (held while the tune plays and fades: noise can't become the floor)
             ref += (micDb - ref) * (float) Math.min(1, dt / REF_UP_S);
