@@ -262,6 +262,29 @@
   -35 dB 0.4 s on). DadCraft's A/B (Oct 31): "Glass sounds great. can we keep both options and have a Both option
   between them?" Now Classic / Both / Glass (0/1/2; Dev's stored Glass, 1, reads as Both): Classic x (1 - v/2),
   Glass x v/2, so Both is half each on the shared fundamental.
+  **Pad Voice** (`pad_voice`, Music, Synth by default, saved in presets; Nov 4, branch `sound-kinds`). DadCraft: "can
+  we make glass bowl option for the pads? i saw something on tv last night and heard a person on that program using
+  glass bowls in a sort of "sound healing" kind of setting ... it might even compliment the glass bells sounds we're
+  already using." Glass Bowl only changes the Synth pad (Pad Sounds Synth or Both). Each chord note keeps Synth's
+  first tone and, in place of Synth's second (x1.004, equal level), gets a twin at x1.0022 at 0.85 (a bowl isn't quite
+  round, so each mode is two: a deep slow swell and dip, 0.5 Hz at 220 Hz, never to silence) and the bowl's second
+  mode at x2.71 (the glass chime bar's is 2.76) at 0.22 with its own twin at x1.0035 (2.1 Hz). Ratios, so higher
+  bowls beat faster. **The strike** (after DadCraft's first listen: "i'm not sure what that glass bowl sound was, but
+  it wasn't a glass bowl"): the first version was only that hum, and Synth is already two beating pure tones, so the
+  two measured nearly alike. Now each chord change strikes the new set's notes at once, outside the slow crossfade: the
+  tone (0.5), the 2.71x mode (0.8) and a 5.15x mode (0.45), 8 ms mallet, squared fades over 6 s (the 5.15x over 2.5 s).
+  Per second above 340 Hz in the clip: Synth -73 to -83 dB, the bowl about -10 dB at each strike falling to -20.
+  (That first listen was also through wrong clips: Pad and Melody Sounds were left on their default, Found sounds,
+  with voices as the mic, so he heard stretched voices, "like maybe children or babies", and hardly any bowl.)
+  Level x1.11 (Synth's loudness: +0.58 dB in the test with the strike). Switching crossfades over 300 ms (largest step
+  0.0031, the bowl's own playing 0.0031). The bowl's oscillators are their own switch~ groups (`bowl0/1`), on only
+  while Glass Bowl is chosen and that set sounds (`pad_voice` x `sw_pads<k>`), so Synth costs nothing new; each set
+  ramps its gains and strike inside its own group (one shared ramp in the music's group made a DSP loop: silence, the
+  Chime Voice lesson again). Synth sample-identical to before over the first 5 s (after that the music varies run to
+  run, the old patch against itself too). Pd test 10u: tones in key, second mode over each, level, asleep with Synth,
+  awake with Glass Bowl, switching smooth. Clips `~/Downloads/glass-bowl-clips/` (40 s, all sources Synth, a quiet
+  room with soft knocks as the mic, one gain for all): 1 Synth, 2 Glass Bowl, 3 Synth + Glass chimes, 4 Glass Bowl +
+  Glass chimes. Waiting on his listen. Later, if he likes it: the bowl could react (the swell quickening while he walks).
   **Motif memory removed (Oct 31):** with Chimes Only When Something Happens fixed its comebacks never play, so
   MotifMemory.java and its tests are gone; its Note type moved to CallResponse. The patch's `chime_note` report stays
   (the tests count chimes with it).

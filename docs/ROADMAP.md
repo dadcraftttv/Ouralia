@@ -44,6 +44,9 @@ sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUIL
 chime phrase grows over the drums that are already playing, trails off over 15 s on steady noise. DadCraft's listen next
 (quiet room with drums -> knock -> steady noise -> quiet again); bass is the next layer after it.
 
+**Pad Voice Glass Bowl (DadCraft, Nov 4):** BUILT on `sound-kinds`: a singing-bowl pad behind a switch, Synth the
+default (design/music.md "Pad Voice"). DadCraft's listen next: `~/Downloads/glass-bowl-clips/`, then on the phone.
+
 **Reactive first (DadCraft, Oct 30):** Ouralia re-anchored on RjDj's rule, the world drives the music. Step 1 was a
 listening baseline of what already reacts (Singing Room, Harmony, sudden-sound chimes, Call and Response) with the
 clock-driven layers off; no code. Then one reactive response made convincing, only where the baseline falls short.

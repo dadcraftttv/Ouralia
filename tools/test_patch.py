@@ -2612,6 +2612,29 @@ for i in range(30):
 ym = np.concatenate(ys)
 check(not np.isnan(ym).any() and float(np.abs(ym).max()) <= 1.0 + 1e-6, "music: loud noise, steps and all voices stay within +-1 (max %.2f)" % float(np.abs(ym).max()))
 
+# ---- 10u. pad voice: Glass Bowl, a singing bowl (DadCraft, Nov 4); Synth as before ----
+# Same chords: the bowl's tones in key, its second mode at 2.71 x quietly above them, about Synth's loudness; its own
+# tones asleep with Synth, awake with Glass Bowl; switching while it plays is a crossfade, not a click.
+def pad_voice(pv, secs=6.5, **over):
+    e = fresh(**dict(dict(music_on=1, music_pad=1, music_arp=0, music_res=0, wet=0, music_pad_reg=1, pad_voice=0), **over))
+    e.listen("sw_bowl0", "sw_bowl1"); e.send("pad_voice", pv)
+    return e, e.run(e.silence(secs))[:, 0]
+es, ys = pad_voice(0); eb, yb = pad_voice(1)
+asleep = all(es.heard.get(f"sw_bowl{k}", [0])[-1:] in ([], [0]) for k in (0, 1))
+awake = any(eb.heard.get(f"sw_bowl{k}", [])[-1:] == [1] for k in (0, 1))
+ts, tb = ys[SR * 2:], yb[SR * 2:]
+fund = spec_peaks(tb, 0.3)
+parts = spec_peaks(tb, 0.01)
+second = [f for f in fund if any(abs(g - 2.71 * f) < 3 for g in parts)]
+db = 20 * np.log10(rms(tb) / rms(ts))
+check(asleep and awake and len(fund) >= 3 and not off_key(fund, 0, 0) and second and abs(db) < 1.5,
+      "pad voice: Glass Bowl's tones in key (%s), a second mode over %s, %.2f dB from Synth; asleep with Synth %s, awake %s"
+      % ([round(f) for f in fund[:6]], [round(f) for f in second], db, asleep, awake))
+e, _ = pad_voice(0, secs=4)
+e.send("pad_voice", 1); y = e.run(e.silence(1))[:, 0]
+step = np.max(np.abs(np.diff(y))); usual = max(np.max(np.abs(np.diff(ts))), np.max(np.abs(np.diff(tb))))   # (the bowl's higher tones move faster)
+check(step < 1.5 * usual, "pad voice: switching while it plays crossfades (largest step %.5f, usual %.5f)" % (step, usual))
+
 # ---- 10v. music variety: Evolving plays dcs_composer's progressions and sections; Classic as before ----
 e = fresh(music_on=1, music_pad=1, music_arp=0, music_res=0, wet=0, music_key=4, music_scale=3, music_pad_reg=1)
 e.listen("comp_chord", "comp_section", "pad_chord")

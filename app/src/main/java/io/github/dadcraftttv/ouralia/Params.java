@@ -273,6 +273,10 @@ final class Params {
             new Param("pad_src", "Pad Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth", "Found sounds (a held hum or voice, stretched)", "Both")
                     .inSection("music"),
+            // Pad Voice (DadCraft, Nov 4: "can we make glass bowl option for the pads?"): Glass Bowl is a crystal singing
+            // bowl, a pure tone with a slow beat and a quiet second mode. Synth stays the default until he says.
+            new Param("pad_voice", "Pad Voice", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Synth (soft tones)", "Glass Bowl (a singing bowl)").inSection("music"),
             new Param("bass_src", "Bass Sound", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Synth", "Found sounds (a held hum or voice, pitched down)")
                     .inSection("music"),
@@ -628,7 +632,7 @@ final class Params {
      */
     static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
             "music_on", "mel_dev", "pat_gen", "walk_ease", "note_big",
-            "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "bass_src",
+            "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "pad_voice", "bass_src",
             "melody_src", "mel_rhythm", "mel_phrase", "chime_voice", "chime_trail", "fm_ring", "res_src", "harm_src", "harm_tracker");
 
     /** Which voice an effect plays with (Classic or New...): saved in presets since Oct 21 (DadCraft), left out of the

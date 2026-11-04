@@ -924,7 +924,9 @@ def build():
     P.group("fprec", r"^fpr_")                                            # recording takes: while a found pad/bass wants them
     add_switch(P, "fprec", ("music_on", "fpad_need"), 100)
     for k in range(2):                                                  # the pad's two crossfade sets: on only while heard
-        P.group(f"pads{k}", rf"^(mu_pad\d_{k}_(o1|o2|s|x)|mu_xf{k})$")
+        P.group(f"pads{k}", rf"^(mu_pad\d_{k}_(o1|o2|s|x|o1a|o2c|s1|bpv|xa|sa1|sa2|sa|sae|sb|sbe|st)|mu_xf{k}|mu_pv{k}_\w+)$")
+        P.group(f"bowl{k}", rf"^mu_pad\d_{k}_(o3|o4|o5|o6|b3|b4|b5|bs1|bs2)$")   # (Glass Bowl's own tones: chosen and heard)
+        add_switch(P, f"bowl{k}", ("pad_voice", f"sw_pads{k}"), PAD_BOWL_SWITCH_MS + 200)
     P.group("horgan", r"^mu_hm\d_")                                      # the organ voices: off for "Your voice"
     add_switch(P, "horgan", ("music_on", "music_harm", "harm_organ"), 2500)
     P.group("hvnew", r"^hv_(din|dcs)$")                                 # (Pitch shifter New: only while it sings)
