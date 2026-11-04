@@ -41,7 +41,7 @@ def render(patch, part, src, switch, output):
     base = dict(gain=1, dry=0, wet=0, comp_thresh=0, pocket_hush=0, pocket_guard=0,
                 music_on=1, music_pad=0, music_arp=0, music_res=0, music_harm=0, music_answer=0,
                 beat_level=0, beat_follow=1, beat_when=1, tempo_mode=1, tempo_bpm=100,
-                music_pad_reg=2, melody_src=src, pad_src=src, bass_src=src, rhythm_src=src)
+                music_pad_reg=2, melody_src=src, pad_src=src, rhythm_src=src)
     if part == 'melody':
         base['music_arp'] = 0.4
     if part in ('pad', 'bass'):
@@ -54,7 +54,7 @@ def render(patch, part, src, switch, output):
                     band_plays=1, chord_color=1)
     if part == 'vocoder':
         base.update(music_arp=0.4, music_pad=0.5, dry=1, voc_mix=1, voc_carrier=src,
-                    melody_src=0, pad_src=0, bass_src=0, rhythm_src=0,
+                    melody_src=0, pad_src=0, rhythm_src=0,
                     voc_wave=1)  # Chords, own pitch, whisper and melody; Chip carrier retained.
     base.update(chime_answer=0, pad_room=0, note_big=0)   # (patch defaults since Oct 31: pin the old sound)
     if switch != 'off':

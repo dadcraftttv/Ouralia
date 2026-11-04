@@ -44,13 +44,14 @@ def add_calm_tune(P):
     P.obj('ct_vel_s', 's calm_vel', x + 200, y + 225); P.c('ct_play', 'ct_vel_s', 1)    # ...and every tick's velocity)
 
 
-def add_calm_bass(P, ex, degree_to_hz, mixb, pad_lvl, x, y):
+def add_calm_bass(P, ex, degree_to_hz, mixb, pad_lvl, syn, x, y):
     """The quiet tune's bass (Nov 4): once the tune passes CALM_BASS_FROM, a plucked low note on the chord's root at
     each bar's downbeat and its fifth (4 steps of 7, 3 of a pentatonic) on the second bar's 16th CALM_BASS_TICK,
     joining downbeat first. Its own voice (the held bass sits out in a quiet room while Pad Only With a Steady Sound
     is on), shaped like the held bass
     (2nd and 3rd harmonics for earbuds, 65-131 Hz). While it plays the held bass makes way for it. Names start
-    ba_cb_ so it sits in the music's DSP group. Returns its signal."""
+    ba_cb_ so it sits in the music's DSP group. Bass Voice Glass Bowl (Nov 4): each note a bowl instead (ba_cbw_, in the
+    bbowl group), easing in and ringing into the next; syn is the synth's share (1 - the voice). Returns its signal."""
     P.obj('ba_cb_root', 'value ba_cb_root', x, y); P.c('mu_pad_root_v', 'ba_cb_root', 1, 0)   # the chord's root
     # The chord changes on the same tick16 0: read the grid 5 ms later, so the downbeat has the new root.
     P.obj('ba_cb_tick', 'r tick16', x, y + 20); P.obj('ba_cb_late', 'pipe 5', x, y + 35); P.c('ba_cb_tick', 'ba_cb_late')
@@ -81,7 +82,26 @@ def add_calm_bass(P, ex, degree_to_hz, mixb, pad_lvl, x, y):
     P.obj('ba_cb_env', 'vline~', x + 160, y + 120); P.c('ba_cb_pl', 'ba_cb_env')
     P.sig2('ba_cb_env2', '*~', 'ba_cb_env', 'ba_cb_env', x + 160, y + 135)
     P.sig2('ba_cb_e', '*~', 'ba_cb_s', 'ba_cb_env2', x, y + 360)
-    P.obj('ba_cb_lp', 'lop~ 700', x, y + 375); P.c('ba_cb_e', 'ba_cb_lp')
+    P.sig2('ba_cb_es', '*~', 'ba_cb_e', syn, x, y + 365)
+    # the bowl: BASS_BOWL_UP x the note, its twin and a whisper of the octave; eases in, rings into the next note
+    P.obj('ba_cbw_f1', f'* {BASS_BOWL_UP}', x + 200, y + 280); P.c('ba_cb_fold', 'ba_cbw_f1')
+    P.obj('ba_cbw_f2', f'+ {BASS_BOWL_BEAT_HZ}', x + 260, y + 280); P.c('ba_cbw_f1', 'ba_cbw_f2')
+    P.obj('ba_cbw_f3', '* 2', x + 320, y + 280); P.c('ba_cbw_f1', 'ba_cbw_f3')
+    for o, src in (('o1', 'ba_cbw_f1'), ('o2', 'ba_cbw_f2'), ('o3', 'ba_cbw_f3')):
+        P.obj(f'ba_cbw_{o}', 'osc~', x + 200, y + 300); P.c(src, f'ba_cbw_{o}')
+    P.obj('ba_cbw_g2', f'*~ {PAD_BOWL_TWIN_LEVEL}', x + 260, y + 315); P.c('ba_cbw_o2', 'ba_cbw_g2')
+    P.obj('ba_cbw_g3', f'*~ {PAD_BOWL_OCTAVE}', x + 320, y + 315); P.c('ba_cbw_o3', 'ba_cbw_g3')
+    P.sig2('ba_cbw_s12', '+~', 'ba_cbw_o1', 'ba_cbw_g2', x + 200, y + 330)
+    P.sig2('ba_cbw_s', '+~', 'ba_cbw_s12', 'ba_cbw_g3', x + 200, y + 345)
+    P.msg('ba_cbw_pl', f'{BS}$1 {CALM_BOWL_RISE_MS} {BS}, 0 {CALM_BOWL_RING_MS} {CALM_BOWL_RISE_MS}', x + 260, y + 100)
+    P.c('ba_cb_vel', 'ba_cbw_pl')
+    P.obj('ba_cbw_env', 'vline~', x + 260, y + 120); P.c('ba_cbw_pl', 'ba_cbw_env')
+    P.sig2('ba_cbw_e', '*~', 'ba_cbw_s', 'ba_cbw_env', x + 200, y + 360)
+    P.obj('ba_cbw_lv', f'*~ {CALM_BOWL_LEVEL}', x + 200, y + 362); P.c('ba_cbw_e', 'ba_cbw_lv')
+    P.obj('ba_cbw_v', 'line~', x + 260, y + 362); P.c('ba_bw_pk', 'ba_cbw_v')      # (the bowl's own copy of the voice)
+    P.sig2('ba_cbw_out', '*~', 'ba_cbw_lv', 'ba_cbw_v', x + 200, y + 364)
+    P.sig2('ba_cb_mix', '+~', 'ba_cb_es', 'ba_cbw_out', x, y + 368)
+    P.obj('ba_cb_lp', 'lop~ 700', x, y + 375); P.c('ba_cb_mix', 'ba_cb_lp')
     P.obj('ba_cb_g', f'*~ {CALM_BASS_GAIN}', x, y + 390); P.c('ba_cb_lp', 'ba_cb_g')
     P.sig2('ba_cb_m', '*~', 'ba_cb_g', mixb, x, y + 405)                    # the Mix's bass trim...
     P.sig2('ba_cb_out', '*~', 'ba_cb_m', pad_lvl, x, y + 420)              # ...and the Pad level, like the held bass

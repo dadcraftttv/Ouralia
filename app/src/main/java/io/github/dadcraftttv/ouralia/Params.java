@@ -277,9 +277,11 @@ final class Params {
             // bowl, a pure tone with a slow beat and a quiet second mode. Synth stays the default until he says.
             new Param("pad_voice", "Pad Voice", 0f, 1f, 0f, "", Param.Curve.LINEAR)
                     .choices("Synth (soft tones)", "Glass Bowl (a singing bowl)").inSection("music"),
-            new Param("bass_src", "Bass Sound", 0f, 1f, 0f, "", Param.Curve.LINEAR)
-                    .choices("Synth", "Found sounds (a held hum or voice, pitched down)")
-                    .inSection("music"),
+            // Bass Voice (DadCraft, Nov 4: "keep the normal synth bass but add those earlier low glass bowls as another
+            // bass option"): both basses (the held one and Calm Builds'). Replaces Bass Sound, whose Found option was
+            // removed ("I don't think Found Sounds work well in that area").
+            new Param("bass_voice", "Bass Voice", 0f, 1f, 0f, "", Param.Curve.LINEAR)
+                    .choices("Synth", "Glass Bowl (a low singing bowl)").inSection("music"),
             new Param("melody_src", "Melody Sounds", 0f, 2f, 1f, "", Param.Curve.LINEAR)
                     .choices("Synth chimes", "Found sounds (tuned from what the mic hears)", "Both")
                     .inSection("music"),
@@ -346,7 +348,7 @@ final class Params {
             new Param("music_pad", "Pad Level (soft chords that drift)", 0f, 1f, 0.33f, "",
                     Param.Curve.LINEAR).inSection("mix").rand(0f, 0.6f).resetWhenAbsent(),
             new Param("mix_bass", "Bass (inside Pad Level)", 0f, 1.5f, 1f, "x", Param.Curve.LINEAR)
-                    .inSection("mix").noRandom(),   // synth and found bass
+                    .inSection("mix").noRandom(),   // the held and Calm Builds basses
             // the Lead's own level, in Mix since Oct 21 (DadCraft: "it directly controls the Lead's volume")
             new Param("music_arp", "Notes and Chimes Level", 0f, 1f, 0.4f, "", Param.Curve.LINEAR)
                     .inSection("mix").rand(0f, 0.8f).resetWhenAbsent(),
@@ -632,7 +634,7 @@ final class Params {
      */
     static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
             "music_on", "mel_dev", "pat_gen", "walk_ease", "note_big",
-            "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "pad_voice", "bass_src",
+            "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "pad_voice", "bass_voice",
             "melody_src", "mel_rhythm", "mel_phrase", "chime_voice", "chime_trail", "fm_ring", "res_src", "harm_src", "harm_tracker");
 
     /** Which voice an effect plays with (Classic or New...): saved in presets since Oct 21 (DadCraft), left out of the

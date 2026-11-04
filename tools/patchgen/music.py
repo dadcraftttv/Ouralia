@@ -1222,12 +1222,35 @@ def add_music(P):
     P.c("ba_o2", "ba_g2"); P.c("ba_o3", "ba_g3")
     P.sig2("ba_s12", "+~", "ba_o1", "ba_g2", bx, 640)
     P.sig2("ba_s", "+~", "ba_s12", "ba_g3", bx, 655)
-    fp_sum, fb_out, fb_ln = add_found_pad(P, px, bx, ex)
+    fp_sum = add_found_pad(P, px, ex)
     add_composer(P, px + 1600, 20)
-    P.obj("ba_sgain", "*~ -1", bx + 40, 662); P.c(fb_ln, "ba_sgain")
-    P.obj("ba_sg1", "+~ 1", bx + 40, 664); P.c("ba_sgain", "ba_sg1")      # the synth bass gives way to the found one
-    P.sig2("ba_ss", "*~", "ba_s", "ba_sg1", bx, 664)
-    P.sig2("ba_sall", "+~", "ba_ss", fb_out, bx, 667)
+    # Bass Voice (DadCraft, Nov 4: "keep the normal synth bass but add those earlier low glass bowls as another bass
+    # option"): 0 Synth, 1 Glass Bowl, the Pad Voice's bowl (a pure tone, a near-equal twin BASS_BOWL_BEAT_HZ above
+    # it, a whisper of the octave) at BASS_BOWL_UP x the bass note: the register of the first, lower bowls. Each new
+    # note eases in over PAD_BOWL_SWELL_MS. Its tones are their own switch group (bbowl: chosen and Music on), so
+    # they take no signal from the music's group; the synth's share (1 - v) ramps in the music's group.
+    P.obj("ba_bw_r", "r bass_voice", bx + 200, 662); P.obj("ba_bw_cl", "clip 0 1", bx + 200, 664)
+    P.obj("ba_bw_pk", f"pack f {PAD_BOWL_SWITCH_MS}", bx + 200, 666); P.c("ba_bw_r", "ba_bw_cl"); P.c("ba_bw_cl", "ba_bw_pk")
+    P.obj("ba_bw_v", "line~", bx + 200, 668); P.c("ba_bw_pk", "ba_bw_v")                    # (the bowl's copy)
+    P.obj("ba_sv_v", "line~", bx + 260, 668); P.c("ba_bw_pk", "ba_sv_v")                    # (the synth's copy)
+    P.obj("ba_sv_neg", "*~ -1", bx + 260, 670); P.c("ba_sv_v", "ba_sv_neg")
+    P.obj("ba_sv_syn", "+~ 1", bx + 260, 672); P.c("ba_sv_neg", "ba_sv_syn")
+    P.sig2("ba_ss", "*~", "ba_s", "ba_sv_syn", bx, 664)
+    P.obj("ba_bw_f1", f"* {BASS_BOWL_UP}", bx + 200, 640); P.c("ba_ft", "ba_bw_f1", 1, 0)
+    P.obj("ba_bw_f2", f"+ {BASS_BOWL_BEAT_HZ}", bx + 260, 640); P.c("ba_bw_f1", "ba_bw_f2")
+    P.obj("ba_bw_f3", "* 2", bx + 320, 640); P.c("ba_bw_f1", "ba_bw_f3")
+    for o, src in (("o1", "ba_bw_f1"), ("o2", "ba_bw_f2"), ("o3", "ba_bw_f3")):
+        P.obj(f"ba_bw_{o}", "osc~", bx + 200, 650); P.c(src, f"ba_bw_{o}")
+    P.obj("ba_bw_g2", f"*~ {PAD_BOWL_TWIN_LEVEL}", bx + 260, 655); P.c("ba_bw_o2", "ba_bw_g2")
+    P.obj("ba_bw_g3", f"*~ {PAD_BOWL_OCTAVE}", bx + 320, 655); P.c("ba_bw_o3", "ba_bw_g3")
+    P.sig2("ba_bw_s12", "+~", "ba_bw_o1", "ba_bw_g2", bx + 200, 657)
+    P.sig2("ba_bw_s", "+~", "ba_bw_s12", "ba_bw_g3", bx + 200, 658)
+    P.msg("ba_bw_swm", f"0 {BS}, 1 {PAD_BOWL_SWELL_MS}", bx + 280, 645); P.c("ba_ft", "ba_bw_swm", 0, 0)   # a new note eases in
+    P.obj("ba_bw_sw", "vline~", bx + 280, 650); P.c("ba_bw_swm", "ba_bw_sw")
+    P.sig2("ba_bw_e", "*~", "ba_bw_s", "ba_bw_sw", bx + 200, 659)
+    P.obj("ba_bw_lv", f"*~ {BASS_BOWL_LEVEL}", bx + 200, 660); P.c("ba_bw_e", "ba_bw_lv")
+    P.sig2("ba_bw_out", "*~", "ba_bw_lv", "ba_bw_v", bx + 200, 661)
+    P.sig2("ba_sall", "+~", "ba_ss", "ba_bw_out", bx, 667)
     mixb = smoothed(P, "mix_bass", "mix_bass", bx + 400, 600)              # the Mix's bass trim
     P.sig2("ba_sm", "*~", "ba_sall", mixb, bx, 668)
     P.sig2("ba_e", "*~", "ba_sm", "ba_env", bx, 670)
@@ -1322,7 +1345,7 @@ def add_music(P):
     P.obj("mu_pr_bsig", "sig~ 1", px + 720, 855); P.obj("mu_pr_blp", "lop~ 2", px + 720, 870)
     P.c("mu_pr_bg", "mu_pr_bsig"); P.c("mu_pr_bsig", "mu_pr_blp")
     P.sig2("mu_pad_mrm", "*~", "mu_pad_mid", "mu_pr_lp", px, 880)
-    calm_bass, calm_way = add_calm_bass(P, ex, degree_to_hz, mixb, pad_lvl, bx, 1000)   # (Calm Builds' bass)
+    calm_bass, calm_way = add_calm_bass(P, ex, degree_to_hz, mixb, pad_lvl, "ba_sv_syn", bx, 1000)   # (Calm Builds' bass)
     P.sig2("ba_way", "*~", "ba_out", calm_way, bx, 870)                      # the held bass makes way for it
     P.sig2("mu_pad_brm", "*~", "ba_way", "mu_pr_blp", px + 60, 880)
     P.sig2("mu_pad_rm", "+~", "mu_pad_mrm", "mu_pad_brm", px, 885)

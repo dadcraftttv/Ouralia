@@ -919,9 +919,9 @@ def build():
     for k in range(2):                                                  # the found pad's sets: on while heard and found
         P.group(f"fpad{k}", rf"^(fp{k}\d?[ab]?_(wl|wc|wn|w|ix|rd|s|acc\d|gm|out)|fp_xf{k})$")
         P.obj(f"grp_fpad{k}_r", f"r sw_fpad{k}", 10, 10); P.obj(f"grp_fpad{k}_sw", "switch~", 10, 40); P.c(f"grp_fpad{k}_r", f"grp_fpad{k}_sw")
-    P.group("fbass", r"^fb[ab]?_(wl|wc|wn|w|ix|rd|s|gm)$")                # the found bass: on while chosen and kept
-    P.obj("grp_fbass_r", "r sw_fbass", 10, 10); P.obj("grp_fbass_sw", "switch~", 10, 40); P.c("grp_fbass_r", "grp_fbass_sw")
-    P.group("fprec", r"^fpr_")                                            # recording takes: while a found pad/bass wants them
+    P.group("bbowl", r"^ba_c?bw_")                                       # Bass Voice Glass Bowl's tones: chosen and Music on
+    add_switch(P, "bbowl", ("music_on", "bass_voice"), PAD_BOWL_SWITCH_MS + 200)
+    P.group("fprec", r"^fpr_")                                            # recording takes: while the found pad wants them
     add_switch(P, "fprec", ("music_on", "fpad_need"), 100)
     for k in range(2):                                                  # the pad's two crossfade sets: on only while heard
         P.group(f"pads{k}", rf"^(mu_pad\d_{k}_(o1|o2|s|x|o1a|o2c|s1|bpv)|mu_xf{k}|mu_pv{k}_\w+)$")

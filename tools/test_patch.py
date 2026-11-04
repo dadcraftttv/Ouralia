@@ -50,8 +50,10 @@ def java_params():
 
 L = 2   # ms of fixed latency from the spatial stage (1.5 ms, rounded in peak reports)
 
-def fresh(_patch=None, **over):
+def fresh(_patch=None, _listen=(), **over):
     e = Engine(LIB, _patch or test_patch_path())
+    if _listen:   # (from before the settle: a chord picked in it is heard too)
+        e.listen(*_listen)
     base = dict(gain=1, dry=1, echo_on=1, echo_time=350, feedback=0.4, wet=0.5,
                 ring_on=1, ring_freq=80, ring_mix=0, smooth=30,
                 pitch_on=1, pitch_semi=0, pitch_mix=0, pitch_window=60,
@@ -69,7 +71,7 @@ def fresh(_patch=None, **over):
                 phaser_on=1, phaser_mix=0, phaser_rate=0.4, phaser_depth=0.7, phaser_fb=0.4,
                 beat_on=1, beat_level=0, beat_hats=0.5, beat_snare=0.6, beat_pitch=55,
                 music_on=0, music_key=0, music_scale=0, music_pad=0.33, music_arp=0.4,
-                music_tone=0.5, music_react=0.8, music_res=0.8, music_harm=0, echo_scatter=0, beat_follow=0, music_pad_reg=2, pocket_hush=0.5, pocket_guard=0.6, melody_src=0, harm_src=0, pad_src=0, bass_src=0, chime_char=0, res_src=0, music_answer=0, walk_ease=0)   # (Soft Steps: tested on its own)
+                music_tone=0.5, music_react=0.8, music_res=0.8, music_harm=0, echo_scatter=0, beat_follow=0, music_pad_reg=2, pocket_hush=0.5, pocket_guard=0.6, melody_src=0, harm_src=0, pad_src=0, chime_char=0, res_src=0, music_answer=0, walk_ease=0)   # (Soft Steps: tested on its own)
     base.update(chime_answer=0, pad_room=0, note_big=0)   # (the old sound: the three reactive behaviours are tested on their own)
     base.update(over)
     for k, v in base.items():
@@ -1959,9 +1961,9 @@ def pad_peaks(y, n=8):
     return out
 def found_pad(x, src, secs=14, **over):
     e = fresh(**dict(dict(music_on=1, music_pad=1, music_pad_reg=1, music_arp=0, music_res=0, music_harm=0, wet=0, pad_src=src), **over))
-    e.listen("fpad_caught", "pad_chord", "harm_deg", "sw_fbass")
+    e.listen("fpad_caught", "pad_chord", "harm_deg")
     y = e.run(np.concatenate([x, np.zeros(secs * SR, np.float32)]))[:, 0]
-    return y, e.heard["fpad_caught"], [int(v) for v in e.heard["pad_chord"]], e.heard["harm_deg"], e.heard["sw_fbass"]
+    return y, e.heard["fpad_caught"], [int(v) for v in e.heard["pad_chord"]], e.heard["harm_deg"], None
 yf, cf, chords_f, _, _ = found_pad(hum(220, 1.5), 1)
 ys, cs, chords_s, hd_s, _ = found_pad(hum(220, 1.5), 0)
 seg_f, seg_s = yf[9 * SR:12 * SR], ys[9 * SR:12 * SR]
@@ -1981,12 +1983,20 @@ _, c_noise, _, _, _ = found_pad(noise, 1, secs=2); _, c_blip, _, _, _ = found_pa
 _, c_short, _, _, _ = found_pad(hum(220, 0.3), 1, secs=2)
 check(not c_noise and not c_blip and not c_short, "found pad: noise, a blip and a hum shorter than a take are not kept (%s %s %s)"
       % (c_noise, c_blip, c_short))
-yb0, _, _, _, _ = found_pad(hum(220, 1.5), 1, secs=10, music_pad_reg=0, bass_src=0)
-yb1, _, _, _, swb = found_pad(hum(220, 1.5), 1, secs=10, music_pad_reg=0, bass_src=1)
-b0, b1 = rms(yb0[5 * SR:12 * SR]), rms(yb1[5 * SR:12 * SR]); pkb = pad_peaks(yb1[5 * SR:12 * SR], 3)
-check(swb == [1] and 0.6 * b0 < b1 < 1.5 * b0 and min(pkb) < 135,
-      "found bass: on a take it plays the bass from it (%s Hz), about as loud as the synth bass (%.4f vs %.4f)"
-      % ([round(f) for f in pkb], b1, b0))
+# Bass Voice (Nov 4): Glass Bowl plays the held bass as a bowl an octave up (a near-pure tone, no 2nd/3rd harmonics
+# of its own), about as loud as the synth bass
+def bass_voice(v):
+    e = fresh(music_on=1, music_pad=1, music_pad_reg=0, music_arp=0, music_res=0, music_harm=0, wet=0, pad_src=0, bass_voice=v)
+    return e.run(e.silence(12))[3 * SR:12 * SR, 0]
+bv0, bv1 = bass_voice(0), bass_voice(1)
+pk0, pk1 = pad_peaks(bv0, 3), pad_peaks(bv1, 3)
+S1 = np.abs(np.fft.rfft(bv1 * np.hanning(len(bv1)))); fr1 = np.fft.rfftfreq(len(bv1), 1 / SR)
+at = lambda f: float(S1[np.abs(fr1 - f) < 3].max())
+under = at(pk1[0] / 2) / at(pk1[0])                                        # (nothing an octave below: no synth bass left)
+check(130 < pk0[0] * 2 < 264 and 130 < pk1[0] < 264 and under < 0.05 and 0.55 * rms(bv0) < rms(bv1) < 1.6 * rms(bv0)
+      and not np.isnan(bv1).any(),
+      "bass voice: Glass Bowl sounds the bass an octave up (bowl %.0f Hz, synth %.0f Hz), nothing an octave below (%.3f), "
+      "about as loud (%.4f vs %.4f)" % (pk1[0], pk0[0], under, rms(bv1), rms(bv0)))
 
 # found melody: the melody's notes play a caught sound striking resonators tuned to the note, in key, about as loud as
 # the synth chimes; before anything is caught, "Found" plays the synth chimes; catching runs for it with the beat off
@@ -2180,7 +2190,7 @@ def breaks_run(steps=150, interval=0.4):
                         per_bar.setdefault(bar, []).append((k, last_tick))
                 seen[k] = len(e.heard[k])
     return kinds, per_bar, bar
-kinds, per_bar, nbars = breaks_run()
+kinds, per_bar, nbars = breaks_run(steps=300)   # (72 bars: a 36-bar run could hold just one by chance)
 brk = [b for b, k in kinds.items() if k > 0]
 ok_kind = all((kinds[b] == 1 and not per_bar.get(b)) or (kinds[b] == 2 and not any(k == "drum_kick" for k, _ in per_bar.get(b, [])))
               or (kinds[b] == 3 and all((k, t) == ("drum_kick", 0) for k, t in per_bar.get(b, []))) for b in brk)
@@ -2681,8 +2691,8 @@ check(len(played) >= 15 and played == chosen and len(forms) >= 3 and cl_played a
 # ---- 10x. patterns made by rules: the walking notes and the drums play bars dcs_composer writes each bar ----
 # (the rules themselves: test_dcs "patterns")
 def walk_run(gen, secs=30):
-    e = fresh(music_on=1, music_arp=1, music_pad=0, music_res=0, wet=0, beat_level=1, beat_follow=1, pat_gen=gen)
-    e.listen("rh_gen_bar", "arp_gen_bar", "chime_deg", "pad_chord")
+    e = fresh(music_on=1, music_arp=1, music_pad=0, music_res=0, wet=0, beat_level=1, beat_follow=1, pat_gen=gen,
+              _listen=("rh_gen_bar", "arp_gen_bar", "chime_deg", "pad_chord"))
     t, nxt = 0.0, 0.5
     for _ in range(int(secs * SR) // 64):
         if t >= nxt:
@@ -2871,7 +2881,7 @@ quiet8 = (np.random.default_rng(3).standard_normal(8 * SR) * 0.0005).astype(np.f
 cl6 = claps(5, 1.1, 0.5)
 mix_cases = {
     "kick": ("mix_kick", quiet8, 0, dict(beat_level=1, beat_follow=1, beat_when=1, rhythm_src=0, beat_snare=0, beat_hats=0, beat_glitch=0)),
-    "bass": ("mix_bass", quiet8, 0, dict(music_on=1, music_pad=1, music_pad_reg=0, pad_src=0, bass_src=0)),
+    "bass": ("mix_bass", quiet8, 0, dict(music_on=1, music_pad=1, music_pad_reg=0, pad_src=0)),
     "walking notes": ("mix_walk", quiet8, 0.5, dict(music_on=1, music_arp=1, beat_follow=0)),
     "chimes": ("mix_chimes", cl6, 0, dict(music_on=1, music_arp=1, music_react=1)),
     "room notes ring": ("mix_ring", cl6, 0, dict(music_on=1, music_res=1, res_src=0)),
@@ -3556,13 +3566,13 @@ check(early == [] and way_early == 1 and abs(len(first) - 2) <= 1 and abs(len(tw
       % (len(early), len(first), len(two), len(full), fifths, way_early, way_full))
 e.send('beat_on', 0); e.run(e.silence(3.5)); quiet, way_off = calm_bass(e, 1, bar * 2)
 check(quiet == [] and way_off == 1, 'calm bass: stops with the drums, the held bass comes back (%s, way %s)' % (quiet, way_off))
-def calm_low(tune, pad):
-    e = calm_fresh(music_pad=pad, music_arp=0, pad_room=1); e.run(e.silence(2)); e.send('calm_tune', tune)
+def calm_low(tune, pad):   # (the drums barely audible, still sounding: their own low band would swamp the bass)
+    e = calm_fresh(music_pad=pad, music_arp=0, pad_room=1, beat_level=0.03); e.run(e.silence(2)); e.send('calm_tune', tune)
     e.run(e.silence(3)); y = e.run(e.silence(bar * 4)).mean(axis=1)
     f = np.fft.rfft(y); fr = np.fft.rfftfreq(len(y), 1 / SR); f[(fr > 300) | (fr < 30)] = 0
     return float(np.mean(np.fft.irfft(f, len(y)) ** 2))
 lo_a, lo_b, lo_c, lo_d = calm_low(0.3, 0.33), calm_low(1, 0.33), calm_low(0.3, 0), calm_low(1, 0)
-check(lo_b / lo_a > 1.2 * lo_d / lo_c and lo_d / lo_c < 1.05,   # (the tune itself moves the drums' low band a little)
+check(lo_b / lo_a > 3 and 0.8 < lo_d / lo_c < 1.25,
       'calm bass: heard under the drums in a quiet room (low band x%.2f), silent at Pad level 0 (x%.2f)'
       % (lo_b / lo_a, lo_d / lo_c))
 

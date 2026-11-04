@@ -100,33 +100,34 @@ def add_found_note(P, k, vx, vy, ex, caught, prefix="fm", gate="mel_src[0]>=1"):
     P.sig2(f"{n}_ring", "+~", f"{n}_res", f"{n}_strg", vx + 100, vy + 400)
     P.sig2(f"{n}_out", "+~", f"{n}_mix", f"{n}_ring", vx, vy + 410)
 
-def add_found_pad(P, px, bx, ex):
-    """Found pad (and, if chosen, bass): a held pitched sound (the Harmony tracker's steady note: a hum, a voice, a
+def add_found_pad(P, px, ex):
+    """Found pad: a held pitched sound (the Harmony tracker's steady note: a hum, a voice, a
     whistle, a machine hum, a bird) is kept with its pitch (FP_SLOTS takes, memory only, never in a pocket) and
     stretched into the pad's chord: each chord note is two grains wandering through the take, pitched from the caught
     note to the chord note (folded within a tritone, so the sound stays natural), their starts a whole number of the
     caught note's periods apart. Each crossfade set has its own switch group (fpad<k>); the synth set (pads<k>) runs
-    only when it is heard. "Pad sounds" pad_src 0 synth / 1 found / 2 both, "Bass sound" bass_src 0 synth / 1 found.
-    Until the first take, found means synth."""
+    only when it is heard. "Pad sounds" pad_src 0 synth / 1 found / 2 both.
+    Until the first take, found means synth. (The found bass was removed Nov 4, DadCraft: "remove Found Sounds from Bass
+    options. I don't think Found Sounds work well in that area.")"""
     n_take = int(FP_TAKE_S * 48000) + 2000
-    # ---- what is needed: catching (and the tracker) when found pad or bass is chosen ----
-    P.obj("fpc_go_need", "t b b b b", px, 1150)
-    for k, nm in enumerate(("pad_src", "bass_src", "music_harm", "music_answer")):
+    # ---- what is needed: catching (and the tracker) when the found pad is chosen ----
+    P.obj("fpc_go_need", "t b b b", px, 1150)
+    for k, nm in enumerate(("pad_src", "music_harm", "music_answer")):
         P.obj(f"fpc_r{k}", f"r {nm}", px + 70 * k, 1100); P.obj(f"fpc_t{k}", "t b f", px + 70 * k, 1115)
         P.obj(f"fpc_w{k}", f"value fpn{k}", px + 70 * k, 1130); P.obj(f"fpc_v{k}", f"value fpn{k}", px + 70 * k, 1170)
         P.c(f"fpc_r{k}", f"fpc_t{k}"); P.c(f"fpc_t{k}", f"fpc_w{k}", 1, 0); P.c(f"fpc_t{k}", "fpc_go_need", 0, 0)
         P.c("fpc_go_need", f"fpc_v{k}", k, 0)
-    ex("fpc_need", "($f1>=1)||($f2==1)", px, 1190); P.c("fpc_v1", "fpc_need", 0, 1); P.c("fpc_v0", "fpc_need", 0, 0)
+    ex("fpc_need", "$f1>=1", px, 1190); P.c("fpc_v0", "fpc_need", 0, 0)
     # (the tracker also runs for call and response, music_answer)
-    ex("fpc_run", "($f2>0)||$f1||($f3>0)", px + 140, 1190); P.c("fpc_v2", "fpc_run", 0, 1)   # (the levels first: they fire first)
-    P.c("fpc_v3", "fpc_run", 0, 2)
+    ex("fpc_run", "($f2>0)||$f1||($f3>0)", px + 140, 1190); P.c("fpc_v1", "fpc_run", 0, 1)   # (the levels first: they fire first)
+    P.c("fpc_v2", "fpc_run", 0, 2)
     P.obj("fpc_need_t", "t f f", px, 1205); P.c("fpc_need", "fpc_need_t")
     P.c("fpc_need_t", "fpc_run", 0, 0)
     P.obj("fpc_need_chg", "change -1", px + 60, 1215); P.c("fpc_need_t", "fpc_need_chg", 1, 0)
     P.obj("fpc_need_s", "s fpad_need", px + 60, 1230); P.c("fpc_need_chg", "fpc_need_s")
     P.obj("fpc_run_chg", "change -1", px + 140, 1215); P.c("fpc_run", "fpc_run_chg")
     P.obj("fpc_run_s", "s harm_run", px + 140, 1230); P.c("fpc_run_chg", "fpc_run_s")
-    # (a take needs the tracker: the Harmony groups run while Harmony is up or a found pad/bass wants takes)
+    # (a take needs the tracker: the Harmony groups run while Harmony is up or the found pad wants takes)
     # ---- catching: a steady pitch starts a take; if it is still held when the take ends, it is kept ----
     P.obj("fpc_stage_t", f"table fpad_stage {n_take}", px + 300, 1100)
     for j in range(FP_SLOTS):
@@ -289,56 +290,7 @@ def add_found_pad(P, px, bx, ex):
         P.obj(f"fp{k}_gm", "*~ 0", cx, 1590); P.c(acc, f"fp{k}_gm"); P.c(f"fps{k}_g", f"fp{k}_gm", 0, 1)
         outs.append(P.sig2(f"fp{k}_out", "*~", f"fp{k}_gm", f"fp_xf{k}", cx, 1605))
     P.sig2("fp_sum", "+~", outs[0], outs[1], px + 1400, 1630)
-    # ---- the found bass: one voice like the pad's, on the bass note (not folded: it must sit low) ----
-    P.obj("fb_r_src", "r bass_src", bx + 600, 1100); P.obj("fb_v_src", "value fb_src", bx + 600, 1115)
-    P.obj("fb_src_t", "t b f", bx + 600, 1108); P.c("fb_r_src", "fb_src_t"); P.c("fb_src_t", "fb_v_src", 1, 0)
-    ex("fb_want", "(fb_src==1)*(fpad_n[0]>=1)*(fb_mon>0)+$f1*0", bx + 600, 1140)
-    P.obj("fb_r_mon", "r music_on", bx + 760, 1100); P.obj("fb_mon_t", "t b f", bx + 760, 1112)
-    P.obj("fb_v_mon", "value fb_mon", bx + 760, 1125); P.c("fb_r_mon", "fb_mon_t"); P.c("fb_mon_t", "fb_v_mon", 1, 0); P.c("fb_mon_t", "fb_go", 0, 0)
-    P.obj("fb_go", "t b", bx + 600, 1125)
-    P.obj("fb_rc", "r fpad_caught", bx + 680, 1100); P.c("fb_src_t", "fb_go", 0, 0); P.c("fb_rc", "fb_go")
-    P.c("fb_go", "fb_want")
-    P.obj("fb_want_t", "t f f", bx + 600, 1155); P.c("fb_want", "fb_want_t")
-    P.obj("fb_sw", "s sw_fbass", bx + 600, 1170); P.c("fb_want_t", "fb_sw", 1, 0)
-    P.obj("fb_pk", "pack f 300", bx + 650, 1170); P.obj("fb_ln", "line~", bx + 650, 1185)
-    P.c("fb_want_t", "fb_pk", 0, 0); P.c("fb_pk", "fb_ln")
-    P.obj("fb_ml", "t f b", bx + 700, 1200); P.c("ba_ft", "fb_ml", 1, 0)       # a bass note: the newest take, its rate
-    P.obj("fb_lastf", "f 65", bx + 760, 1185); P.c("ba_ft", "fb_lastf", 1, 1)   # (switched on: the current note again)
-    P.obj("fb_on1", "sel 1", bx + 760, 1170); P.c("fb_want_t", "fb_on1", 0, 0); P.c("fb_on1", "fb_lastf"); P.c("fb_lastf", "fb_ml")
-    ex("fb_slot", "fpad_n[1]+$f1*0", bx + 700, 1215); P.c("fb_ml", "fb_slot", 1, 0)
-    P.obj("fb_sv", "value fbs", bx + 700, 1230); P.obj("fb_slt", "t f f", bx + 700, 1222); P.c("fb_slot", "fb_slt"); P.c("fb_slt", "fb_sv", 1, 0)
-    P.obj("fb_nm", "makefilename fpad_%d", bx + 760, 1230); P.msg("fb_nmm", f"set {BS}$1", bx + 760, 1240)
-    P.c("fb_slt", "fb_nm", 0, 0); P.c("fb_nm", "fb_nmm")
-    ex("fb_rate", "$f1/max(fpad_f0[fbs],20)", bx + 800, 1215); P.c("fb_ml", "fb_rate", 0, 0)
-    P.obj("fb_rv", "value fbr", bx + 800, 1230); P.c("fb_rate", "fb_rv")
-    P.obj("fb_met", f"metro {FP_GRAIN_MS / 2}", bx + 600, 1260); P.obj("fb_mr", "r sw_fbass", bx + 600, 1245); P.c("fb_mr", "fb_met")
-    P.obj("fb_ab", "f", bx + 600, 1275); P.obj("fb_ab1", "+ 1", bx + 640, 1275); P.obj("fb_abm", "mod 2", bx + 680, 1275)
-    P.c("fb_met", "fb_ab"); P.c("fb_ab", "fb_ab1"); P.c("fb_ab1", "fb_abm"); P.c("fb_abm", "fb_ab", 0, 1)
-    P.obj("fb_abt", "t f f", bx + 600, 1290); P.c("fb_ab", "fb_abt")
-    P.obj("fb_rnd", "random 1000", bx + 700, 1290); P.c("fb_abt", "fb_rnd", 1, 0)
-    P.obj("fb_tgt", "value fbt", bx + 700, 1310)
-    ex("fb_tg", f"({FP_LOOP_S[0]}+{FP_LOOP_S[1] - FP_LOOP_S[0]}*$f1/1000)*{sr}", bx + 700, 1300); P.c("fb_rnd", "fb_tg"); P.c("fb_tg", "fb_tgt")
-    P.obj("fb_st", "value fbst", bx + 600, 1330)
-    adv = f"fbst+{FP_GRAIN_MS / 2}*fbr*{sr}/1000"; per = f"({sr}/max(fpad_f0[fbs],20))"
-    ex("fb_nx", f"{adv}-rint(({adv}-fbt)/{per})*{per}+$f1*0", bx + 600, 1320); P.c("fb_abt", "fb_nx", 0, 0)
-    P.obj("fb_nt", "t f f", bx + 600, 1335); P.c("fb_nx", "fb_nt"); P.c("fb_nt", "fb_st", 1, 0)
-    P.obj("fb_nd", f"expr $f1+{FP_GRAIN_MS}*fbr*{sr}/1000".replace("$", BS + "$"), bx + 660, 1345)
-    P.obj("fb_pk2", "pack f f", bx + 600, 1360); P.c("fb_nt", "fb_nd", 0, 0); P.c("fb_nd", "fb_pk2", 0, 1); P.c("fb_nt", "fb_pk2", 0, 0)
-    P.obj("fb_abp", "list prepend", bx + 600, 1370); P.c("fb_abt", "fb_abp", 1, 1); P.c("fb_pk2", "fb_abp")
-    P.obj("fb_rt", "route 0 1", bx + 600, 1380); P.c("fb_abp", "fb_rt")
-    P.obj("fb_abs", "sel 0 1", bx + 750, 1290); P.c("fb_abt", "fb_abs", 1, 0)
-    for g, gn in enumerate("ab"):
-        P.msg(f"fb_w{gn}m", f"0 {BS}, 1 {FP_GRAIN_MS}", bx + 750 + 60 * g, 1305); P.c("fb_abs", f"fb_w{gn}m", g, 0)
-        P.obj(f"fb{gn}_wl", "vline~", bx + 750 + 60 * g, 1320); P.c(f"fb_w{gn}m", f"fb{gn}_wl")
-        P.obj(f"fb{gn}_wc", "cos~", bx + 750 + 60 * g, 1335); P.c(f"fb{gn}_wl", f"fb{gn}_wc")
-        P.obj(f"fb{gn}_wn", "*~ -0.5", bx + 750 + 60 * g, 1350); P.c(f"fb{gn}_wc", f"fb{gn}_wn")
-        P.obj(f"fb{gn}_w", "+~ 0.5", bx + 750 + 60 * g, 1365); P.c(f"fb{gn}_wn", f"fb{gn}_w")
-        P.msg(f"fb{gn}_m", f"{BS}$1 {BS}, {BS}$2 {FP_GRAIN_MS}", bx + 600 + 60 * g, 1395); P.c("fb_rt", f"fb{gn}_m", g, 0)
-        P.obj(f"fb{gn}_ix", "vline~", bx + 600 + 60 * g, 1410); P.c(f"fb{gn}_m", f"fb{gn}_ix")
-        P.obj(f"fb{gn}_rd", "tabread4~ fpad_0", bx + 600 + 60 * g, 1425); P.c(f"fb{gn}_ix", f"fb{gn}_rd"); P.c("fb_nmm", f"fb{gn}_rd", 0, 0)
-        P.sig2(f"fb{gn}_s", "*~", f"fb{gn}_rd", f"fb{gn}_w", bx + 600 + 60 * g, 1440)
-    P.sig2("fb_s", "+~", "fba_s", "fbb_s", bx + 600, 1460)
-    ex("fb_g", f"fpad_g[fbs]*{FB_GAIN}+$f1*0", bx + 800, 1250); P.c("fb_slt", "fb_g", 0, 0)
-    P.obj("fb_gm", "*~ 0", bx + 600, 1475); P.c("fb_s", "fb_gm"); P.c("fb_g", "fb_gm", 0, 1)
-    P.sig2("fb_out", "*~", "fb_gm", "fb_ln", bx + 600, 1490)
-    return "fp_sum", "fb_out", "fb_ln"
+    # (holds the removed found bass's [random] place: Pd seeds every [random] from one counter, so the later ones keep
+    # the sequences they had, and the chimes' random timbres stay as they were)
+    P.obj("fp_seedkeep", "random 1000", px, 1700)
+    return "fp_sum"

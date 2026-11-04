@@ -7,8 +7,8 @@
   "mix"). It holds the existing beat_snare, beat_hats, beat_glitch, music_pad, music_harm (moved from Rhythm/Music,
   ids unchanged) and new trims 0-1.5 (default 1 = as before, noRandom, NOT resetWhenAbsent so older presets and the
   built-in Realms leave them alone): `mix_kick` (synth kick and found kick; the found one is `fs_ks_kick`, named into
-  the fsound group: outside it the trim made a DSP loop between the toplevel and that group), `mix_bass` (synth +
-  found bass, `ba_sm`), `mix_chimes` / `mix_walk` (the chimes and walking notes share the 4 voices, so the trims scale
+  the fsound group: outside it the trim made a DSP loop between the toplevel and that group), `mix_bass` (the held
+  bass, either voice, `ba_sm`, and Calm Builds' bass), `mix_chimes` / `mix_walk` (the chimes and walking notes share the 4 voices, so the trims scale
   each note's velocity: chimes at `mu_deg` and motif replays, the arpeggio writes its own trimmed velocity on each
   note from `apvel` (`mu_arp_t` outlet 3; before, an arpeggio note after a chime played at the chime's velocity) and
   the groove note), `mix_ring` / `mix_bells` (`rn_out` / `rnf_out`). At 0 a part is silent but still runs (no extra
@@ -173,8 +173,8 @@
   (400; the organ's 1.8 s would shift the room too long) + window + 100 later. `HV_GAIN` 0.7 x Harmony. The organ
   voices are group `horgan` (music_on x music_harm x `harm_organ` = harm_src != 1). Tests use harm_src 0 unless
   they test it.
-  **Found pad / bass** (DadCraft, Oct 12; `add_found_pad`; "Pad sounds" `pad_src` Synth / Found (default) / Both,
-  "Bass sound" `bass_src` Synth (default) / Found, Music, noPreset): when the Harmony tracker hears a steady pitch
+  **Found pad** (DadCraft, Oct 12; `add_found_pad`; "Pad sounds" `pad_src` Synth / Found (default) / Both, Music,
+  noPreset; the found bass, "Bass sound" `bass_src`, was REMOVED Nov 4, see "Bass Voice"): when the Harmony tracker hears a steady pitch
   (its note-on), a `FP_TAKE_S` (0.6 s) take from `FP_PREROLL_MS` (180) earlier is recorded from `hv_buf` (group
   `fprec`) and kept if the note is still held at its end, with its pitch (`fpad_f0`), a peak gain (`fpad_g`), in
   `FP_SLOTS` (2) round-robin tables `fpad_<n>` (`fpad_n`: count, newest); never in a pocket. Each pad set
@@ -184,11 +184,9 @@
   folded within a tritone (`FP_GAIN` 0.075: as loud as the synth pad). Each set's sound (synth or found, `fpw_m`)
   is latched at its chord change (a new take joins at the next one; a fading set is never cut; a Pad sounds change
   re-latches at once); the switches (`fpw_*`: active x register != Low x mode) run only what is heard, so with Pad
-  register Low no pad set runs. The found bass (`fb_*`, group `fbass`) is one such voice on the bass note, not
-  folded, `FB_GAIN` 2.8; it starts on the current note when switched on; the synth bass gives way. The tracker and
-  detection now run while Harmony is up OR a found pad/bass wants takes (`harm_run`; the voice harmony still only
-  while Harmony > 0). The event log says "Kept a held note for the found pad (A3)". The found bass has faint grain
-  sidebands (~16 dB down) when pulled far down; untested on the phone.
+  register Low no pad set runs. The tracker and detection now run while Harmony is up OR the found pad wants takes
+  (`harm_run`; the voice harmony still only while Harmony > 0). The event log says "Kept a held note for the found
+  pad (A3)".
   **Melody rhythm** (Oct 15, from DadCraft's other chat, levels 1+2; `mel_rhythm` Music, Off (as before, default) /
   Straight / Dotted / Mixed, noPreset; `add_melody_rhythm`; Pd test "melody rhythm:"): one-bar cells
   (`MEL_CELLS_STRAIGHT`/`_DOTTED`, note lengths in 16ths, negative = rest; Mixed = both sorted by onsets) on the
@@ -274,6 +272,26 @@
   -35 dB 0.4 s on). DadCraft's A/B (Oct 31): "Glass sounds great. can we keep both options and have a Both option
   between them?" Now Classic / Both / Glass (0/1/2; Dev's stored Glass, 1, reads as Both): Classic x (1 - v/2),
   Glass x v/2, so Both is half each on the shared fundamental.
+  **Bass Voice** (`bass_voice`, Music, Synth by default, saved in presets; Nov 4, `sound-kinds`). DadCraft: "can we
+  keep the normal synth bass but add those earlier low glass bowls as another bass option?" (both basses, his pick)
+  "i forgot to mention that we should remove Found Sounds from Bass options. I don't think Found Sounds work well in
+  that area." So Bass Voice replaces Bass Sound (`bass_src`; the found bass's `fb_*` voice, its `fbass` group,
+  `FB_GAIN` and its test are gone; stored `bass_src` values are simply ignored). Glass Bowl is the Pad Voice's bowl
+  (a pure tone, a twin `BASS_BOWL_BEAT_HZ` 0.31 Hz above at `PAD_BOWL_TWIN_LEVEL`, the octave at `PAD_BOWL_OCTAVE`)
+  at `BASS_BOWL_UP` 2 x the bass note, 131-262 Hz: the register of the first, lower Glass Bowl pad (0c8bedd, before
+  the octave up), and a pure tone at 65 Hz would be lost in earbuds. The held bass: each new note eases in over
+  `PAD_BOWL_SWELL_MS` 4 s (on top of the bass's own dip and rise). Calm Builds' bass: each note eases in over
+  `CALM_BOWL_RISE_MS` 300 and rings down over `CALM_BOWL_RING_MS` 2.6 s into the next, no pluck. The tones
+  (`ba_bw_*`, `ba_cbw_*`) are their own switch group `bbowl` (Music on x Bass Voice), so they take no signal from
+  the music's group; switching crossfades over 300 ms. Levels by RMS: `BASS_BOWL_LEVEL` 0.79 matches the synth held
+  bass over a minute (pad register Low), `CALM_BOWL_LEVEL` 0.46 matches the Calm pluck's 30-600 Hz power (drums
+  near silent). Test "Bass Voice (Nov 4)": the bowl an octave up, nothing an octave below, about as loud. Clips:
+  `~/Downloads/bass-voice-clips/`.
+  Test fallout, worth knowing: removing the found bass dropped a [random], so `fp_seedkeep` holds its place (every
+  later [random] keeps its sequence; without it birds-lift and Chime character failed). The bowl's new DSP objects
+  re-sort the graph, which moves some one-block delays and so event timing; three tests that had leaned on a lucky
+  random path were made robust: `fresh(_listen=...)` hears a chord picked during the settle (patterns made by rules),
+  the arrangement run is 72 bars, not 36, and the Calm bass check plays the drums barely audible.
   **Pad Voice** (`pad_voice`, Music, Synth by default, saved in presets; Nov 4, branch `sound-kinds`). DadCraft: "can
   we make glass bowl option for the pads? i saw something on tv last night and heard a person on that program using
   glass bowls in a sort of "sound healing" kind of setting ... it might even compliment the glass bells sounds we're
