@@ -53,7 +53,15 @@ public class J2 {
         check(SoundKindsRunner.on()&&!((SoundKinds)field("kinds")).trafficAllowed(),"restart has a fresh model and no stale permission");
         trafficJudgement();trafficJudgement();
         ParamStore.set("music_on",0);SoundKindsRunner.settingsTick();Handler.drain();
-        check(lastTraffic().equals("traffic_state=0.0"),"Music off releases traffic without stopping the shared listener");
+        check(lastTraffic().equals("traffic_state=0.0")&&!SoundKindsRunner.on()&&lastSk().equals("sk_on=0.0"),
+            "Music off stops the listener and its ring (DadCraft, Nov 4)");
+        ParamStore.set("music_on",1);SoundKindsRunner.settingsTick();Handler.drain();
+        check(SoundKindsRunner.on()&&lastSk().equals("sk_on=1.0"),"Music back on starts it again");
+        ParamStore.set("music_on",0);SoundKindsRunner.detach();Handler.drain();
+        SoundKindsRunner.attach(c,48000,s->{});Handler.drain();
+        check(!SoundKindsRunner.on(),"starting to play with Music off does not listen");
+        ParamStore.set("music_on",1);SoundKindsRunner.settingsTick();Handler.drain();
+        check(SoundKindsRunner.on(),"then Music on starts it");
         ParamStore.set("traffic_pass",0);SoundKindsRunner.settingsTick();Handler.drain();
         check(!SoundKindsRunner.on(),"last Music listening switch off stops runner");
         // Stop while model creation is queued, then immediately restart: old work must not replace the new model.

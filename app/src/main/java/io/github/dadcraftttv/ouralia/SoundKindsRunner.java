@@ -45,6 +45,7 @@ final class SoundKindsRunner {
     private static final ThreadLocal<SoundKinds.Resampler> resampler = ThreadLocal.withInitial(SoundKinds.Resampler::new);
     private static int judged;
     private static volatile boolean roomOn, gapsOn, waterOn;
+    private static boolean musicOn;   // (Music's switch as last seen: the listener follows it)
     private static boolean waterSent;
     private static volatile int uwStyle;
     private static int uwSent;
@@ -115,6 +116,17 @@ final class SoundKindsRunner {
     /** Make Room for Music (Nov 1): the music steps back while sound kinds hears music in the room. The Music
      *  setting {@link #ROOM_ID} since Nov 1 (was a Dev switch in Diagnostics). */
     static final String ROOM_ID = "room_make";
+
+    static boolean musicPlaying() {
+        return ParamStore.get("music_on") >= 0.5f;
+    }
+
+    /** Listen or not (DadCraft, Nov 4: "stop listening while those things that don't need it aren't on"): every
+     *  sound-kind setting acts on the music, so they listen only while Music is on; the Diagnostics switch always. */
+    private static boolean wanted(Context c, boolean room, boolean gaps, boolean water, int uw, boolean birds,
+                                  boolean traffic, boolean flow) {
+        return (musicPlaying() && (room || gaps || water || uw > 0 || birds || traffic || flow)) || (c != null && enabled(c));
+    }
 
     static boolean roomEnabled() {
         return available() && ParamStore.get(ROOM_ID) >= 0.5f;
@@ -221,7 +233,8 @@ final class SoundKindsRunner {
         boolean music, talk, listen, same;
         int w, u, b, tr;
         synchronized (lock) {
-            boolean trafficChanged = trafficOn != traffic || flowOn != flow;
+            boolean trafficChanged = trafficOn != traffic || flowOn != flow, mus = musicPlaying(), musicChanged = mus != musicOn;
+            musicOn = mus;
             trafficOn = traffic;
             flowOn = flow;
             boolean waterChanged = waterOn != water, uwChanged = (uwStyle > 0) != (uw > 0), birdsChanged = birdsOn != birds;
@@ -232,7 +245,7 @@ final class SoundKindsRunner {
             u = uwTick();
             b = birdsTick();
             tr = trafficTick();
-            same = (room == roomOn && gaps == gapsOn && !waterChanged && !uwChanged && !birdsChanged && !trafficChanged) || app == null;
+            same = (room == roomOn && gaps == gapsOn && !waterChanged && !uwChanged && !birdsChanged && !trafficChanged && !musicChanged) || app == null;
             if (same) {
                 music = talk = listen = false;
             } else {
@@ -240,7 +253,7 @@ final class SoundKindsRunner {
                 gapsOn = gaps;
                 music = kinds != null && kinds.roomMusic();
                 talk = kinds != null && kinds.talking();
-                listen = room || gaps || water || uw > 0 || birds || traffic || flow || enabled(app);
+                listen = wanted(app, room, gaps, water, uw, birds, traffic, flow);
             }
             boolean all = !same, rm = room && music, vt = gaps && talk;
             queue(() -> {
@@ -260,7 +273,8 @@ final class SoundKindsRunner {
         if (listen) {
             start();
         } else {
-            stop("Make Room for Music, Mind the Gap, Water Leaves a Trail, Underwater, Birds Lift the Chimes and the traffic switches off");
+            stop(musicPlaying() ? "Make Room for Music, Mind the Gap, Water Leaves a Trail, Underwater, Birds Lift the Chimes and the traffic switches off"
+                    : "Music off");
         }
     }
 
@@ -274,8 +288,8 @@ final class SoundKindsRunner {
         }
         if (on) {
             start();
-        } else if (!roomEnabled() && !gapsEnabled() && !waterEnabled() && uwEnabled() == 0 && !birdsEnabled() && !trafficEnabled()
-                && !flowEnabled()) {   // (any of the Music sound-kind settings keeps listening)
+        } else if (!wanted(null, roomEnabled(), gapsEnabled(), waterEnabled(), uwEnabled(), birdsEnabled(), trafficEnabled(),
+                flowEnabled())) {   // (any of the Music sound-kind settings keeps listening, while Music is on)
             stop("switched off");
         }
     }
@@ -294,8 +308,9 @@ final class SoundKindsRunner {
             birdsOn = birdsEnabled();
             trafficOn = trafficEnabled();
             flowOn = flowEnabled();
+            musicOn = musicPlaying();
         }
-        if (enabled(c) || roomOn || gapsOn || waterOn || uwStyle > 0 || birdsOn || trafficOn || flowOn) {
+        if (wanted(c, roomOn, gapsOn, waterOn, uwStyle, birdsOn, trafficOn, flowOn)) {
             start();
         }
     }

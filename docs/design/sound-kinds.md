@@ -920,3 +920,12 @@ What sits around YAMNet (whole minus YAMNet medians, approximate) fell from ~8-9
 ring copy 0.2-0.3 ms. The remainder is mostly wall time: the worker pre-empted by the audio thread, which no
 resampler change removes. Why YAMNet itself varies (9.5 to 17 ms across today's runs) is open: the phone's load or
 heat, not this code.
+
+**Music off stops the listener (DadCraft, Nov 4: "yes, let's have it stop listening while those things that don't need
+it aren't on. it shouldn't take much for it to get up to speed once it turns on, right?").** Every sound-kind setting
+acts on the music, so they keep the listener running only while Music is on; the Diagnostics switch still listens
+always. Music off stops YAMNet, its thread and the patch's ring writer (`sk_on` 0) and logs "Sound kinds: off (Music
+off)"; Music on starts it again. Getting up to speed: the model loads, the first judgement needs ~1 s of sound, then
+the windows fill from silence: about 3 s for talk, water and birds (13 of 32 judgements at ~4 a second) and about 8 s
+for room music and the traffic scene (32 of 80). Until then the music simply plays as if nothing was heard. Test J2:
+Music off stops it and its ring, on starts it, starting to play with Music off doesn't listen.
