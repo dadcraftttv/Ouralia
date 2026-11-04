@@ -3,6 +3,20 @@ import java.io.*; import java.nio.file.*; import java.util.*; import java.util.z
 public class S {
     static int fails = 0;
     static void check(boolean c, String m) { System.out.println((c ? "ok:   " : "FAIL: ") + m); if (!c) fails++; }
+    /** A document provider in memory: folders, files, and which calls fail. */
+    static class Fake implements SceneTree.Tree {
+        Map<String, SceneTree.Doc> docs = new HashMap<>(); Map<String, List<String>> kids = new HashMap<>(); Map<String, String> data = new HashMap<>();
+        Set<String> failList = new HashSet<>(), failOpen = new HashSet<>(); boolean failName;
+        void dir(String id, String name) { docs.put(id, new SceneTree.Doc(id, name, true)); }
+        void file(String id, String name, String content) { docs.put(id, new SceneTree.Doc(id, name, false)); data.put(id, content); }
+        void under(String p, String c) { kids.computeIfAbsent(p, k -> new ArrayList<>()).add(c); }
+        public List<SceneTree.Doc> children(String id) {
+            if (failList.contains(id)) throw new SecurityException("permission revoked");
+            List<SceneTree.Doc> out = new ArrayList<>(); for (String k : kids.getOrDefault(id, List.of())) out.add(docs.get(k)); return out;
+        }
+        public InputStream open(String id) { if (failOpen.contains(id)) throw new IllegalStateException("provider gone"); return new ByteArrayInputStream(data.get(id).getBytes()); }
+        public String name(String id) { if (failName) throw new SecurityException("no"); return docs.get(id).name; }
+    }
     static byte[] zip(String... nameContent) throws IOException {
         ByteArrayOutputStream b = new ByteArrayOutputStream();
         try (ZipOutputStream z = new ZipOutputStream(b)) {
@@ -42,6 +56,42 @@ public class S {
         SceneLibrary.delete(SceneLibrary.find(dir, "Foo.rj"));
         check(SceneLibrary.find(dir, "Foo.rj") == null, "delete removes the scene");
         check(SceneLibrary.folderName("a/b:c").equals("a_b_c.rj") && SceneLibrary.folderName("").equals("scene.rj") && SceneLibrary.folderName(".hid.zip").equals("scene_hid.rj"), "folderName cleans: " + SceneLibrary.folderName("a/b:c") + ", " + SceneLibrary.folderName(""));
+        // ---- review findings 3 and 4 (Nov 4): bounded metadata, shared import limits, provider failures ----
+        String big = "<plist><dict><key>name</key><string>" + "x".repeat(SceneLibrary.MAX_PLIST_BYTES) + "</string></dict></plist>";
+        SceneLibrary.Scene bp = SceneLibrary.importZip(new ByteArrayInputStream(zip("Big.rj/_main.pd", "#N canvas;", "Big.rj/Info.plist", big)), "x", dir);
+        check(bp.name.equals("Big"), "an oversized Info.plist is not read: the folder name instead (" + bp.name.length() + " chars)");
+        String longName = "<plist><dict><key>name</key><string>" + "N".repeat(500) + "</string><key>description</key><string>"
+                + "d".repeat(5000) + "</string></dict></plist>";
+        SceneLibrary.Scene ln = SceneLibrary.importZip(new ByteArrayInputStream(zip("Long.rj/_main.pd", "#N canvas;", "Long.rj/Info.plist", longName)), "x", dir);
+        check(ln.name.length() <= SceneLibrary.MAX_NAME_CHARS && ln.description.length() <= SceneLibrary.MAX_DESCRIPTION_CHARS,
+                "shown name and description are bounded (" + ln.name.length() + ", " + ln.description.length() + ")");
+        String[] many = new String[2 * (SceneLibrary.MAX_FILES + 1) + 2];
+        many[0] = "Long.rj/_main.pd"; many[1] = "#N canvas;";
+        for (int i = 0; i <= SceneLibrary.MAX_FILES; i++) { many[2 + 2 * i] = "Long.rj/f" + i; many[3 + 2 * i] = ""; }
+        try { SceneLibrary.importZip(new ByteArrayInputStream(zip(many)), "x", dir); check(false, "too many files rejected"); }
+        catch (IOException e) { check(SceneLibrary.find(dir, "Long.rj").description.length() > 0, "too many files rejected, the old copy kept: " + e.getMessage()); }
+        String deep = "Deep2.rj/" + "d/".repeat(SceneLibrary.MAX_NESTING + 1) + "x.pd";
+        try { SceneLibrary.importZip(new ByteArrayInputStream(zip("Deep2.rj/_main.pd", "#N canvas;", deep, "x")), "x", dir); check(false, "deep nesting rejected"); }
+        catch (IOException e) { check(SceneLibrary.find(dir, "Deep2.rj") == null, "too deep a zip rejected: " + e.getMessage()); }
+        new File(dir, ".import-1/Ghost.rj").mkdirs(); Files.write(new File(dir, ".import-1/_main.pd").toPath(), "x".getBytes());
+        check(SceneLibrary.list(dir).stream().noneMatch(x -> x.dirName.startsWith(".")), "a leftover import folder is never listed as a scene");
+        // Folder imports through a fake provider.
+        Fake t = new Fake();
+        t.dir("root", "Picked"); t.dir("good", "Good.rj"); t.file("g1", "_main.pd", "#N canvas;"); t.under("root", "good"); t.under("good", "g1");
+        t.dir("bad", "Bad.rj"); t.file("b1", "_main.pd", "#N canvas;"); t.under("root", "bad"); t.under("bad", "b1"); t.failOpen.add("b1");
+        t.dir("lost", "Lost"); t.under("root", "lost"); t.failList.add("lost");
+        t.dir("evil", "Evil.rj"); t.file("e1", "_main.pd", "x"); t.file("e2", "x/../../escaped.txt", "x"); t.under("root", "evil"); t.under("evil", "e1"); t.under("evil", "e2");
+        SceneTree.Result r = SceneTree.importTree(t, "root", dir);
+        check(r.imported.size() == 1 && r.imported.get(0).dirName.equals("Good.rj") && r.failed.containsAll(List.of("Bad.rj", "Lost", "Evil.rj")),
+                "provider failures become failed scenes, the good one still imports: " + r.failed);
+        check(!new File(dir, "escaped.txt").exists() && SceneLibrary.find(dir, "Evil.rj") == null, "a provider name with ../ is refused");
+        Fake d = new Fake(); d.dir("root", "Nest.rj"); d.file("m", "_main.pd", "x"); d.under("root", "m");
+        String parent = "root";
+        for (int i = 0; i <= SceneLibrary.MAX_NESTING; i++) { d.dir("n" + i, "n" + i); d.under(parent, "n" + i); parent = "n" + i; }
+        check(SceneTree.importTree(d, "root", dir).failed.equals(List.of("Nest.rj")), "too deep a folder is refused");
+        Fake gone = new Fake(); gone.failList.add("root"); gone.failName = true;
+        SceneTree.Result g = SceneTree.importTree(gone, "root", dir);
+        check(g.imported.isEmpty() && g.failed.equals(List.of("scene")), "a provider that refuses everything fails quietly: " + g.failed);
         java.util.List<Object[]> st = java.util.List.of(new Object[]{"rjsave-ex-one", "a", 30f}, new Object[]{"x", "1.5", -2.25f});
         java.util.List<Object[]> back = SceneState.decode(SceneState.encode(st));
         check(back.size() == 2 && Arrays.equals(back.get(0), st.get(0)) && Arrays.equals(back.get(1), st.get(1)),

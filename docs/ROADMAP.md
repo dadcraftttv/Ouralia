@@ -26,7 +26,9 @@ Finding 5 DONE Nov 4 (abe4da3): the test runner stops on native-build failure an
 both tiers. Finding 6 DONE Nov 4: CI also runs on pushes to `sound-kinds`, fails on a stale `test_scene.pd`, builds
 Debug and Ouralia Dev; `desktop/test.sh` also compiles the desktop app. Finding 1 DONE Nov 4: Music in Stereo off closes the side after its effects, so a held
 Freeze no longer keeps it wide. Finding 2 DONE Nov 4: the classifier runner's Pd sends go through one queue in
-the order their state was read, so a stop can't be overtaken. Next in the saved Nov 3 sequence: scene import bounds, then inactive DSP cost with a Moto
+the order their state was read, so a stop can't be overtaken. Findings 3 and 4 DONE Nov 4: scene imports share one
+budget (bytes, files, depth), Info.plist is bounded, provider failures fail the scene, not the app. Next in the saved
+Nov 3 sequence: inactive DSP cost (Underwater gating) with a Moto
 CPU comparison. Reactive-first additions remain proposals for DadCraft to choose.
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
