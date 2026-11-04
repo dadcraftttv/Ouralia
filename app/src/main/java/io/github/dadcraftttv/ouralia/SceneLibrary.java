@@ -38,6 +38,46 @@ final class SceneLibrary {
     static final String LIB_DIR = "pd";
 
     private static final long MAX_UNZIPPED_BYTES = 512L * 1024 * 1024;
+    // One import's limits, the zip and the folder paths alike (review findings 3 and 4, Nov 4). RjDj's own scenes hold
+    // tens of files a couple of folders deep; these leave room and stop a runaway import before it fills the phone.
+    static final int MAX_FILES = 4096, MAX_NESTING = 12;
+    static final int MAX_PLIST_BYTES = 64 * 1024;   // Info.plist is a few hundred bytes; past this it is not read
+    static final int MAX_NAME_CHARS = 80, MAX_DESCRIPTION_CHARS = 400;
+
+    /** What one import has used so far: bytes, files and how deep. Exceeding any limit fails the import. */
+    static final class Budget {
+        private long bytes;
+        private int files;
+
+        void file(int depth) throws IOException {
+            if (++files > MAX_FILES) {
+                throw new IOException("Scene has too many files");
+            }
+            if (depth > MAX_NESTING) {
+                throw new IOException("Scene folders are nested too deeply");
+            }
+        }
+
+        void bytes(int n) throws IOException {
+            bytes += n;
+            if (bytes > MAX_UNZIPPED_BYTES) {
+                throw new IOException("Scene is too large");
+            }
+        }
+    }
+
+    /** {@code dest/name} for a name from a zip-free source (a folder provider): one plain name that stays inside
+     *  {@code dest}, or an IOException. */
+    static File child(File dest, String name) throws IOException {
+        if (name == null || name.isEmpty() || !isPlainName(name) || name.indexOf('\0') >= 0) {
+            throw new IOException("Unsafe file name: " + name);
+        }
+        File out = new File(dest, name);
+        if (!out.getCanonicalPath().startsWith(dest.getCanonicalPath() + File.separator)) {
+            throw new IOException("Unsafe file name: " + name);
+        }
+        return out;
+    }
 
     /** One imported scene. {@code dirName} is the folder name and doubles as its stable id. */
     static final class Scene {
@@ -68,7 +108,8 @@ final class SceneLibrary {
         File[] children = scenesDir.listFiles();
         if (children != null) {
             for (File dir : children) {
-                if (dir.isDirectory() && new File(dir, MAIN_PATCH).isFile()) {
+                // (a dot folder is an import in progress or one left by a crash: never a scene, folderName() sees to it)
+                if (dir.isDirectory() && !dir.getName().startsWith(".") && new File(dir, MAIN_PATCH).isFile()) {
                     result.add(describe(dir));
                 }
             }
@@ -177,9 +218,19 @@ final class SceneLibrary {
         }
         String name = root.equals(staging) ? fallbackName : root.getName();
         File target = new File(scenesDir, folderName(name));
-        deleteRecursively(target);
+        // A scene of the same name is set aside, not deleted, until the new one is in place (review finding 3).
+        File old = target.exists() ? new File(scenesDir, ".replaced-" + System.nanoTime()) : null;
+        if (old != null && !target.renameTo(old)) {
+            throw new IOException("Could not replace the scene");
+        }
         if (!root.renameTo(target)) {
+            if (old != null) {
+                old.renameTo(target);
+            }
             throw new IOException("Could not store the scene");
+        }
+        if (old != null) {
+            deleteRecursively(old);
         }
         return describe(target);
     }
@@ -189,7 +240,7 @@ final class SceneLibrary {
             throw new IOException("Cannot create " + dest);
         }
         String destPath = dest.getCanonicalPath() + File.separator;
-        long total = 0;
+        Budget budget = new Budget();
         byte[] buf = new byte[16 * 1024];
         try (ZipInputStream zin = new ZipInputStream(in)) {
             ZipEntry entry;
@@ -208,6 +259,7 @@ final class SceneLibrary {
                     out.mkdirs();
                     continue;
                 }
+                budget.file(entryName.split("/").length - 1);
                 File parent = out.getParentFile();
                 if (parent != null) {
                     parent.mkdirs();
@@ -215,10 +267,7 @@ final class SceneLibrary {
                 try (OutputStream os = new FileOutputStream(out)) {
                     int n;
                     while ((n = zin.read(buf)) > 0) {
-                        total += n;
-                        if (total > MAX_UNZIPPED_BYTES) {
-                            throw new IOException("Scene is too large");
-                        }
+                        budget.bytes(n);
                         os.write(buf, 0, n);
                     }
                 }
@@ -260,10 +309,10 @@ final class SceneLibrary {
         File plist = infoPlist(dir);
         if (plist != null) {
             try {
-                String xml = new String(readAll(plist), StandardCharsets.UTF_8);
-                name = plistString(xml, "name");
-                author = orEmpty(plistString(xml, "author"));
-                description = orEmpty(plistString(xml, "description"));
+                String xml = new String(readAll(plist, MAX_PLIST_BYTES), StandardCharsets.UTF_8);
+                name = clip(plistString(xml, "name"), MAX_NAME_CHARS);
+                author = clip(orEmpty(plistString(xml, "author")), MAX_NAME_CHARS);
+                description = clip(orEmpty(plistString(xml, "description")), MAX_DESCRIPTION_CHARS);
             } catch (IOException e) {
                 // Fall through to the folder name.
             }
@@ -307,6 +356,10 @@ final class SceneLibrary {
                 .replace("&apos;", "'").replace("&amp;", "&");
     }
 
+    private static String clip(String s, int max) {
+        return s == null || s.length() <= max ? s : s.substring(0, max - 1).trim() + "\u2026";
+    }
+
     private static String orEmpty(String s) {
         return s == null ? "" : s;
     }
@@ -344,12 +397,19 @@ final class SceneLibrary {
 
     // ---- small file helpers ----
 
-    private static byte[] readAll(File f) throws IOException {
+    /** The whole file, or an IOException when it is longer than {@code max} (nothing big is ever held in memory). */
+    private static byte[] readAll(File f, int max) throws IOException {
+        if (f.length() > max) {
+            throw new IOException("Too large: " + f.getName());
+        }
         try (InputStream in = new FileInputStream(f)) {
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             byte[] buf = new byte[8192];
             int n;
             while ((n = in.read(buf)) > 0) {
+                if (out.size() + n > max) {
+                    throw new IOException("Too large: " + f.getName());
+                }
                 out.write(buf, 0, n);
             }
             return out.toByteArray();

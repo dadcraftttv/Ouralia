@@ -128,3 +128,12 @@
   `~/.local/share/ouralia/phone-sessions/` (`--clear` then deletes them on the phone: do it with the app stopped);
   `tools/session_summary.py` prints a few lines per session and each mark with what played in the 10 s before it.
   Velocity per note isn't in it yet (`chime_deg` carries only the step).
+- **Scene import limits** (review findings 3 and 4, Claude Code, Nov 4; `SceneLibrary`, `SceneTree`, test S): a zip
+  and a picked folder share one budget per import: 512 MB, 4096 files, folders 12 deep; past any of them the
+  import fails with a message and nothing is stored. Info.plist is read only up to 64 KB (larger: the folder's name
+  is shown instead), and a scene's shown name/author are cut at 80 characters, its description at 400. A scene of
+  the same name is set aside until the new copy is in place, then deleted, so a failed import never loses it.
+  Folder imports go through `SceneTree` (plain Java; `TreeImporter` is only the Android provider): a revoked
+  permission or a provider error marks that scene failed instead of closing the app, and a provider file name that
+  is not one plain name (`a/../..`) is refused. Folders whose names start with a dot (an import in progress, or one
+  a crash left) are never listed as scenes. Not built: cancelling an import part way.

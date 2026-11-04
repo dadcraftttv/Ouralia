@@ -267,7 +267,13 @@ final class SceneUi {
                 a.runOnUiThread(() -> a.toast(R.string.toast_scene_import_failed, "Cannot create " + dir));
                 return;
             }
-            TreeImporter.Result r = TreeImporter.importTree(a.getContentResolver(), tree, dir);
+            SceneTree.Result r;
+            try {
+                r = TreeImporter.importTree(a.getContentResolver(), tree, dir);
+            } catch (RuntimeException e) {   // (never out of this thread: it would close the app; review finding 4)
+                a.runOnUiThread(() -> a.toast(R.string.toast_scene_import_failed, e.getClass().getSimpleName()));
+                return;
+            }
             a.runOnUiThread(() -> {
                 if (r.imported.isEmpty()) {
                     a.toast(R.string.toast_scene_none_found);
