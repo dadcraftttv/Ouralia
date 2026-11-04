@@ -42,7 +42,8 @@ sounds flat in today's composer). Session logs (email or delete, 50 MB cap) BUIL
 
 **Calm Builds, the quiet tune (DadCraft, Nov 3):** REWORKED on `sound-kinds` (item 7): after 30-60 s of quiet a two-bar
 chime phrase grows over the drums that are already playing, trails off over 15 s on steady noise. DadCraft's listen next
-(quiet room with drums -> knock -> steady noise -> quiet again); bass is the next layer after it.
+(quiet room with drums -> knock -> steady noise -> quiet again). Bass BUILT Nov 4 (DadCraft: "lets start on the bass for
+Calm Builds"): a plucked bass joins past 0.4 of the build (design/music.md); his listen next.
 
 **Pad Voice Glass Bowl (DadCraft, Nov 4):** BUILT on `sound-kinds`: a singing-bowl pad behind a switch, Synth the
 default (design/music.md "Pad Voice"). DadCraft's listen next: `~/Downloads/glass-bowl-clips/`, then on the phone.

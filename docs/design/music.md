@@ -46,8 +46,20 @@
     joins past rank/6), velocity 0.2 -> 0.45. They go through `motif` (a chime at a scale step: key, register,
     chime voice, Mix level, Music in Stereo places all apply; Chimes Only When Something Happens doesn't block it).
     No [random] in the patch. Only while the drums are sounding: the beat's own output (`beat_out`) above -60 dBFS
-    within the last 3 s, so it never starts the drums and stops with them. No new voice; bass is the next layer,
-    after DadCraft's first listen.
+    within the last 3 s, so it never starts the drums and stops with them. No new voice for the chimes.
+  - **The bass (Nov 4, DadCraft: "lets start on the bass for Calm Builds"; `add_calm_bass` in `calm.py`).** Built
+    before his first Calm listen, at his call. In a quiet room the held bass is silent (Pad Only With a Steady Sound,
+    on by default, keeps it out), so the tune has its own: a plucked low note (the held bass's tone: 2nd and 3rd
+    harmonics for earbuds, 65-131 Hz, lop~ 700; 10 ms up, down over 1.4 s, squared) on the chord's root at each
+    bar's downbeat, and its fifth (4 steps of 7, 3 of a pentatonic) on 16th 10 of the second bar. It joins once
+    `calm_tune` passes `CALM_BASS_FROM` 0.4 (48 s into the rise), downbeat first, all three notes by 1.0; velocity
+    0.5 -> 1. In the 15 s fade it leaves first (by 9 s in). It reads the grid 5 ms late, since the chord changes on
+    the same tick16 0. Mix bass trim and Pad level apply, like the held bass. While it plays the held bass makes way
+    (x 1 - its level, only while the drums sound), so two basses never stack when Pad Only With a Steady Sound is
+    off. Level: `CALM_BASS_GAIN` 0.16 puts it within 0.1 dB of the held bass (40-300 Hz power over 9.6 s, drums
+    subtracted). Test_patch "7z10": joins downbeats first, fifth as the pickup, stops with the drums, the held bass
+    makes way and comes back, heard in the low band, silent at Pad 0. Not in the composer path (Evolving's own bass
+    notes go straight to the held bass; the Calm bass follows the chord root). Clips: `~/Downloads/calm-bass-clips/`.
   - **Moto CPU (Nov 3, Ouralia Dev playing, Music + Music in Stereo on, `top` 30 x 2 s):** Calm Builds on median
     56.25% of a core, off 58.5%: no measurable cost.
   - The patch's `calm_chimes` receiver stays (the tests use it to make standing-still chimes come); the app no
