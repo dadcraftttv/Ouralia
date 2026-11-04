@@ -32,14 +32,14 @@ DEFAULTS = [
     ("phaser_on", 1), ("phaser_mix", 0), ("phaser_rate", 0.4), ("phaser_depth", 0.7), ("phaser_fb", 0.4),
     ("beat_on", 1), ("beat_level", 0), ("beat_hats", 0.5), ("beat_snare", 0.6), ("beat_pitch", 55),
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
-    ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("fs_clean", 0), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("bass_src", 0), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
+    ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("fs_clean", 0), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
     ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 1), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 1), ("new_pieces", 1), ("walk_ease", 1), ("band_plays", 1),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("wind_guard", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
     # Reactive first (DadCraft, Oct 31: "make those the default behavior period, no switch"): no setting in the app,
     # the first two stay as the patch's own values so the tests can still pin the old sound (0); Notes Only for Bigger
     # Sounds stays a slider, at his 20.5 dB by default (mics differ by maker)
-    ("chime_answer", 1), ("pad_room", 1), ("note_big", 20.5), ("chime_voice", 0), ("pad_voice", 0), ("chime_trail", 0),
+    ("chime_answer", 1), ("pad_room", 1), ("note_big", 20.5), ("chime_voice", 0), ("pad_voice", 0), ("bass_voice", 0), ("chime_trail", 0),
 ]
 
 # Scales as semitone steps above the key note. The patch snaps every note it plays to these.
@@ -171,6 +171,13 @@ PAD_BOWL_SWELL_MS = 4000        # each note eases in over this, from silence, wh
 PAD_BOWL_STAGGER_MS = 700       # ...one after another, this far apart (the bowls are played in turn)
 PAD_BOWL_LEVEL = 1.15           # the bowl x this: Synth's loudness over a minute (an octave up it measures 0.7 dB under, ears hear it louder)
 PAD_BOWL_SWITCH_MS = 300        # switching the voice crossfades over this long
+BASS_BOWL_UP = 2                # Bass Voice Glass Bowl: the bowl sounds this x the bass note (65-131 Hz -> 131-262 Hz, the
+                                #   register of the first, lower Glass Bowl pad; a pure tone at 65 Hz is lost in earbuds)
+BASS_BOWL_BEAT_HZ = 0.31        # its twin this far above it: the slow wobble
+BASS_BOWL_LEVEL = 0.79          # the held bowl x this: the synth bass's RMS over a minute (design/music.md)
+CALM_BOWL_LEVEL = 0.46          # the Calm Builds bowl x this: its synth pluck's low-band power (it rings longer)
+CALM_BOWL_RISE_MS = 300         # a Calm bowl note eases in over this (no strike)...
+CALM_BOWL_RING_MS = 2600        # ...and rings down over this, into the next note
 PAD_GLIDE_MS = 3500     # the pad crossfades from one chord to the next over this time (no pitch slides)
 
 # Room notes: resonators that make the mic's own sound ring the current chord: root, third and fifth (scale steps
@@ -290,7 +297,6 @@ FP_PREROLL_MS = 180
 FP_GRAIN_MS = 120                 # its stretch grains (two, half overlapping), started a whole number of the caught
 FP_LOOP_S = (0.08, 0.35)          # note's periods apart so a steady note stays steady, wandering in this part
 FP_GAIN = 0.075                    # per chord voice (the synth pad's oscillator pairs are ~0.03-0.04 each)
-FB_GAIN = 2.8                     # the found bass against the synth bass's (1 + 0.35 + 0.15) oscillators
 FS_POP_DB = 94                    # louder than this (-6 dBFS) and mostly lows: a mic pop, not kept
 FS_MIN_DB = 55                     # quieter than this (-45 dBFS at its loudest) is not worth keeping
 FS_FLOOR_RISE = 0.02               # (its floor creeps up this many dB a reading: 0.6 dB a second)
