@@ -22,10 +22,19 @@
   reverb +40% and the `calm_chimes` still-pattern chance) rather than keep both; Codex's review in Conductor
   `.handoff/to-claude-quiet.md`.
   - **Quiet** is judged in Java from the pre-effect mic level (`Modulation.micLevelDb`, dBFS) against a reference
-    that follows the room's low level while waiting (falls within ~1 s, rises with a 60 s time constant). Noisy:
+    that follows the room's low level while waiting (falls over ~3 s, rises with a 60 s time constant). Noisy:
     `NOISE_DB` 8 above it, or over `GUARD_DB` -40 at all, or walking. Consistent noise: noisy for 3 of the last 5 s.
     A knock or cough changes nothing (and the found drums still catch it: nothing here gates catching). A steady fan
     under the guard becomes the reference, so it counts as quiet; a louder room never does.
+  - **Dropouts (fixed Nov 4).** DadCraft: "it was quiet in my house for several minutes but Calm Builds did nothing.
+    the only time i heard anything was when i started making the slightest amount of noise." His session logs: a
+    steady -56 dBFS room, never walking, with the Moto's level reading about -100 for a moment every 10-20 s. Each
+    dropout pulled the reference (then falling within 1 s) to about -95, the room then read 40 dB over it, i.e. noise,
+    so the wait restarted; the reference needs ~100 s to climb back, and the next dropout came first. Calm stayed
+    "waiting" for 7 minutes. Now a level under `DROPOUT_DB` -80 dBFS counts as quiet and never moves the reference,
+    and the reference falls over 3 s, not 1. Replaying his two sessions' logged levels: old code never starts, new
+    starts at 29 s in both (and trails off in the second when he made noise). Test B has both cases. Where the
+    dropouts come from (the Moto's input processing?) is not known.
   - **Lifecycle:** a quiet wait (30-60 s, new each time; noise restarts it) -> a fresh phrase, rising over
     `RISE_S` 120 s -> plays in full while quiet, indefinitely -> consistent noise starts a `FADE_S` 15 s trail-off
     that always finishes (quiet mid-fade doesn't revive it), then a fresh full wait. The reference is held while it
