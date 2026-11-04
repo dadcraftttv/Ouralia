@@ -894,3 +894,22 @@ always comes last. Sends still run outside the lock (Pd's thread calls `ready()`
 ours could deadlock). No behaviour change otherwise; sends are now a moment later, on that thread. Java test J2 pins it:
 nothing is sent from the caller's thread, and stop during inference, stop during loading and an immediate restart all
 end in the right state. The race itself needs real threads, which the single-threaded test stubs can't stage.
+
+## The classifier's own cost (review performance item, Claude Code, Nov 4)
+
+DadCraft: "move ahead on the classifier." Measured first: the Moto's minute lines put YAMNet at a median 9.5 ms per
+judgement, ~235 a minute, i.e. under 4% of a core in an app at ~60%; the patch's DSP is the bulk, not the classifier.
+Around YAMNet each judgement copied ~1 s of ring into a new array, rebuilt the 65-tap low-pass and resampled into
+another new array (~1 MB a second allocated), computing two filtered points per output sample. Now the low-pass is
+made once per sample rate, each worker thread reuses its two buffers (per thread: an old worker can still be finishing
+after a restart), and the second point is skipped when its weight is exactly 0, which at 48 kHz (step exactly 3) is
+always. Output sample-identical to the old resampler at 48 and 44.1 kHz (test J keeps the old one as reference).
+Desktop: 1.94 -> 0.81 ms per judgement. The minute line now also gives the whole judgement (ring copy + resampling +
+YAMNet) and the ring copy. On the Moto (3 minutes): YAMNet median 9.5 ms, whole judgement 17-19 ms, ring copy
+0.1-0.2 ms (now at most two reads, i.e. two takes of Pd's lock, not four): the rest is resampling, wall time
+including the audio thread pre-empting the worker. So the resampler keeps what it computed: consecutive judgements
+read the ring one segment on, and at 48 kHz a segment (12288 samples) is exactly 4096 outputs, so the older 11504 are
+the last output moved along, sample for sample, and only 4096 are computed (`SoundKinds.Resampler`; a skipped
+judgement, a restart, another rate or the first time computes all 15600). Test J: identical to the full computation
+through a wrapping, skipping sequence. Left as it was: the listener keeps running while Music is off
+(test J2 checks it on purpose, the sound-kind context stays warm); stopping it there is DadCraft's call.

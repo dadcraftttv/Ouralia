@@ -112,6 +112,13 @@ public class J2 {
         YamNet.fail=true; SoundKindsRunner.attach(c,48000,s->{});Handler.drain();
         check(!SoundKindsRunner.on()&&field("thread")==null,"startup failure clears runner and contribution");
         SoundKindsRunner.detach();
+        // Review, Nov 4: the ring copy, oldest whole segment first, in at most two reads (Pd's lock taken at most twice).
+        int seg=7, n=SoundKinds.SEGS; PdBase.ring=new float[n*seg]; for(int i=0;i<PdBase.ring.length;i++)PdBase.ring[i]=i;
+        boolean order=true; int most=0;
+        for(int k=0;k<n;k++){ float[] x=new float[(n-1)*seg]; PdBase.reads=0; SoundKindsRunner.readRing(x,k,seg); most=Math.max(most,PdBase.reads);
+            for(int j=1;j<n;j++)for(int i=0;i<seg;i++) if(x[(j-1)*seg+i]!=((k+j)%n)*seg+i) order=false; }
+        PdBase.ring=null;
+        check(order&&most<=2,"the ring copy keeps the segments' order for every k, in at most "+most+" reads");
         if(fails==0)System.out.println("ALL PASSED"); else System.exit(1);
     }
 }

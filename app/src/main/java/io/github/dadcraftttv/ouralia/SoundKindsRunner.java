@@ -37,6 +37,12 @@ final class SoundKindsRunner {
     private static volatile boolean busy;
     private static int dropped;
     private static final long[] nanos = new long[600];
+    private static final long[] wholeNanos = new long[600];
+    private static final long[] copyNanos = new long[600];    // (of which the ring copy, Pd's lock included)   // (the whole judgement: ring copy, resampling, YAMNet)
+    /** Each worker thread's own ring copy and 16 kHz buffer, reused (review, Nov 4: ~1 MB a second was allocated).
+     *  Per thread, since an old worker can still be finishing a judgement after a restart. */
+    private static final ThreadLocal<float[]> ringCopy = new ThreadLocal<>();
+    private static final ThreadLocal<SoundKinds.Resampler> resampler = ThreadLocal.withInitial(SoundKinds.Resampler::new);
     private static int judged;
     private static volatile boolean roomOn, gapsOn, waterOn;
     private static boolean waterSent;
@@ -428,6 +434,18 @@ final class SoundKindsRunner {
         });
     }
 
+    /** Copies the SEGS - 1 whole segments of {@code s} samples, oldest (k + 1) to newest (k - 1), into {@code x}: at
+     *  most two runs of the ring, so at most two takes of Pd's lock (four until Nov 4; the audio thread holds that
+     *  lock while it computes each block). */
+    static void readRing(float[] x, int k, int s) {
+        int n = SoundKinds.SEGS;
+        int first = (k + 1) % n, head = Math.min(n - 1, n - first);
+        PdBase.readArray(x, 0, "sk_ring", first * s, head * s);
+        if (head < n - 1) {
+            PdBase.readArray(x, head * s, "sk_ring", 0, (n - 1 - head) * s);
+        }
+    }
+
     private static void judge(int k, Handler owner) {
         SoundKinds.Model m;
         SoundKinds ks;
@@ -446,18 +464,22 @@ final class SoundKindsRunner {
         if (m == null || ks == null) {
             return;
         }
+        long start = System.nanoTime();
         int n = SoundKinds.SEGS;
-        float[] x = new float[(n - 1) * s];
-        for (int j = 1; j < n; j++) {   // the whole segments, oldest (k + 1, i.e. k - n + 1) to newest (k - 1)
-            PdBase.readArray(x, (j - 1) * s, "sk_ring", ((k + j) % n) * s, s);
+        float[] x = ringCopy.get();
+        if (x == null || x.length != (n - 1) * s) {
+            x = new float[(n - 1) * s];
+            ringCopy.set(x);
         }
-        float[] wave = SoundKinds.to16k(x, x.length, r);
+        readRing(x, k, s);
+        long copied = System.nanoTime() - start;
+        float[] wave = resampler.get().next(x, x.length, r, k, s);
         if (wave == null) {
             return;
         }
         long t0 = System.nanoTime();
         float[] scores = m.scores(wave);
-        long took = System.nanoTime() - t0;
+        long took = System.nanoTime() - t0, whole = System.nanoTime() - start;
         boolean changed, roomChanged, room, talkChanged, talk, step, gaps;
         int water, uw, birds, traffic;
         String line;
@@ -466,6 +488,8 @@ final class SoundKindsRunner {
                 return;
             }
             if (judged < nanos.length) {
+                copyNanos[judged] = copied;
+                wholeNanos[judged] = whole;
                 nanos[judged++] = took;
             }
             boolean wasRoom = ks.roomMusic(), wasTalk = ks.talking();
@@ -535,7 +559,8 @@ final class SoundKindsRunner {
     /** The minute's cost line (then counting starts again). */
     static String minuteLine() {
         synchronized (lock) {
-            String s = SoundKinds.costLine(nanos, judged) + (dropped > 0 ? ", " + dropped + " skipped (busy)" : "");
+            String s = SoundKinds.costLine(nanos, wholeNanos, judged)
+                    + SoundKinds.medianLine("ring copy", copyNanos, judged) + (dropped > 0 ? ", " + dropped + " skipped (busy)" : "");
             judged = dropped = 0;
             return s;
         }

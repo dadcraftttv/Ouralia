@@ -5,6 +5,18 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
   static float[] sine(double f,int rate,int n){ float[] x=new float[n]; for(int i=0;i<n;i++) x[i]=(float)Math.sin(2*Math.PI*f*i/rate); return x; }
   static double amp(float[] y,double f){ double c=0,s=0; for(int i=0;i<y.length;i++){ c+=y[i]*Math.cos(2*Math.PI*f*i/16000); s+=y[i]*Math.sin(2*Math.PI*f*i/16000);} return 2*Math.hypot(c,s)/y.length; }
   static float[] sc(int... hot){ float[] s=new float[521]; for(int i=0;i<hot.length;i+=2) s[hot[i]]=hot[i+1]/100f; return s; }
+  /** The resampler as it was before Nov 4, the reference. */
+  static float[] oldTo16k(float[] x,int n,int rate){
+    double step=(double)rate/16000; int taps=32; double cut=7200.0/rate; float[] h=new float[2*taps+1]; double sum=0;
+    for(int i=-taps;i<=taps;i++){ double s=i==0?2*cut:Math.sin(2*Math.PI*cut*i)/(Math.PI*i);
+      double w=0.42+0.5*Math.cos(Math.PI*i/(taps+1))+0.08*Math.cos(2*Math.PI*i/(taps+1)); h[i+taps]=(float)(s*w); sum+=s*w; }
+    for(int i=0;i<h.length;i++) h[i]/=(float)sum;
+    double first=n-2-taps-(SoundKinds.SAMPLES-1)*step; float[] out=new float[SoundKinds.SAMPLES];
+    for(int j=0;j<out.length;j++){ double at=first+j*step; int i0=(int)at; double f=at-i0;
+      out[j]=(float)((1-f)*fil(x,i0,h,taps)+f*fil(x,i0+1,h,taps)); }
+    return out;
+  }
+  static float fil(float[] x,int i,float[] h,int taps){ float s=0; for(int k=-taps;k<=taps;k++) s+=h[k+taps]*x[i+k]; return s; }
   public static void main(String[] a){
     for(int rate: new int[]{48000,44100}){
       float[] y=SoundKinds.to16k(sine(1000,rate,2*24576),2*24576,rate);
@@ -17,6 +29,32 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     float[] y=SoundKinds.to16k(r,r.length,48000);
     check(Math.abs(y[y.length-1]-(r.length-2-32))<1.5&&Math.abs(y[1]-y[0]-3)<1e-3,"the newest samples, 3 to 1 at 48 kHz ("+y[y.length-1]+")");
     check(SoundKinds.to16k(new float[30000],30000,48000)==null,"too little: nothing");
+    // Review, Nov 4: cached coefficients, a reused buffer and skipping the 0-weight second point change nothing.
+    java.util.Random rnd=new java.util.Random(5);
+    for(int rate: new int[]{48000,44100}){
+      float[] in=new float[2*24576]; for(int i=0;i<in.length;i++) in[i]=(float)rnd.nextGaussian();
+      float[] ref=oldTo16k(in,in.length,rate), buf=new float[SoundKinds.SAMPLES];
+      float[] got=SoundKinds.to16k(in,in.length,rate,buf), again=SoundKinds.to16k(in,in.length,rate,buf);
+      check(got==buf&&java.util.Arrays.equals(ref,got)&&java.util.Arrays.equals(ref,again),
+          "at "+rate+" Hz: the reused-buffer resampler matches the old one sample for sample");
+    }
+    for(int rate: new int[]{48000,44100}){
+      int seg=12288, n=SoundKinds.SEGS; float[] stream=new float[20*seg]; for(int i=0;i<stream.length;i++) stream[i]=(float)rnd.nextGaussian();
+      SoundKinds.Resampler rs=new SoundKinds.Resampler(); boolean same=true; StringBuilder fr=new StringBuilder();
+      int[] ks={0,1,2,3,4,0,1,3,4,0,1};   // consecutive, wrapping, then a skipped judgement (1 -> 3)
+      int pos=0;
+      for(int i=0;i<ks.length;i++){
+        pos+= i==0?0:((ks[i]-ks[i-1]+n)%n)*seg;   // the stream moves on a segment per judgement
+        float[] x=java.util.Arrays.copyOfRange(stream,pos,pos+(n-1)*seg);
+        float[] want=SoundKinds.to16k(x,x.length,rate), got=rs.next(x,x.length,rate,ks[i],seg);
+        same&=java.util.Arrays.equals(want,got); fr.append(rs.fresh).append(i<ks.length-1?",":"");
+      }
+      String f=fr.toString();
+      boolean shape= rate==48000 ? f.equals("15600,4096,4096,4096,4096,4096,4096,15600,4096,4096,4096") : f.replace("15600","").replace(",","").isEmpty();
+      check(same&&shape,"at "+rate+" Hz: keeping the last output gives the same samples, computing only the new part ("+f+")");
+    }
+    check(SoundKinds.costLine(new long[]{3000000,1000000,2000000},new long[]{5000000,4000000,6000000},3).endsWith(
+        "; whole judgement median 5.0 ms, slowest 6.0 ms"),"the cost line also gives the whole judgement");
     String kinds="# test\nvoices 0 1\nmusic 2\ntraffic 3\nbirds 4\nwater 5\nsteps 6\nquiet 494\n";
     SoundKinds k=new SoundKinds(kinds);
     check(!k.judge(sc(4,40))&&k.kind()==-1,"one judgement isn't enough");
