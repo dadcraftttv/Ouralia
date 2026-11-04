@@ -147,7 +147,8 @@ the captured build output (review finding 5, fixed Nov 4). `tools/test_run_tests
 and successful startup in both tiers; it also runs in both tiers. Run it alone with `python3 tools/test_run_tests.py`.
 CI (`.github/workflows/tests.yml`, review finding 6, Nov 4) runs on pushes to `main` and `sound-kinds` and on pull
 requests: it regenerates `test_scene.pd` and fails if the committed one differs, builds Debug and Ouralia Dev (the
-real YAMNet code), builds libpd (`tools/build_libpd.sh`) so `dcs` compiles, then runs the quick tier. Before finding 5's
+real YAMNet code), checks out Pd's headers at `tools/build_libpd.sh`'s pinned commit so `dcs` compiles (all of
+libpd doesn't build with the runner's newer GCC), then runs the quick tier. Before finding 5's
 fix CI never had libpd: `make -C dcs` failed there on every run, unseen. `desktop/test.sh` (full tier) also compiles the desktop app's own sources.
 
 1. Desktop libpd is needed for the Pd tests: `tools/build_libpd.sh` builds it into `tools/.libpd/libpd.so` (needs git, make, gcc).
