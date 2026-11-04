@@ -888,6 +888,11 @@ def build():
     if LEGACY_FX:
         P.group("reverse", r"^(rvs_ph1|rvs_ph2_off|rvs_ph2|rvs_wr|rvs_tap\d_\w+|rvs_rd\d|rvs_cos\d\w*|rvs_win\d|rvs_grain\d|rvs_sound)$")
     add_switch(P, "reverse", ("rvs_on", "rvs_mix"), 300, dsp=LEGACY_FX)
+    # Underwater's four paths (music, music side, beat, beat side): the filters and the wobbling delay rest while it is
+    # off (review performance item, Nov 4). Off, each path's output is exactly its input (the wet difference times
+    # uw_amt = 0), so they wake on "underwater" > 0 and sleep after the longest fade out plus the delay buffer.
+    P.group("uw", r"^uw_(mu|ms|bt|bs)_(lp1|lp2|dw|vd|d1|d1s|wet|d2)$")
+    add_switch(P, "uw", ("underwater",), max(UW_OUT_MS) + UW_BUF_MS + 500)
     P.group("roomnotes", r"^rn\d*_")
     add_switch(P, "roomnotes", ("music_on", "music_res", "rn_ring"), 2500)
     for k in range(2):                                                  # Room notes, found: each voice on while it rings

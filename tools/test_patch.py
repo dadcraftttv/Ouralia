@@ -3075,6 +3075,21 @@ bh = [uw_hf(y) for y in bt]; bl = [20 * np.log10(rms(y) / rms(bt[0])) for y in b
 check(bh[1] < bh[0] - 10 and bh[2] < bh[1] - 5 and all(abs(v) < 4 for v in bl),
       "underwater: the beat above 2.5 kHz off/gentle/deeper %s dB, level %s dB" % (["%.1f" % v for v in bh], ["%.1f" % v for v in bl]))
 
+# underwater asleep while off (review performance item, Nov 4): the four paths' filters and delay rest at 0, wake at
+# once, stay awake through the whole fade out, rest again after it, and work again on the next water
+e = fresh(wet=0, dry=0, music_on=1, music_pad=0.33, music_arp=0.4); e.listen("sw_uw", "uw_level")
+e.run(e.silence(2)); asleep = e.heard["sw_uw"][-1:] in ([], [0])
+e.send("underwater", 2); y = e.run(e.silence(0.5))[:, 0]; awake = e.heard["sw_uw"][-1:] == [1]
+jump = np.max(np.abs(np.diff(y[:int(0.12 * SR)])))
+e.run(e.silence(UW_IN_MS[2] / 1000 + 0.5)); e.send("underwater", 0)
+e.run(e.silence(UW_OUT_MS[2] / 1000)); through_fade = e.heard["sw_uw"][-1:] == [1]
+e.run(e.silence(4)); rests = e.heard["sw_uw"][-1:] == [0]
+e.send("underwater", 2); e.run(e.silence(UW_IN_MS[2] / 1000 + 0.5)); e.send_msg("uw_probe", "bang")
+again = e.heard["sw_uw"][-1:] == [1] and e.heard["uw_level"][-1] > 0.999
+check(asleep and awake and through_fade and rests and again and jump < 0.08,
+      "underwater: paths asleep off, awake at once, through the fade, asleep after, back again (%s %s %s %s %s, step %.4f)"
+      % (asleep, awake, through_fade, rests, again, jump))
+
 # ---- 7z4. answer in the gaps: while people talk the chimes wait, then answer in the pauses (Nov 1, step 6) ----
 from patchgen.constants import TALK_GAP_MS, TALK_NOTE_MS
 def tg_run(talk, pause, on=1, rounds=4, speech=1.5):   # "speech" (noise, 1.5 s) then a pause, a few times: answers, chime times
