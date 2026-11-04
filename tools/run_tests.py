@@ -268,8 +268,12 @@ def main():
     if code:
         print("FAIL: make_patch.py\n" + text)
         return 1
-    sh(["make", "-s", "-C", "dcs"])
+    code, text = sh(["make", "-s", "-C", "dcs"])
+    if code:
+        print("FAIL: make -s -C dcs\n" + text)
+        return 1
     jobs = {"java": lambda: sh(["tools/javatests/run.sh"], env=env),
+            "test_run_tests.py": lambda: sh(["python3", "tools/test_run_tests.py"]),
             "test_release.py": lambda: sh(["python3", "tools/test_release.py"])}   # (cheap: also in quick)
     if not quick:
         jobs["desktop"] = lambda: sh(["desktop/test.sh"], env=env)

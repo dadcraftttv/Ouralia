@@ -141,6 +141,11 @@ This file is the index. Each feature's notes live in one of these (`grep -rn <fe
 - `docs/design/status-log.md`: **Status log**: what happened when, newest last.
 
 ## Tests (run these after touching patch or Java logic)
+`tools/run_tests.sh` runs the full tier; `tools/run_tests.sh quick <words>` selects patch sections plus the cheap
+checks. Both tiers stop before starting any suite if patch generation or the native `dcs` build fails, printing
+the captured build output (review finding 5, fixed Nov 4). `tools/test_run_tests.py` guards those failure paths
+and successful startup in both tiers; it also runs in both tiers. Run it alone with `python3 tools/test_run_tests.py`.
+
 1. Desktop libpd is needed for the Pd tests: `tools/build_libpd.sh` builds it into `tools/.libpd/libpd.so` (needs git, make, gcc).
    It is pinned to our libpd fork's commit ebc0b83 (Pd 0.55.2), the same libpd as the app's pd-core. Pd 0.56 breaks StreetBeatz.rj
    (`hip~` multichannel error); move the pin only together with pd-core. numpy lives in `tools/.venv` (run the tests with `tools/.venv/bin/python`).
