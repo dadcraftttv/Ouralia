@@ -1113,6 +1113,40 @@ check(ok and info[0][1] < info[2][1] and all(x[3] >= 6 for x in info),
       f"melody rhythm by rules: straight on the 8ths, dotted odd counts on the 16ths, lengths fill the bar, every 4th bar the base; "
       f"(drive, straight notes, dotted notes, bars changed of 23) {info}")
 
+# ---------------------------------------------------------------- idle (Nov 4)
+# Music in Stereo's side effects go idle while it is off: the LFO (or read cycle) moves on, nothing else. Two copies
+# fed the same: one idle for a second of silence (as the side is), then both on noise: identical, while a copy
+# stopped with run 0 for that second (Pd's switch~) comes back out of step.
+print("idle:")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from patchgen.constants import CHORUS_BASE_MS, FLANGE_MIN_MS, PHASER_CENTRE_HZ, PHASER_Q, PHASER_STAGES
+twins = {
+    "chorus": (f"dcs_chorus~ {CHORUS_BASE_MS[0]} {CHORUS_BASE_MS[1]} 60", ["run 1", "on 1", "mix 0.6", "rate 0.8", "depth 3"]),
+    "flanger": (f"dcs_flanger~ {FLANGE_MIN_MS} 30", ["run 1", "on 1", "mix 0.6", "rate 0.3", "depth 4", "fb 0.5"]),
+    "phaser": (f"dcs_phaser~ {PHASER_CENTRE_HZ} {PHASER_Q} 1.4 " + " ".join(str(m) for m in PHASER_STAGES),
+               ["run 1", "on 1", "mix 0.6", "rate 0.4", "depth 0.7", "fb 0.4"]),
+    "taps": ("dcs_taps~ 2100", ["run 1", "ra 2.5", "win 20"]),
+}
+rng = np.random.default_rng(5)
+noise = (rng.standard_normal(SR) * 0.2).astype(np.float32)
+for name, (obj, setup) in twins.items():
+    diffs = {}
+    for how in ("idle 1", "run 0"):
+        d = patch("idle_" + name, ["adc~", obj, obj, "r both", "r b", "dac~"],
+                  [(0, 0, 1, 0), (0, 0, 2, 0), (3, 0, 1, 0), (3, 0, 2, 0), (4, 0, 2, 0), (1, 0, 5, 0), (2, 0, 5, 1)])
+        e = Engine(LIB, d)
+        for m in setup:
+            sel, *v = m.split(); e.send_msg("both", sel, *[float(x) for x in v])
+        e.run(np.zeros(SR // 4, dtype=np.float32))
+        sel, v = how.split(); e.send_msg("b", sel, float(v))
+        e.run(np.zeros(SR, dtype=np.float32))
+        e.send_msg("b", sel, 1.0 - float(v))
+        y = e.run(noise)
+        diffs[how] = float(np.max(np.abs(y[:, 0] - y[:, 1])))
+    check(diffs["idle 1"] == 0 and diffs["run 0"] > 1e-3,
+          f"{name}: idle keeps its LFO in step with a running twin (difference {diffs['idle 1']:.3g}; "
+          f"stopped instead {diffs['run 0']:.3g})")
+
 # ---------------------------------------------------------------- dcs_loaded
 print("dcs_loaded:")
 d = patch("loaded", ["dcs_loaded", "f", "r dl_ping", "t b", "s dl_out", "r dl_bang", "t b", "dcs_loaded", "s dl_out2"],

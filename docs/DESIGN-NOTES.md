@@ -28,13 +28,23 @@ All starting numbers are in `constants.py`.
 
 The side takes the same music master, pad hold/stop gates, chime tone cutoff and levels, Make Room and Underwater
 as the mid. `music_fx.py` extracts the existing chorus/flanger/phaser/tremolo/reverse/freeze chain, used unchanged
-for the mid and with private buffers for the side. Both paths run continuously, keeping effect phases aligned
-when width changes; this has an off-state processing cost as well. Beat side takes its own existing level,
+for the mid and with private buffers for the side. Both paths keep their effect phases aligned when width changes
+(while off, the side's effects only idle along: below). Beat side takes its own existing level,
 pattern/step gains, Make Room and Underwater. L = mid + side, R = mid - side, before the existing spatial stage.
 The summed side passes one more gate after its effects (review finding 1, Nov 4): a held Freeze or an effect tail
 kept the side wide after the switch went off (Codex measured side RMS 0.0102 staying put). Switching on opens it at
 once (the 50 ms width ramp still shapes the entry, unchanged); off closes it over the same 50 ms. Settled on or off
 is the old law exactly; test_patch checks off-with-Freeze-held goes to silence and back on restores it.
+Off, the side's effects go idle (DadCraft, Nov 4: "those effects should be off when the switch is off. no need to use
+those resources"): 2.65 s after the switch goes off (the gate's 50 ms, the reverse line's 2.1 s, a margin), the side's
+chorus, flanger, phaser and reverse get `idle 1` (from `sw_msfx`): each LFO or read cycle moves on exactly as the mid's
+does, nothing else is computed; switching on wakes them at once. Not a `switch~`: a stopped LFO comes back out of step
+with the mid's (test_dcs: a twin idled for 1 s is identical to one that ran; one stopped with `run 0` differs by up to
+0.48). Their lines hold only silence by then (the side's input is 0 while off), so waking is exact: test_patch's side
+with chorus after an off/on equals a run never switched off (0.0037 both). Tremolo is already a multiply, and freeze
+only writes its line until held (a held loop keeps its place). Desktop (patch only, 20 s, Music + pad + arp, stereo
+off, median of 5): with chorus, flanger, phaser, tremolo and reverse on, 0.466 s -> 0.404 s (13.4% less); with the
+effects at rest no change (0.4%, they already cost almost nothing).
 Echo, stereo/reverse reverb retain their shared mono sends from the mid, so ambience surrounds the fixed direct
 places. Wind Guard, input mic mid/side and World in Stereo are unchanged. Water/Birds/Trailing Melody and Mind the
 Gap still act upstream, and earn no extra notes from this switch.

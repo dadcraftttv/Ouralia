@@ -3285,6 +3285,36 @@ check(held > 1e-5 and off < 0.01 * held and back > 0.5 * held,
       "stereo music: off closes the side even with Freeze held, on opens it again (side rms held %.2g, off %.2g, on %.2g)"
       % (held, off, back))
 
+# The side's effects idle while Music in Stereo is off (DadCraft, Nov 4): awake at once on the switch, through the
+# gate's close and the reverse line, idle after; the side comes back with chorus on exactly as if never switched off
+# (its LFO kept in step), and a held Freeze is still held.
+def msfx_run(switch):   # the same notes (so the same places), the switch off for 4.5 s in between or never
+    e, y = stereo_note(1, pan=0.5, chorus_on=1, chorus_mix=0.5, chorus_rate=0.8, chorus_depth=3)
+    e.listen("sw_msfx"); e.send_list("motif", 9, 0.5); e.run(e.silence(0.3))
+    before = side_rms(e.run(e.silence(0.5)))
+    if switch: e.send("music_stereo", 0)
+    e.run(e.silence(1.5)); through = e.heard["sw_msfx"][-1:] in ([], [1])
+    e.run(e.silence(2.5)); asleep = e.heard["sw_msfx"][-1:] == [0]
+    quiet = side_rms(e.run(e.silence(0.5)))
+    if switch: e.send("music_stereo", 1)
+    y = e.run(e.silence(0.12)); awake = e.heard["sw_msfx"][-1:] == [1]
+    jump = np.max(np.abs(np.diff((y[:, 0] - y[:, 1]) * 0.5)))
+    e.send_list("motif", 9, 0.5); e.run(e.silence(0.3))
+    return through, asleep, awake, before, quiet, side_rms(e.run(e.silence(0.5))), jump
+through, asleep, awake, before, quiet, after, jump = msfx_run(True)
+kept = msfx_run(False)[5]
+check(through and asleep and awake and before > 1e-4 and quiet < 1e-6 and 0.97 < after / kept < 1.03 and jump < 0.05,
+      "stereo music: side effects idle while off, awake at once, side back with chorus as if never off (%s %s %s, side rms %.2g off %.2g "
+      "on %.2g, never off %.2g, step %.4f)" % (through, asleep, awake, before, quiet, after, kept, jump))
+e, y = stereo_note(1, pan=0.5)
+e.send("glitch_on", 1); e.send("glitch_len", 300); e.send("glitch_hold", 1); e.run(e.silence(0.3))
+held = side_rms(e.run(e.silence(0.5)))
+e.send("music_stereo", 0); e.run(e.silence(4.5))
+e.send("music_stereo", 1); e.run(e.silence(0.2))
+back = side_rms(e.run(e.silence(0.5)))
+check(held > 1e-5 and back > 0.5 * held,
+      "stereo music: Freeze held through the side's idle is still there (side rms held %.2g, back %.2g)" % (held, back))
+
 # ---- 7z8. traffic pass: envelope, vetoes, one earned glide, lifecycle and off identity ----
 _tp_patches = {}
 def traffic_fresh(variant='', state=2, stereo=1):
