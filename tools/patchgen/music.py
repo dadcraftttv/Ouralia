@@ -1088,31 +1088,27 @@ def add_music(P):
         P.c(f"mu_xf{k}_sel", f"mu_xf{k}_dl", 1, 0)          # (the switches: add_found_pad, which also knows found sets)
         P.obj(f"mu_xf{k}_gl", "+ 300", px + 520 + 80 * k, 385); P.c("mu_r_glide", f"mu_xf{k}_gl"); P.c(f"mu_xf{k}_gl", f"mu_xf{k}_dl", 0, 1)
         P.obj(f"grp_pads{k}_r", f"r sw_pads{k}", 10, 10); P.obj(f"grp_pads{k}_sw", "switch~", 10, 40); P.c(f"grp_pads{k}_r", f"grp_pads{k}_sw")
-    # Pad Voice (DadCraft, Nov 4: "can we make glass bowl option for the pads?"): 0 Synth, 1 Glass Bowl. Shared
-    # gains, ramped: Synth's second tone x (1 - v), the first tone x (1 - v + v * level), the bowl's own tones x v.
+    # Pad Voice (DadCraft, Nov 4: "can we make glass bowl option for the pads?"): 0 Synth, 1 Glass Bowl, a crystal
+    # singing bowl played by rubbing its rim, shaped on recordings (design/music.md "Pad Voice"): an almost pure tone
+    # with a near-equal twin a fraction of a Hz away (the deep, slow swell and dip), a whisper of the octave, each note
+    # easing in slowly, one after another. Gains ramp on switching: Synth x (1 - v), the bowl x v * level.
     # (Each crossfade set ramps its own copy, inside its switched group: a signal from the music's group into the
     # set and back out would be a DSP loop.)
     P.obj("mu_pv_r", "r pad_voice", px + 700, 380); P.obj("mu_pv_cl", "clip 0 1", px + 700, 395)
     P.obj("mu_pv_pk", f"pack f {PAD_BOWL_SWITCH_MS}", px + 700, 410)
     P.c("mu_pv_r", "mu_pv_cl"); P.c("mu_pv_cl", "mu_pv_pk")
+    cm = " " + BS + ","
     for k in (0, 1):
         v = f"mu_pv{k}"
         P.obj(f"{v}_ln", "line~", px + 700, 425); P.c("mu_pv_pk", f"{v}_ln")
         P.obj(f"{v}_neg", "*~ -1", px + 700, 440); P.c(f"{v}_ln", f"{v}_neg")
         P.obj(f"{v}_syn", "+~ 1", px + 700, 455); P.c(f"{v}_neg", f"{v}_syn")                    # 1 - v
-        P.obj(f"{v}_lv", f"*~ {PAD_BOWL_LEVEL}", px + 760, 440); P.c(f"{v}_ln", f"{v}_lv")
-        P.sig2(f"{v}_one", "+~", f"{v}_syn", f"{v}_lv", px + 760, 455)                              # 1 - v + v * level
         P.obj(f"{v}_bw", f"*~ {PAD_BOWL_LEVEL}", px + 820, 440); P.c(f"{v}_ln", f"{v}_bw")       # v * level
-        # The strike (DadCraft's first listen, Nov 4: "it wasn't a glass bowl"): when this set takes a chord, its notes
-        # are struck like bowls, at once (not under the slow crossfade): the tone and the two modes above it ring out,
-        # squared fades (faster at first, like a real ring), the high mode first.
-        cm = " " + BS + ","
-        for e, ms in (("ea", PAD_BOWL_STRIKE_MS[0]), ("eb", PAD_BOWL_STRIKE_MS[1])):
-            P.msg(f"{v}_{e}m", f"1 {PAD_BOWL_ATTACK_MS}{cm} 0 {ms} {PAD_BOWL_ATTACK_MS}", px + 880, 425)
-            P.c(f"mu_xf{k}_ont", f"{v}_{e}m", 0, 0)
-            P.obj(f"{v}_{e}", "vline~", px + 880, 440); P.c(f"{v}_{e}m", f"{v}_{e}")
-            P.sig2(f"{v}_{e}2", "*~", f"{v}_{e}", f"{v}_{e}", px + 880, 455)
-            P.sig2(f"{v}_{e}w", "*~", f"{v}_{e}2", f"{v}_bw", px + 880, 470)                       # x v * level
+        for n in range(4):   # each note's swell: from silence when this set takes a chord, staggered
+            P.msg(f"{v}_w{n}m", f"0{cm} 1 {PAD_BOWL_SWELL_MS} {n * PAD_BOWL_STAGGER_MS}", px + 880 + 40 * n, 425)
+            P.c(f"mu_xf{k}_ont", f"{v}_w{n}m", 0, 0)
+            P.obj(f"{v}_w{n}", "vline~", px + 880 + 40 * n, 440); P.c(f"{v}_w{n}m", f"{v}_w{n}")
+            P.sig2(f"{v}_w{n}b", "*~", f"{v}_w{n}", f"{v}_bw", px + 880 + 40 * n, 470)   # (straight: as the old set fades)
     pad_sum = None
     offsets = ["+ 0", "+ 2", "+ 4", None]
     for i in range(4):
@@ -1141,34 +1137,23 @@ def add_music(P):
             P.c(f"mu_pad{i}_{k}_gate", f"mu_pad{i}_{k}_t")
             P.c(f"mu_pad{i}_{k}_t", f"mu_pad{i}_{k}_o1", 0, 0)
             P.c(f"mu_pad{i}_{k}_t", f"mu_pad{i}_{k}_det", 1, 0); P.c(f"mu_pad{i}_{k}_det", f"mu_pad{i}_{k}_o2")
-            # Glass Bowl: the first tone with a quieter twin a hair above (the slow "wah" of a bowl that isn't quite
-            # round), and the bowl's second mode at PAD_BOWL_PARTIAL x with its own faster beat (group bowl{k})
-            for o, mult in (("o3", PAD_BOWL_TWIN), ("o4", PAD_BOWL_PARTIAL), ("o5", PAD_BOWL_PARTIAL * PAD_BOWL_TWIN2),
-                            ("o6", PAD_BOWL_THIRD)):
-                P.obj(f"mu_pad{i}_{k}_{o}f", f"* {mult:.6g}", kx + 40, 515)
+            # Glass Bowl: the tone (o1, shared), its twin PAD_BOWL_BEATS_HZ[i] above and a whisper of the octave
+            # (their oscillators: group bowl{k}, running only while chosen and heard)
+            P.obj(f"mu_pad{i}_{k}_o3f", f"+ {PAD_BOWL_BEATS_HZ[i]}", kx + 40, 515)
+            P.obj(f"mu_pad{i}_{k}_o4f", "* 2", kx + 40, 515)
+            for o in ("o3", "o4"):
                 P.obj(f"mu_pad{i}_{k}_{o}", "osc~", kx + 40, 520)
                 P.c(f"mu_pad{i}_{k}_t", f"mu_pad{i}_{k}_{o}f", 1, 0); P.c(f"mu_pad{i}_{k}_{o}f", f"mu_pad{i}_{k}_{o}")
             P.obj(f"mu_pad{i}_{k}_b3", f"*~ {PAD_BOWL_TWIN_LEVEL}", kx + 40, 525); P.c(f"mu_pad{i}_{k}_o3", f"mu_pad{i}_{k}_b3")
-            P.obj(f"mu_pad{i}_{k}_b4", f"*~ {PAD_BOWL_PARTIAL_LEVEL}", kx + 40, 525); P.c(f"mu_pad{i}_{k}_o4", f"mu_pad{i}_{k}_b4")
-            P.obj(f"mu_pad{i}_{k}_b5", f"*~ {PAD_BOWL_PARTIAL_LEVEL * PAD_BOWL_TWIN_LEVEL:.6g}", kx + 40, 525)
-            P.c(f"mu_pad{i}_{k}_o5", f"mu_pad{i}_{k}_b5")
+            P.obj(f"mu_pad{i}_{k}_b4", f"*~ {PAD_BOWL_OCTAVE}", kx + 40, 525); P.c(f"mu_pad{i}_{k}_o4", f"mu_pad{i}_{k}_b4")
             P.sig2(f"mu_pad{i}_{k}_bs1", "+~", f"mu_pad{i}_{k}_b3", f"mu_pad{i}_{k}_b4", kx + 40, 527)
-            P.sig2(f"mu_pad{i}_{k}_bs2", "+~", f"mu_pad{i}_{k}_bs1", f"mu_pad{i}_{k}_b5", kx + 40, 528)
-            P.sig2(f"mu_pad{i}_{k}_bpv", "*~", f"mu_pad{i}_{k}_bs2", f"mu_pv{k}_bw", kx + 40, 529)
-            P.sig2(f"mu_pad{i}_{k}_o1a", "*~", f"mu_pad{i}_{k}_o1", f"mu_pv{k}_one", kx, 529)
+            P.sig2(f"mu_pad{i}_{k}_bo", "+~", f"mu_pad{i}_{k}_o1", f"mu_pad{i}_{k}_bs1", kx + 40, 528)
+            P.sig2(f"mu_pad{i}_{k}_bpv", "*~", f"mu_pad{i}_{k}_bo", f"mu_pv{k}_w{i}b", kx + 40, 529)
+            P.sig2(f"mu_pad{i}_{k}_o1a", "*~", f"mu_pad{i}_{k}_o1", f"mu_pv{k}_syn", kx, 529)
             P.sig2(f"mu_pad{i}_{k}_o2c", "*~", f"mu_pad{i}_{k}_o2", f"mu_pv{k}_syn", kx, 529)
             P.sig2(f"mu_pad{i}_{k}_s1", "+~", f"mu_pad{i}_{k}_o1a", f"mu_pad{i}_{k}_o2c", kx, 530)
             P.sig2(f"mu_pad{i}_{k}_s", "+~", f"mu_pad{i}_{k}_s1", f"mu_pad{i}_{k}_bpv", kx, 530)
-            P.sig2(f"mu_pad{i}_{k}_xa", "*~", f"mu_pad{i}_{k}_s", f"mu_xf{k}", kx, 545)
-            st = PAD_BOWL_STRIKE   # (the tone, the second mode, the third: their strike levels)
-            P.obj(f"mu_pad{i}_{k}_sa1", f"*~ {st[0]}", kx, 546); P.c(f"mu_pad{i}_{k}_o1", f"mu_pad{i}_{k}_sa1")
-            P.obj(f"mu_pad{i}_{k}_sa2", f"*~ {st[1]}", kx, 546); P.c(f"mu_pad{i}_{k}_o4", f"mu_pad{i}_{k}_sa2")
-            P.sig2(f"mu_pad{i}_{k}_sa", "+~", f"mu_pad{i}_{k}_sa1", f"mu_pad{i}_{k}_sa2", kx, 547)
-            P.sig2(f"mu_pad{i}_{k}_sae", "*~", f"mu_pad{i}_{k}_sa", f"mu_pv{k}_eaw", kx, 548)
-            P.obj(f"mu_pad{i}_{k}_sb", f"*~ {st[2]}", kx, 546); P.c(f"mu_pad{i}_{k}_o6", f"mu_pad{i}_{k}_sb")
-            P.sig2(f"mu_pad{i}_{k}_sbe", "*~", f"mu_pad{i}_{k}_sb", f"mu_pv{k}_ebw", kx, 548)
-            P.sig2(f"mu_pad{i}_{k}_st", "+~", f"mu_pad{i}_{k}_sae", f"mu_pad{i}_{k}_sbe", kx, 549)
-            parts.append(P.sig2(f"mu_pad{i}_{k}_x", "+~", f"mu_pad{i}_{k}_xa", f"mu_pad{i}_{k}_st", kx, 550))
+            parts.append(P.sig2(f"mu_pad{i}_{k}_x", "*~", f"mu_pad{i}_{k}_s", f"mu_xf{k}", kx, 545))
         P.sig2(f"mu_pad{i}_sum", "+~", parts[0], parts[1], vx, 560)
         P.obj(f"mu_pad{i}_g", "*~ " + ("0.042", "0.033", "0.03", "0.021")[i], vx, 590)
         P.c(f"mu_pad{i}_sum", f"mu_pad{i}_g")
