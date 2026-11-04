@@ -159,20 +159,17 @@ BASS_GAIN = 0.11
 BASS_DUCK = 0.6         # a footstep takes the bass down this share while the walking beat plays...
 BASS_DUCK_MS = 220      # ...and it comes back over this
 # Pad Voice Glass Bowl (DadCraft, Nov 4: "glass bowls in a sort of "sound healing" kind of setting ... it might even
-# compliment the glass bells"): a crystal singing bowl, nearly a pure tone. Each note's tone gets a quieter twin a hair
-# above (a bowl isn't quite round, so each mode is two: the slow "wah"), and the bowl's second mode at 2.71 x (the
-# glass chimes' bar has 2.76) with its own, faster beat. Ratios, not Hz, so higher bowls beat faster, as real ones do.
-PAD_BOWL_TWIN = 1.0022          # the tone's twin: 0.5 Hz of beat at 220 Hz
-PAD_BOWL_TWIN_LEVEL = 0.85      # (under 1, so the beat swells and dips deeply without going silent)
-PAD_BOWL_PARTIAL = 2.71         # the second mode
-PAD_BOWL_TWIN2 = 1.0035         # its twin: 2.1 Hz of beat over a 220 Hz note
-PAD_BOWL_PARTIAL_LEVEL = 0.22   # quiet: an out-of-key overtone, under a chord of four
-PAD_BOWL_LEVEL = 1.11           # the bowl's tones x this: Synth's loudness (measured over keys C, F, A: 0.8-1.2 dB under at 1)
+# compliment the glass bells"). Shaped on recordings of rubbed crystal bowls (Freesound 129219, 264181, 530848): an
+# almost pure tone (overtones 38-60 dB down, the octave the strongest), a deep slow swell and dip (0.15-0.56 Hz, 86-100%
+# deep: two near-equal tones a fraction of a Hz apart) and a slow rise as the rim is rubbed (DadCraft: "there really
+# isn't a stike, just a soft attack/easeing inkind of start").
+PAD_BOWL_BEATS_HZ = (0.23, 0.38, 0.29, 0.53)   # each note's twin this far above it: each bowl wobbles at its own pace
+PAD_BOWL_TWIN_LEVEL = 0.9       # near-equal: the dip goes ~25 dB down, never quite silent
+PAD_BOWL_OCTAVE = 0.012         # a whisper of the octave (-38 dB, the strongest overtone in the recordings)
+PAD_BOWL_SWELL_MS = 4000        # each note eases in over this, from silence, when its set takes a chord...
+PAD_BOWL_STAGGER_MS = 700       # ...one after another, this far apart (the bowls are played in turn)
+PAD_BOWL_LEVEL = 1.15           # the bowl x this: Synth's loudness over a minute (C, F, A; its notes ease in)
 PAD_BOWL_SWITCH_MS = 300        # switching the voice crossfades over this long
-PAD_BOWL_THIRD = 5.15           # the third mode, heard only in the strike
-PAD_BOWL_STRIKE = (0.5, 0.8, 0.45)      # each chord change strikes its notes: the tone, the 2.71 x and 5.15 x modes
-PAD_BOWL_STRIKE_MS = (6000, 2500)       # ...ringing out over these (the tone and second mode, the third), squared
-PAD_BOWL_ATTACK_MS = 8                  # a soft mallet (the glass chime's is 6)
 PAD_GLIDE_MS = 3500     # the pad crossfades from one chord to the next over this time (no pitch slides)
 
 # Room notes: resonators that make the mic's own sound ring the current chord: root, third and fifth (scale steps

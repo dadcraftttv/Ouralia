@@ -2613,23 +2613,26 @@ ym = np.concatenate(ys)
 check(not np.isnan(ym).any() and float(np.abs(ym).max()) <= 1.0 + 1e-6, "music: loud noise, steps and all voices stay within +-1 (max %.2f)" % float(np.abs(ym).max()))
 
 # ---- 10u. pad voice: Glass Bowl, a singing bowl (DadCraft, Nov 4); Synth as before ----
-# Same chords: the bowl's tones in key, its second mode at 2.71 x quietly above them, about Synth's loudness; its own
-# tones asleep with Synth, awake with Glass Bowl; switching while it plays is a crossfade, not a click.
+# Same chords: the bowl's tones in key and nothing at a metal bowl's 2.71 x; its notes ease in (no strike) while Synth's
+# first chord is there at once; its own oscillators asleep with Synth, awake with Glass Bowl; switching while it plays
+# is a crossfade, not a click.
 def pad_voice(pv, secs=6.5, **over):
-    e = fresh(**dict(dict(music_on=1, music_pad=1, music_arp=0, music_res=0, wet=0, music_pad_reg=1, pad_voice=0), **over))
-    e.listen("sw_bowl0", "sw_bowl1"); e.send("pad_voice", pv)
+    e = fresh(**dict(dict(music_on=0, music_pad=1, music_arp=0, music_res=0, wet=0, music_pad_reg=1, pad_voice=0,
+                          pad_room=0), **over))   # (the mic hears silence: the pad stays open)
+    e.listen("sw_bowl0", "sw_bowl1"); e.send("pad_voice", pv); e.send("music_on", 1)   # (chosen, then the music starts)
     return e, e.run(e.silence(secs))[:, 0]
 es, ys = pad_voice(0); eb, yb = pad_voice(1)
 asleep = all(es.heard.get(f"sw_bowl{k}", [0])[-1:] in ([], [0]) for k in (0, 1))
 awake = any(eb.heard.get(f"sw_bowl{k}", [])[-1:] == [1] for k in (0, 1))
 ts, tb = ys[SR * 2:], yb[SR * 2:]
-fund = spec_peaks(tb, 0.3)
-parts = spec_peaks(tb, 0.01)
-second = [f for f in fund if any(abs(g - 2.71 * f) < 3 for g in parts)]
-db = 20 * np.log10(rms(tb) / rms(ts))
-check(asleep and awake and len(fund) >= 3 and not off_key(fund, 0, 0) and second and abs(db) < 1.5,
-      "pad voice: Glass Bowl's tones in key (%s), a second mode over %s, %.2f dB from Synth; asleep with Synth %s, awake %s"
-      % ([round(f) for f in fund[:6]], [round(f) for f in second], db, asleep, awake))
+fund = spec_peaks(yb[SR * 4:], 0.05)   # (its notes arrive one after another)
+parts = spec_peaks(tb, 0.003)
+metal = [f for f in fund if any(abs(g - 2.71 * f) < 3 for g in parts)]
+first = rms(yb[SR * 2 // 5:SR * 9 // 10]) / rms(ys[SR * 2 // 5:SR * 9 // 10])   # (after the 300 ms switch)
+later = rms(yb[SR * 5:]) / rms(ys[SR * 5:])
+check(asleep and awake and len(fund) >= 3 and not off_key(fund, 0, 0) and not metal and first < 0.25 and 0.5 < later < 2,
+      "pad voice: Glass Bowl's tones in key (%s), none at 2.71 x (%s), eases in (0.4-0.9 s %.3f of Synth, 5-6.5 s %.2f); "
+      "asleep with Synth %s, awake %s" % ([round(f) for f in fund[:6]], [round(f) for f in metal], first, later, asleep, awake))
 e, _ = pad_voice(0, secs=4)
 e.send("pad_voice", 1); y = e.run(e.silence(1))[:, 0]
 step = np.max(np.abs(np.diff(y))); usual = max(np.max(np.abs(np.diff(ts))), np.max(np.abs(np.diff(tb))))   # (the bowl's higher tones move faster)
