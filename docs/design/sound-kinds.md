@@ -418,6 +418,19 @@ click. Tell us which one, and whether it is too strong, too weak or too slow.
 **His first listen (Nov 2):** "i can't tell which i like better. i'll keep testing with the two options." Both stay
 in, no tuning; his pick (or a change) when he has one.
 
+**Asleep while off (review performance item, Claude Code, Nov 4).** The four paths (music, music side, beat, beat
+side) ran their filters and wobbling delay even with Underwater Off, in every build. Their wet part is now one switched
+block (`switch~`, group `uw`): it wakes at once on `underwater` > 0 and sleeps 8.5 s after it returns to 0 (the longest
+fade out, 8 s, plus the 40 ms buffer and a margin). Off, each path's output is its input exactly either way, and the
+wake comes at amount 0, so nothing is heard (step at wake 0.0006). Test: asleep, awake at once, awake through the fade,
+asleep after, working again. Beat through the paths sample-identical old vs new (the music can't be compared sample
+for sample: it varies run to run even on one patch). **Desktop** (patch only, Music + pad + arp + beat, Underwater
+off, 24 s, 5 runs each): median 0.524 s old, 0.448 s new, **14.4% less patch time**, about 0.3 points of a desktop
+core, ranges apart. **Moto** (Ouralia Dev playing, Music + Music in Stereo on, Underwater Off; process CPU over three
+60 s windows from /proc): before 57.4 / 62.0 / 62.7%, after 59.1 / 61.3 / 61.1% of a core: no difference the phone
+can resolve (it swings about 3 points; `top` snapshots range 22-85%). 0 underruns both. Kept: it is free and saves
+real work; the bigger costs are elsewhere (the classifier's resampling, finding 2's performance notes).
+
 ## Step 9 options: birds (Nov 2)
 
 DadCraft: "hand birds to codex, options first." Write-up only; neither option is built. DadCraft cannot test
