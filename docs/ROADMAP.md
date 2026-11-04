@@ -22,9 +22,9 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 ## Open now (checked against the code, 2026-10-22)
 
 **Project review (Codex, Nov 3):** [branch/code/performance review](PROJECT-REVIEW-2026-11-03.md).
-Finding 5 DONE Nov 4 (afbeac1+1): the test runner stops on native-build failure and prints diagnostics; regression tests in
-both tiers. Next in the saved Nov 3 sequence: CI branch/variant/generated-patch
-coverage, stereo/Freeze transition, classifier lifecycle, scene import bounds, then inactive DSP cost with a Moto
+Finding 5 DONE Nov 4 (abe4da3): the test runner stops on native-build failure and prints diagnostics; regression tests in
+both tiers. Finding 6 DONE Nov 4: CI also runs on pushes to `sound-kinds`, fails on a stale `test_scene.pd`, builds
+Debug and Ouralia Dev; `desktop/test.sh` also compiles the desktop app. Next in the saved Nov 3 sequence: stereo/Freeze transition, classifier lifecycle, scene import bounds, then inactive DSP cost with a Moto
 CPU comparison. Reactive-first additions remain proposals for DadCraft to choose.
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.

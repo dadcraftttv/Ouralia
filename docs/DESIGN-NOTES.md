@@ -145,6 +145,9 @@ This file is the index. Each feature's notes live in one of these (`grep -rn <fe
 checks. Both tiers stop before starting any suite if patch generation or the native `dcs` build fails, printing
 the captured build output (review finding 5, fixed Nov 4). `tools/test_run_tests.py` guards those failure paths
 and successful startup in both tiers; it also runs in both tiers. Run it alone with `python3 tools/test_run_tests.py`.
+CI (`.github/workflows/tests.yml`, review finding 6, Nov 4) runs on pushes to `main` and `sound-kinds` and on pull
+requests: it regenerates `test_scene.pd` and fails if the committed one differs, builds Debug and Ouralia Dev (the
+real YAMNet code), then runs the quick tier. `desktop/test.sh` (full tier) also compiles the desktop app's own sources.
 
 1. Desktop libpd is needed for the Pd tests: `tools/build_libpd.sh` builds it into `tools/.libpd/libpd.so` (needs git, make, gcc).
    It is pinned to our libpd fork's commit ebc0b83 (Pd 0.55.2), the same libpd as the app's pd-core. Pd 0.56 breaks StreetBeatz.rj
