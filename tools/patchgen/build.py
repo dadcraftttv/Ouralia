@@ -893,6 +893,21 @@ def build():
     # uw_amt = 0), so they wake on "underwater" > 0 and sleep after the longest fade out plus the delay buffer.
     P.group("uw", r"^uw_(mu|ms|bt|bs)_(lp1|lp2|dw|vd|d1|d1s|wet|d2)$")
     add_switch(P, "uw", ("underwater",), max(UW_OUT_MS) + UW_BUF_MS + 500)
+    # Music in Stereo's side effects rest while the switch is off (DadCraft, Nov 4: "no need to use those resources
+    # if the user has it off"). Off, the side is closed after them (ms_gate) and its input is 0, so their output is
+    # never heard. Once the gate has closed and the longest line (the reverse echo's 2.1 s) holds only silence, the
+    # side's chorus, flanger, phaser and reverse go idle: their LFOs and read cycles move on exactly as the mid's
+    # do (so they are still in step when it wakes), nothing else is computed. They wake at once on music_stereo > 0.
+    # (Not a switch~: a stopped block's LFOs would stand still and come back out of step with the mid's.) Tremolo
+    # is already a multiply and freeze only writes its line until held (a held loop must keep its place).
+    if not LEGACY_FX:
+        add_switch(P, "msfx", ("music_stereo",), MUSIC_STEREO_MS + 2100 + 500, dsp=False)
+        P.obj("msfx_idle_r", "r sw_msfx", 4600, 1900); P.obj("msfx_idle_n", "== 0", 4600, 1915)
+        P.msg("msfx_idle_m", "idle " + BS + "$1", 4600, 1930)
+        P.c("msfx_idle_r", "msfx_idle_n"); P.c("msfx_idle_n", "msfx_idle_m")
+        for fx_name in ("msfx_chorused", "msfx_flanged", "msfx_phased", "msfx_rvs_sound"):
+            assert fx_name in P.index, fx_name
+            P.c("msfx_idle_m", fx_name)
     P.group("roomnotes", r"^rn\d*_")
     add_switch(P, "roomnotes", ("music_on", "music_res", "rn_ring"), 2500)
     for k in range(2):                                                  # Room notes, found: each voice on while it rings

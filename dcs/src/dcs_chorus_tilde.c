@@ -2,7 +2,7 @@
  * swing +-depth ms around their bases, a quarter cycle apart, averaged and mixed in by the amount.
  * `run 0` stops it as Pd's switch~ stopped its subpatch (the LFO and the line stand still; the output is the input).
  *
- * Messages: rate <Hz>, depth <ms>, mix <0..1>, on <0|1>, smooth <ms>, run <0|1>.
+ * Messages: rate <Hz>, depth <ms>, mix <0..1>, on <0|1>, smooth <ms>, run <0|1>, idle <0|1>.
  * Arguments: the two base delays in ms (15 21), the line's length in ms (60).
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -16,7 +16,7 @@ typedef struct {
     t_object x_obj;
     t_float x_f;
     t_float sr, smooth, base[2];
-    int run;
+    int run, idle;
     double phase;
     dcs_delay d;
     dcs_line rate, depth, mix, on;
@@ -37,6 +37,11 @@ static t_int *dcs_chorus_perform(t_int *w)
             t_sample f = in[i];
             out[i] = f + (0 - f) * (mix[i] * on[i]);
         }
+        return w + 5;
+    }
+    if (x->idle) {   /* idle: the LFO moves on as when running (in step with a twin that runs), nothing else */
+        DCS_SCRATCH(ph); dcs_phasor_block(&x->phase, rate, 0, ph, n, x->sr);
+        for (int i = 0; i < n; i++) out[i] = in[i];
         return w + 5;
     }
     DCS_SCRATCH(ph); DCS_SCRATCH(ms); DCS_SCRATCH(r0); DCS_SCRATCH(r1);
@@ -71,6 +76,7 @@ static void dcs_chorus_mix(t_dcs_chorus *x, t_floatarg f) { dcs_line_set(&x->mix
 static void dcs_chorus_on(t_dcs_chorus *x, t_floatarg f) { dcs_line_set(&x->on, f, x->smooth); }
 static void dcs_chorus_smooth(t_dcs_chorus *x, t_floatarg f) { x->smooth = f; }
 static void dcs_chorus_run(t_dcs_chorus *x, t_floatarg f) { x->run = f != 0; }
+static void dcs_chorus_idle(t_dcs_chorus *x, t_floatarg f) { x->idle = f != 0; }
 
 static void *dcs_chorus_new(t_floatarg b0, t_floatarg b1, t_floatarg ms)
 {
@@ -99,4 +105,5 @@ void dcs_chorus_tilde_setup(void)
     class_addmethod(dcs_chorus_class, (t_method)dcs_chorus_on, gensym("on"), A_FLOAT, 0);
     class_addmethod(dcs_chorus_class, (t_method)dcs_chorus_smooth, gensym("smooth"), A_FLOAT, 0);
     class_addmethod(dcs_chorus_class, (t_method)dcs_chorus_run, gensym("run"), A_FLOAT, 0);
+    class_addmethod(dcs_chorus_class, (t_method)dcs_chorus_idle, gensym("idle"), A_FLOAT, 0);
 }

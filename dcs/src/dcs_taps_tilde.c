@@ -4,7 +4,7 @@
  * rate (1 - ratio) shifts pitch by ratio; one that grows 2 ms per ms plays backwards. `run 0` stops it as Pd's
  * switch~ stopped its subpatch (silent).
  *
- * Messages: ra <Hz>, rb <x> (1 unless set), win <ms>, smooth <ms>, run <0|1>. Argument: the line's length in ms.
+ * Messages: ra <Hz>, rb <x> (1 unless set), win <ms>, smooth <ms>, run <0|1>, idle <0|1>. Argument: the line's length in ms.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  * Copyright (c) 2026 dadcraft (DadCraft Studios)
@@ -17,7 +17,7 @@ typedef struct {
     t_object x_obj;
     t_float x_f;
     t_float sr, smooth;
-    int run;
+    int run, idle;
     double phase;
     dcs_delay d;
     dcs_line ra, rb, win;
@@ -33,6 +33,13 @@ static t_int *dcs_taps_perform(t_int *w)
     dcs_line_block(&x->rb, rb, n, x->sr);
     dcs_line_block(&x->win, win, n, x->sr);
     if (!x->run) {
+        for (int i = 0; i < n; i++) out[i] = 0;
+        return w + 5;
+    }
+    if (x->idle) {   /* idle: the read cycle moves on as when running (in step with a twin that runs), nothing else */
+        DCS_SCRATCH(rate); DCS_SCRATCH(p1);
+        for (int i = 0; i < n; i++) rate[i] = ra[i] * rb[i];
+        dcs_phasor_block(&x->phase, rate, 0, p1, n, x->sr);
         for (int i = 0; i < n; i++) out[i] = 0;
         return w + 5;
     }
@@ -66,6 +73,7 @@ static void dcs_taps_rb(t_dcs_taps *x, t_floatarg f) { dcs_line_set(&x->rb, f, x
 static void dcs_taps_win(t_dcs_taps *x, t_floatarg f) { dcs_line_set(&x->win, f, x->smooth); }
 static void dcs_taps_smooth(t_dcs_taps *x, t_floatarg f) { x->smooth = f; }
 static void dcs_taps_run(t_dcs_taps *x, t_floatarg f) { x->run = f != 0; }
+static void dcs_taps_idle(t_dcs_taps *x, t_floatarg f) { x->idle = f != 0; }
 
 static void *dcs_taps_new(t_floatarg ms)
 {
@@ -92,4 +100,5 @@ void dcs_taps_tilde_setup(void)
     class_addmethod(dcs_taps_class, (t_method)dcs_taps_win, gensym("win"), A_FLOAT, 0);
     class_addmethod(dcs_taps_class, (t_method)dcs_taps_smooth, gensym("smooth"), A_FLOAT, 0);
     class_addmethod(dcs_taps_class, (t_method)dcs_taps_run, gensym("run"), A_FLOAT, 0);
+    class_addmethod(dcs_taps_class, (t_method)dcs_taps_idle, gensym("idle"), A_FLOAT, 0);
 }

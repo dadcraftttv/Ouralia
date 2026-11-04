@@ -5,7 +5,7 @@
  * `run 0` stops it as Pd's switch~ stopped its subpatch (and the metro with it).
  *
  * Messages: rate <Hz>, depth <0..1> (read at each sweep step), fb <-1..1>, mix <0..1>, on <0|1>, smooth <ms>,
- * run <0|1>. Arguments: centre Hz (700), q (0.7), the feedback delay in ms (1.4), then the 4 stage multipliers.
+ * run <0|1>, idle <0|1>. Arguments: centre Hz (700), q (0.7), the feedback delay in ms (1.4), then the 4 stage multipliers.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  * Copyright (c) 2026 dadcraft (DadCraft Studios)
@@ -22,7 +22,7 @@ typedef struct {
     t_object x_obj;
     t_float x_f;
     t_float sr, smooth, depth, centre, q, fbms, mult[NSTAGE];
-    int run, metro;
+    int run, metro, idle;
     double now, metrotime;      /* Pd's logical time, in its units */
     t_sample snap;              /* [snapshot~]: the LFO's last sample */
     dcs_osc osc;
@@ -78,6 +78,12 @@ static t_int *dcs_phaser_perform(t_int *w)
         }
         return w + 5;
     }
+    if (x->idle) {   /* idle: the LFO moves on as when running (in step with a twin that runs), nothing else */
+        DCS_SCRATCH(lfo); dcs_osc_block(&x->osc, rate, 0, lfo, n, x->sr);
+        if (n > 0) x->snap = lfo[n - 1];   /* (the sweep steps above read it) */
+        for (int i = 0; i < n; i++) out[i] = in[i];
+        return w + 5;
+    }
     DCS_SCRATCH(lfo); DCS_SCRATCH(rd); DCS_SCRATCH(y);
     dcs_osc_block(&x->osc, rate, 0, lfo, n, x->sr);
     dcs_delay_read(&x->d, x->fbms, rd, n, x->sr, n);   /* (the reader comes first: it feeds the writer) */
@@ -120,6 +126,8 @@ static void dcs_phaser_mix(t_dcs_phaser *x, t_floatarg f) { dcs_line_set(&x->mix
 static void dcs_phaser_on(t_dcs_phaser *x, t_floatarg f) { dcs_line_set(&x->on, f, x->smooth); }
 static void dcs_phaser_smooth(t_dcs_phaser *x, t_floatarg f) { x->smooth = f; }
 /* the switch: the subpatch and its [metro] (which steps at once when started) */
+static void dcs_phaser_idle(t_dcs_phaser *x, t_floatarg f) { x->idle = f != 0; }
+
 static void dcs_phaser_run(t_dcs_phaser *x, t_floatarg f)
 {
     x->run = f != 0;
@@ -167,4 +175,5 @@ void dcs_phaser_tilde_setup(void)
     class_addmethod(dcs_phaser_class, (t_method)dcs_phaser_on, gensym("on"), A_FLOAT, 0);
     class_addmethod(dcs_phaser_class, (t_method)dcs_phaser_smooth, gensym("smooth"), A_FLOAT, 0);
     class_addmethod(dcs_phaser_class, (t_method)dcs_phaser_run, gensym("run"), A_FLOAT, 0);
+    class_addmethod(dcs_phaser_class, (t_method)dcs_phaser_idle, gensym("idle"), A_FLOAT, 0);
 }
