@@ -30,6 +30,7 @@ final class SoundKindsRunner {
     private static Consumer<String> log;
     private static HandlerThread thread;
     private static Handler worker;
+    private static Handler sends;   // (one thread for every Pd send, in the order the state was computed)
     private static SoundKinds.Model model;
     private static SoundKinds kinds;
     private static int seg, ticks, rate;
@@ -77,6 +78,19 @@ final class SoundKindsRunner {
     }
 
     private SoundKindsRunner() { }
+
+    /** Call with the lock held: queue Pd sends behind every earlier state change (review finding 2, Nov 4). A stop's
+     *  neutral state can no longer be overtaken by an older judgement or startup that read its state before the stop.
+     *  The sends themselves run on their own thread, outside the lock: Pd's thread calls {@link #ready} holding Pd's
+     *  lock, so sending under ours could deadlock. */
+    private static void queue(Runnable r) {
+        if (sends == null) {
+            HandlerThread t = new HandlerThread("SoundKindsPd");
+            t.start();
+            sends = new Handler(t.getLooper());
+        }
+        sends.post(r);
+    }
 
     /** True in the Dev build (the model is there). */
     static boolean available() {
@@ -222,16 +236,21 @@ final class SoundKindsRunner {
                 talk = kinds != null && kinds.talking();
                 listen = room || gaps || water || uw > 0 || birds || traffic || flow || enabled(app);
             }
+            boolean all = !same, rm = room && music, vt = gaps && talk;
+            queue(() -> {
+                sendWater(w);
+                sendUw(u);
+                sendBirds(b);
+                sendTraffic(tr);
+                if (all) {
+                    PdBase.sendFloat("room_music", rm ? 1 : 0);
+                    PdBase.sendFloat("voice_talk", vt ? 1 : 0);
+                }
+            });
         }
-        sendWater(w);
-        sendUw(u);
-        sendBirds(b);
-        sendTraffic(tr);
         if (same) {
             return;
         }
-        PdBase.sendFloat("room_music", room && music ? 1 : 0);
-        PdBase.sendFloat("voice_talk", gaps && talk ? 1 : 0);
         if (listen) {
             start();
         } else {
@@ -316,13 +335,12 @@ final class SoundKindsRunner {
                         kinds = k;
                         seg = size / SoundKinds.SEGS;
                         judged = dropped = 0;
+                        int traffic = trafficTick();
+                        queue(() -> {
+                            sendTraffic(traffic);
+                            PdBase.sendFloat("sk_on", 1);
+                        });
                     }
-                    int traffic;
-                    synchronized (lock) {
-                        traffic = trafficTick();
-                    }
-                    sendTraffic(traffic);
-                    PdBase.sendFloat("sk_on", 1);
                     l.accept(String.format(java.util.Locale.US, "Sound kinds: on (YAMNet, ring %d samples at %d Hz)", size, rate));
                 } catch (Throwable e) {   // (no model, no LiteRT for this ABI, no ring in the patch)
                     synchronized (lock) {
@@ -364,14 +382,16 @@ final class SoundKindsRunner {
             uw = uwTick();
             birds = birdsTick();
             traffic = trafficTick();
+            queue(() -> {
+                sendWater(water);
+                sendUw(uw);
+                sendBirds(birds);
+                sendTraffic(traffic);
+                PdBase.sendFloat("sk_on", 0);
+                PdBase.sendFloat("room_music", 0);   // (no ears: the music comes back)
+                PdBase.sendFloat("voice_talk", 0);
+            });
         }
-        sendWater(water);
-        sendUw(uw);
-        sendBirds(birds);
-        sendTraffic(traffic);
-        PdBase.sendFloat("sk_on", 0);
-        PdBase.sendFloat("room_music", 0);   // (no ears: the music comes back)
-        PdBase.sendFloat("voice_talk", 0);
         w.post(() -> {
             if (stoppedModel != null) {
                 stoppedModel.close();
@@ -438,7 +458,7 @@ final class SoundKindsRunner {
         long t0 = System.nanoTime();
         float[] scores = m.scores(wave);
         long took = System.nanoTime() - t0;
-        boolean changed, roomChanged, room, talkChanged, talk;
+        boolean changed, roomChanged, room, talkChanged, talk, step, gaps;
         int water, uw, birds, traffic;
         String line;
         synchronized (lock) {
@@ -459,29 +479,32 @@ final class SoundKindsRunner {
             uw = uwTick();
             birds = birdsTick();
             traffic = trafficTick();
+            step = roomOn;
+            gaps = gapsOn;
+            boolean sendRoom = roomChanged && step, sendTalk = talkChanged && gaps;
+            queue(() -> {
+                sendWater(water);
+                sendUw(uw);
+                sendBirds(birds);
+                sendTraffic(traffic);
+                if (sendRoom) {
+                    PdBase.sendFloat("room_music", room ? 1 : 0);
+                }
+                if (sendTalk) {
+                    PdBase.sendFloat("voice_talk", talk ? 1 : 0);
+                }
+            });
         }
-        sendWater(water);
-        sendUw(uw);
-        sendBirds(birds);
-        sendTraffic(traffic);
         if (changed && l != null) {
             l.accept(line);
         }
         if (roomChanged) {
-            boolean step = roomOn;
-            if (step) {
-                PdBase.sendFloat("room_music", room ? 1 : 0);
-            }
             if (l != null) {
                 l.accept(room ? "Room music: heard" + (step ? ", the music steps back" : " (Make Room for Music off)")
                         : "Room music: gone" + (step ? ", the music comes back" : ""));
             }
         }
         if (talkChanged) {
-            boolean gaps = gapsOn;
-            if (gaps) {
-                PdBase.sendFloat("voice_talk", talk ? 1 : 0);
-            }
             if (l != null) {
                 l.accept(talk ? "Talk: heard" + (gaps ? ", the chimes wait for the gaps" : " (Mind the Gap off)")
                         : "Talk: over" + (gaps ? ", the chimes play again" : ""));

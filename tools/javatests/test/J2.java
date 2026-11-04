@@ -21,6 +21,10 @@ public class J2 {
         for(int i=PdBase.sent.size()-1;i>=0;i--)if(PdBase.sent.get(i).startsWith("traffic_flow_state="))return PdBase.sent.get(i);
         return "";
     }
+    static String lastSk() {
+        for(int i=PdBase.sent.size()-1;i>=0;i--)if(PdBase.sent.get(i).startsWith("sk_on="))return PdBase.sent.get(i);
+        return "";
+    }
     static void trafficJudgement() {
         for(int i=0;i<5;i++)SoundKindsRunner.ready(0);
         Handler.drain();
@@ -39,15 +43,16 @@ public class J2 {
         check(lastTraffic().equals("traffic_state=2.0"),"runner sends traffic permission on unchanged-kind judgement too");
         SoundKinds ks=(SoundKinds)field("kinds"); float[] voices=new float[521]; voices[0]=.8f;
         for(int i=0;i<32;i++)ks.judge(voices,i*250);
-        SoundKindsRunner.settingsTick();
+        SoundKindsRunner.settingsTick();Handler.drain();
         check(lastTraffic().equals("traffic_state=3.0"),"settled talk reaches patch with Mind the Gap off");
         SoundKindsRunner.detach();
         check(!SoundKindsRunner.on()&&!ks.trafficAllowed()&&!ks.talking(),"stop clears logic immediately before queued cleanup");
+        Handler.drain();
         check(lastTraffic().equals("traffic_state=0.0"),"stop sends neutral traffic state");
         SoundKindsRunner.attach(c,48000,s->{});Handler.drain();
         check(SoundKindsRunner.on()&&!((SoundKinds)field("kinds")).trafficAllowed(),"restart has a fresh model and no stale permission");
         trafficJudgement();trafficJudgement();
-        ParamStore.set("music_on",0);SoundKindsRunner.settingsTick();
+        ParamStore.set("music_on",0);SoundKindsRunner.settingsTick();Handler.drain();
         check(lastTraffic().equals("traffic_state=0.0"),"Music off releases traffic without stopping the shared listener");
         ParamStore.set("traffic_pass",0);SoundKindsRunner.settingsTick();Handler.drain();
         check(!SoundKindsRunner.on(),"last Music listening switch off stops runner");
@@ -63,6 +68,29 @@ public class J2 {
         check(SoundKindsRunner.on()&&((Integer)field("judged"))==0,
             "old queued judgement cannot infer on the restarted model");
         SoundKindsRunner.detach();Handler.drain();
+        // Review finding 2 (Nov 4): every Pd send waits in one queue, in the order its state was read under the lock,
+        // so a stop's neutral state always lands after older work. Nothing is sent from the caller's thread.
+        ParamStore.set("traffic_pass",1);ParamStore.set("music_on",1);
+        SoundKindsRunner.attach(c,48000,s->{});Handler.drain();
+        trafficJudgement();trafficJudgement();
+        int before=PdBase.sent.size();
+        ParamStore.set("music_on",0);SoundKindsRunner.settingsTick();
+        check(PdBase.sent.size()==before,"settings changes queue their sends, never send from the caller");
+        Handler.drain();ParamStore.set("music_on",1);SoundKindsRunner.settingsTick();Handler.drain();
+        // stop during inference: a judgement queued before the stop runs after it and must send nothing
+        for(int i=0;i<5;i++)SoundKindsRunner.ready(0);
+        SoundKindsRunner.detach();
+        before=PdBase.sent.size();Handler.drain();
+        check(String.join(",",PdBase.sent.subList(before,PdBase.sent.size())).indexOf("traffic_state=2")<0
+            &&lastTraffic().equals("traffic_state=0.0")&&lastSk().equals("sk_on=0.0"),
+            "stop during inference: the old judgement sends nothing after the stop's neutral state");
+        // stop during loading, no restart: the old startup must not turn the ring back on
+        SoundKindsRunner.attach(c,48000,s->{});SoundKindsRunner.detach();Handler.drain();
+        check(!SoundKindsRunner.on()&&lastSk().equals("sk_on=0.0"),"stop during loading leaves the ring off: "+lastSk());
+        // immediate restart: only the new startup's state remains
+        SoundKindsRunner.attach(c,48000,s->{});SoundKindsRunner.detach();SoundKindsRunner.attach(c,48000,s->{});Handler.drain();
+        check(SoundKindsRunner.on()&&lastSk().equals("sk_on=1.0"),"stop then restart ends listening with the ring on");
+        SoundKindsRunner.detach();Handler.drain();ParamStore.set("traffic_pass",0);
         // Traffic Flow alone: starts the listener, latches the settled scene, leaves pass permission neutral.
         ParamStore.set("traffic_pass",0);ParamStore.set("traffic_flow",1);ParamStore.set("music_on",1);
         SoundKindsRunner.attach(c,48000,s->{});Handler.drain();
@@ -76,7 +104,7 @@ public class J2 {
         for(int i=0;i<60;i++)kf.judge(quiet,i*250);
         check(kf.trafficScene(),"a 15 s lull keeps the scene (red light)");
         for(int i=0;i<20;i++)kf.judge(quiet,i*250);
-        SoundKindsRunner.settingsTick();
+        SoundKindsRunner.settingsTick();Handler.drain();
         check(!kf.trafficScene()&&lastFlow().equals("traffic_flow_state=1.0"),"the scene leaves after the window empties");
         ParamStore.set("traffic_flow",0);SoundKindsRunner.settingsTick();Handler.drain();
         check(!SoundKindsRunner.on()&&lastFlow().equals("traffic_flow_state=0.0"),"Traffic Flow off stops the runner, neutral state");

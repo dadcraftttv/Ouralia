@@ -869,3 +869,15 @@ listener without Diagnostics. Turning it on alone does not turn on option 1.
   idling engines may read as activity. Judge it at a real stop-and-go street; set it aside if lull/return
   doesn't track the road convincingly.
 
+
+## The runner's Pd sends, one queue (review finding 2, Claude Code, Nov 4)
+
+The project review (`docs/PROJECT-REVIEW-2026-11-03.md`, finding 2) found that `SoundKindsRunner` read its state under
+its lock and sent to Pd after letting go. A stop on another thread could send its neutral state in that gap, and the
+older startup (`sk_on=1`) or judgement (water/birds/traffic, room music, talk) then landed after it: the ring back on
+with nothing reading it, or a stale effect left on. Now every Pd send the runner makes is queued, while the lock is
+still held, on one `SoundKindsPd` thread: sends reach Pd in the order their state was read, so a stop's neutral state
+always comes last. Sends still run outside the lock (Pd's thread calls `ready()` holding Pd's lock, so sending under
+ours could deadlock). No behaviour change otherwise; sends are now a moment later, on that thread. Java test J2 pins it:
+nothing is sent from the caller's thread, and stop during inference, stop during loading and an immediate restart all
+end in the right state. The race itself needs real threads, which the single-threaded test stubs can't stage.
