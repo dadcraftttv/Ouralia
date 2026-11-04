@@ -913,3 +913,10 @@ the last output moved along, sample for sample, and only 4096 are computed (`Sou
 judgement, a restart, another rate or the first time computes all 15600). Test J: identical to the full computation
 through a wrapping, skipping sequence. Left as it was: the listener keeps running while Music is off
 (test J2 checks it on purpose, the sound-kind context stays warm); stopping it there is DadCraft's call.
+
+Moto reading of the kept output (Nov 4, Music + Music in Stereo, 3 minutes): whole judgement median 16.7, 21.1,
+21.4 ms, but YAMNet alone ran slower this time (12.0, 15.0, 15.3 ms, against 9.5), so the totals hide the change.
+What sits around YAMNet (whole minus YAMNet medians, approximate) fell from ~8-9 ms to 4.7-6.1 ms, about a third less;
+ring copy 0.2-0.3 ms. The remainder is mostly wall time: the worker pre-empted by the audio thread, which no
+resampler change removes. Why YAMNet itself varies (9.5 to 17 ms across today's runs) is open: the phone's load or
+heat, not this code.
