@@ -36,12 +36,15 @@ allocations (Moto: the work around YAMNet ~8-9 -> 5-6 ms), the listener stops wh
 ("showing why the music or sound changed is redundant - users should be aware of why something happened or changed,
 because the sonic environment around them changed"). **Item 2 BUILT Nov 4 as Found Palette** (`fs_palette`, Rhythm,
 off by default; "all three together, and start slow"): distinct sounds kept for minutes, each step its own sound, a
-learned spot the sound caught there (design/rhythm.md "Found Palette"). His listen next: `~/Downloads/found-palette-clips/`,
-then the phone.
+learned spot the sound caught there (design/rhythm.md "Found Palette"). DadCraft (Nov 4): "i've listened to found palette and i like it" (still a switch, off by
+default, until he says otherwise).
 **Item 3 STARTED Nov 4 as Mixed Surroundings** (`sk_mixed`, Music, Dev only, off by default; "go ahead and start on
 mixed surroundings"): each kind clearly there counts, Water Trail and Birds Lift take turns, "unsure" instead of quiet;
 each judgement's scores now in the session log for replays (design/sound-kinds.md "Step 12"). His listen next, in real
-mixes (talk by water, birds by a road), with Session Log on.
+mixes (talk by water, birds by a road), with Session Log on. **If he likes it** (DadCraft, Nov 4): Birds Lift the
+Chimes, Underwater, Water Leaves a Trail, Traffic Passes Through, Traffic Flow, Make Room for Music and Mind the Gap
+all go behind the one Mixed Surroundings switch; Underwater becomes its Deeper style; the Now line says "unsure" instead
+of quiet; every sound happening shapes the music ("both sounds, or as many that are happening").
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
