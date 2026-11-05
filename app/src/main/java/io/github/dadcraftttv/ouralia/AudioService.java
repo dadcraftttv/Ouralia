@@ -125,13 +125,6 @@ public class AudioService extends Service {
     private static final String SK_READY = "sk_ready";
     static final String[] ROOM_KIND_NAMES = {"talking", "music", "traffic", "wind", "crowd"};
 
-    /** What the room listener hears now (RoomListener.TALKING..CROWD, -1: none of them, or not running). */
-    static int roomKind() {
-        synchronized (room) {
-            return running ? room.kind() : -1;
-        }
-    }
-
     /** Its last numbers (talking, music, traffic, wind, crowd). */
     static float[] roomScores() {
         synchronized (room) {

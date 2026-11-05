@@ -334,12 +334,9 @@ final class PlayerUi {
                 : Worlds.roomLoud() ? (Worlds.roomLively() ? R.string.why_room_lively : R.string.why_room_steady)
                 : R.string.why_room_middle;
         why.add(a.getString(room, Math.round(Worlds.roomLevelDb())));
-        int heard = AudioService.roomKind();   // the room listener (only listens for now)
-        if (heard >= 0) {
-            why.add(a.getString(new int[]{R.string.hears_talking, R.string.hears_music, R.string.hears_traffic,
-                    R.string.hears_wind, R.string.hears_crowd}[heard]));
-        }
-        int kind = SoundKindsRunner.kind();   // sound kinds (Dev, step 4c): YAMNet's word beside the room listener's
+        // (the old room listener's word left the Now line Nov 5: it said "a crowd" over a running sink, and over
+        // plain quiet and talk, DadCraft: "take the old listener's word off". Diagnostics and the event log keep it.)
+        int kind = SoundKindsRunner.kind();   // sound kinds (Dev, step 4c): YAMNet's word
         if (kind >= 0) {
             why.add(a.getString(R.string.hears_kind, SoundKinds.NAMES[kind], SoundKindsRunner.score()));
         }

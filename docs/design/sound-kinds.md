@@ -953,3 +953,18 @@ hour, under the 50 MB cap) through `SoundKindsRunner.scoresSink`, so real mixes 
 (the first numbers are judgement, not measured: there were no stored scores). Tests: J "mixed" (talk by a fountain
 and birds by a road, both heard on, only the winner off; the gestures lead and don't flap on an even mix; unsure vs
 YAMNet's silence), each made to fail once to see its numbers.
+
+**First listen (DadCraft, Nov 5):** "i do like what Mixed Surroundings is doing, but i noticed that the listener was
+mistaking running water at a sink for crowd." Replay of session 20261105-083424 (sink ~91-128 s, mic about -25 dB):
+"a crowd" was the old room listener (dcs_listen~, 0.78-0.96 over the sink, and over plain quiet and talk ~320 times
+in that events.log), which drives nothing; YAMNet led with water but weakly, mostly 0.1-0.26 with voices blips of
+0.2-0.5, so under `PRESENT_MIN` about half the time. YAMNet's household water classes were in no group:
+**water now also holds "Water tap, faucet" (364), "Sink (filling or washing)" (365), "Bathtub (filling or washing)"
+(366) and "Toilet flush" (368)** (groups.json, kinds.txt by `--export`). The bench gained seven Commons sink/tap clips
+(clips.json, `"sink": true`): all seven named water at phone level (bench water 16/17 phone/max, was 9/10; every other
+kind unchanged). Their median water score rose modestly where a tap is the clearest sound (Cold water 3 phone
+0.70 -> 0.80, Faucet water into sink 0.20 -> 0.33; the others already 0.4-0.7), so the phone's sink scored lower than
+the clips for some reason not seen yet (the room, the phone's mic chain): his next sink listen says whether this is
+enough or `PRESENT_MIN` wants tuning for water. Also seen: voices holds YAMNet's Crowd (64) and Hubbub (65), so the
+voices blips over the sink may be those. The old listener's word left the Now line (DadCraft: "take the old
+listener's word off"); Diagnostics and the event log keep its scores.
