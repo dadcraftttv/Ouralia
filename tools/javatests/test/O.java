@@ -19,6 +19,7 @@ public class O {   // Session Log: a file per session, only the kept receivers, 
     SessionLog.pd("chime_deg",3f); SessionLog.pd("mic_level",42f); SessionLog.pd("comp_chord",2f,0f,4f,7f,11f,-12f);
     SessionLog.pd("tick16",5f); SessionLog.pd("tick16",0f); SessionLog.pd("heard_off");
     SessionLog.mark("flat \"here\"\n");
+    SessionLog.kinds(new float[]{0.5f,0,0,0,0.25f,0,0},false); SessionLog.kinds(new float[]{0,0,0,0,0,0,0.9f},true);
     ParamStore.set("music_on",ParamStore.get("music_on")>=0.5f?0f:1f);
     SessionLog.second(true,false,true);
     SessionLog.stopAndWait();
@@ -27,6 +28,8 @@ public class O {   // Session Log: a file per session, only the kept receivers, 
     String text=read(s.get(0)); String[] lines=text.split("\n");
     boolean shaped=true; for(String l:lines) shaped&=l.startsWith("{\"t\":")&&l.endsWith("}");
     check(shaped,"every line is one JSON object ("+lines.length+" lines)");
+    check(text.contains("\"ev\":\"kinds\",\"v\":[0.5000,0.000,0.000,0.000,0.2500,0.000,0.000]}")&&text.contains(",0.9000],\"s\":1}"),
+        "kinds lines: seven scores, and \"s\":1 when YAMNet heard silence (the replay tool reads both)");
     check(lines[0].contains("\"ev\":\"start\"")&&lines[0].contains("\"settings\":{")&&lines[lines.length-1].contains("\"ev\":\"stop\""),"starts with the settings, ends with stop");
     check(text.contains("\"src\":\"chime_deg\",\"v\":[3.000]")&&text.contains("\"src\":\"comp_chord\""),"the patch's notes and chords kept");
     check(!text.contains("mic_level"),"what the log doesn't keep is left out");

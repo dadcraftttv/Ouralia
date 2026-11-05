@@ -30,6 +30,7 @@ public class J2 {
         Handler.drain();
     }
     public static void main(String[] args)throws Exception {
+        long[] clock={0}; SoundKindsRunner.clock=()->clock[0]+=SoundKinds.STEP_MS;   // (a judgement every 0.25 s)
         Context c=new Context(new File("/tmp")) {
             public AssetManager getAssets(){return new AssetManager(){
                 public InputStream open(String name){return new ByteArrayInputStream(
@@ -58,7 +59,7 @@ public class J2 {
         trafficJudgement();trafficJudgement();
         check(lastTraffic().equals("traffic_state=2.0"),"runner sends traffic permission on unchanged-kind judgement too");
         SoundKinds ks=(SoundKinds)field("kinds"); float[] voices=new float[521]; voices[0]=.8f;
-        for(int i=0;i<32;i++)ks.judge(voices,i*250);
+        for(int i=0;i<32;i++)ks.judge(voices);
         SoundKindsRunner.settingsTick();Handler.drain();
         check(lastTraffic().equals("traffic_state=3.0"),"settled talk reaches patch with Mind the Gap off");
         SoundKindsRunner.detach();
@@ -125,9 +126,9 @@ public class J2 {
         check(lastFlow().equals("traffic_flow_state=2.0")&&lastTraffic().equals("traffic_state=0.0"),
             "settled traffic latches the scene, pass state stays off: "+lastFlow()+" "+lastTraffic());
         SoundKinds kf=(SoundKinds)field("kinds"); float[] quiet=new float[521]; quiet[494]=.8f;
-        for(int i=0;i<60;i++)kf.judge(quiet,i*250);
+        for(int i=0;i<60;i++)kf.judge(quiet);   // (each STEP_MS after the last: the windows are measured in time)
         check(kf.trafficScene(),"a 15 s lull keeps the scene (red light)");
-        for(int i=0;i<20;i++)kf.judge(quiet,i*250);
+        for(int i=0;i<20;i++)kf.judge(quiet);
         SoundKindsRunner.settingsTick();Handler.drain();
         check(!kf.trafficScene()&&lastFlow().equals("traffic_flow_state=1.0"),"the scene leaves after the window empties");
         ParamStore.set("traffic_flow",0);SoundKindsRunner.settingsTick();Handler.drain();

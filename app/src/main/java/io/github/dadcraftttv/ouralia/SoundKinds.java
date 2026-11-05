@@ -8,7 +8,7 @@ import java.util.Locale;
  * Sound kinds, step 4c (Oct 31, a Dev spike: docs/design/sound-kinds.md). Plain logic: the mic's last ~1 s (from the
  * patch's sk_ring) is brought to 16 kHz for YAMNet, its 521 scores become seven kinds (the highest of each kind's
  * classes, kinds.txt), and a kind is heard once it leads two judgements in a row, or one with a score of STRONG or more
- * (a judgement every ~0.25 s; the gate is 2 s). Only
+ * (a judgement every ~0.25 s; the gate is 2 s); its scene windows are measured in time (STEP_MS). Only
  * listens: the Now line, Diagnostics and the event log show it. {@link SoundKindsRunner} does the Android part.
  */
 final class SoundKinds {
@@ -24,20 +24,97 @@ final class SoundKinds {
     /** The patch's ring: SEGS segments (patchgen SK_N); the SEGS - 1 whole ones are read each time. */
     static final int SEGS = 5;
     /**
-     * Make Room for Music (Nov 1): music in the room when it was the kind for ROOM_ON of the last ROOM_N judgements
-     * (~20 s at one every ~0.25 s), gone again under ROOM_OFF. DadCraft's Nov 1 runs replayed: never on the walk or at
-     * home, on 86% of a song-filled 14 minutes, 3 changes.
+     * The scene windows are measured in time, not judgements (the 2026-11-03 review, built Nov 5, DadCraft: "go ahead
+     * with the replay tool and the time-based windows"): each judgement counts for the time since the one before (STEP_MS
+     * the first time, at most MAX_STEP_MS: a judgement hears ~1 s), and a window holds the judgements of its last span.
+     * A count window stretched when work was skipped (32 judgements were 8 s only at one every 0.25 s); now a gap is
+     * time no kind was heard. At one judgement every STEP_MS the shares are exactly the old counts' (13 of 32 = 3.25 s
+     * of 8 s), so every number tuned on the counts holds.
      */
-    static final int MUSIC = 1, ROOM_N = 80;
+    static final long STEP_MS = 250, MAX_STEP_MS = 1000;
+
+    /** A share of the last {@code ms} during which a kind was heard, on at {@code on} of it, off again at {@code off}. */
+    static final class Window {
+        long ms;
+        float on, off;
+        private long[] at = new long[0];
+        private int[] dur = new int[0];
+        private int head, size;
+        private long heardMs;
+        private boolean state;
+
+        Window(long ms, float on, float off) {
+            this.ms = ms;
+            this.on = on;
+            this.off = off;
+            clear();
+        }
+
+        void clear() {
+            int cap = (int) (4 * ms / STEP_MS) + 8;   // (judgements faster than one every STEP_MS / 4: the oldest go early)
+            if (at.length != cap) {
+                at = new long[cap];
+                dur = new int[cap];
+            }
+            head = size = 0;
+            heardMs = 0;
+            state = false;
+        }
+
+        /** One judgement at {@code now}, standing for {@code stepMs}; the window's state after it. */
+        boolean add(long now, int stepMs, boolean heard) {
+            if (size == at.length) {
+                drop();
+            }
+            int i = (head + size++) % at.length;
+            at[i] = now;
+            dur[i] = heard ? stepMs : 0;
+            heardMs += dur[i];
+            while (size > 0 && at[head] <= now - ms) {
+                drop();
+            }
+            if (!state && heardMs >= Math.round(on * ms)) {
+                state = true;
+            } else if (state && heardMs <= Math.round(off * ms)) {
+                state = false;
+            }
+            return state;
+        }
+
+        private void drop() {
+            heardMs -= dur[head];
+            head = (head + 1) % at.length;
+            size--;
+        }
+
+        boolean on() {
+            return state;
+        }
+
+        /** The share of the span heard just now (for the replay tool). */
+        float share() {
+            return (float) heardMs / ms;
+        }
+    }
+
+    /**
+     * Make Room for Music (Nov 1): music in the room when it was the kind for ROOM_ON of the last ROOM_MS (~20 s),
+     * gone again under ROOM_OFF. DadCraft's Nov 1 runs replayed: never on the walk or at home, on 86% of a song-filled
+     * 14 minutes, 3 changes.
+     */
+    static final int MUSIC = 1;
+    static final long ROOM_MS = 20_000;
     static final float ROOM_ON = 0.4f, ROOM_OFF = 0.15f;
     /**
-     * Mind the Gap (Nov 1, step 6): people talking when voices were the kind for TALK_ON of the last TALK_N
-     * judgements (~8 s: talk starts and stops more often than a song), over again under TALK_OFF.
+     * Mind the Gap (Nov 1, step 6): people talking when voices were the kind for TALK_ON of the last TALK_MS (~8 s:
+     * talk starts and stops more often than a song), over again under TALK_OFF.
      */
-    static final int VOICES = 0, TALK_N = 32;
+    static final int VOICES = 0;
+    static final long TALK_MS = 8_000;
     static final float TALK_ON = 0.4f, TALK_OFF = 0.15f;
 
-    static final int WATER = 4, WATER_N = 32;
+    static final int WATER = 4;
+    static final long WATER_MS = 8_000;
     static final float WATER_ON = 0.4f, WATER_OFF = 0.15f;
     /** Traffic Passes Through (Nov 3): fast score permission, released after 2 s of losing. */
     static final int TRAFFIC = 2;
@@ -48,7 +125,8 @@ final class SoundKinds {
     private boolean traffic;
 
     /** Birds Lift the Chimes (Nov 2): the same ~8 s window as water, so the gaps between calls hold it. */
-    static final int BIRDS = 3, BIRDS_N = 32;
+    static final int BIRDS = 3;
+    static final long BIRDS_MS = 8_000;
     static final float BIRDS_ON = 0.4f, BIRDS_OFF = 0.15f;
 
     /**
@@ -62,11 +140,19 @@ final class SoundKinds {
      */
     static volatile boolean mixed;
     static final float PRESENT_MIN = 0.2f, PRESENT_REL = 0.5f;
-    static final float LEAD_RATIO = 1.25f, AVG_N = 32;   // (the other takes over past this ratio of ~8 s averages)
+    static final float LEAD_RATIO = 1.25f;
+    static final long AVG_MS = 8_000;   // (the gestures' averages: each judgement moves them by its step / AVG_MS)
     private int gesture = -1;   // WATER or BIRDS while both are heard (mixed only)
     private float waterAvg, birdsAvg;
-    private boolean unsure;
+    private boolean unsure, silent;
     private final boolean[] in = new boolean[NAMES.length];   // (this judgement's kinds clearly there)
+
+    /**
+     * The numbers the replay tool may try other values for (tools/replay_kinds.py --set); the app keeps the defaults.
+     * presentMin is per kind, so a kind that scores low (water) can get its own.
+     */
+    final float[] presentMin = new float[NAMES.length];
+    float presentRel = PRESENT_REL, quietFloor = QUIET_FLOOR, strong = STRONG, leadRatio = LEAD_RATIO;
 
     /** The model (YamNet on LiteRT; the tests stand in a fake). */
     interface Model {
@@ -78,30 +164,22 @@ final class SoundKinds {
     private final int[][] cols;
     private final float[] last = new float[NAMES.length];
     private int kind = -1, candidate = -1, candidateN;
-    private final boolean[] wasMusic = new boolean[ROOM_N];
-    private int musicN, roomI;
-    private boolean roomMusic;
-    private final boolean[] wasTalk = new boolean[TALK_N];
-    private int talkN, talkI;
-    private boolean talking;
-    private final boolean[] wasWater = new boolean[WATER_N];
-    private int waterN, waterI;
-    private boolean water;
-    private final boolean[] wasBirds = new boolean[BIRDS_N];
-    private int birdsN, birdsI;
+    private long lastNow = Long.MIN_VALUE;
+    final Window room = new Window(ROOM_MS, ROOM_ON, ROOM_OFF);
+    final Window talk = new Window(TALK_MS, TALK_ON, TALK_OFF);
+    final Window waterW = new Window(WATER_MS, WATER_ON, WATER_OFF);
+    final Window birdsW = new Window(BIRDS_MS, BIRDS_ON, BIRDS_OFF);
     /** Traffic Flow (Nov 3): a settled traffic scene, the room-music window's length (~20 s) so a short lull
-     *  at a red light holds it: traffic the kind for TRAFFIC_SCENE_ON of the last TRAFFIC_SCENE_N, gone under OFF. */
-    static final int TRAFFIC_SCENE_N = 80;
+     *  at a red light holds it: traffic the kind for TRAFFIC_SCENE_ON of the last TRAFFIC_SCENE_MS, gone under OFF. */
+    static final long TRAFFIC_SCENE_MS = 20_000;
     static final float TRAFFIC_SCENE_ON = 0.4f, TRAFFIC_SCENE_OFF = 0.15f;
-    private final boolean[] wasTraffic = new boolean[TRAFFIC_SCENE_N];
-    private int trafficSceneN, trafficI;
-    private boolean trafficScene;
-    private boolean birds;
+    final Window trafficW = new Window(TRAFFIC_SCENE_MS, TRAFFIC_SCENE_ON, TRAFFIC_SCENE_OFF);
 
 
     /** {@code kinds}: kinds.txt's lines ("voices 0 1 2 ...", "#" comments), one per name, in NAMES' order. */
     SoundKinds(String kinds) {
         cols = new int[NAMES.length][];
+        Arrays.fill(presentMin, PRESENT_MIN);
         for (String line : kinds.split("\n")) {
             String[] p = line.trim().split("\\s+");
             int k = Arrays.asList(NAMES).indexOf(p[0]);
@@ -227,21 +305,44 @@ final class SoundKinds {
         return s;
     }
 
-    /** One judgement from YAMNet's scores; true when what is heard changed. */
+    /**
+     * One judgement from YAMNet's scores, STEP_MS after the last (the tests' steady clock); true when what is heard
+     * changed. The app passes the real time.
+     */
     boolean judge(float[] scores) {
-        return judge(scores, System.nanoTime() / 1_000_000);
+        return judge(scores, lastNow == Long.MIN_VALUE ? 0 : lastNow + STEP_MS);
     }
 
-    /** Monotonic milliseconds, explicit for threshold/lifecycle tests. */
+    /** Monotonic milliseconds. */
     boolean judge(float[] scores, long now) {
-        int lead = 0;
+        float[] k7 = new float[NAMES.length];
         for (int k = 0; k < NAMES.length; k++) {
             float m = 0;
             for (int c : cols[k]) {
                 m = Math.max(m, scores[c]);
             }
-            last[k] = m;
-            if (k != QUIET && m > last[lead]) {
+            k7[k] = m;
+        }
+        int top = 0;   // YAMNet's own top class
+        for (int c = 1; c < scores.length; c++) {
+            if (scores[c] > scores[top]) {
+                top = c;
+            }
+        }
+        return judgeKinds(k7, top == cols[QUIET][0], now);
+    }
+
+    /**
+     * The same from the seven kinds' scores and whether YAMNet's top class was Silence: what a session log keeps, so
+     * the replay tool runs exactly this.
+     */
+    boolean judgeKinds(float[] kinds, boolean yamnetSilent, long now) {
+        int step = lastNow == Long.MIN_VALUE ? (int) STEP_MS : (int) Math.max(0, Math.min(MAX_STEP_MS, now - lastNow));
+        lastNow = now;
+        int lead = 0;
+        for (int k = 0; k < NAMES.length; k++) {
+            last[k] = kinds[k];
+            if (k != QUIET && last[k] > last[lead]) {
                 lead = k;
             }
         }
@@ -264,85 +365,57 @@ final class SoundKinds {
         } else if (now - trafficBadSince >= TRAFFIC_RELEASE_MS) {
             traffic = false;
         }
-        int top = 0;   // YAMNet's own top class
-        for (int c = 1; c < scores.length; c++) {
-            if (scores[c] > scores[top]) {
-                top = c;
-            }
-        }
         int best = lead;   // (the strongest kind, before quiet)
-        boolean silent = top == cols[QUIET][0];
-        if (last[lead] < QUIET_FLOOR || silent) {
+        silent = yamnetSilent;
+        if (last[lead] < quietFloor || silent) {
             lead = QUIET;
         }
         boolean mix = mixed;
-        waterAvg += (last[WATER] - waterAvg) / AVG_N;
-        birdsAvg += (last[BIRDS] - birdsAvg) / AVG_N;
-        unsure = mix && !silent && last[best] < QUIET_FLOOR;
+        float a = Math.min(1f, (float) step / AVG_MS);
+        waterAvg += (last[WATER] - waterAvg) * a;
+        birdsAvg += (last[BIRDS] - birdsAvg) * a;
+        unsure = mix && !silent && last[best] < quietFloor;
         for (int k = 0; k < QUIET; k++) {
-            in[k] = !silent && last[k] >= PRESENT_MIN && last[k] >= PRESENT_REL * last[best];
+            in[k] = !silent && last[k] >= presentMin[k] && last[k] >= presentRel * last[best];
         }
         candidateN = lead == candidate ? candidateN + 1 : 1;
         candidate = lead;
         int was = kind;
-        if (lead != kind && (candidateN >= ENTER_N || (lead != QUIET && last[lead] >= STRONG))) {
+        if (lead != kind && (candidateN >= ENTER_N || (lead != QUIET && last[lead] >= strong))) {
             kind = lead;
         }
-        boolean m = mix ? in[MUSIC] : kind == MUSIC;   // the room-music window (a fixed ROOM_N long, empty at first: fills from silence)
-        musicN += (m ? 1 : 0) - (wasMusic[roomI] ? 1 : 0);
-        wasMusic[roomI] = m;
-        roomI = (roomI + 1) % ROOM_N;
-        if (!roomMusic && musicN >= ROOM_ON * ROOM_N) {
-            roomMusic = true;
-        } else if (roomMusic && musicN <= ROOM_OFF * ROOM_N) {
-            roomMusic = false;
-        }
-        boolean v = mix ? in[VOICES] : kind == VOICES;   // the talk window, the same way
-        talkN += (v ? 1 : 0) - (wasTalk[talkI] ? 1 : 0);
-        wasTalk[talkI] = v;
-        talkI = (talkI + 1) % TALK_N;
-        if (!talking && talkN >= TALK_ON * TALK_N) {
-            talking = true;
-        } else if (talking && talkN <= TALK_OFF * TALK_N) {
-            talking = false;
-        }
-        boolean w = mix ? in[WATER] : kind == WATER;
-        waterN += (w ? 1 : 0) - (wasWater[waterI] ? 1 : 0);
-        wasWater[waterI] = w;
-        waterI = (waterI + 1) % WATER_N;
-        if (!water && waterN >= WATER_ON * WATER_N) {
-            water = true;
-        } else if (water && waterN <= WATER_OFF * WATER_N) {
-            water = false;
-        }
-        boolean b = mix ? in[BIRDS] : kind == BIRDS;
-        birdsN += (b ? 1 : 0) - (wasBirds[birdsI] ? 1 : 0);
-        wasBirds[birdsI] = b;
-        birdsI = (birdsI + 1) % BIRDS_N;
-        if (!birds && birdsN >= BIRDS_ON * BIRDS_N) {
-            birds = true;
-        } else if (birds && birdsN <= BIRDS_OFF * BIRDS_N) {
-            birds = false;
-        }
-        boolean tr = mix ? in[TRAFFIC] : kind == TRAFFIC;
-        trafficSceneN += (tr ? 1 : 0) - (wasTraffic[trafficI] ? 1 : 0);
-        wasTraffic[trafficI] = tr;
-        trafficI = (trafficI + 1) % TRAFFIC_SCENE_N;
-        if (!trafficScene && trafficSceneN >= TRAFFIC_SCENE_ON * TRAFFIC_SCENE_N) {
-            trafficScene = true;
-        } else if (trafficScene && trafficSceneN <= TRAFFIC_SCENE_OFF * TRAFFIC_SCENE_N) {
-            trafficScene = false;
-        }
+        // (each scene window: while its kind is clearly there with Mixed Surroundings, else while it is the kind;
+        //  empty at first, so they fill from silence)
+        room.add(now, step, mix ? in[MUSIC] : kind == MUSIC);
+        talk.add(now, step, mix ? in[VOICES] : kind == VOICES);
+        boolean water = waterW.add(now, step, mix ? in[WATER] : kind == WATER);
+        boolean birds = birdsW.add(now, step, mix ? in[BIRDS] : kind == BIRDS);
+        trafficW.add(now, step, mix ? in[TRAFFIC] : kind == TRAFFIC);
         if (!mix || !(water && birds)) {
             gesture = water ? WATER : birds ? BIRDS : -1;
         } else if (gesture != WATER && gesture != BIRDS) {
             gesture = waterAvg >= birdsAvg ? WATER : BIRDS;
-        } else if (gesture == WATER && birdsAvg > LEAD_RATIO * waterAvg) {
+        } else if (gesture == WATER && birdsAvg > leadRatio * waterAvg) {
             gesture = BIRDS;
-        } else if (gesture == BIRDS && waterAvg > LEAD_RATIO * birdsAvg) {
+        } else if (gesture == BIRDS && waterAvg > leadRatio * birdsAvg) {
             gesture = WATER;
         }
         return kind != was;
+    }
+
+    /** Mixed only: whether each kind was clearly there in the last judgement (for the replay tool). */
+    boolean present(int k) {
+        return in[k];
+    }
+
+    /** Whether YAMNet's own top class was Silence in the last judgement (the session log keeps it). */
+    boolean silent() {
+        return silent;
+    }
+
+    /** Which gesture leads while water and birds are both heard (WATER, BIRDS or -1; for the replay tool). */
+    int gesture() {
+        return gesture;
     }
 
     /** What is heard now (an index in NAMES), or -1 before the first (two, unless strong) judgements. */
@@ -352,27 +425,27 @@ final class SoundKinds {
 
     /** True while music has been playing in the room (see ROOM_N). */
     boolean roomMusic() {
-        return roomMusic;
+        return room.on();
     }
 
     /** True while people have been talking (see TALK_N). */
     boolean talking() {
-        return talking;
+        return talk.on();
     }
 
     /** True while settled water fills the window (about eight seconds). */
     boolean water() {
-        return water;
+        return waterW.on();
     }
 
     /** Water Leaves a Trail's water: {@link #water}, unless birds lead the gestures (mixed only). */
     boolean waterLeads() {
-        return water && (!mixed || gesture != BIRDS);
+        return waterW.on() && (!mixed || gesture != BIRDS);
     }
 
     /** Birds Lift the Chimes' birds: {@link #birds}, unless water leads the gestures (mixed only). */
     boolean birdsLead() {
-        return birds && (!mixed || gesture != WATER);
+        return birdsW.on() && (!mixed || gesture != WATER);
     }
 
     /** Mixed only: no kind scored though YAMNet didn't hear silence (an unfamiliar sound, not a quiet room). */
@@ -382,17 +455,17 @@ final class SoundKinds {
 
     /** True while settled birds fill the window (about eight seconds), like {@link #water}. */
     boolean birds() {
-        return birds;
+        return birdsW.on();
     }
 
     /** True while settled traffic fills the window (about twenty seconds). */
     boolean trafficScene() {
-        return trafficScene;
+        return trafficW.on();
     }
 
     /** Fast score permission, independent of the optional Mind the Gap switch. */
     boolean trafficAllowed() {
-        return traffic && !talking;
+        return traffic && !talk.on();
     }
 
     /** The last judgement's numbers, one per kind. */
@@ -445,23 +518,13 @@ final class SoundKinds {
         Arrays.fill(last, 0);
         kind = candidate = -1;
         candidateN = 0;
-        Arrays.fill(wasMusic, false);
-        musicN = roomI = 0;
-        roomMusic = false;
-        Arrays.fill(wasTalk, false);
-        talkN = talkI = 0;
-        talking = false;
-        Arrays.fill(wasWater, false);
-        waterN = waterI = 0;
-        water = false;
-        Arrays.fill(wasBirds, false);
-        Arrays.fill(wasTraffic, false);
-        trafficSceneN = trafficI = 0;
-        trafficScene = false;
-        birdsN = birdsI = 0;
-        birds = false;
+        lastNow = Long.MIN_VALUE;
+        for (Window w : new Window[]{room, talk, waterW, birdsW, trafficW}) {
+            w.clear();
+        }
         gesture = -1;
-        unsure = false;
+        unsure = silent = false;
+        Arrays.fill(in, false);
         waterAvg = birdsAvg = 0;
     }
 }

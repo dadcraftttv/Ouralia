@@ -27,7 +27,9 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 - **His calls:** do water and birds hold back for talk; Found Palette's default (a switch, off); learning from session
   logs (not started).
 - **Tuning from replays:** Mixed Surroundings' `PRESENT_MIN` 0.2 was judgement; water may want lower (his sink
-  scored 0.1-0.26). Wind and singing only where real listening shows a problem (Codex, Nov 5).
+  scored 0.1-0.26). The replay tool is BUILT (Nov 5, `tools/replay_kinds.py`, design/sound-kinds.md Step 16), and the
+  windows are now measured in time: his sink replayed with water's own minimum at 0.12 holds water 40 s instead of 14 s.
+  Next: check that candidate over his other sessions, then his sink listen. Wind and singing only where real listening shows a problem (Codex, Nov 5).
 - **Singing and whistling count as music in the room** (seen Nov 5 on rc6: whistling read as music 0.59-0.98 and
   birds 0.33-0.80). The app's music group holds YAMNet's singing classes, and nothing tells your own voice from a
   radio, so with Mixed Surroundings on, ~8 s of singing in 20 can trigger Make Room for Music (the music and beat

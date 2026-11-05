@@ -1010,3 +1010,43 @@ name, built by its Context constructor) and `org.tensorflow.lite.**`. The About 
 notice wherever the model is. PRIVACY.md: the section is no longer Dev only (still on-device, nothing saved or sent,
 no internet permission). The bench's `--export` now writes to `app/src/main/assets/sound_kinds`. Tests: a JVM stub
 `android.os.Build` (stubs2) stands in for an ARM phone.
+
+## Step 16: the replay tool and time-based windows (Claude Code, Nov 5)
+
+DadCraft (Nov 5), after asking what else could improve accuracy: "go ahead with the replay tool and the time-based
+windows" (both from the 2026-11-03 review: "start with deterministic replay of scores", and "use elapsed time for
+context windows: the current judgement-count windows stretch when work is skipped").
+
+**Time-based windows.** The five scene windows (talk 8 s, water 8 s, birds 8 s, room music 20 s, traffic scene 20 s)
+were rings of 32 or 80 judgements, so their length was 8 s only at one judgement every 0.25 s. Now each is a
+`SoundKinds.Window` of milliseconds: a judgement counts for the time since the one before (`STEP_MS` 250 the first
+time, at most `MAX_STEP_MS` 1 s, since a judgement hears ~1 s), and the window holds its last span. A gap is time no
+kind was heard, and faster judgements no longer shrink a window. The gestures' ~8 s averages move by step/`AVG_MS`
+the same way. At one judgement every 250 ms the shares equal the old counts exactly (13 of 32 = 3.25 s of 8 s;
+on/off compared in whole ms), so every number tuned on the counts holds; test J's old checks pass unchanged and
+three new ones (a judgement a second apart: on after 4, not 13; a 10 s gap empties the window; twice as fast still
+needs 3.2 s) fail on the old code. The runner passes real time (`SoundKindsRunner.clock`, which the J2 test steps).
+On the Moto this changes little: the six score-logging sessions (Nov 4-5) judged every 256-257 ms (median) with
+at most 3 steps over 0.5 s in a session (the longest 0.8 s), so the old windows were 8.2 s and now are 8 s. It matters
+where judgements are skipped (a slower phone, a busy moment).
+
+**The replay tool.** `tools/replay_kinds.py` runs a session log's logged scores back through the app's own
+`SoundKinds` (`judgeKinds`, the same code `judge` uses after reducing YAMNet's 521 scores to the seven), with
+Mixed Surroundings as the log says (`--mixed` overrides). It prints the judgement steps (gaps), each kind's
+median/p90/max score, how much of the time each was clearly there and was the heard kind, the time each scene was on
+and its changes, and a timeline of scene changes with DadCraft's marks and the recent mic level (`--heard` adds
+every change of the Now line's kind; `--scores` gives each second's scores; `--from/--to` narrows it). `--set
+NAME=VALUE` replays a second time with other numbers and shows both: `present_min` (all kinds, or one:
+`present_min.water`), `present_rel`, `quiet_floor`, `strong`, `lead_ratio`, and each window's `.on`, `.off`, `.s`.
+These are `SoundKinds` instance fields that only the tool changes; the app keeps the constants. `presentMin` is per kind
+now, so water can have its own minimum. The session log's kinds line gains `"s":1` when YAMNet's own top class was
+Silence (needed to tell quiet from unsure); older logs don't have it, and the tool guesses it from the quiet group
+leading the six kinds (it says so). `tools/pull_sessions.sh --dev` copies Ouralia Dev's sessions (adb can't read
+the release app's). Test: `tools/test_replay_kinds.py` (both tiers), a made-up log.
+
+**First replay: his sink (session 20261105-083424, sink ~1:30-2:08, mic about -27 dB).** Water's median score there
+was 0.15 (p90 0.26), clearly there (at least 0.2) 17% of that stretch, and the water scene was on 14 s with 2 changes.
+With `--set present_min.water=0.12`: clearly there 53%, on 40 s with 1 change. That is a candidate, not a decision:
+the same replay over his other sessions (talk, music, walks) has to show water doesn't come on where there was none,
+and his next sink listen says whether it feels right. Seen in passing: the logged mic level drops to -97/-98 dB for a
+second at a time (the Moto's dropouts, as in Calm Builds, Nov 4); the timeline shows the loudest of the last 5 s.
