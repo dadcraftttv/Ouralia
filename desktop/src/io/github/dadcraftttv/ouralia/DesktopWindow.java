@@ -352,7 +352,8 @@ final class DesktopWindow {
     private void fillSection(JPanel body, Params.Section section) {
         for (Param p : Params.ALL) {
             if (p.section.equals(section.id) && p.moverOf == null && !p.id.equals(Params.moversSwitchId(section.id))
-                    && !p.id.equals("intensity") && !PHONE_ONLY.contains(p.id)) {
+                    && !p.id.equals("intensity") && !PHONE_ONLY.contains(p.id)
+                    && !Params.classifierOnly(p)) {   // (no sound classifier on the desktop yet, Nov 5)
                 addRow(body, p);
                 if (p.budget != null && lastOfBudget(p)) {   // the glitch matrix: how much of it is in use
                     JLabel line = new JLabel(" ");
