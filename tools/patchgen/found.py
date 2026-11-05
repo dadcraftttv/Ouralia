@@ -245,7 +245,10 @@ def add_found_pad(P, px, ex):
         P.c(f"fps{k}_met", f"fps{k}_ab"); P.c(f"fps{k}_ab", f"fps{k}_ab1"); P.c(f"fps{k}_ab1", f"fps{k}_abm"); P.c(f"fps{k}_abm", f"fps{k}_ab", 0, 1)
         P.obj(f"fps{k}_abt", "t f f", cx, 1235); P.c(f"fps{k}_ab", f"fps{k}_abt")
         P.obj(f"fps{k}_abs", "sel 0 1", cx, 1250); P.c(f"fps{k}_abt", f"fps{k}_abs", 1, 0)
-        P.obj(f"fps{k}_rnd", "random 1000", cx + 100, 1250); P.c(f"fps{k}_abt", f"fps{k}_rnd", 1, 0)
+        # a new target each half grain: [random]'s left inlet takes a bang, not the grain number (Nov 5: the float
+        # left the target at 0 since the found pad was built, so every grain started near the take's attack)
+        P.obj(f"fps{k}_rb", "b", cx + 100, 1242); P.c(f"fps{k}_abt", f"fps{k}_rb", 1, 0)
+        P.obj(f"fps{k}_rnd", "random 1000", cx + 100, 1250); P.c(f"fps{k}_rb", f"fps{k}_rnd")
         P.obj(f"fps{k}_tgt", f"value fpt{k}", cx + 100, 1265)
         ex(f"fps{k}_tg", f"({FP_LOOP_S[0]}+{FP_LOOP_S[1] - FP_LOOP_S[0]}*$f1/1000)*{sr}", cx + 100, 1258)
         P.c(f"fps{k}_rnd", f"fps{k}_tg"); P.c(f"fps{k}_tg", f"fps{k}_tgt")
