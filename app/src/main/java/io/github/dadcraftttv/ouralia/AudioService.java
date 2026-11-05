@@ -1050,6 +1050,7 @@ public class AudioService extends Service {
         actualRate = queryActualRate();
         running = true;
         if (scene == null) {   // (the built-in patch has the mic ring; scenes don't)
+            SoundKindsRunner.scoresSink = SessionLog::kinds;   // (Mixed Surroundings: real mixes to replay)
             SoundKindsRunner.attach(this, sampleRate, what -> handler.post(() -> logEvent(what)));
         }
         AudioManager am = getSystemService(AudioManager.class);

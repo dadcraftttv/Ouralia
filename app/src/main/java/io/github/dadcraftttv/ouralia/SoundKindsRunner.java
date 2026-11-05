@@ -140,6 +140,10 @@ final class SoundKindsRunner {
     }
 
     static final String WATER_ID = "water_trail";
+    /** Mixed Surroundings (Nov 4): several kinds at once each count (SoundKinds.mixed). */
+    static final String MIXED_ID = "sk_mixed";
+    /** Each judgement's seven scores go here (the service: SessionLog.kinds), so real mixes can be replayed. */
+    static volatile java.util.function.Consumer<float[]> scoresSink;
 
     static boolean waterEnabled() {
         return available() && ParamStore.get(WATER_ID) >= 0.5f;
@@ -149,7 +153,7 @@ final class SoundKindsRunner {
      *  sends it with {@link #sendWater} after letting go of the lock (Pd's callbacks take the lock: ready()). */
     private static int waterTick() {
         boolean next = thread != null && waterOn && ParamStore.get("music_on") >= 0.5f
-                && kinds != null && kinds.water();
+                && kinds != null && kinds.waterLeads();
         if (next == waterSent) {
             return -1;
         }
@@ -200,7 +204,7 @@ final class SoundKindsRunner {
     /** Called with lock held, like {@link #waterTick}: the value to send if it changed, else -1. */
     private static int birdsTick() {
         boolean next = thread != null && birdsOn && ParamStore.get("music_on") >= 0.5f
-                && kinds != null && kinds.birds();
+                && kinds != null && kinds.birdsLead();
         if (next == birdsSent) {
             return -1;
         }
@@ -227,6 +231,7 @@ final class SoundKindsRunner {
     /** Called each tick of the sound's loop: Make Room for Music, Mind the Gap or Water Leaves a Trail changed (row, preset, reset):
      *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
     static void settingsTick() {
+        SoundKinds.mixed = available() && ParamStore.get(MIXED_ID) >= 0.5f;
         boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled(), birds = birdsEnabled(), traffic = trafficEnabled(),
                 flow = flowEnabled();
         int uw = uwEnabled();
@@ -509,6 +514,8 @@ final class SoundKindsRunner {
             }
             boolean wasRoom = ks.roomMusic(), wasTalk = ks.talking();
             changed = ks.judge(scores);
+            java.util.function.Consumer<float[]> sink = scoresSink;
+            if (sink != null) sink.accept(ks.scores());   // (each judgement's scores: real mixes to replay)
             line = ks.heardLine();
             room = ks.roomMusic();
             roomChanged = room != wasRoom;

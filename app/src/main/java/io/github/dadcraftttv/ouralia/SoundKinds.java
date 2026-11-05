@@ -51,6 +51,23 @@ final class SoundKinds {
     static final int BIRDS = 3, BIRDS_N = 32;
     static final float BIRDS_ON = 0.4f, BIRDS_OFF = 0.15f;
 
+    /**
+     * Mixed Surroundings (Nov 4, the 2026-11-03 review's item 3, DadCraft: "go ahead and start on mixed surroundings";
+     * `sk_mixed`, off by default): real places are mixes (talk by a fountain, birds by a road), but each scene above
+     * counted only while its kind won, so in a mix each got part of its window and maybe none came on. On, a kind
+     * counts while it is clearly there: at least PRESENT_MIN and PRESENT_REL of the leader's score. The two decorative
+     * gestures (Water Leaves a Trail, Birds Lift the Chimes) don't stack: the one heard louder lately leads (scores
+     * averaged over ~8 s), the other takes over only past LEAD_RATIO of it. Nothing scoring while YAMNet doesn't hear silence is "unsure",
+     * not a quiet room (Calm Builds measures quiet from the level, so it is unchanged). Off: exactly as before.
+     */
+    static volatile boolean mixed;
+    static final float PRESENT_MIN = 0.2f, PRESENT_REL = 0.5f;
+    static final float LEAD_RATIO = 1.25f, AVG_N = 32;   // (the other takes over past this ratio of ~8 s averages)
+    private int gesture = -1;   // WATER or BIRDS while both are heard (mixed only)
+    private float waterAvg, birdsAvg;
+    private boolean unsure;
+    private final boolean[] in = new boolean[NAMES.length];   // (this judgement's kinds clearly there)
+
     /** The model, only in the Dev build (src/dev YamNet: LiteRT). */
     interface Model {
         /** 521 scores for SAMPLES samples at RATE. */
@@ -253,8 +270,17 @@ final class SoundKinds {
                 top = c;
             }
         }
-        if (last[lead] < QUIET_FLOOR || top == cols[QUIET][0]) {
+        int best = lead;   // (the strongest kind, before quiet)
+        boolean silent = top == cols[QUIET][0];
+        if (last[lead] < QUIET_FLOOR || silent) {
             lead = QUIET;
+        }
+        boolean mix = mixed;
+        waterAvg += (last[WATER] - waterAvg) / AVG_N;
+        birdsAvg += (last[BIRDS] - birdsAvg) / AVG_N;
+        unsure = mix && !silent && last[best] < QUIET_FLOOR;
+        for (int k = 0; k < QUIET; k++) {
+            in[k] = !silent && last[k] >= PRESENT_MIN && last[k] >= PRESENT_REL * last[best];
         }
         candidateN = lead == candidate ? candidateN + 1 : 1;
         candidate = lead;
@@ -262,7 +288,7 @@ final class SoundKinds {
         if (lead != kind && (candidateN >= ENTER_N || (lead != QUIET && last[lead] >= STRONG))) {
             kind = lead;
         }
-        boolean m = kind == MUSIC;   // the room-music window (a fixed ROOM_N long, empty at first: fills from silence)
+        boolean m = mix ? in[MUSIC] : kind == MUSIC;   // the room-music window (a fixed ROOM_N long, empty at first: fills from silence)
         musicN += (m ? 1 : 0) - (wasMusic[roomI] ? 1 : 0);
         wasMusic[roomI] = m;
         roomI = (roomI + 1) % ROOM_N;
@@ -271,7 +297,7 @@ final class SoundKinds {
         } else if (roomMusic && musicN <= ROOM_OFF * ROOM_N) {
             roomMusic = false;
         }
-        boolean v = kind == VOICES;   // the talk window, the same way
+        boolean v = mix ? in[VOICES] : kind == VOICES;   // the talk window, the same way
         talkN += (v ? 1 : 0) - (wasTalk[talkI] ? 1 : 0);
         wasTalk[talkI] = v;
         talkI = (talkI + 1) % TALK_N;
@@ -280,7 +306,7 @@ final class SoundKinds {
         } else if (talking && talkN <= TALK_OFF * TALK_N) {
             talking = false;
         }
-        boolean w = kind == WATER;
+        boolean w = mix ? in[WATER] : kind == WATER;
         waterN += (w ? 1 : 0) - (wasWater[waterI] ? 1 : 0);
         wasWater[waterI] = w;
         waterI = (waterI + 1) % WATER_N;
@@ -289,7 +315,7 @@ final class SoundKinds {
         } else if (water && waterN <= WATER_OFF * WATER_N) {
             water = false;
         }
-        boolean b = kind == BIRDS;
+        boolean b = mix ? in[BIRDS] : kind == BIRDS;
         birdsN += (b ? 1 : 0) - (wasBirds[birdsI] ? 1 : 0);
         wasBirds[birdsI] = b;
         birdsI = (birdsI + 1) % BIRDS_N;
@@ -298,7 +324,7 @@ final class SoundKinds {
         } else if (birds && birdsN <= BIRDS_OFF * BIRDS_N) {
             birds = false;
         }
-        boolean tr = kind == TRAFFIC;
+        boolean tr = mix ? in[TRAFFIC] : kind == TRAFFIC;
         trafficSceneN += (tr ? 1 : 0) - (wasTraffic[trafficI] ? 1 : 0);
         wasTraffic[trafficI] = tr;
         trafficI = (trafficI + 1) % TRAFFIC_SCENE_N;
@@ -306,6 +332,15 @@ final class SoundKinds {
             trafficScene = true;
         } else if (trafficScene && trafficSceneN <= TRAFFIC_SCENE_OFF * TRAFFIC_SCENE_N) {
             trafficScene = false;
+        }
+        if (!mix || !(water && birds)) {
+            gesture = water ? WATER : birds ? BIRDS : -1;
+        } else if (gesture != WATER && gesture != BIRDS) {
+            gesture = waterAvg >= birdsAvg ? WATER : BIRDS;
+        } else if (gesture == WATER && birdsAvg > LEAD_RATIO * waterAvg) {
+            gesture = BIRDS;
+        } else if (gesture == BIRDS && waterAvg > LEAD_RATIO * birdsAvg) {
+            gesture = WATER;
         }
         return kind != was;
     }
@@ -330,6 +365,21 @@ final class SoundKinds {
         return water;
     }
 
+    /** Water Leaves a Trail's water: {@link #water}, unless birds lead the gestures (mixed only). */
+    boolean waterLeads() {
+        return water && (!mixed || gesture != BIRDS);
+    }
+
+    /** Birds Lift the Chimes' birds: {@link #birds}, unless water leads the gestures (mixed only). */
+    boolean birdsLead() {
+        return birds && (!mixed || gesture != WATER);
+    }
+
+    /** Mixed only: no kind scored though YAMNet didn't hear silence (an unfamiliar sound, not a quiet room). */
+    boolean unsure() {
+        return unsure;
+    }
+
     /** True while settled birds fill the window (about eight seconds), like {@link #water}. */
     boolean birds() {
         return birds;
@@ -352,7 +402,7 @@ final class SoundKinds {
 
     /** "Heard: birds 0.71" for the event log. */
     String heardLine() {
-        return kind < 0 ? "Heard: nothing yet" : String.format(Locale.US, "Heard: %s %.2f", NAMES[kind], last[kind]);
+        return kind < 0 ? "Heard: nothing yet" : unsure ? "Heard: unsure" : String.format(Locale.US, "Heard: %s %.2f", NAMES[kind], last[kind]);
     }
 
     /** The minute's cost for the event log: how many judgements and how long YAMNet took (median, slowest). */
@@ -410,5 +460,8 @@ final class SoundKinds {
         trafficScene = false;
         birdsN = birdsI = 0;
         birds = false;
+        gesture = -1;
+        unsure = false;
+        waterAvg = birdsAvg = 0;
     }
 }

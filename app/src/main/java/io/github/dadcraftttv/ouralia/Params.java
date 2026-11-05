@@ -258,6 +258,11 @@ final class Params {
                     Param.Curve.LINEAR).choices("Off", "Gentle", "Deeper").inSection("music").noPd().noPreset().soundKinds(),
             // Birds Lift the Chimes (DadCraft, Nov 2: "do birds lift the Chimes"): while sound kinds hears birds, the
             // chimes already earned turn to high Glass, a little softer. Birds alone play nothing. Independent.
+            // Mixed Surroundings (Nov 4, the review's item 3): a mix (talk by a fountain, birds by a road) counts each
+            // kind that is clearly there, not only the loudest; Water Leaves a Trail and Birds Lift the Chimes take
+            // turns rather than stack. Off by default until DadCraft's listen.
+            new Param("sk_mixed", "Mixed Surroundings (several sounds heard at once each shape the music)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
             new Param("birds_lift", "Birds Lift the Chimes (birds heard: earned chimes turn to high glass)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
             // Notes only for bigger sounds (DadCraft, Oct 30: typing "just sounds like it's random notes responding with

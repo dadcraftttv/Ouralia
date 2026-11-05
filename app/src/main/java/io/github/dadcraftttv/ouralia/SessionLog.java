@@ -131,6 +131,18 @@ final class SessionLog {
         write(s.append("]}"));
     }
 
+    /** A sound-kinds judgement's seven scores (SoundKinds.NAMES order), for replaying real mixes (Nov 4). */
+    static void kinds(float[] scores) {
+        if (!recording) {
+            return;
+        }
+        StringBuilder s = line("kinds").append(",\"v\":[");
+        for (int i = 0; i < scores.length; i++) {
+            s.append(i == 0 ? "" : ",").append(num(scores[i]));
+        }
+        write(s.append("]}"));
+    }
+
     /** DadCraft's note at this moment ("flat", "like", or anything typed). */
     static void mark(String text) {
         mark(text, System.nanoTime());

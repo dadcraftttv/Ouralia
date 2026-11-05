@@ -929,3 +929,27 @@ off)"; Music on starts it again. Getting up to speed: the model loads, the first
 the windows fill from silence: about 3 s for talk, water and birds (13 of 32 judgements at ~4 a second) and about 8 s
 for room music and the traffic scene (32 of 80). Until then the music simply plays as if nothing was heard. Test J2:
 Music off stops it and its ring, on starts it, starting to play with Music off doesn't listen.
+
+## Step 12: Mixed Surroundings (review item 3, Claude Code, Nov 4; Dev only, off by default; DadCraft's listen next)
+
+DadCraft (Nov 4), choosing from the review's reactive proposals: 2 first, "item 3 would be my second choice", then
+"go ahead and start on mixed surroundings". The problem: every scene (Make Room for Music, Mind the Gap, water,
+birds, the traffic scene) counted a judgement only while its kind *won* it, so in a real mix (talk by a fountain,
+birds by a road) each got part of its window and maybe neither came on; nothing scoring (an unfamiliar sound) read
+as "quiet" (the Moto's events log, Oct 31-Nov 4: "Heard: quiet" 2734 times, the most of any).
+`sk_mixed` ("Mixed Surroundings", Music, toggle, noPd, noPreset, soundKinds) sets `SoundKinds.mixed`. On:
+- A kind counts in its scene's window while it is clearly there: its score at least `PRESENT_MIN` (0.2) and at least
+  `PRESENT_REL` (half) of the strongest kind's, unless YAMNet's top class is silence. The windows, their lengths and
+  their on/off shares are unchanged, as is the Now line's one kind (`kind()`) and Traffic Passes Through's fast permission.
+- The two decorative gestures don't stack: while water and birds are both settled, the one with the louder ~8 s
+  average score (`AVG_N` 32 judgements) leads (`waterLeads()` for Water Leaves a Trail, `birdsLead()` for Birds Lift
+  the Chimes); the other takes over only past `LEAD_RATIO` (1.25x). Underwater still follows `water()`.
+- No kind above QUIET_FLOOR while YAMNet isn't hearing silence is "unsure" (`unsure()`, "Heard: unsure"), not quiet.
+  Calm Builds judges quiet from the level, so nothing there changes.
+Off: exactly as before (test J "mixed off"). Talk keeps its existing priority (the traffic responses give way to it);
+whether water and birds should also hold back for talk is DadCraft's call.
+Data: each judgement's seven scores now go into the session log (`"ev":"kinds"`, NAMES order; ~4 a second, ~1 MB an
+hour, under the 50 MB cap) through `SoundKindsRunner.scoresSink`, so real mixes can be replayed to tune PRESENT_*
+(the first numbers are judgement, not measured: there were no stored scores). Tests: J "mixed" (talk by a fountain
+and birds by a road, both heard on, only the winner off; the gestures lead and don't flap on an even mix; unsure vs
+YAMNet's silence), each made to fail once to see its numbers.
