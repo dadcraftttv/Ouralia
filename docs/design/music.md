@@ -42,11 +42,38 @@
     once. Event log "Calm tune starts/ends"; the Now line still says "building".
   - **The tune (patch, `calm.py`):** the app sends `calm_phrase` (six chime steps 7..14, picked per build: starts
     on a chord tone, moves a step or two, the second bar's downbeat a chord tone, ends home) and `calm_tune` 0..1.
+    The second-bar octave uses the current scale's length (5/6/7), tries up then down within steps 7..14,
+    otherwise keeps that chord tone: no upper-limit clamp collapsing different answers onto 14.
     Notes fall on 16ths 0, 6 and 12 of each of two bars (`tick16`); they join downbeats first (ranks 0..5, note
     joins past rank/6), velocity 0.2 -> 0.45. They go through `motif` (a chime at a scale step: key, register,
     chime voice, Mix level, Music in Stereo places all apply; Chimes Only When Something Happens doesn't block it).
     No [random] in the patch. Only while the drums are sounding: the beat's own output (`beat_out`) above -60 dBFS
     within the last 3 s, so it never starts the drums and stops with them. No new voice for the chimes.
+  - **Development (Nov 4).** DadCraft: "calm builds sounds great, but it's getting stuck repeating the same phrase
+    over and over ... it doesn't have to adhere to a particular style, but it shouldn't get stuck either."
+    He chose Codex's plan: keep the sound; let the tune move. During the two-minute rise, the opening motif stays
+    intact so notes still join in their original order. In full, eight-bar sections have four two-bar passes:
+    motif, exact repeat, one or two changed answer notes, then another answer with an optional breath (two rests).
+    Each next section develops the previous full motif: starts a step from its last note, changes inner notes,
+    returns to its new opening. Reject the last 16 applied pitch sequences (rests ignored) and the last four
+    section contours; a bounded random search has an exhaustive fallback. A spacious fourth pass is followed by
+    a full six-note motif. No increasing sparsity, onset moves, voice/level/effect changes, or harmony/bass changes.
+  - **Phrase boundary:** `calm_phrase` now fills `ct_pending_phrase`; a sounding two-bar boundary copies it into
+    `ct_phrase` before its first note, clears the pending flag and emits `calm_pass <epoch>`. Phone and desktop
+    acknowledge that epoch in `CalmBuild`, then prepare the next pass on their service tick. No pending phrase:
+    repeat the active one. Drums stopped: do not consume pending work. Java never estimates phrase length from
+    tempo or wall time. `calm_reset <epoch>` empties active/pending tables and invalidates old callbacks on off,
+    reset, a new build and the completed fade. Live scale-size changes prepare a fresh motif with a new epoch
+    without restarting the rise/fade clock. The patch's existing bar counter (also used by the bass) is unchanged.
+    Test B: 48 seeded 128-bar runs across scale lengths 5/6/7, max three equal consecutive pitch sequences,
+    four distinct per rolling 32 bars (rests ignored), contour change by 16 bars, range/count/fullness and lifecycle.
+    Test_patch "7z10": exact mid-pass update ordering, missing pending work, reset, rests, rank gate in both
+    directions, tempo changes and drums stop/restart. The five-minute render uses the real Java/Pd handshake;
+    `~/Downloads/calm-development-clips/` (README: settings/timeline). It includes quiet wait, full build,
+    sustained playing and the fade, no normalization or microphone recording. Peak 0.3956, no Pd errors;
+    full-level applied phrases: longest equal pitch run 2, minimum 12 distinct per rolling 32 bars, ignoring rests.
+    Full tier passed (201 patch sections + all 12 other suites, 576 s); Dev build passed. DadCraft's listen
+    decides whether the motion feels free enough. Not installed yet.
   - **The bass (Nov 4, DadCraft: "lets start on the bass for Calm Builds"; `add_calm_bass` in `calm.py`).** Built
     before his first Calm listen, at his call. In a quiet room the held bass is silent (Pad Only With a Steady Sound,
     on by default, keeps it out), so the tune has its own: a plucked low note (the held bass's tone: 2nd and 3rd

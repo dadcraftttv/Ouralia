@@ -2,7 +2,8 @@
 """Calm builds, the quiet tune (Nov 3): the app's level (calm_tune 0..1) and phrase (calm_phrase, six chime steps)
 become a two-bar chime phrase on the drum grid, only while the drums are sounding. No new voice: the notes go
 through the motif path (a chime at a scale step, music.py), so key, chord register, chime voice, Mix level and
-Music in Stereo places all apply. No [random]: the app picks the phrase."""
+Music in Stereo places all apply. No [random]: Java develops the phrase; Pd commits a pending list on the two-bar
+boundary and acknowledges it on calm_pass, so Java prepares ahead without estimating the drum clock."""
 from .constants import *  # noqa: F401,F403
 from .core import *  # noqa: F401,F403
 
@@ -15,8 +16,22 @@ def add_calm_tune(P):
     x, y = 16200, 100
     P.obj('ct_r_lvl', 'r calm_tune', x, y); P.obj('ct_lvl', 'value ct_lvl', x, y + 15); P.c('ct_r_lvl', 'ct_lvl')
     P.obj('ct_tab', f'table ct_phrase {CALM_NOTES}', x + 100, y)
-    P.obj('ct_r_ph', 'r calm_phrase', x + 100, y + 15); P.obj('ct_set', 'array set ct_phrase', x + 100, y + 30)
-    P.c('ct_r_ph', 'ct_set')
+    P.obj('ct_pending_tab', f'table ct_pending_phrase {CALM_NOTES}', x + 400, y)
+    P.obj('ct_r_ph', 'r calm_phrase', x + 400, y + 15)
+    P.obj('ct_ph_t', 't b l', x + 400, y + 30); P.c('ct_r_ph', 'ct_ph_t')
+    P.obj('ct_set', 'array set ct_pending_phrase', x + 460, y + 45); P.c('ct_ph_t', 'ct_set', 1)
+    P.msg('ct_pending_one', '1', x + 400, y + 45); P.c('ct_ph_t', 'ct_pending_one')
+    P.obj('ct_pending_v', 'value ct_pending', x + 400, y + 60); P.c('ct_pending_one', 'ct_pending_v')
+    # The app resets before sending a new build's phrase. Its epoch rejects old callbacks after off/restart.
+    P.obj('ct_reset', 'r calm_reset', x + 600, y)
+    P.obj('ct_reset_t', 't b f', x + 600, y + 15); P.c('ct_reset', 'ct_reset_t')
+    P.obj('ct_epoch', 'value ct_epoch', x + 660, y + 30); P.c('ct_reset_t', 'ct_epoch', 1)
+    P.msg('ct_pending_zero', '0', x + 600, y + 30); P.c('ct_reset_t', 'ct_pending_zero')
+    P.obj('ct_pending_clear', 'value ct_pending', x + 600, y + 45); P.c('ct_pending_zero', 'ct_pending_clear')
+    P.msg('ct_empty', 'const -1', x + 720, y + 30); P.c('ct_reset_t', 'ct_empty')
+    P.obj('ct_empty_s', 's ct_phrase', x + 720, y + 45); P.c('ct_empty', 'ct_empty_s')
+    P.obj('ct_empty_pending_s', 's ct_pending_phrase', x + 720, y + 60); P.c('ct_empty', 'ct_empty_pending_s')
+    P.obj('ct_init', 'loadbang', x + 600, y - 15); P.c('ct_init', 'ct_reset_t')
     # The drums are sounding: the beat's own output above CALM_DRUM_DB within the last CALM_DRUM_HOLD_MS.
     P.obj('ct_env', 'env~ 1024 512', x + 200, y); P.c('beat_out', 'ct_env')
     P.obj('ct_hit', f'> {100 + CALM_DRUM_DB}', x + 200, y + 15); P.c('ct_env', 'ct_hit')
@@ -29,8 +44,18 @@ def add_calm_tune(P):
     P.obj('ct_drums0', 'value ct_drums', x + 260, y + 90); P.c('ct_zero', 'ct_drums0')
     # The grid: tick16 is the 16th in the bar (0..15); the phrase is two bars long.
     P.obj('ct_tick', 'r tick16', x, y + 120); P.obj('ct_tt', 't f f', x, y + 135); P.c('ct_tick', 'ct_tt')
-    P.c('ct_tt', _ex(P, 'ct_bar', 'if($f1==0,1-ct_bar,ct_bar)', x + 100, y + 150), 1)
+    P.obj('ct_grid_t', 't f f', x + 400, y + 120); P.c('ct_tt', 'ct_grid_t', 1)
+    P.c('ct_grid_t', _ex(P, 'ct_bar', 'if($f1==0,1-ct_bar,ct_bar)', x + 100, y + 150), 1)
     P.obj('ct_bar_v', 'value ct_bar', x + 100, y + 165); P.c('ct_bar', 'ct_bar_v')
+    _ex(P, 'ct_boundary', '$f1==0&&ct_bar==0&&ct_lvl>0&&ct_drums>0&&ct_pending>0', x + 400, y + 135)
+    P.c('ct_grid_t', 'ct_boundary')
+    P.obj('ct_commit_sel', 'sel 1', x + 400, y + 150); P.c('ct_boundary', 'ct_commit_sel')
+    P.obj('ct_commit_t', 't b b b', x + 400, y + 165); P.c('ct_commit_sel', 'ct_commit_t')
+    P.obj('ct_get', 'array get ct_pending_phrase', x + 520, y + 180); P.c('ct_commit_t', 'ct_get', 2)
+    P.obj('ct_active_set', 'array set ct_phrase', x + 520, y + 195); P.c('ct_get', 'ct_active_set')
+    P.c('ct_commit_t', 'ct_pending_zero', 1)
+    P.obj('ct_epoch_read', 'value ct_epoch', x + 400, y + 180); P.c('ct_commit_t', 'ct_epoch_read')
+    P.obj('ct_pass_s', 's calm_pass', x + 400, y + 195); P.c('ct_epoch_read', 'ct_pass_s')
     # Notes at 16ths 0, 6, 12 of each bar (k = 0..2), note i = bar*3 + k in time order. They join downbeats first:
     # rank 2k + bar, note joins when the level passes rank / CALM_NOTES. Out: velocity (right), then step or -1.
     play = (f'ct_lvl>0&&ct_drums>0&&fmod($f1,6)==0&&$f1<=12&&ct_lvl>(2*int($f1/6)+ct_bar)/{CALM_NOTES}')

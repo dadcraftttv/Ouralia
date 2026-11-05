@@ -136,7 +136,7 @@ final class DesktopApp {
         }
         engine = new DesktopEngine(m -> say.accept(m));
         PdBase.setReceiver(new Receiver());
-        for (String s : new String[]{"mic_level", "heard_deg", "heard_off", "tempo", "dcs_ok"}) {
+        for (String s : new String[]{"mic_level", "heard_deg", "heard_off", "tempo", "dcs_ok", "calm_pass"}) {
             PdBase.subscribe(s);
         }
         SessionLog.setDir(context.getFilesDir(), "desktop", "desktop");
@@ -311,10 +311,15 @@ final class DesktopApp {
             }
             Worlds.tick(dt, Modulation.micLevelDb(), false, false, minuteOfDay, Double.MAX_VALUE);
             // calm builds, the quiet tune: a quiet room grows a two-bar chime phrase over the drums (CalmBuild.java)
+            int scaleSize = SCALE_SIZES[Math.max(0, Math.min(SCALE_SIZES.length - 1,
+                    Math.round(Modulation.output(Params.byId("music_scale"), ParamStore.get("music_scale")))))];
+            CalmBuild.scaleSize(scaleSize);
             boolean calmOn = ParamStore.get(CalmBuild.ID) >= 0.5f && ParamStore.get("music_on") >= 0.5f;
             if (CalmBuild.tick(dt, calmOn, false, Modulation.micLevelDb())) {
                 say.accept(CalmBuild.phase() == CalmBuild.Phase.RISING ? "Calm tune starts." : "Calm tune ends.");
             }
+            Integer calmReset = CalmBuild.takeReset();
+            if (calmReset != null) PdBase.sendFloat("calm_reset", calmReset);
             float[] phrase = CalmBuild.takePhrase();   // (before its level, so the first note has its phrase)
             if (phrase != null) {
                 Object[] steps = new Object[phrase.length];
@@ -328,8 +333,6 @@ final class DesktopApp {
                 calmTuneSent = tune;
                 PdBase.sendFloat("calm_tune", tune);
             }
-            int scaleSize = SCALE_SIZES[Math.max(0, Math.min(SCALE_SIZES.length - 1,
-                    Math.round(Modulation.output(Params.byId("music_scale"), ParamStore.get("music_scale")))))];
             float answerLevel = ParamStore.get("music_on") >= 0.5f ? ParamStore.get("music_answer") : 0f;
             play(callResponse.poll(nowS, answerLevel, scaleSize), CallResponse.velocity(answerLevel));
         } catch (RuntimeException e) {
@@ -354,6 +357,7 @@ final class DesktopApp {
             SessionLog.pd(source, x);
             double t = System.nanoTime() / 1e9;
             switch (source) {
+                case "calm_pass": CalmBuild.phraseApplied(x); break;
                 case "mic_level": Modulation.setMicLevelDb(x - 100f); break;   // (Pd's dB: 100 = full scale)
                 case "heard_deg": callResponse.onNote(Math.round(x), t); break;
                 case "tempo": tempoBpm = x; break;

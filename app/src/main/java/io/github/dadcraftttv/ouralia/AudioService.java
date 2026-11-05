@@ -255,10 +255,15 @@ public class AudioService extends Service {
                         PhoneContext.inPocket(), minuteOfDay, PhoneContext.secondsSinceShake(nowS));
                 SoundKindsRunner.settingsTick();   // Make Room for Music or Mind the Gap switched (row, preset, reset)
                 // calm builds, the quiet tune: a quiet room grows a two-bar chime phrase over the drums (CalmBuild.java)
+                int scaleSize = SCALE_SIZES[Math.max(0, Math.min(SCALE_SIZES.length - 1,
+                        Math.round(Modulation.output(Params.byId("music_scale"), ParamStore.get("music_scale")))))];
+                CalmBuild.scaleSize(scaleSize);
                 boolean calmOn = ParamStore.get(CalmBuild.ID) >= 0.5f && ParamStore.get("music_on") >= 0.5f;
                 if (CalmBuild.tick(dt, calmOn, StepDetector.walking(nowS), Modulation.micLevelDb())) {
                     logEvent(CalmBuild.phase() == CalmBuild.Phase.RISING ? "Calm tune starts" : "Calm tune ends");
                 }
+                Integer calmReset = CalmBuild.takeReset();
+                if (calmReset != null) PdBase.sendFloat("calm_reset", calmReset);
                 float[] phrase = CalmBuild.takePhrase();   // (before its level, so the first note has its phrase)
                 if (phrase != null) {
                     Object[] steps = new Object[phrase.length];
@@ -281,8 +286,6 @@ public class AudioService extends Service {
                     logEvent("Notes moved " + noteRegister.steps() + " steps" + (noteRegister.warm() ? ", warm" : ""));
                 }
                 // call and response: a sung phrase that just ended gets its answer (played like a motif)
-                int scaleSize = SCALE_SIZES[Math.max(0, Math.min(SCALE_SIZES.length - 1,
-                        Math.round(Modulation.output(Params.byId("music_scale"), ParamStore.get("music_scale")))))];
                 float answerLevel = ParamStore.get("music_on") >= 0.5f ? ParamStore.get("music_answer") : 0f;
                 List<CallResponse.Note> answer = callResponse.poll(nowS, answerLevel, scaleSize);
                 if (answer != null && !answer.isEmpty()) {
@@ -697,6 +700,10 @@ public class AudioService extends Service {
             @Override
             public void receiveFloat(String source, float x) {
                 SessionLog.pd(source, x);
+                if ("calm_pass".equals(source)) {
+                    CalmBuild.phraseApplied(x);
+                    return;
+                }
                 if (SK_READY.equals(source)) {   // sound kinds (Dev): a ring segment filled
                     SoundKindsRunner.ready(Math.round(x));
                     return;
@@ -864,6 +871,7 @@ public class AudioService extends Service {
             }
         });
         PdBase.subscribe("mic_level");
+        PdBase.subscribe("calm_pass");
         PdBase.subscribe(HARMONY_RECEIVER);
         PdBase.subscribe(COMP_SECTION);
         PdBase.subscribe(TEMPO);
