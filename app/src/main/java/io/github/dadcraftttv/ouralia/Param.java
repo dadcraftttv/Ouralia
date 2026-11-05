@@ -36,6 +36,7 @@ final class Param {
     String[] choices = null;
     /** For a mover setting: the id of the slider it moves; null for everything else. */
     String moverOf = null;
+    String under = null;   // the master toggle this sub-switch acts under (one-switch plan, Nov 5)
     /** When a preset doesn't mention this parameter, reset it to its default instead of keeping it. */
     boolean resetWhenAbsent = false;
     /** Uses one of our own C objects (dcs/): shown with an asterisk, so DadCraft can tell the new options apart. */
@@ -99,6 +100,12 @@ final class Param {
 
     Param inSection(String sectionId) {
         section = sectionId;
+        return this;
+    }
+
+    /** A sub-switch: acts only while that master toggle is on, drawn compact under it (faded while it's off). */
+    Param under(String masterId) {
+        under = masterId;
         return this;
     }
 

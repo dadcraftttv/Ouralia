@@ -36,6 +36,22 @@ public class J2 {
                     "voices 0\nmusic 2\ntraffic 3\nbirds 4\nwater 5\nsteps 6\nquiet 494\n".getBytes(StandardCharsets.UTF_8));}
             };}
         };
+        String[] subs={"room_make","voice_gaps","traffic_pass","traffic_flow","water_trail","underwater","birds_lift"};
+        for(String id:subs) ParamStore.set(id,1);
+        ParamStore.set("sk_mixed",0);
+        check(!SoundKindsRunner.roomEnabled()&&!SoundKindsRunner.gapsEnabled()&&!SoundKindsRunner.trafficEnabled()&&!SoundKindsRunner.flowEnabled()
+            &&!SoundKindsRunner.waterEnabled()&&SoundKindsRunner.uwEnabled()==0&&!SoundKindsRunner.birdsEnabled(),"Mixed off: none of the seven act");
+        ParamStore.set("sk_mixed",1);
+        check(SoundKindsRunner.roomEnabled()&&SoundKindsRunner.gapsEnabled()&&SoundKindsRunner.trafficEnabled()&&SoundKindsRunner.flowEnabled()
+            &&SoundKindsRunner.waterEnabled()&&SoundKindsRunner.uwEnabled()==2&&SoundKindsRunner.birdsEnabled(),"Mixed on: all seven act, Underwater as Deeper");
+        ParamStore.set("room_make",0);
+        check(!SoundKindsRunner.roomEnabled()&&SoundKindsRunner.gapsEnabled(),"a sub-switch off turns only that one off");
+        for(String id:subs) ParamStore.set(id,0);
+        ParamStore.set("sk_mixed",0);
+        // the one switch (Nov 5): the traffic responses act only under Mixed Surroundings; the other sub-switches
+        // (on by default) off, so only traffic keeps the runner listening
+        for(String id:new String[]{"room_make","voice_gaps","traffic_flow","water_trail","underwater","birds_lift"})ParamStore.set(id,0);
+        ParamStore.set("sk_mixed",1);
         ParamStore.set("traffic_pass",1); ParamStore.set("music_on",1);
         SoundKindsRunner.attach(c,48000,s->{}); Handler.drain();
         check(SoundKindsRunner.on(),"traffic setting starts listener without Diagnostics");
