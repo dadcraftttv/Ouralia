@@ -1050,3 +1050,27 @@ With `--set present_min.water=0.12`: clearly there 53%, on 40 s with 1 change. T
 the same replay over his other sessions (talk, music, walks) has to show water doesn't come on where there was none,
 and his next sink listen says whether it feels right. Seen in passing: the logged mic level drops to -97/-98 dB for a
 second at a time (the Moto's dropouts, as in Calm Builds, Nov 4); the timeline shows the loudest of the last 5 s.
+
+## Accuracy step 7 on the bench: raising quiet sound before YAMNet (Claude Code, Nov 5; bench only, nothing in the app)
+
+DadCraft asked for quick wins within 20 minutes; this was step 7 of the accuracy list (the far condition lost traffic,
+water and wind to "quiet"). `bench.py --norm CAP [--gate DB]` adds the conditions phone+n and far+n: each 0.975 s
+window raised toward -35 dBFS by at most CAP dB, never lowered, and left alone under the gate. 40 s a run.
+
+| max scores | traffic | water | wind | steps | music | real quiet room | made quiet rooms |
+|---|---|---|---|---|---|---|---|
+| far (today) | 1/12 | 9/17 | 2/12 | 9/12 | 9/10 | 1/1 | 9/9 |
+| far+n, cap 10 dB | **12/12** | **15/17** | **6/12** | **11/12** | 10/10 | 1/1 | 8/9 |
+| far+n, cap 20 dB | 12/12 | 16/17 | 5/12 | 11/12 | 10/10 | 0/1 | 7/9 |
+| phone+n, cap 10 dB | 12/12 | 16/17 | 5/12 | 11/12 | 10/10 | **0/1** | **5/9** |
+| far+n, cap 10, gate -55 | 7/12 | 14/17 | 3/12 | 8/12 | 9/10 | 1/1 | 9/9 |
+| phone+n, cap 10, gate -60 | 12/12 | 16/17 | 5/12 | 11/12 | 10/10 | 0/1 | 6/9 |
+
+At phone level without the raise: traffic 12/12, water 16/17, wind 6/12, steps 9/12, quiet 1/1 and 7/9. Voices, birds and
+music are unchanged throughout.
+**Reading:** raising quiet sound by up to 10 dB wins back almost everything lost at a distance, at no cost to
+louder sound. But quiet rooms raised as well start being named as sounds (the real library room and 4 of 9 made ones
+at phone+n), and a level gate can't separate them: a quiet room and a distant road sit at the same level, so the gate
+takes the distance gains back before it saves the rooms. **So the raise only works if quiet is judged from the
+un-raised level** (as Calm Builds already does) or from YAMNet's scores on the un-raised window (a second inference, about
++3% of a core). That is a design choice for DadCraft before anything goes into the app.

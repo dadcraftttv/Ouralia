@@ -27,6 +27,13 @@ MAX_WINDOWS = 12                      # per clip, spread over its first 40 s
 KEEP_DB = 20                          # windows this far under the clip's loudest are gaps, not the sound
 QUIET_FLOOR = 0.05                    # no kind scores this much: the room is quiet (0.1 hid quiet traffic)
 GATE = 0.8                            # 8 of 10 clips named right
+# --norm CAP (Nov 5, accuracy step 7): each window raised toward NORM_TARGET before YAMNet, by at most CAP dB, never
+# lowered; adds the conditions phone+n and far+n, so what it wins at a distance and what it costs (quiet rooms heard
+# as sounds) are both counted
+NORM_TARGET = -35
+NORM_CAP = float(sys.argv[sys.argv.index("--norm") + 1]) if "--norm" in sys.argv else None
+NORM_GATE = float(sys.argv[sys.argv.index("--gate") + 1]) if "--gate" in sys.argv else -999   # (windows under it stay)
+CONDS = ("clean", "phone", "far") + (("phone+n", "far+n") if NORM_CAP is not None else ())
 
 def fetch(url, path):
     if not os.path.exists(path):
@@ -207,9 +214,14 @@ def main():
         except Exception as e:                            # a dead link or a decode failure: report, carry on
             print("skip %s: %s" % (c["name"][:50], str(e)[:80])); continue
         absolute = c["kind"] in ("quiet", "info")         # quiet rooms keep their own level
-        for cond, level in (("clean", -20), ("phone", -35), ("far", -50)):
-            y = (x if absolute else at(x, -20)) if cond == "clean" else phone(x, db(x) - 15 * (cond == "far") if absolute else level)
+        for cond, level in (("clean", -20), ("phone", -35), ("far", -50), ("phone+n", -35), ("far+n", -50)):
+            if cond not in CONDS:
+                continue
+            far = cond.startswith("far")
+            y = (x if absolute else at(x, -20)) if cond == "clean" else phone(x, db(x) - 15 * far if absolute else level)
             ws = windows(y, absolute)
+            if cond.endswith("+n"):
+                ws = [w * 10 ** (min(NORM_CAP, max(0.0, NORM_TARGET - db(w))) / 20 * (db(w) >= NORM_GATE)) for w in ws]
             scores = [yam(w) for w in ws]
             if c["kind"] == "info" and cond == "phone":
                 top = Counter(labels[s.argmax()] for s in scores).most_common(1)[0][0]
@@ -223,7 +235,7 @@ def main():
 
     print("YAMNet on this desktop: %.1f ms per window (median, one thread)" % (1000 * np.median(times)))
     for how in ("max", "sum"):
-        for cond in ("clean", "phone", "far"):
+        for cond in CONDS:
             rows = [r for r in res if r[1] == cond and r[2] == how and r[0]["kind"] in KINDS]
             line = []
             for k in KINDS:
@@ -234,7 +246,7 @@ def main():
                 line.append("%s %d/%d%s" % (k, hit, len(rr), "" if hit >= GATE * len(rr) else "!"))
                 if real and syn:
                     line[-1] += "(+synth %d/%d)" % (sum(r[3] == k for r in syn), len(syn))
-            print("%-5s %-5s %s" % (how, cond, "  ".join(line)))
+            print("%-5s %-7s %s" % (how, cond, "  ".join(line)))
     rows = [r for r in res if r[1] == "phone" and r[2] == "max" and r[0]["kind"] in KINDS]
     conf = Counter((r[0]["kind"], r[3]) for r in rows if r[3] != r[0]["kind"])
     print("phone/max wrong as:", ", ".join("%s->%s %d" % (a, b, n) for (a, b), n in conf.most_common()))
