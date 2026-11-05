@@ -92,9 +92,15 @@ final class ParamStore {
 
     /** Apply a preset's values (only known parameters that belong in presets). */
     static synchronized void applyPreset(Map<String, Float> preset) {
+        applyPreset(preset, false);
+    }
+
+    /** {@code builtIn}: a built-in preset leaves out only what it means to leave alone (Nov 5: the Realms leave your
+     *  Beat Level), so nothing is reset for being absent; a user preset without a setting predates it and resets it. */
+    static synchronized void applyPreset(Map<String, Float> preset, boolean builtIn) {
         morph.clear();
         pushUndo();
-        applyValues(preset);
+        applyValues(preset, builtIn);
     }
 
     /** The most a budget slider may be set to now: its max minus what the others in its budget already take. */
@@ -222,7 +228,7 @@ final class ParamStore {
         morph.clear();
         Map<String, Float> previous = undoStack.pollFirst();
         if (previous != null) {
-            applyValues(previous);
+            applyValues(previous, false);   // (a full snapshot)
         }
     }
 
@@ -249,13 +255,13 @@ final class ParamStore {
         }
     }
 
-    private static void applyValues(Map<String, Float> map) {
+    private static void applyValues(Map<String, Float> map, boolean builtIn) {
         for (Param p : Params.ALL) {
             if (!p.inPreset) {
                 continue;
             }
             Float v = map.get(p.id);
-            if (v == null && p.resetWhenAbsent) {
+            if (v == null && p.resetWhenAbsent && !builtIn) {
                 v = p.def;   // e.g. an older preset has no movers: switch them off
             }
             if (v != null) {

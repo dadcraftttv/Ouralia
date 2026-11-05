@@ -88,7 +88,7 @@ final class PresetUi {
             a.toast(R.string.toast_read_failed, name);
             return;
         }
-        ParamStore.applyPreset(values);
+        ParamStore.applyPreset(values, !user);
         a.settingRows.refreshRows();
         a.toast(R.string.toast_loaded, name);
     }

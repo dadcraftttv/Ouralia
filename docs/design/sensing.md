@@ -3,6 +3,13 @@
 <!-- Part of the design notes: the index, how we work and the map of these files are in docs/DESIGN-NOTES.md. -->
 
 - **Auto Worlds:** Tranquil / Flux / Kinetic / Ghost / Pocket / Unstable, priority Unstable > Ghost > Kinetic > Flux > Tranquil > Pocket.
+  **Beat Level (Nov 5):** only Kinetic (0.6) and Pocket (0.45) set it; Tranquil, Flux, Ghost and Unstable leave it
+  (`PresetManager.leaveBeat`). DadCraft: with Realm Hopper on, Tranquil "seemed to keep music from building": built
+  from defaults() they set Beat Level 0, the drums stopped, and Calm Builds (which plays over them) never grew in the
+  quiet room it is for. Beat Level is `resetWhenAbsent` for old user presets, so a built-in preset's absent setting is
+  now left alone (`ParamStore.applyPreset(map, builtIn)`, `Worlds.loadPreset`); coming from Kinetic or Pocket the
+  beat goes home with the rest. Tests: W (Tranquil keeps it, Kinetic sets it, home again), M (by hand; an old user
+  preset still resets it).
   **Unstable** (roadmap 5): shaking the phone (`PhoneContext.secondsSinceShake`: 3 jolts past 1.2 g, gravity taken out,
   within 1.5 s; one bump or walking bumps don't count) while not walking brings it *at once* (no dwell or min hold,
   0.3 s fade instead of 3 s) and keeps it until 5 s after the last shake; then the normal 5 s dwell hands back.

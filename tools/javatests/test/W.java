@@ -125,7 +125,10 @@ public class W {
     check(!Worlds.isEnabled()&&"Tranquil realm".equals(Worlds.presetName("tranquil")),"defaults: off, each world has its preset");
     check("Kinetic realm".equals(Worlds.renamedBuiltIn("Kinetic world"))&&Worlds.renamedBuiltIn("My world")==null&&Worlds.renamedBuiltIn("Kinetic realm")==null,"a stored built-in world preset name moves to its realm name, user presets are left alone");
     for(Worlds.World wd:Worlds.ALL){ check(PresetManager.builtIn(wd.defaultPreset)!=null,"built-in preset exists: "+wd.defaultPreset); }
-    for(String n:new String[]{"Tranquil realm","Flux realm","Kinetic realm","Ghost realm","Pocket realm"}){ Map<String,Float> pr=PresetManager.builtIn(n); boolean ok=true; for(Param p:Params.ALL) if(p.inPreset&&!Params.builtInsLeave(p.id)){Float v=pr.get(p.id); if(v==null||Math.abs(p.clamp(v)-v)>1e-4) ok=false;} check(ok,n+" has valid values for every preset setting"); }
+    for(String n:new String[]{"Tranquil realm","Flux realm","Kinetic realm","Ghost realm","Pocket realm"}){ Map<String,Float> pr=PresetManager.builtIn(n); boolean ok=true; for(Param p:Params.ALL) if(p.inPreset&&!Params.builtInsLeave(p.id)&&!p.id.equals("beat_level")){Float v=pr.get(p.id); if(v==null||Math.abs(p.clamp(v)-v)>1e-4) ok=false;} check(ok,n+" has valid values for every preset setting"); }
+    // Nov 5 (DadCraft: Tranquil "seemed to keep music from building"): only Kinetic and Pocket set the drums' level
+    for(String n:new String[]{"Tranquil realm","Flux realm","Ghost realm","Unstable realm"}) check(!PresetManager.builtIn(n).containsKey("beat_level"),n+" leaves Beat Level alone");
+    check(PresetManager.builtIn("Kinetic realm").get("beat_level")==0.6f&&PresetManager.builtIn("Pocket realm").get("beat_level")==0.45f,"Kinetic and Pocket still set their drum level");
     ParamStore.set("wet",0.2f); ParamStore.set("reverb_mix",0f);
     Worlds.tick(0.033,-60f,false,12*60);
     check(ParamStore.get("wet")==0.2f,"auto worlds off: sliders untouched");
@@ -152,6 +155,18 @@ public class W {
     for(int i=0;i<400;i++) Worlds.tick(0.033,(i%5<2?-6f:-16f),false,12*60);   // -> flux
     check("flux".equals(Worlds.currentWorld())&&ParamStore.get("reverb_mix")==before,"locked slider is left alone while the world changes");
     ParamStore.setLocked("reverb_mix",false);
+    // your drums stay through Tranquil, Kinetic's level goes home when Tranquil comes back (Calm Builds needs them)
+    Worlds.reset(); Worlds.setEnabled(false); for(int i=0;i<200;i++) Worlds.tick(0.033,-60f,false,12*60);
+    ParamStore.set("beat_level",0.5f); Worlds.setEnabled(true);
+    for(int i=0;i<400;i++) Worlds.tick(0.033,-60f,false,12*60);
+    boolean keptT="tranquil".equals(Worlds.currentWorld())&&Math.abs(ParamStore.get("beat_level")-0.5f)<1e-3;
+    for(int i=0;i<400;i++) Worlds.tick(0.033,-60f,true,12*60);
+    boolean kin="kinetic".equals(Worlds.currentWorld())&&Math.abs(ParamStore.get("beat_level")-0.6f)<1e-3;
+    if(!kin) System.out.println("   kinetic step: "+Worlds.currentWorld()+" beat "+ParamStore.get("beat_level"));
+    for(int i=0;i<400;i++) Worlds.tick(0.033,-60f,false,12*60);
+    boolean home="tranquil".equals(Worlds.currentWorld())&&Math.abs(ParamStore.get("beat_level")-0.5f)<1e-3;
+    check(keptT&&kin&&home,"Tranquil keeps your Beat Level, Kinetic sets its own, back in Tranquil it goes home ("+keptT+" "+kin+" "+home+")");
+    Worlds.setEnabled(false); for(int i=0;i<200;i++) Worlds.tick(0.033,-60f,false,12*60);
     // midway through a fade values are between
     Worlds.reset(); Worlds.setEnabled(false); Worlds.setEnabled(true); ParamStore.set("wet",0.2f);
     for(int i=0;i<200;i++) Worlds.tick(0.033,-60f,false,12*60);
