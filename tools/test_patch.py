@@ -98,7 +98,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "traffic_state", "calm_tune", "calm_phrase", "traffic_flow_state", "btf_probe", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "traffic_state", "calm_tune", "calm_phrase", "calm_reset", "traffic_flow_state", "btf_probe", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
     "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "birds_lift", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
@@ -3528,16 +3528,18 @@ e = flow_fresh(); e.send('music_on', 0)
 check(flow_gain(e, .005, 10) == 1, 'traffic flow: Music off never dips')
 
 # ---- 7z10. calm builds, the quiet tune: the phrase on the drum grid, only while the drums sound ----
-def calm_fresh(**over):
+def calm_fresh(_listen=(), **over):
     e = fresh(**dict(dict(dry=0, wet=0, beat_level=1, beat_follow=1, beat_when=1, rhythm_src=0, music_on=1,
                           music_pad=0, music_arp=0.6, chime_answer=1), **over))
-    e.listen('calm_note', 'calm_vel'); e.send_list('calm_phrase', 9, 10, 11, 7, 8, 9); return e
+    e.listen('calm_note', 'calm_vel', *_listen); e.send_list('calm_phrase', 9, 10, 11, 7, 8, 9); return e
 def calm_notes(e, secs):
     e.heard['calm_note'] = []; e.run(e.silence(secs)); return [round(v, 2) for v in e.heard['calm_note']]
 def calm_vel(e): return round(e.heard['calm_vel'][-1], 2)
 e = calm_fresh(); e.run(e.silence(2))
 silent = calm_notes(e, 4)
-e.send('calm_tune', 1); bar = 60 / 100 * 4; full = calm_notes(e, bar * 4)
+e.send('calm_tune', 1); bar = 60 / 100 * 4
+e.run(e.silence(bar * 2))   # first pending phrase waits for its two-bar boundary
+full = calm_notes(e, bar * 4)
 steps = sorted(set(full)); vels = [calm_vel(e)]
 check(silent == [] and abs(len(full) - 12) <= 1 and steps == [7, 8, 9, 10, 11] and vels == [0.45],
       'calm tune: nothing at level 0, in full all six notes every two bars, the phrase\'s steps at 0.45 (%d notes, %s, %s)'
@@ -3550,6 +3552,59 @@ check(calm_notes(e, bar * 2) == [], 'calm tune: the drums stopped, the tune stop
 e = calm_fresh(beat_on=0); e.send('calm_tune', 1)
 check(calm_notes(e, bar * 4) == [], 'calm tune: never starts drums, never plays without them')
 
+# ---- 7z10a. calm builds: pending phrases commit before the first note, reset and rests ----
+# Drive individual grid events without advancing audio: exact boundary ordering, independent of wall time.
+e = calm_fresh(_listen=('calm_pass',)); e.run(e.silence(2))
+e.send('calm_reset', 41); e.send_list('calm_phrase', *([7] * 6)); e.send('calm_tune', 1)
+for _ in range(2):
+    if not e.heard['calm_pass']: e.send('tick16', 0)
+e.heard['calm_note'] = []
+for tick in range(1, 8): e.send('tick16', tick)
+e.send_list('calm_phrase', *([14] * 6))   # after the first two notes, in the middle of the pass
+unchanged = list(e.array('ct_phrase')) == [7] * 6
+for tick in list(range(8, 16)) + list(range(16)): e.send('tick16', tick)
+old_tail = e.heard['calm_note'][:]
+e.heard['calm_note'] = []
+for tick in list(range(16)) * 2: e.send('tick16', tick)
+new_pass = e.heard['calm_note'][:]
+check(unchanged and old_tail == [7] * 5 and new_pass == [14] * 6 and e.heard['calm_pass'] == [41, 41],
+      'calm tune: mid-pass pending list cannot splice; replacement commits before its first note (%s / %s, ack %s)'
+      % (old_tail, new_pass, e.heard['calm_pass']))
+e.heard['calm_note'] = []
+for tick in list(range(16)) * 2: e.send('tick16', tick)
+check(e.heard['calm_note'] == [14] * 6 and e.heard['calm_pass'] == [41, 41],
+      'calm tune: no pending phrase keeps the current pass without another acknowledgement')
+# ---- 7z10b. calm builds: the rise and fade retain the downbeats-first rank gate ----
+rank_counts = []
+for level in (0.2, 0.4, 0.75, 1, 0.75, 0.4, 0.2, 0):
+    e.send('calm_tune', level); e.heard['calm_note'] = []
+    for tick in list(range(16)) * 2: e.send('tick16', tick)
+    rank_counts.append(len(e.heard['calm_note']))
+check(rank_counts == [2, 3, 5, 6, 5, 3, 2, 0],
+      'calm tune: rise/fade retain the six slots and downbeats-first rank gate (%s)' % rank_counts)
+e.send('calm_tune', 1)
+e.send_list('calm_phrase', *([9] * 6)); e.send('calm_reset', 42)
+for tick in list(range(16)) * 2: e.send('tick16', tick)
+check(list(e.array('ct_phrase')) == [-1] * 6 and e.heard['calm_pass'] == [41, 41],
+      'calm tune: off/reset clears active and pending, no stale phrase acknowledged')
+e.send_list('calm_phrase', 8, -1, 10, 11, -1, 8); e.heard['calm_note'] = []
+for tick in list(range(16)) * 2: e.send('tick16', tick)
+check(e.heard['calm_note'] == [8, 10, 11, 8] and e.heard['calm_pass'][-1:] == [42],
+      'calm tune: fresh build plays only the new phrase, negative steps are rests')
+# ---- 7z10c. calm builds: natural clock, tempo changes and stopped drums ----
+e = calm_fresh(_listen=('calm_pass', 'tempo')); e.send('calm_reset', 51)
+e.send_list('calm_phrase', *([7] * 6)); e.send('calm_tune', 1); e.run(e.silence(bar * 3))
+e.send('beat_on', 0); e.run(e.silence(3.5)); e.send_list('calm_phrase', *([14] * 6))
+acks_before = len(e.heard['calm_pass']); e.heard['calm_note'] = []
+e.send('tempo_mode', 1); e.send('tempo_bpm', 137)
+e.run(e.silence(bar * 3))
+stopped = len(e.heard['calm_pass']) == acks_before and not e.heard['calm_note']
+e.send('beat_on', 1); e.run(e.silence(bar * 3))
+check(stopped and len(e.heard['calm_pass']) == acks_before + 1 and list(e.array('ct_phrase')) == [14] * 6
+      and e.heard['tempo'] and max(e.heard['tempo']) > 120,
+      'calm tune: tempo change and drums stop/restart retain pending until a sounding pass boundary')
+
+# ---- 7z10d. calm builds: bass keeps its joining order, roots, pickup, level and held-bass handover ----
 e = calm_fresh(); e.listen('calm_bass', 'calm_way'); e.run(e.silence(2))
 def calm_bass(e, tune, secs):
     e.send('calm_tune', tune); e.run(e.silence(1)); e.heard['calm_bass'] = []; e.run(e.silence(secs))

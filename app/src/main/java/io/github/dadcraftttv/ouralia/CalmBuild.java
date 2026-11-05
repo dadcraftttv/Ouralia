@@ -3,6 +3,7 @@ package io.github.dadcraftttv.ouralia;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.ArrayDeque;
 
 /**
  * Calm builds, the quiet tune (DadCraft, Nov 3; "Calm builds" switch in Music, off by default, the user's own, not in
@@ -11,7 +12,7 @@ import java.util.Random;
  * over 15 seconds once a consistent amount of noise has been detected."
  * <p>
  * After a quiet wait (30-60 s, new each time) a two-bar chime phrase, picked fresh for each build, grows a note at a
- * time over {@link #RISE_S}, then plays while the room stays quiet. Quiet is judged from the pre-effect mic level
+ * time over {@link #RISE_S}, then develops in eight-bar sections while the room stays quiet. Quiet is judged from the pre-effect mic level
  * against a reference that follows the room's low level while waiting (a steady fan below {@link #GUARD_DB} becomes
  * the reference, so it counts as quiet). A knock or a cough is short and changes nothing (the found drums still catch
  * it). Noise for {@link #NOISE_S} of the last {@link #WINDOW_S} s, or walking, starts a {@link #FADE_S} trail-off that
@@ -50,6 +51,13 @@ final class CalmBuild {
     private static double bucketS;
     private static final float[] phrase = new float[NOTES];
     private static boolean phraseNew;
+    private static int scaleSize = 7;
+    private static int epoch;
+    private static boolean resetNew, awaitingApplied, advance;
+    private static int pass;
+    private static float[] motif;
+    private static final ArrayDeque<String> recent = new ArrayDeque<>();
+    private static final ArrayDeque<String> contours = new ArrayDeque<>();
     /** 0..1 picks where in WAIT_MIN_S..WAIT_MAX_S a wait falls (tests pin it). */
     static java.util.function.DoubleSupplier wait01 = Math::random;
     /** The phrase's dice (tests seed it). */
@@ -64,6 +72,7 @@ final class CalmBuild {
         refSet = false;
         Arrays.fill(noisy, 0);
         bucketS = 0;
+        clearPhrase();
         newWait();
     }
 
@@ -88,6 +97,7 @@ final class CalmBuild {
             level = 0;
             Arrays.fill(noisy, 0);
             if (was) {
+                clearPhrase();
                 newWait();
             }
             return was;
@@ -125,7 +135,10 @@ final class CalmBuild {
                 if (noise) {
                     phaseS = 0;
                 } else if (phaseS >= waitS) {
+                    clearPhrase();
                     pickPhrase();
+                    motif = phrase.clone();
+                    contours.add(contour(motif));
                     next(Phase.RISING);
                 }
                 break;
@@ -145,6 +158,7 @@ final class CalmBuild {
                 level = (float) Math.max(0, fadeFrom * (1 - phaseS / FADE_S));
                 if (phaseS >= FADE_S) {
                     level = 0;
+                    clearPhrase();
                     newWait();
                     next(Phase.WAITING);
                 }
@@ -167,8 +181,10 @@ final class CalmBuild {
             if (i == 0) {
                 at = start;
             } else if (i == 3) {
-                at = chord[dice.nextInt(chord.length)] + (dice.nextBoolean() ? 0 : 7);   // the second bar's downbeat
-                at = Math.min(at, HIGH);
+                at = chord[dice.nextInt(chord.length)];
+                if (dice.nextBoolean()) {
+                    at = octave(at, scaleSize);
+                }
             } else if (i == NOTES - 1) {
                 at = start;   // home
             } else {
@@ -176,6 +192,106 @@ final class CalmBuild {
                 at = Math.max(LOW, Math.min(HIGH, at + (move <= 2 ? move - 3 : move - 2)));
             }
             phrase[i] = at;
+        }
+        phraseNew = true;
+    }
+
+    /** Try the octave in either direction; retain the chord tone if neither fits. Never clamp to HIGH. */
+    static int octave(int step, int size) {
+        return step + size <= HIGH ? step + size : step - size >= LOW ? step - size : step;
+    }
+
+    static synchronized void scaleSize(int size) {
+        if (size < 1 || size == scaleSize) return;
+        scaleSize = size;
+        if (phase == Phase.RISING || phase == Phase.PLAYING) {
+            clearPhrase();
+            pickPhrase();
+            motif = phrase.clone();
+            contours.add(contour(motif));
+        }
+    }
+
+    private static void clearPhrase() {
+        epoch = epoch % 1_000_000 + 1;   // exactly represented by Pd's float, including after long sessions
+        resetNew = true;
+        phraseNew = awaitingApplied = advance = false;
+        pass = 0;
+        motif = null;
+        recent.clear();
+        contours.clear();
+    }
+
+    /** Send before a pending phrase or level: invalidates active/pending Pd notes on reset, off and new build. */
+    static synchronized Integer takeReset() {
+        if (!resetNew) return null;
+        resetNew = false;
+        return epoch;
+    }
+
+    /** Pd acknowledges only a pending phrase actually committed at a two-bar boundary. No Pd calls here. */
+    static synchronized void phraseApplied(float generation) {
+        if (generation != epoch || !awaitingApplied) return;
+        awaitingApplied = false;
+        recent.add(sounding(phrase));
+        while (recent.size() > 16) recent.removeFirst();
+        advance = phase == Phase.RISING || phase == Phase.PLAYING;
+    }
+
+    private static String sounding(float[] notes) {
+        StringBuilder s = new StringBuilder();
+        for (float n : notes) if (n >= 0) s.append((int) n).append(',');
+        return s.toString();
+    }
+
+    private static String contour(float[] notes) {
+        StringBuilder s = new StringBuilder();
+        for (int i = 1; i < notes.length; i++) s.append((int) (notes[i] - notes[i - 1])).append(',');
+        return s.toString();
+    }
+
+    private static int near(int step, int move) {
+        int n = step + move;
+        return n < LOW || n > HIGH ? step - move : n;
+    }
+
+    /** Develop the previous motif, rejecting recent pitch sequences and section contours (including A/B/A/B). */
+    private static void develop() {
+        float[] next = null;
+        for (int attempt = 0; next == null; attempt++) {
+            float[] c = motif.clone();
+            if (attempt < 128) {
+                c[0] = near((int) motif[NOTES - 1], dice.nextBoolean() ? 1 : -1);
+                int a = 1 + dice.nextInt(4), b = 1 + dice.nextInt(4);
+                c[a] = near((int) c[a], dice.nextBoolean() ? 1 : -1);
+                c[b] = near((int) c[b], dice.nextBoolean() ? 2 : -2);
+                c[NOTES - 1] = c[0];
+            } else {
+                // Exhaustive fallback: 8^3 candidates, far more than the short forbidden history.
+                int k = attempt - 128, width = HIGH - LOW + 1;
+                c[1] = LOW + k % width;
+                c[3] = LOW + k / width % width;
+                c[4] = LOW + k / (width * width) % width;
+            }
+            if (!recent.contains(sounding(c)) && !contours.contains(contour(c))) next = c;
+        }
+        motif = next;
+        contours.add(contour(motif));
+        while (contours.size() > 4) contours.removeFirst();
+    }
+
+    private static void nextPass() {
+        if (phase == Phase.PLAYING) {
+            pass = (pass + 1) % 4;
+            if (pass == 0) develop();
+        }
+        System.arraycopy(motif, 0, phrase, 0, NOTES);
+        if (pass >= 2) {   // third pass answers differently; fourth closes or breathes
+            phrase[3] = near((int) motif[3], dice.nextBoolean() ? 1 : -1);
+            if (dice.nextBoolean()) phrase[4] = near((int) motif[4], dice.nextBoolean() ? 1 : -1);
+            if (pass == 3 && dice.nextBoolean()) {
+                phrase[2] = phrase[4] = -1;
+            }
         }
         phraseNew = true;
     }
@@ -192,12 +308,17 @@ final class CalmBuild {
         return ref;
     }
 
-    /** The phrase once after a new one is picked (the service sends it), else null. */
+    /** Prepare one pass ahead after Pd acknowledges the last one; the service sends it outside this lock. */
     static synchronized float[] takePhrase() {
+        if (advance) {
+            advance = false;
+            nextPass();
+        }
         if (!phraseNew) {
             return null;
         }
         phraseNew = false;
+        awaitingApplied = true;
         return phrase.clone();
     }
 }
