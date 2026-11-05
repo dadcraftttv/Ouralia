@@ -98,6 +98,14 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     for(int i=0;i<300;i++){ k.judge(sc(i%2==0?5:0,60)); held &= k.water(); }
     check(held,"water: half the window holds on without flapping");
     k.reset(); check(!k.water(),"reset forgets water");
+    // time windows (Nov 5, the 2026-11-03 review): a judgement counts for the time since the last (at most 1 s), so
+    // skipped work doesn't stretch a window and faster judgements don't shrink it
+    k.reset(); int wn=0; long wt=0; while(!k.water()&&wn<40){ k.judge(sc(5,60),wt); wt+=1000; wn++; }
+    check(wn==4,"time windows: water a second apart is on after 4 judgements (3.25 s of 8 s), not 13 ("+wn+")");
+    k.judge(sc(0,60),wt+10000); check(!k.water(),"time windows: after a 10 s gap the window is empty, water off");
+    k.reset(); wn=0; wt=0; while(!k.water()&&wn<100){ k.judge(sc(5,60),wt); wt+=125; wn++; }
+    check(wn==25,"time windows: twice as fast still needs 3.2 s of water ("+wn+")");
+    k.reset();
     Param birdsSetting=Params.byId("birds_lift");
     check(birdsSetting!=null&&birdsSetting.def==1f&&"sk_mixed".equals(birdsSetting.under)&&birdsSetting.toggle&&!birdsSetting.sendToPd
         &&birdsSetting.inPreset&&!birdsSetting.randomizable,"birds switch: on under Mixed Surroundings, app-controlled, in presets, outside dice");

@@ -131,8 +131,9 @@ final class SessionLog {
         write(s.append("]}"));
     }
 
-    /** A sound-kinds judgement's seven scores (SoundKinds.NAMES order), for replaying real mixes (Nov 4). */
-    static void kinds(float[] scores) {
+    /** A sound-kinds judgement's seven scores (SoundKinds.NAMES order), for replaying real mixes (Nov 4), and
+     *  "s":1 when YAMNet's own top class was Silence (Nov 5: the replay needs it to tell quiet from unsure). */
+    static void kinds(float[] scores, boolean silent) {
         if (!recording) {
             return;
         }
@@ -140,7 +141,7 @@ final class SessionLog {
         for (int i = 0; i < scores.length; i++) {
             s.append(i == 0 ? "" : ",").append(num(scores[i]));
         }
-        write(s.append("]}"));
+        write(s.append(silent ? "],\"s\":1}" : "]}"));
     }
 
     /** DadCraft's note at this moment ("flat", "like", or anything typed). */

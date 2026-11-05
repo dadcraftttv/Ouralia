@@ -160,8 +160,11 @@ final class SoundKindsRunner {
     static boolean mixedEnabled() {
         return available() && ParamStore.get(MIXED_ID) >= 0.5f;
     }
-    /** Each judgement's seven scores go here (the service: SessionLog.kinds), so real mixes can be replayed. */
-    static volatile java.util.function.Consumer<float[]> scoresSink;
+    /** Each judgement's seven scores and whether YAMNet heard silence go here (the service: SessionLog.kinds), so real
+     *  mixes can be replayed (tools/replay_kinds.py). */
+    static volatile java.util.function.BiConsumer<float[], Boolean> scoresSink;
+    /** Monotonic milliseconds for the judgements (the scene windows are measured in time); the tests step it. */
+    static volatile java.util.function.LongSupplier clock = () -> System.nanoTime() / 1_000_000;
 
     static boolean waterEnabled() {
         return mixedEnabled() && ParamStore.get(WATER_ID) >= 0.5f;
@@ -531,9 +534,9 @@ final class SoundKindsRunner {
                 nanos[judged++] = took;
             }
             boolean wasRoom = ks.roomMusic(), wasTalk = ks.talking();
-            changed = ks.judge(scores);
-            java.util.function.Consumer<float[]> sink = scoresSink;
-            if (sink != null) sink.accept(ks.scores());   // (each judgement's scores: real mixes to replay)
+            changed = ks.judge(scores, clock.getAsLong());   // (real time: the windows are measured in it)
+            java.util.function.BiConsumer<float[], Boolean> sink = scoresSink;
+            if (sink != null) sink.accept(ks.scores(), ks.silent());   // (each judgement's scores: real mixes to replay)
             line = ks.heardLine();
             room = ks.roomMusic();
             roomChanged = room != wasRoom;
