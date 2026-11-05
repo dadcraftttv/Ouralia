@@ -21,11 +21,12 @@ behaviour changes, or tell DadCraft it needs one).
   --history` and events.log, whose "Health:" lines give battery, temperature and the app's CPU each minute;
   DESIGN-NOTES "Diagnostics").
 - **Dev path** (DadCraft, Oct 30; the R.5 `dev` branch was deleted with the kits): new work is built on its own
-  branch (now `sound-kinds`, which contains `reactive`: kit removal, the reactive-first steps, sound kinds, Music in
-  Stereo, both traffic switches and the new Calm Builds; all pushed) and tried in "Ouralia Dev"
+  branch and tried in "Ouralia Dev"
   (`./gradlew assembleDev`, `adb install -r app/build/outputs/apk/dev/app-dev.apk`; id `io.github.dadcraftttv.ouralia.dev`,
   beside the release app with its own settings). He listens after each first audible change; a branch merges to `main`
-  only on his "yes", a step he doesn't like is dropped. `main` and the rc releases stay untouched meanwhile.
+  only on his "yes", a step he doesn't like is dropped. `sound-kinds` (with `reactive`: kit removal, the reactive-first
+  steps, sound kinds, Mixed Surroundings as the one switch, presets) merged into `main` Nov 5 (DadCraft: "merge
+  everything from dev into main"); the rc releases predate it.
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
   Getting a sound's shape, tone and feel right takes rounds of listening: that is expected. Before his first listen,
   check what can be measured, so his rounds go on feel and not on faults (Shimmer Style, Oct 23):
@@ -63,7 +64,7 @@ behaviour changes, or tell DadCraft it needs one).
 - `app/src/main/assets/scene_lib` (rjlib + our scene helpers), `builtin_scenes/` (4 official RjDj scenes).
 - `dcs/` — our own Pd objects in C (prefix `dcs_`, BSD-3, loaded by `#X declare -lib dcs;`). After changing
   `dcs/src`: `make -C dcs`, `tools/build_dcs_android.sh` (commits `app/src/main/jniLibs/*/libdcs.so`), `tools/test_dcs.py`.
-- Selectable kits removed Oct 30 (on `reactive`, so `sound-kinds` too; `main` still has them): the built-in Synth
+- Selectable kits removed Oct 30 (on `main` since the Nov 5 merge): the built-in Synth
   voices and Found sources remain (DESIGN-NOTES "Kits"). The sound classifier (YAMNet, LiteRT) ships only in Dev
   (`app/src/dev/`).
 - `desktop/` — Linux stream mode (Swing + JACK via pw-jack), compiles the phone's logic classes unchanged.
