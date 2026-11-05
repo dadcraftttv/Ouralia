@@ -187,6 +187,12 @@ final class Params {
             // uncaught): 0 = off, as before. New sound: off by default until DadCraft's ears say.
             new Param("fs_clean", "Clear Catches (how far above the room a sound must be, 0 = off)", 0f, 30f, 0f, " dB",
                     Param.Curve.LINEAR).inSection("beat"),
+            // Found Palette (Nov 4, the review's item 2, DadCraft: "all three together, and start slow"): the found drums
+            // keep distinct sounds (a look-alike catch refreshes its sound, a new one takes a place at most once a minute
+            // per drum), each step of the beat plays its own sound and a learned spot the sound caught there. New
+            // sound: off by default until DadCraft's ears say.
+            new Param("fs_palette", "Found Palette (your sounds keep their places in the beat)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).choices("Off", "On").inSection("beat"),
             new Param("beat_level", "Beat Level (0 = off)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("beat").rand(0f, 0.7f).resetWhenAbsent(),
             new Param("beat_pitch", "Kick Drum Pitch", 40f, 120f, 55f, " Hz", Param.Curve.LOG)
@@ -632,7 +638,7 @@ final class Params {
      * the sound", so it loads exactly as meant), but a Realm never changes them, a built-in preset says nothing about
      * them, and a preset made before keeps what you have (none is resetWhenAbsent).
      */
-    static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean",
+    static final Set<String> BAND = Set.of("beat_follow", "tempo_mode", "tempo_bpm", "beat_when", "rhythm_src", "fs_clean", "fs_palette",
             "music_on", "mel_dev", "pat_gen", "walk_ease", "note_big",
             "music_follow", "calm_build", "music_key", "music_scale", "music_pad_reg", "pad_src", "pad_voice", "bass_voice",
             "melody_src", "mel_rhythm", "mel_phrase", "chime_voice", "chime_trail", "fm_ring", "res_src", "harm_src", "harm_tracker");

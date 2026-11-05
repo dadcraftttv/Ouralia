@@ -98,7 +98,7 @@ check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
 jp = java_params()
 patch_text = open(PATCH).read()
-receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "traffic_state", "calm_tune", "calm_phrase", "calm_reset", "traffic_flow_state", "btf_probe", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
+receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "comp_section", "traffic_state", "calm_tune", "calm_phrase", "calm_reset", "traffic_flow_state", "btf_probe", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)
     "step", "sk_on", "room_music", "voice_talk", "water_trail", "underwater", "birds_lift", "scale_n", "pad_glide", "mic_level", "pad_slot", "pool_n", "pool_x", "pocket", "pocket_down", "duck", "step_strength", "step_hit", "beat_sure", "groove", "gc_mode", "gc_try", "density_on", "motif", "drift_now", "drift_set", "drift_n", "comp_seed", "music_register", "music_warm", "pulse", "tick16", "clock_walking", "gc_mode", "fs_need", "harm_organ", "fpad_need", "harm_run", "fpad_kick", "fpad_caught", "rh_swing_set", "fs_flourish_set", "rn_ring", "rnf_found", "realm_cue", "handling", "jolt", "msync", "tempo", "calm_chimes", "band_phase", "heard_deg", "heard_off", "shift_voice_c", "harm_tracker_c", "drum_kick", "drum_snare", "voc_ctl", "st_r", "st_mid", "st_side", "stereo_plain", "st_extra"} - {r for r in re.findall(r"#X obj \d+ \d+ r (sw_\w+);", open(PATCH).read())}   # events and internal links, not settings
 pd_ids = {i for i, _, nopd in jp if not nopd}
 check(len(jp) >= 10, "parsed %d params from Params.java" % len(jp))
@@ -2259,6 +2259,50 @@ hit6 = learned_spots({1, 2, 3}, 11)
 check(hit6[2] and hit6[3] and hit6[4] and not any(hit6[8:]) and not hit6[0] and not hit6[1],
       "learned groove: claps on one off-beat teach the snare that spot, then it fades (snare on that spot per bar: %s)"
       % "".join("x" if h else "." for h in hit6))
+
+# Found Palette (fs_palette, Nov 4; DadCraft: "all three together, and start slow"): a look-alike catch refreshes its
+# sound, a clearly new one takes a place at most once a minute per drum, each step keeps its own sound, a learned
+# spot plays the sound caught there
+def palette_run(events, total, pal=1, quiet=(), listen=()):
+    thump, clap, tick = fs_sounds()
+    x = (np.random.default_rng(3).standard_normal(int(total * SR)) * 0.0005).astype(np.float32)
+    for t, f in events:
+        s = {"k": thump, "s": clap, "h": tick}[f]() * (0.1 if t in quiet else 1); i = int(t * SR)
+        x[i:i + len(s)] += s.astype(np.float32)
+    e = fresh(dry=0, wet=0, beat_level=1, beat_follow=1, beat_when=1, rhythm_src=1, fs_palette=pal)
+    e.listen("fs_caught", "fs_pal_code", *listen); e.run(x); return e
+fill = [(1.0 + 0.6 * k, "k") for k in range(5)]
+e = palette_run(fill + [(4.6, "k"), (5.2, "k"), (6.4, "k")], 7.5, quiet={6.4})
+codes = [int(v) for v in e.heard["fs_pal_code"]]
+check(codes[:5] == [0, 1, 2, 3, 4] and all(100 <= c < 105 for c in codes[5:7]) and 200 <= codes[7] < 205,
+      "Found Palette: five kicks fill the slots, the same thump again refreshes one, a different one within the minute "
+      "is not kept (%s)" % codes)
+e2 = palette_run(fill, 5, pal=0)
+check(e2.heard["fs_pal_code"] == [] and len(e2.heard["fs_caught"]) == 5, "Found Palette off: the round robin as before")
+e = palette_run(fill + [(30.0, "k"), (66.0, "k")], 67.5, quiet={66.0})
+codes = [int(v) for v in e.heard["fs_pal_code"]]; feat = list(e.array("fs_feat"))
+lv = [feat[3 * j] for j in range(5)]
+check(len(codes) == 7 and 100 <= codes[5] < 105 and codes[6] < 5 and codes[6] != codes[5] - 100
+      and min(lv) == lv[codes[6]] and max(lv) - min(lv) > 15,
+      "Found Palette: a minute on, a new sound takes the least recently heard place, not the refreshed one (%s, "
+      "loudness kept %s)" % (codes, [round(v) for v in lv]))
+def picks(pal, total=30):
+    """Each step's kick slots over the second half (the catches' learned spots have faded by then)."""
+    e = palette_run(fill, total, pal=pal, listen=("fs_pick_k",))
+    got = {}
+    for v in e.heard["fs_pick_k"][len(e.heard["fs_pick_k"]) // 2:]:
+        got.setdefault(int(v) % 100, set()).add(int(v) // 100)
+    return got
+on, off = picks(1), picks(0)
+check(all(len(v) == 1 for v in on.values()) and len(set().union(*on.values())) >= 2
+      and any(len(v) > 1 for v in off.values()),
+      "Found Palette: each step keeps its own kick (steps -> slots %s), several sounds in the bar; off, a step's sound "
+      "changes (%s)" % ({k: sorted(v) for k, v in sorted(on.items())}, {k: sorted(v) for k, v in sorted(off.items())}))
+e = palette_run(fill, 9, listen=("fs_pick_k", "tick16"))
+e.send_list("rh_hslot", 6, 3); e.send_list("rh_heard", 6, 1); e.heard["fs_pick_k"] = []
+e.run((np.random.default_rng(4).standard_normal(int(2.4 * SR)) * 0.0005).astype(np.float32))
+at6 = [int(v) // 100 for v in e.heard["fs_pick_k"] if int(v) % 100 == 6]
+check(at6 and all(s == 3 for s in at6), "Found Palette: a learned spot plays the sound caught there (step 6: %s)" % at6)
 
 # input shaping: the gate's own fast meter, hysteresis, hold, attack and release; the compressor's attack and release
 def db_tone(db, secs, f=1000):
