@@ -7600,8 +7600,8 @@
 #X obj 300 440 *~;
 #X obj 16200 100 r calm_tune;
 #X obj 16200 115 value ct_lvl;
-#X obj 16300 100 table ct_phrase 6;
-#X obj 16600 100 table ct_pending_phrase 6;
+#X obj 16300 100 table ct_phrase 64;
+#X obj 16600 100 table ct_pending_phrase 64;
 #X obj 16600 115 r calm_phrase;
 #X obj 16600 130 t b l;
 #X obj 16660 145 array set ct_pending_phrase;
@@ -7637,7 +7637,7 @@
 #X obj 16720 295 array set ct_phrase;
 #X obj 16600 280 value ct_epoch;
 #X obj 16600 295 s calm_pass;
-#X obj 16200 280 expr if(ct_lvl>0&&ct_drums>0&&fmod(\$f1\,6)==0&&\$f1<=12&&ct_lvl>(2*int(\$f1/6)+ct_bar)/6\,ct_phrase[int(ct_bar*3+int(\$f1/6))]\,-1)\;0.2+0.25*ct_lvl;
+#X obj 16200 280 expr if(ct_lvl>0&&ct_drums>0&&ct_phrase[int(ct_bar*16+\$f1)]>=0&&ct_lvl>ct_phrase[int(ct_bar*16+\$f1)+32]/6\,ct_phrase[int(ct_bar*16+\$f1)]\,-1)\;0.2+0.25*ct_lvl;
 #X obj 16200 310 pack f f;
 #X obj 16200 295 moses 0;
 #X obj 16200 325 s motif;
