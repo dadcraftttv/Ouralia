@@ -29,7 +29,8 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 - **Tuning from replays:** Mixed Surroundings' `PRESENT_MIN` 0.2 was judgement; water may want lower (his sink
   scored 0.1-0.26). Wind and singing only where real listening shows a problem (Codex, Nov 5).
 - **Testers' feedback** on rc6 (tester guide "What to test").
-- **Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.
+- ~~**Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.~~ DONE Nov 5: topics and description
+  set, a README GIF of the Now line from rc6 on the Moto. Still to make: a short clip with sound (DadCraft records it).
 - **Release to Play** (item 14): the release key and the Play forms (docs/RELEASING.md).
 - Older, still waiting on DadCraft: the phone checks (call pause, pocket shaping), Clear Catches' verdict, a cost per
   feature (item 22).
