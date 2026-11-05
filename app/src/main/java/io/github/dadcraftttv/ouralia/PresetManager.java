@@ -198,6 +198,7 @@ final class PresetManager {
         tranquil.put("music_pad", 0.22f);                 // soft and low; only heard if Music is switched on
         tranquil.put("music_arp", 0.25f);
         tranquil.put("music_res", 0.6f);
+        leaveBeat(tranquil);
         BUILT_IN.put("Tranquil realm", tranquil);
 
         // Edgy but see-through: DadCraft heard heavy distortion + freeze turn running water into nothing but fuzz,
@@ -212,6 +213,7 @@ final class PresetManager {
         flux.put("music_pad", 0.08f);
         flux.put("music_arp", 0.35f);
         flux.put("music_res", 1f);                       // the loud room rings in key
+        leaveBeat(flux);
         BUILT_IN.put("Flux realm", flux);
 
         Map<String, Float> kinetic = make(250f, 0.5f, 0.45f, 80f, 0f);
@@ -242,6 +244,7 @@ final class PresetManager {
         ghostWorld.put("gc_pct_shuffle", 0f);
         mover(ghostWorld, "space_pan", 1, 0.05f, 0.9f);
         mover(ghostWorld, "rvs_time", 1, 0.04f, 0.5f);
+        leaveBeat(ghostWorld);
         BUILT_IN.put("Ghost realm", ghostWorld);
 
         // Unstable: shake the phone and everything piles on at once, glitchy by design; more shaking bends it further.
@@ -259,6 +262,7 @@ final class PresetManager {
         mover(unstable, "ring_freq", 6, 2f, 0.8f);      // Shake = higher: the harder you shake, the wilder it gets
         mover(unstable, "pitch_semi", 6, 2f, 0.6f);
         mover(unstable, "crush_rate", 6, 2f, 0.7f);
+        leaveBeat(unstable);
         BUILT_IN.put("Unstable realm", unstable);
 
         // In a pocket the mic only hears cloth and rustle, so keep the room quiet and soft and let the
@@ -363,6 +367,13 @@ final class PresetManager {
         m.put(Params.moverId(target, "mvspeed"), speedHz);
         m.put(Params.moverId(target, "mvdepth"), depth);
         m.put(Params.moversSwitchId(p.section), 1f);
+    }
+
+    /** A Realm that has no drum level of its own leaves yours (DadCraft, Nov 5: with Realm Hopper on, Tranquil "seemed
+     *  to keep music from building"): from defaults() it set Beat Level to 0, so the drums stopped and Calm Builds,
+     *  which plays over them, never grew in the quiet room it is for. Kinetic and Pocket still set theirs. */
+    private static void leaveBeat(Map<String, Float> m) {
+        m.remove("beat_level");
     }
 
     private static Map<String, Float> make(float echoTime, float feedback, float wet,

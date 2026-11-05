@@ -482,7 +482,7 @@ What to expect:
 - **The music stays in time with the beat.** While the Rhythm plays, chimes wait for the next half-beat (at most half a beat: about a third of a second at a walking tempo, up to half a second at the slowest set tempo) so they fall in with the drums, standing or walking. When you stop walking, the pad and bass ease down a little for a few seconds, then fill back in.
 - When a lot has been played lately, the music holds back and leaves more room, so a busy room doesn't turn into a wall of notes.
 - The music passes through your other effects, so Echo, Reverb, Chorus, Stereo Space and the rest all shape it. The Pitch, Ring, Bit-crush, Distortion and Filter effects do not touch it.
-- In Realms, Tranquil keeps the music very soft, Flux keeps the notes light but lets the loud room ring in key, Kinetic lets the notes grow with your pace, and Pocket switches the Singing Room off. Realms never switch the music on or off for you.
+- In Realms, Tranquil keeps the music very soft, Flux keeps the notes light but lets the loud room ring in key, Kinetic lets the notes grow with your pace, and Pocket switches the Singing Room off. Realms never switch the music on or off for you, and only Kinetic and Pocket change how loud the drums are: the others leave your Beat Level, so Calm Builds can still grow over the drums in Tranquil.
 
 #### Hearing what kind of sound it is (Mixed Surroundings)
 

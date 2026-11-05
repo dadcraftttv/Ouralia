@@ -376,6 +376,7 @@ final class Worlds {
     /** A preset's values for every preset parameter, filling gaps the way loading a preset does. */
     private static Map<String, Float> loadPreset(String name) {
         Map<String, Float> raw = PresetManager.builtIn(name);
+        boolean user = raw == null;
         if (raw == null && app != null) {
             raw = PresetManager.readUser(app, name);
         }
@@ -388,8 +389,8 @@ final class Worlds {
                 continue;
             }
             Float v = raw.get(p.id);
-            if (v == null && p.resetWhenAbsent) {
-                v = p.def;   // an older preset knows nothing of this setting: switch it off
+            if (v == null && p.resetWhenAbsent && user) {
+                v = p.def;   // an older user preset knows nothing of this setting: switch it off (a built-in means it)
             }
             if (v != null) {
                 full.put(p.id, v);
