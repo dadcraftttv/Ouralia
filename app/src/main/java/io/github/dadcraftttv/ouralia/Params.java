@@ -253,9 +253,9 @@ final class Params {
             new Param("water_trail", "Water Leaves a Trail (water heard: at least two softer notes follow a chime)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().under("sk_mixed"),
             // Underwater (DadCraft, Nov 2: "can we build both? just so i could test them side by side"): while water is
-            // heard the music and beat, never the mic, turn muffled with a slow wobble. Gentle and Deeper to compare.
-            // Since Nov 5 (DadCraft's one-switch plan: "Underwater as Deeper"): on means Deeper; Gentle stays in the
-            // patch, unused. A stored Gentle or Deeper loads as on.
+            // heard the music and beat, never the mic, turn muffled with a slow wobble. (Gentle and Deeper compared Nov 2-5.)
+            // Since Nov 5 (DadCraft's one-switch plan: "Underwater as Deeper", then "go ahead and remove the gentle
+            // style"): one style, the old Deeper. A stored Gentle or Deeper loads as on.
             new Param("underwater", "Underwater (water heard: the music goes muffled and wobbly)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).toggle().inSection("music").noPd().noPreset().soundKinds().under("sk_mixed"),
             // Birds Lift the Chimes (DadCraft, Nov 2: "do birds lift the Chimes"): while sound kinds hears birds, the

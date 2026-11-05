@@ -43,7 +43,7 @@ public class J2 {
             &&!SoundKindsRunner.waterEnabled()&&SoundKindsRunner.uwEnabled()==0&&!SoundKindsRunner.birdsEnabled(),"Mixed off: none of the seven act");
         ParamStore.set("sk_mixed",1);
         check(SoundKindsRunner.roomEnabled()&&SoundKindsRunner.gapsEnabled()&&SoundKindsRunner.trafficEnabled()&&SoundKindsRunner.flowEnabled()
-            &&SoundKindsRunner.waterEnabled()&&SoundKindsRunner.uwEnabled()==2&&SoundKindsRunner.birdsEnabled(),"Mixed on: all seven act, Underwater as Deeper");
+            &&SoundKindsRunner.waterEnabled()&&SoundKindsRunner.uwEnabled()==1&&SoundKindsRunner.birdsEnabled(),"Mixed on: all seven act, Underwater on");
         ParamStore.set("room_make",0);
         check(!SoundKindsRunner.roomEnabled()&&SoundKindsRunner.gapsEnabled(),"a sub-switch off turns only that one off");
         for(String id:subs) ParamStore.set(id,0);

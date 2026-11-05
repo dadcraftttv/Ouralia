@@ -981,3 +981,8 @@ indented under Mixed Surroundings, faded while it is off (still settable); each 
 as Deeper"): a stored Gentle (1) or Deeper (2) loads as on; the patch still has Gentle, unused, for now. Mixed itself
 stays off by default. Tests: J (the seven under it, on by default, Underwater a switch, Deeper clamps to on), J2
 (Mixed off: none act; on: all, Underwater 2; one sub-switch off turns only that one off; made to fail once).
+**Gentle removed (Nov 5, DadCraft: "go ahead and remove the gentle style"):** the patch has one Underwater style,
+the old Deeper: constants are single numbers (UW_CUTOFF 900 Hz, UW_DELAY_MS 12 +/- UW_DEPTH_MS 3 at UW_RATE_HZ 0.25,
+only the delayed copy heard, UW_IN_MS 5 s, UW_OUT_MS 8 s; Gentle was 1600 Hz, a 0.2 share of 10 +/- 1 ms at 0.2 Hz,
+4 s in, 6 s out). The style picker, its stored value and the 500 ms style glide are gone; "underwater" > 0 is on (the
+app sends 1). Tests: 7z6 compares off/on (above 2.5 kHz at least 15 dB down, level within 3 dB music, 4 dB beat).
