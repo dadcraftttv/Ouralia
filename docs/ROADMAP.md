@@ -34,7 +34,10 @@ kept restarting its quiet wait (design/music.md). The review's six steps are don
 allocations (Moto: the work around YAMNet ~8-9 -> 5-6 ms), the listener stops while Music is off, the music side FX idle while Music in Stereo is off. Reactive-first additions: DadCraft's picks (Nov 4): **2, captured sounds' identity, first** ("i like 2 the most");
 **3, mixed environments, second**; **4, authored experiences, kept for later**; **1, explaining changes, dropped**
 ("showing why the music or sound changed is redundant - users should be aware of why something happened or changed,
-because the sonic environment around them changed").
+because the sonic environment around them changed"). **Item 2 BUILT Nov 4 as Found Palette** (`fs_palette`, Rhythm,
+off by default; "all three together, and start slow"): distinct sounds kept for minutes, each step its own sound, a
+learned spot the sound caught there (design/rhythm.md "Found Palette"). His listen next: `~/Downloads/found-palette-clips/`,
+then the phone.
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 

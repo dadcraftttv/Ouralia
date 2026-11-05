@@ -85,6 +85,21 @@
   like the glitch cloud's, which is unchanged). Its audio is switched (`fsound`,
   on while rhythm_src x beat_level > 0). Reports `fs_caught <role>`: the Now line shows "kit K2 S1 H3", the event
   log each catch with "kit K3 S2 H1 · 24 caught" (the slots fill to 3, the total keeps counting). Pd lessons again: a running max needs its own output fed back; a stored decay never banged was 0.
+- **Found Palette** (Nov 4, `fs_palette`, Rhythm, Off/On, off by default, in presets with The Band; the 2026-11-03
+  review's item 2, "strengthen the identity of captured sounds", DadCraft's first pick: "i like 2 the most" ... "all
+  three together, and start slow"; `add_found_palette` in rhythm.py). What the Moto's log showed (Oct 31-Nov 4, 1286
+  catches): the whole hat set was replaced in a median 23 s (p25 8 s), snares 96 s, kicks 150 s, every hit played a
+  random one of its role's five, and 11% of catches were near-copies of the one before yet pushed out an older sound.
+  On: (1) a catch like a kept sound of its role (loudness within ~FS_PAL_LV_DB 6, lows and highs against it within
+  ~FS_PAL_SHAPE_DB 4, summed shares <= FS_PAL_SIM 1.5) refreshes it (its audio kept); a clearly new one takes the least
+  recently heard slot, at most once FS_PAL_NEW_S (60 s) per role; otherwise it isn't kept. Empty slots fill as before.
+  Replaying the log through it: sounds last ~10-13 min, half the catches refresh. (2) Each step plays its own sound:
+  a hash of the step and `fs_mapep` (no [random], so the other [random]s keep their sequences) picks the slot, new
+  every FS_PAL_MAP_BARS (16) bars or when the composer's section changes. (3) Every catch notes its slot at its spot
+  (`rh_hslot`): a learned spot plays the sound caught there. Off: the round robin and random picks, unchanged. Pd
+  lesson: one 1.4k-character [expr] of the choice was never created (no error seen); it is short steps now. Tests:
+  test_patch "Found Palette" (fill/refresh/not kept, a minute on the least recently heard goes, each step one sound,
+  a learned spot's sound). Clips: `~/Downloads/found-palette-clips/` (off, on; same made-up room, same level).
 - **Clear Catches** (Oct 22, `fs_clean`, Rhythm, 0-30 dB, 0 = off by default, in presets with The Band). DadCraft's long session:
   found sounds "grainy, crackling", synth drums clean (his A/B). The log: 663 kicks caught in 41 minutes, half under
   -30 dB, many at the -45 dB floor (FS_MIN_DB). Every catch is levelled to the same drum loudness (its peak to 0.5,

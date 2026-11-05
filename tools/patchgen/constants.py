@@ -32,7 +32,7 @@ DEFAULTS = [
     ("phaser_on", 1), ("phaser_mix", 0), ("phaser_rate", 0.4), ("phaser_depth", 0.7), ("phaser_fb", 0.4),
     ("beat_on", 1), ("beat_level", 0), ("beat_hats", 0.5), ("beat_snare", 0.6), ("beat_pitch", 55),
     ("music_on", 0), ("music_key", 0), ("music_scale", 0), ("music_pad", 0.33), ("music_arp", 0.4),
-    ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("fs_clean", 0), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
+    ("music_tone", 0.5), ("music_react", 0.8), ("music_res", 0.8), ("music_harm", 0.6), ("beat_follow", 1), ("beat_when", 1), ("rhythm_src", 1), ("fs_clean", 0), ("fs_palette", 0), ("melody_src", 1), ("harm_src", 1), ("pad_src", 1), ("tempo_mode", 0), ("tempo_bpm", 100), ("chime_char", 0.5), ("res_src", 1), ("cue_sound", 1), ("beat_glitch", 0.4), ("gate_attack", 5), ("gate_hold", 0), ("gate_release", 80), ("comp_attack", 40),
     ("comp_release", 40), ("music_drift", 1), ("echo_scatter", 0.5), ("echo_scatter_style", 0), ("echo_throw", 0.5), ("echo_depth", 0.5), ("gc_amount", 0), ("gc_level", 0.7), ("gc_pct_stutter", 35), ("gc_pct_reverse", 25),
     ("gc_pct_shuffle", 20), ("gc_pct_stretch", 20), ("gc_pct_pitch", 0), ("gc_pct_gate", 0), ("music_pad_reg", 2), ("pocket_hush", 0.5), ("pocket_guard", 0.6), ("handling_hush", 0.5), ("intensity", 0.5), ("mix_kick", 1), ("mix_bass", 1), ("mix_chimes", 1), ("mix_walk", 1), ("mix_ring", 1), ("mix_bells", 1), ("reverb_rev", 0), ("music_answer", 0.5), ("beat_break", 0), ("mel_rhythm", 0), ("mel_phrase", 0), ("music_var", 1), ("mel_dev", 0), ("pat_gen", 0), ("chord_color", 1), ("new_pieces", 1), ("walk_ease", 1), ("band_plays", 1),
     ("gc_voice", 1), ("fm_ring", 0), ("pocket_rustle", 0), ("wind_guard", 0), ("pocket_steps", 0), ("harm_tracker", 0), ("shift_voice", 0), ("onset_mode", 0),
@@ -327,6 +327,14 @@ GL_MIN_PEAK = 0.02                 # a recorded glitch quieter than this (the fr
 FS_HEARD_ADD = 0.8                 # the learned groove: a catch adds this at its spot in the bar...
 FS_HEARD_KEEP = 0.55               # ...which keeps this much each bar (a few bars of echo, then gone)
 FS_HEARD_MIN = 0.3                 # below this a spot plays nothing
+# Found Palette (Nov 4, review item 2; DadCraft: "all three together, and start slow"; `fs_palette`, off by default):
+FS_PAL_LV_DB = 6.0                 # a catch is like a kept sound: loudness within about this...
+FS_PAL_SHAPE_DB = 4.0              # ...and its lows and highs (each against its loudness) within about this...
+FS_PAL_SIM = 1.5                   # ...summed as shares of those: at most this is "the same sound" (refreshes it)
+FS_PAL_NEW_S = 60                  # a clearly new sound takes a place at most once a minute per drum (the least
+                                   # recently heard goes); replaying the Moto's Oct 31-Nov 4 catches: sounds last
+                                   # ~10-13 min (were 23 s for hats), half the catches refresh a kept sound
+FS_PAL_MAP_BARS = 16               # each step keeps its sound this many bars, or until the composer's section changes
 FS_ROLE_SPEC = (                   # role: playback rate (pitch), filter, level, decay ms
     ("k", 0.8, "lop~ 3500", 1.0, 260),   # (gentle filters: a borrowed sound must keep its character)
     ("s", 1.0, "hip~ 160", 0.8, 200),

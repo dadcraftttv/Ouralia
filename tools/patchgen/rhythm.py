@@ -241,6 +241,10 @@ def add_found_kit(P, x):
     P.obj("fs_all_t", "t f f", x + 300, y + 230); P.c("fs_max_all", "fs_all_t"); P.c("fs_all_t", "fs_role", 0, 0)
     P.obj("fs_lv_pk", "pack f f f", x + 300, y + 250); P.obj("fs_lv_s", "s fs_levels", x + 300, y + 270)
     P.c("fs_all_t", "fs_lv_pk", 1, 0); P.c("fs_max_lo", "fs_lv_pk", 0, 1); P.c("fs_max_hi", "fs_lv_pk", 0, 2); P.c("fs_lv_pk", "fs_lv_s")
+    # Found Palette: the catch's levels, for the palette's choice below (the pack fires before fs_role)
+    P.obj("fs_pl_up", "unpack f f f", x + 200, y + 290); P.c("fs_lv_pk", "fs_pl_up")
+    for i, nm in enumerate(("lv", "lo", "hi")):
+        P.obj(f"fs_pl_{nm}", f"value fs_pl_{nm}", x + 200 + 40 * i, y + 305); P.c("fs_pl_up", f"fs_pl_{nm}", i, 0)
     P.obj("fs_keep", "moses 0", x + 400, y + 250); P.c("fs_role", "fs_keep")
     P.obj("fs_pop", "sel -2 -3 -4", x + 300, y + 290); P.c("fs_keep", "fs_pop", 0, 0)   # (a dropped pop is reported as 3)
     P.msg("fs_chirp5", "5", x + 380, y + 310); P.c("fs_pop", "fs_chirp5", 2, 0); P.c("fs_chirp5", "fs_pop_s")   # (a hat while birds lift: 5)
@@ -260,6 +264,7 @@ def add_found_kit(P, x):
     ex("fs_hd_i", "$f2*16+$f1", x + 1000, y + 300)                       # (the role first, cold; then the spot)
     P.c("fs_hd_t", "fs_hd_i", 1, 1); P.c("fs_hd_t", "fs_pos_v", 0, 0); P.c("fs_pos_v", "fs_hd_i", 0, 0)
     P.obj("fs_hd_it", "t f f", x + 1000, y + 320); P.c("fs_hd_i", "fs_hd_it")
+    P.obj("fs_hd_idx", "value fs_hd_idx", x + 1100, y + 320); P.c("fs_hd_i", "fs_hd_idx")   # (the palette's spot)
     P.obj("fs_hd_rd", "tabread rh_heard", x + 1000, y + 340)
     ex("fs_hd_new", f"min($f1+{FS_HEARD_ADD},1)", x + 1000, y + 360)
     P.obj("fs_hd_wr", "tabwrite rh_heard", x + 1000, y + 380)
@@ -269,7 +274,8 @@ def add_found_kit(P, x):
         P.obj(f"fs_rr{k}_add", "+ 1", x + 500 + 60 * k, y + 350)
         P.obj(f"fs_rr{k}_mod", f"mod {FS_SLOTS}", x + 500 + 60 * k, y + 370)
         P.c(f"fs_rr{k}", f"fs_rr{k}_add"); P.c(f"fs_rr{k}_add", f"fs_rr{k}_mod"); P.c(f"fs_rr{k}_mod", f"fs_rr{k}", 0, 1)
-    P.obj("fs_role_sel", "sel 0 1 2", x + 500, y + 300); P.c("fs_k_t", "fs_role_sel", 2, 0)
+    P.obj("fs_role_sel", "sel 0 1 2", x + 500, y + 300)
+    add_found_palette(P, x + 1500, y + 300)   # (fs_k_t outlet 2: the round robin, or the palette)
     for k in range(3):
         P.c("fs_role_sel", f"fs_rr{k}", k, 0)
         P.obj(f"fs_slot{k}", f"+ {k * FS_SLOTS}", x + 500 + 60 * k, y + 390); P.c(f"fs_rr{k}", f"fs_slot{k}")
@@ -321,10 +327,18 @@ def add_found_kit(P, x):
         # so one catch already makes the whole kit found
         own, S = f"fs_filled[{k}]", FS_SLOTS
         i = "int($f1*max(fs_filled[0]+fs_filled[1]+fs_filled[2],1)/1000)"
-        ex(f"fsv_{r}_pick", f"if({own}>=1,{k * S}+int($f1*{own}/1000),if({i}<fs_filled[0],{i},"
+        # Found Palette on: a learned spot plays the sound caught there; any other step its own sound from the map
+        # (a hash of the step and fs_mapep: no [random]), kept for FS_PAL_MAP_BARS bars or the composer's section
+        h = f"{16 * k}+fs_step"
+        frac = f"sin(({h}+1)*12.9898+fmod(fs_mapep,1000)*78.233)*43758.5453"
+        mine = (f"if(rh_heard[{h}]>={FS_HEARD_MIN}&&rh_hslot[{h}]>=0,rh_hslot[{h}],"
+                f"{k * S}+min({own}-1,int({own}*({frac}-floor({frac})))))")
+        ex(f"fsv_{r}_pick", f"if({own}>=1,if(fspal>0,{mine},{k * S}+int($f1*{own}/1000)),if({i}<fs_filled[0],{i},"
                             f"if({i}<fs_filled[0]+fs_filled[1],{S}+{i}-fs_filled[0],{2 * S}+{i}-fs_filled[0]-fs_filled[1])))",
            vx + 180, vy + 40)
         P.c(f"fsv_{r}_rnd", f"fsv_{r}_pick")
+        ex(f"fsv_{r}_pk_e", "$f1*100+fs_step", vx + 300, vy + 60); P.c(f"fsv_{r}_pick", f"fsv_{r}_pk_e")
+        P.obj(f"fsv_{r}_pk_s", f"s fs_pick_{r}", vx + 300, vy + 75); P.c(f"fsv_{r}_pk_e", f"fsv_{r}_pk_s")   # (tests)
         if os.environ.get("FS_DEBUG"):
             P.obj(f"fsdbg_pick_{r}", f"s fsdbg_pick_{r}", vx + 300, vy + 40); P.c(f"fsv_{r}_pick", f"fsdbg_pick_{r}")
             P.obj(f"fsdbg_amp_{r}", f"s fsdbg_amp_{r}", vx + 300, vy + 160); P.c(f"fsv_{r}_amp", f"fsdbg_amp_{r}")
@@ -390,6 +404,113 @@ def add_found_kit(P, x):
     soft_limit(P, "fs_ks", "fs_ks0", FS_LIMIT, FS_MAKEUP, x + 1000, y + 920)
     soft_limit(P, "fs_hat_lim", outs[2], FS_LIMIT, FS_MAKEUP, x + 1100, y + 920)
     return "fs_ks", "fs_hat_lim"
+
+def _pex(P, name, text, xx, yy):
+    """An [expr] (text's own outlets already split with BS + ';')."""
+    return P.obj(name, "expr " + text.replace(",", BS + ",").replace("$", BS + "$"), xx, yy)
+
+
+def add_found_palette(P, x, y):
+    """Found Palette (Nov 4, review item 2: "strengthen the identity of captured sounds"; DadCraft: "all three
+    together, and start slow"; `fs_palette` in Rhythm, off by default). Off: each catch takes its role's oldest slot
+    (fs_role_sel, the round robin). On: a catch like one already kept (loudness and lows/highs, FS_PAL_*) refreshes
+    it, keeping that sound; a clearly new one takes the least recently heard slot, at most once FS_PAL_NEW_S per role;
+    otherwise it is not kept. Empty slots fill as before. Every catch's slot (kept, refreshed or its nearest) is noted
+    for its spot in the bar (rh_hslot), so the learned groove plays that sound back there; the voices give each step
+    its own sound (add_found_kit). No [random] here (Pd seeds them in order: the others keep their sequences)."""
+    S = FS_SLOTS
+    P.obj("fs_feat_t", f"table fs_feat {9 * S}", x, y - 60); P.obj("fs_seen_t", f"table fs_seen {3 * S}", x + 120, y - 60)
+    P.obj("fs_newat_t", "table fs_newat 3", x + 240, y - 60); P.obj("fs_hslot_t", "table rh_hslot 48", x + 340, y - 60)
+    P.obj("fs_pal_lb", "loadbang", x + 460, y - 60); P.msg("fs_pal_m1", "const -1", x + 460, y - 45)
+    P.obj("fs_pal_hs", "s rh_hslot", x + 460, y - 30); P.c("fs_pal_lb", "fs_pal_m1"); P.c("fs_pal_m1", "fs_pal_hs")
+    # the palette's clock, in seconds
+    P.msg("fs_pal_on1", "1", x + 560, y - 45); P.c("fs_pal_lb", "fs_pal_on1")
+    P.obj("fs_pal_met", "metro 1000", x + 560, y - 30); P.c("fs_pal_on1", "fs_pal_met")
+    P.obj("fs_pal_cnt", "f", x + 560, y - 15); P.obj("fs_pal_inc", "+ 1", x + 600, y - 15)
+    P.c("fs_pal_met", "fs_pal_cnt"); P.c("fs_pal_cnt", "fs_pal_inc"); P.c("fs_pal_inc", "fs_pal_cnt", 0, 1)
+    P.obj("fs_pal_now", "value fs_now", x + 560, y); P.c("fs_pal_cnt", "fs_pal_now")
+    # the switch: one path or the other
+    P.obj("fs_pal_r", "r fs_palette", x + 700, y - 60); P.obj("fs_pal_v", "value fspal", x + 700, y - 45)
+    P.obj("fs_pal_rt", "t f f f", x + 800, y - 45); P.c("fs_pal_r", "fs_pal_rt"); P.c("fs_pal_rt", "fs_pal_v", 2, 0)
+    P.obj("fs_pal_off", "== 0", x + 800, y - 30); P.c("fs_pal_rt", "fs_pal_off", 1, 0)
+    P.obj("fs_pal_onq", "!= 0", x + 860, y - 30); P.c("fs_pal_rt", "fs_pal_onq", 0, 0)
+    P.obj("fs_pal_t", "t f f", x, y); P.c("fs_k_t", "fs_pal_t", 2, 0)
+    P.obj("fs_pal_old", "spigot 1", x - 100, y + 20); P.c("fs_pal_t", "fs_pal_old", 1, 0); P.c("fs_pal_off", "fs_pal_old", 0, 1)
+    P.c("fs_pal_old", "fs_role_sel")
+    P.obj("fs_pal_new", "spigot 0", x, y + 20); P.c("fs_pal_t", "fs_pal_new", 0, 0); P.c("fs_pal_onq", "fs_pal_new", 0, 1)
+    P.obj("fs_pal_role_t", "t f f", x, y + 40); P.c("fs_pal_new", "fs_pal_role_t")
+    P.obj("fs_pal_role", "value fs_pal_role", x + 100, y + 55); P.c("fs_pal_role_t", "fs_pal_role", 1, 0)
+    # how far the catch is from each of its role's kept sounds (features: loudness, lows and highs against it)
+    def dist(j):
+        f = f"($f1*{S}+{j})*3"
+        return (f"abs(fs_pl_lv-fs_feat[{f}])/{FS_PAL_LV_DB}+abs(fs_pl_lo-fs_pl_lv-fs_feat[{f}+1])/{FS_PAL_SHAPE_DB}"
+                f"+abs(fs_pl_hi-fs_pl_lv-fs_feat[{f}+2])/{FS_PAL_SHAPE_DB}")
+    _pex(P, "fs_pal_d", f" {BS}; ".join(dist(j) for j in range(S)), x, y + 70)
+    P.c("fs_pal_role_t", "fs_pal_d", 0, 0)
+    P.obj("fs_pal_pk", "pack " + " ".join(["f"] * S), x, y + 90)
+    for j in range(S):
+        P.c("fs_pal_d", "fs_pal_pk", j, j)
+    # the choice, as one number: slot (0..3S-1) to keep it new, 100 + slot to refresh, 200 + nearest not to keep.
+    # (In short steps: one long [expr] of it was never created.) The nearest and how near, the least recently heard:
+    b, n = f"fs_pal_role*{S}", "fs_filled[fs_pal_role]"
+    def first(vals, target):
+        out = str(S - 1)
+        for j in range(S - 2, -1, -1):
+            out = f"if({vals(j)}=={target},{j},{out})"
+        return out
+    def least(vals):
+        return "min(" * (S - 1) + vals(0) + "," + ",".join(vals(j) + ")" for j in range(1, S))
+    seen = lambda j: f"fs_seen[{b}+{j}]"
+    P.obj("fs_pal_lt", "t l l b", x, y + 100); P.c("fs_pal_pk", "fs_pal_lt")
+    _pex(P, "fs_pal_sm", least(seen), x + 300, y + 100); P.c("fs_pal_lt", "fs_pal_sm", 2, 0)
+    P.obj("fs_pal_smv", "value fs_pal_sm", x + 300, y + 115); P.c("fs_pal_sm", "fs_pal_smv")
+    _pex(P, "fs_pal_m", least(lambda j: f"$f{j + 1}"), x + 200, y + 100); P.c("fs_pal_lt", "fs_pal_m", 1, 0)
+    P.obj("fs_pal_mv", "value fs_pal_m", x + 200, y + 130); P.c("fs_pal_m", "fs_pal_mv")
+    # the nearest: the list again ([t] fires right to left, so its minimum is known by now)
+    _pex(P, "fs_pal_j", first(lambda j: f"$f{j + 1}", "fs_pal_m"), x, y + 130); P.c("fs_pal_lt", "fs_pal_j", 0, 0)
+    so = first(seen, "fs_pal_sm")
+    _pex(P, "fs_pal_e", f"if({n}<{S},{b}+{n},if(fs_pal_m<={FS_PAL_SIM},100+{b}+$f1,"
+                        f"if(fs_now-fs_newat[fs_pal_role]>={FS_PAL_NEW_S},{b}+{so},200+{b}+$f1)))", x, y + 145)
+    P.c("fs_pal_j", "fs_pal_e")
+    P.obj("fs_pal_kind_s", "s fs_pal_code", x + 200, y + 130); P.c("fs_pal_e", "fs_pal_kind_s")   # (tests)
+    P.obj("fs_pal_new_m", "moses 100", x, y + 130); P.c("fs_pal_e", "fs_pal_new_m")
+    P.obj("fs_pal_rd_m", "moses 200", x + 100, y + 150); P.c("fs_pal_new_m", "fs_pal_rd_m", 1, 0)
+    P.obj("fs_pal_rf", "- 100", x + 100, y + 170); P.c("fs_pal_rd_m", "fs_pal_rf", 0, 0)
+    P.obj("fs_pal_dr", "- 200", x + 200, y + 170); P.c("fs_pal_rd_m", "fs_pal_dr", 1, 0)
+    # every catch: its spot in the bar now plays this slot (the learned groove)
+    _pex(P, "fs_pal_hs_e", f"$f1 {BS}; fs_hd_idx", x + 300, y + 210)
+    P.obj("fs_pal_hs_w", "tabwrite rh_hslot", x + 300, y + 230)
+    P.c("fs_pal_hs_e", "fs_pal_hs_w", 0, 0); P.c("fs_pal_hs_e", "fs_pal_hs_w", 1, 1)
+    _pex(P, "fs_pal_seen_e", f"fs_now {BS}; $f1", x + 200, y + 250)   # (kept or refreshed: heard now)
+    P.obj("fs_pal_seen_w", "tabwrite fs_seen", x + 200, y + 270)
+    P.c("fs_pal_seen_e", "fs_pal_seen_w", 0, 0); P.c("fs_pal_seen_e", "fs_pal_seen_w", 1, 1)
+    # a new sound: its features, the time, then the copy (fs_slot: the gain and the slice, as the round robin does)
+    P.obj("fs_pal_nt", "t f f f f f f f", x, y + 190); P.c("fs_pal_new_m", "fs_pal_nt", 0, 0)
+    for i, val in enumerate(("fs_pl_lv", "fs_pl_lo-fs_pl_lv", "fs_pl_hi-fs_pl_lv")):
+        _pex(P, f"fs_pal_f{i}", f"{val} {BS}; $f1*3+{i}", x + 400 + 100 * i, y + 290)
+        P.obj(f"fs_pal_fw{i}", "tabwrite fs_feat", x + 400 + 100 * i, y + 310)
+        P.c(f"fs_pal_f{i}", f"fs_pal_fw{i}", 0, 0); P.c(f"fs_pal_f{i}", f"fs_pal_fw{i}", 1, 1)
+        P.c("fs_pal_nt", f"fs_pal_f{i}", 6 - i, 0)
+    P.c("fs_pal_nt", "fs_pal_seen_e", 3, 0)
+    _pex(P, "fs_pal_na_e", f"fs_now {BS}; fs_pal_role", x + 100, y + 330)
+    P.obj("fs_pal_na_w", "tabwrite fs_newat", x + 100, y + 350)
+    P.c("fs_pal_na_e", "fs_pal_na_w", 0, 0); P.c("fs_pal_na_e", "fs_pal_na_w", 1, 1); P.c("fs_pal_nt", "fs_pal_na_e", 2, 0)
+    P.c("fs_pal_nt", "fs_pal_hs_e", 1, 0); P.c("fs_pal_nt", "fs_slot", 0, 0)
+    P.obj("fs_pal_rt2", "t f f", x + 100, y + 190); P.c("fs_pal_rf", "fs_pal_rt2")
+    P.c("fs_pal_rt2", "fs_pal_seen_e", 1, 0); P.c("fs_pal_rt2", "fs_pal_hs_e", 0, 0)
+    P.c("fs_pal_dr", "fs_pal_hs_e")
+    # each step's own sound: a map from the steps to the kept sounds, new every FS_PAL_MAP_BARS bars or section
+    P.obj("fs_map_ep", "value fs_mapep", x + 700, y + 100)
+    P.obj("fs_map_f", "f", x + 700, y + 80); P.obj("fs_map_inc", "+ 1", x + 740, y + 80)
+    P.c("fs_map_f", "fs_map_inc"); P.c("fs_map_inc", "fs_map_f", 0, 1); P.c("fs_map_inc", "fs_map_ep")
+    P.obj("fs_map_sect", "r comp_section", x + 700, y + 20); P.obj("fs_map_chg", "change", x + 700, y + 40)
+    P.obj("fs_map_b", "t b", x + 700, y + 60); P.c("fs_map_sect", "fs_map_chg"); P.c("fs_map_chg", "fs_map_b")
+    P.c("fs_map_b", "fs_map_f")
+    P.obj("fs_map_bars", "f", x + 800, y + 20); P.obj("fs_map_binc", "+ 1", x + 840, y + 20)
+    P.c("rh_bar_sel", "fs_map_bars", 0, 0); P.c("fs_map_bars", "fs_map_binc"); P.c("fs_map_binc", "fs_map_bars", 0, 1)
+    P.obj("fs_map_mod", f"mod {FS_PAL_MAP_BARS}", x + 800, y + 40); P.c("fs_map_binc", "fs_map_mod")
+    P.obj("fs_map_zero", "sel 0", x + 800, y + 60); P.c("fs_map_mod", "fs_map_zero"); P.c("fs_map_zero", "fs_map_f")
+
 
 def add_glitch_loop(P, x):
     """C5, loop layering: when the glitch cloud fires, one bar of its own sound (gcx_mono: the glitch voices, not the
@@ -579,6 +700,7 @@ def add_rhythm(P, x):
     P.c("rh_on", "rh_t")
     P.obj("rh_bar_sel", "sel 15", x + 300, y + 60)                      # (after tick 15's hits: the next bar's patterns)
     P.c("rh_t", "rh_bar_sel", 1, 0)
+    P.obj("rh_step_v", "value fs_step", x + 300, y + 40); P.c("rh_t", "rh_step_v", 1, 0)   # (the voices' step)
     # (patterns are held for RH_HOLD_BARS bars, DadCraft: "slightly too busy/random"; the bar count runs every bar)
     P.obj("rh_hold", "spigot 1", x + 300, y + 70)
     # new bar: bar count, the patterns, the fill
