@@ -34,7 +34,8 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   step back 6 dB, chimes need bigger sounds) just when Harmony and Call and Response should answer, and whistling can
   turn chimes to glass (Birds Lift). Options for DadCraft: (a) singing classes out of the music group (YAMNet often
   names singing "Music" itself, bench singing->music 5/10, so only partly); (b) Make Room holds off while Harmony's
-  tracker hears a held pitched voice near the mic; (c) leave it. His call.
+  tracker hears a held pitched voice near the mic; (c) leave it. **DadCraft (Nov 5): "lets leave it for now and
+  iterate later in dev."**
 - **Testers' feedback** on rc6 (tester guide "What to test").
 - ~~**Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.~~ DONE Nov 5: topics and description
   set, a README GIF of the Now line from rc6 on the Moto. Still to make: a short clip with sound (DadCraft records it).
