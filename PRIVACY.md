@@ -19,7 +19,7 @@ tracking, no crash reporting. Android's automatic backup is turned off for it to
 
 ## What it keeps on your phone
 
-- **Your settings, presets, and any kits or scenes you import**, in the app's own storage. They stay on your phone
+- **Your settings, presets, and any scenes you import**, in the app's own storage. They stay on your phone
   and go only where you export them yourself.
 - **An event log** (`events.log`, at most about 128 KB, oldest lines dropped first). It holds no sound and no words:
   only times, the room's loudness as numbers, the names of the headphones and mic in use, what the app did

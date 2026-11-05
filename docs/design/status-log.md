@@ -105,3 +105,38 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   existing flaw: a jump up read past the live sound and played it unshifted (1001 Hz). Claude's review fixed the
   pitch jump (dcs-objects "More glitch kinds"); full tier then 167/167 sections and all suites passed (265 s).
   The legacy kit guide is archived. Claude review/install and DadCraft's listen remain; main untouched.
+- **Nov 5: rc6, the first public beta.** CLAUDE.md's "Current state" as it stood before rc6:
+  - **Release:** rc5.2 (0.9.0-rc5.2, versionCode 15, Oct 30; DadCraft chose rc5.2) = rc5.1 + everything since Oct 22
+    (Shimmer, Wind Guard, World in Stereo, Clear Catches, Room listener, Sleep Timer, Tap Tempo, Session Log, New
+    Pieces) and Session logs in About (email them as one zip or delete them, cap 50 MB). ~/Downloads/Ouralia-0.9.0-rc5.2.apk. Its GitHub
+    pre-release is gone with the Nov 2 repo remake (see GitHub below).
+  - **rc5.1** (0.9.0-rc5.1, versionCode 14, Oct 21; DadCraft: a hotfix of rc5, not rc6) = rc5 + presets that save
+    The Band, Intensity and the effects' voices, the Kit menus refreshing after a preset loads, and the cards'
+    on/off switches back, Notes and Chimes Level in Mix (its APK was replaced twice on the release for those, before
+    any download, DadCraft's choice). Release APK, debug
+    key, ~/Downloads/Ouralia-0.9.0-rc5.1.apk; its GitHub pre-releases (and rc5's) are gone with the Nov 2 repo
+    remake. A fix on an rc is rcN.1 (versionCode always +1). Next: rc6 / versionCode 16.
+  - **Plan (DadCraft, Oct 21):** rc5 = the first public beta, renamed to Ouralia, posted under GitHub Releases. The rc5
+    releases were never advertised and were dropped on Nov 2 (see GitHub). The rename is done (Oct 21); the found-sound rhythm section (ROADMAP 16) was
+    already built (DadCraft will walk-test it). Everything else waits for wider testers' feedback.
+  - **DadCraft's verdicts (Oct 21):** Evolving stays opt-in (not the default). Hooks That Grow (`mel_dev`), Living
+    Grooves (`pat_gen`), Chord Colours (`chord_color`): "all good". The Band Plays good with Intensity 50 (he is
+    comparing it off with Intensity 100). Renames, effect families, rounded icons: good.
+  - **Oct 22:** the reviews' points built (ROADMAP 22), MainActivity split, World in Stereo, pd-core 1.4.2-pdscenes.2,
+    a long session (DESIGN-NOTES Status log). All pushed, forks included.
+  - **Open:** see ROADMAP "Open now". Next, from the long session: Clear Catches' verdict, Tempo Set following steps?
+    (Tap Tempo built), ducking for a muted game. DadCraft (Oct 22): found sounds work with World in Stereo (the name
+    since Oct 22, was Room in Stereo), the Bluetooth notice shows in Audio Devices.
+  Since rc5.2 (Oct 30-Nov 5, all on `sound-kinds`, merged into `main` Nov 5): kits removed (Codex, Oct 30); the
+  reactive-first steps made fixed behaviour (chimes only for a heard cause, the pad only under a steady sound, Notes
+  Only for Bigger Sounds at 20.5 dB); Evolving, Chord Colours, New Pieces, The Band Plays and Wandering Home always
+  on (Nov 1); Chime Voice Glass/Both, Pad Voice Glass Bowl, Bass Voice, Trailing Melody (with a mover), Calm Builds
+  rebuilt as the quiet tune, Music in Stereo, Found Palette; sound kinds (YAMNet) with Make Room for Music, Mind the
+  Gap, Water Leaves a Trail, Underwater (one style), Traffic Passes Through, Traffic Flow, Birds Lift the Chimes, all
+  under Mixed Surroundings (one switch, Nov 5), in presets (Nov 5), and in every phone build on ARM (Nov 5: "bring it
+  in"); Codex's Nov 3 review findings fixed. DadCraft (Nov 5) on the RjDj question: "a user driven type of RjDj
+  experience". Then: "lets make and post rc6 and make sure all of our documentation is completely up to date. i'd
+  like to open this up to a public beta today." Docs brought up to date for it: tester guide (rc6 section, the new
+  features moved into The Band tab, Mixed Surroundings' own part, privacy, what to test), README (public beta,
+  shaped by you, sound kinds on ARM), NOTICE, PRIVACY, ROADMAP "Open now" summary, the Diagnostics switch's label.
+

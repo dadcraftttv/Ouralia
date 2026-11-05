@@ -138,7 +138,7 @@
     <string name="stereo_level_hint">Set by ear: the room should sound about as loud as with the switch off. A new Check Again starts it from 0.</string>
     <string name="stereo_needs_mic">Allow the microphone first.</string>
     <string name="diag_dropouts">Dropouts since Start: %1$d (each a click or gap: the phone couldn\'t keep up)</string>
-    <string name="sound_kinds_switch">Sound kinds (Dev test: YAMNet names what it hears)</string>
+    <string name="sound_kinds_switch">Sound kinds (names what it hears in the event log, without changing the music)</string>
     <string name="diag_kinds">Sound kinds (YAMNet, only listens): %1$s %2$.2f</string>
     <string name="hears_kind">YAMNet: %1$s %2$.2f</string>
     <string name="diag_room">Room listener (only listens for now): talking %1$.2f · music %2$.2f · traffic %3$.2f · wind %4$.2f · crowd %5$.2f</string>

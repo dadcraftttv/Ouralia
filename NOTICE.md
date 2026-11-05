@@ -14,8 +14,8 @@ inside the app under *About and licenses*.
 | Helper abstractions `closebang`, `rj_compass`, `rj_loc`, `rj_text`, `rj_time`, `rjdj` (and `rj_image`), from PdParty by Dan Wilcox, Copyright 2011-2023 | Simplified BSD (`assets/licenses/pdparty-LICENSE.txt`) | `assets/scene_lib/` |
 | libpd / pd-for-android (`pd-core`) | Standard Improved BSD | Gradle dependency |
 | Oboe (audio backend inside `pd-core`) | Apache License 2.0 | Gradle dependency |
-| *Ouralia Dev build only:* YAMNet sound classifier model by Google (tensorflow/models, Kaggle `google/yamnet`); its AudioSet class names | Apache License 2.0; class names CC BY-SA 4.0 (used under GPLv3 by CC's one-way compatibility) | `app/src/dev/assets/sound_kinds/` (with its `NOTICE.txt`) |
-| *Ouralia Dev build only:* LiteRT runtime (`com.google.ai.edge.litert`) | Apache License 2.0 | Gradle dependency (`devImplementation`) |
+| YAMNet sound classifier model by Google (tensorflow/models, Kaggle `google/yamnet`); its AudioSet class names | Apache License 2.0; class names CC BY-SA 4.0 (used under GPLv3 by CC's one-way compatibility) | `app/src/main/assets/sound_kinds/` (with its `NOTICE.txt`) |
+| LiteRT runtime (`com.google.ai.edge.litert`; ARM phones) | Apache License 2.0 | Gradle dependency |
 
 `soundinput.pd` and `soundoutput.pd` in `assets/scene_lib/` were written for this app.
 
