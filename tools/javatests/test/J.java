@@ -85,7 +85,7 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
         "Music in Stereo: Dev Music switch, off, sent to Pd, outside presets and dice");
     Param waterSetting=Params.byId("water_trail");
     check(waterSetting!=null&&waterSetting.def==1f&&"sk_mixed".equals(waterSetting.under)&&waterSetting.toggle&&!waterSetting.sendToPd
-        &&!waterSetting.inPreset&&!waterSetting.randomizable,"water switch: on under Mixed Surroundings, app-controlled, outside presets and dice");
+        &&waterSetting.inPreset&&!waterSetting.randomizable,"water switch: on under Mixed Surroundings, app-controlled, in presets, outside dice");
     k.reset(); for(int i=0;i<12;i++) k.judge(sc(5,60));
     check(!k.water(),"water: 12/32 below 40 percent");
     k.judge(sc(5,60)); check(k.water(),"water: 13/32 turns on");
@@ -100,7 +100,7 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     k.reset(); check(!k.water(),"reset forgets water");
     Param birdsSetting=Params.byId("birds_lift");
     check(birdsSetting!=null&&birdsSetting.def==1f&&"sk_mixed".equals(birdsSetting.under)&&birdsSetting.toggle&&!birdsSetting.sendToPd
-        &&!birdsSetting.inPreset&&!birdsSetting.randomizable,"birds switch: on under Mixed Surroundings, app-controlled, outside presets and dice");
+        &&birdsSetting.inPreset&&!birdsSetting.randomizable,"birds switch: on under Mixed Surroundings, app-controlled, in presets, outside dice");
     for(int i=0;i<12;i++) k.judge(sc(4,60));
     check(!k.birds(),"birds: 12/32 below 40 percent");
     k.judge(sc(4,60)); check(k.birds()&&!k.water(),"birds: 13/32 turns on (water stays off)");
@@ -114,12 +114,12 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     k.reset(); check(!k.birds(),"reset forgets birds");
     Param uw=Params.byId("underwater");
     check(uw!=null&&uw.def==1f&&uw.max==1f&&uw.toggle&&uw.choices==null&&"sk_mixed".equals(uw.under)&&!uw.sendToPd
-        &&!uw.inPreset&&!uw.randomizable&&uw.soundKinds,"underwater: a switch (on = Deeper) under Mixed Surroundings, outside presets and dice");
+        &&uw.inPreset&&!uw.randomizable&&uw.soundKinds,"underwater: a switch under Mixed Surroundings, in presets, outside dice");
     check(uw.clamp(2f)==1f,"a stored Deeper loads as on");
     Param trafficSetting=Params.byId("traffic_pass");
     check(trafficSetting!=null&&trafficSetting.def==1f&&"sk_mixed".equals(trafficSetting.under)&&trafficSetting.toggle&&!trafficSetting.sendToPd
-        &&trafficSetting.soundKinds&&trafficSetting.dcs&&"music".equals(trafficSetting.section)&&!trafficSetting.inPreset&&!trafficSetting.randomizable,
-        "traffic pass: Dev Music sub-switch under Mixed Surroundings, on, outside presets and dice");
+        &&trafficSetting.soundKinds&&trafficSetting.dcs&&"music".equals(trafficSetting.section)&&trafficSetting.inPreset&&!trafficSetting.randomizable,
+        "traffic pass: Dev Music sub-switch under Mixed Surroundings, on, in presets, outside dice");
     k.reset(); k.judge(sc(3,19),0); k.judge(sc(3,19),250);
     check(!k.trafficAllowed(),"traffic: 0.19 cannot enter");
     k.judge(sc(3,20),500); check(!k.trafficAllowed(),"traffic: one qualifying lead cannot enter");
@@ -143,8 +143,8 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     check(SoundKinds.costLine(new long[]{3000000,1000000,2000000},3).equals("Sound kinds: 3 judgements, YAMNet median 2.0 ms, slowest 3.0 ms"),"the minute's cost line");
     // Mixed Surroundings (Nov 4, the review's item 3): each kind clearly there counts, not only the leader
     Param mixSetting=Params.byId("sk_mixed");
-    check(mixSetting!=null&&mixSetting.def==0f&&mixSetting.toggle&&!mixSetting.sendToPd&&!mixSetting.inPreset,
-        "mixed switch: off, app-controlled, outside presets");
+    check(mixSetting!=null&&mixSetting.def==0f&&mixSetting.toggle&&!mixSetting.sendToPd&&mixSetting.inPreset&&!mixSetting.randomizable,
+        "mixed switch: off, app-controlled, in presets, outside dice");
     // The one switch (Nov 5): the seven responses act only under Mixed Surroundings, each with its own sub-switch
     String[] subs={"room_make","voice_gaps","traffic_pass","traffic_flow","water_trail","underwater","birds_lift"};
     java.util.List<String> under=new java.util.ArrayList<>();
@@ -152,6 +152,28 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     check(under.equals(java.util.Arrays.asList(subs))||new java.util.HashSet<>(under).equals(new java.util.HashSet<>(java.util.Arrays.asList(subs))),
         "exactly the seven responses sit under Mixed Surroundings: "+under);
     for(String id:subs){ Param p=Params.byId(id); check(p.def==1f&&p.toggle,"sub-switch on by default: "+id); }
+    // In presets since Nov 5 ("lets move on to step 3"): a user's preset carries them, built-ins and Realms never move them
+    java.util.List<String> mset=new java.util.ArrayList<>(java.util.Arrays.asList(subs)); mset.add("sk_mixed");
+    for(String id:mset){ Param p=Params.byId(id);
+      check(p.inPreset&&!p.randomizable&&Params.builtInsLeave(id)&&Params.realmsLeave(id)&&Params.mixedSet(id),"in presets, left by built-ins and Realms, not dice: "+id); }
+    check(!Params.mixedSet("music_stereo")&&!Params.mixedSet("intensity"),"only Mixed and its seven count as the set");
+    for(String bn:PresetManager.builtInNames()) for(String id:mset)
+      check(!PresetManager.builtIn(bn).containsKey(id),"built-in preset "+bn+" leaves "+id);
+    ParamStore.set("sk_mixed",1); ParamStore.set("water_trail",0);
+    PresetManager.soundKinds=true;
+    java.util.Map<String,Float> dev;
+    try{ dev=PresetManager.parse(PresetManager.toJson("Kitchen",ParamStore.snapshot())).values; }catch(Exception ex){ throw new RuntimeException(ex); }
+    check(dev.get("sk_mixed")==1f&&dev.get("water_trail")==0f&&dev.get("birds_lift")!=null,"Dev: a saved preset round-trips Mixed and its seven: "+dev.get("sk_mixed")+" "+dev.get("water_trail"));
+    PresetManager.soundKinds=false;
+    String rel=PresetManager.toJson("Release",ParamStore.snapshot());
+    check(!rel.contains("\"sk_mixed\"")&&!rel.contains("\"water_trail\"")&&!rel.contains("\"music_stereo\""),"without sound kinds a saved preset leaves them out");
+    PresetManager.soundKinds=true;
+    java.util.Map<String,Float> old=new java.util.HashMap<>(dev); for(String id:mset) old.remove(id);
+    ParamStore.set("sk_mixed",1); ParamStore.applyPreset(old);
+    check(ParamStore.get("sk_mixed")==1f,"an older preset without them leaves Mixed as it is");
+    dev.put("sk_mixed",0f); ParamStore.applyPreset(dev);
+    check(ParamStore.get("sk_mixed")==0f&&ParamStore.get("water_trail")==0f,"a preset with them sets them");
+    PresetManager.soundKinds=false; ParamStore.set("sk_mixed",0); ParamStore.set("water_trail",1);
     for(boolean mx:new boolean[]{false,true}){
       SoundKinds.mixed=mx; SoundKinds mq=new SoundKinds(kinds);
       // talk by a fountain: voices lead three judgements in four, the water always there under them

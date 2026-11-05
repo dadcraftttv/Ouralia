@@ -45,8 +45,9 @@ public class T {
     Map<String,Float> cur=ParamStore.snapshot(); String used=PresetManager.save(ctx,"My Test!!",cur);
     check(used.equals("My Test"),"sanitize name -> '"+used+"'");
     Map<String,Float> back=PresetManager.readUser(ctx,"My Test");
-    boolean eq=back!=null; if(eq) for(Param p:Params.ALL){ if(!p.inPreset){ eq&=!back.containsKey(p.id); continue;} eq&=Math.abs(back.get(p.id)-cur.get(p.id))<1e-4; }
-    check(eq,"user preset round-trips; gain excluded");
+    boolean eq=back!=null; if(eq) for(Param p:Params.ALL){ if(!p.inPreset||p.soundKinds){ eq&=!back.containsKey(p.id); continue;}   // (sound kinds: only saved in Dev, Nov 5)
+    eq&=Math.abs(back.get(p.id)-cur.get(p.id))<1e-4; }
+    check(eq,"user preset round-trips; gain and (outside Dev) sound kinds excluded");
     check(PresetManager.userNames(ctx).equals(Arrays.asList("My Test")),"userNames lists it");
     try{ PresetManager.save(ctx,"Default",cur); check(false,"builtin name rejected"); }catch(java.io.IOException e){ check(true,"builtin name rejected: "+e.getMessage()); }
     check(PresetManager.delete(ctx,"My Test") && PresetManager.userNames(ctx).isEmpty(),"delete works");

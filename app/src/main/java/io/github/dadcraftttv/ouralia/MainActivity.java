@@ -123,6 +123,7 @@ public class MainActivity extends Activity {
         look = new Styler(this, theme);
         ParamStore.loadOnce(this);
         SoundKindsRunner.carryRoomSwitch(this);   // (the Nov 1 Dev switch becomes the Music setting)
+        PresetManager.soundKinds = SoundKindsRunner.available();   // (presets carry Mixed Surroundings only here)
         SceneLibrary.installBuiltIns(this, SceneSettings.scenesDir(this));
         audioManager = getSystemService(AudioManager.class);
 
