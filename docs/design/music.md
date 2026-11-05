@@ -15,7 +15,7 @@
   switch~ factors). Turning Auto realms on asks first ("Let Realms change your sound?": they set the sliders from
   their own preset, the mix too; "What it changes" keeps a part).
 - **Calm builds, the quiet tune** (roadmap item 7, Oct 14; reworked Nov 3; `CalmBuild.java`, test B; `calm.py`, test_patch
-  "7z10"; `calm_build` toggle in Music, "Calm Builds", off by default, noPd, in presets since Oct 21). DadCraft (Nov 3):
+  "7z10"; `calm_build` toggle in Music, "Calm Builds", off by default, noPd, in presets since Oct 21; DadCraft, Nov 4: "Calm Builds is working well now"). DadCraft (Nov 3):
   "I'd like the chimes, bells, bass, etc to play along with the drums when a room has been quiet for ... 30 seconds to
   a minute. it should be a slow build up ... can trail off over 15 seconds once a consistent amount of noise has been
   detected. ... I don't want to bring back the kits." He chose to replace the Oct 14 layer lift (pad/room/harmony/
@@ -319,13 +319,13 @@
   the music's group; switching crossfades over 300 ms. Levels by RMS: `BASS_BOWL_LEVEL` 0.79 matches the synth held
   bass over a minute (pad register Low), `CALM_BOWL_LEVEL` 0.46 matches the Calm pluck's 30-600 Hz power (drums
   near silent). Test "Bass Voice (Nov 4)": the bowl an octave up, nothing an octave below, about as loud. Clips:
-  `~/Downloads/bass-voice-clips/`.
+  `~/Downloads/bass-voice-clips/`. DadCraft (Nov 4): "Bass voice is also working well."
   Test fallout, worth knowing: removing the found bass dropped a [random], so `fp_seedkeep` holds its place (every
   later [random] keeps its sequence; without it birds-lift and Chime character failed). The bowl's new DSP objects
   re-sort the graph, which moves some one-block delays and so event timing; three tests that had leaned on a lucky
   random path were made robust: `fresh(_listen=...)` hears a chord picked during the settle (patterns made by rules),
   the arrangement run is 72 bars, not 36, and the Calm bass check plays the drums barely audible.
-  **Pad Voice** (`pad_voice`, Music, Synth by default, saved in presets; Nov 4, branch `sound-kinds`). DadCraft: "can
+  **Pad Voice** (`pad_voice`, Music, Synth by default, saved in presets; Nov 4, branch `sound-kinds`; DadCraft, Nov 4: "Pad Voice can stay on Synth as default"). DadCraft: "can
   we make glass bowl option for the pads? i saw something on tv last night and heard a person on that program using
   glass bowls in a sort of "sound healing" kind of setting ... it might even compliment the glass bells sounds we're
   already using." Glass Bowl only changes the Synth pad (Pad Sounds Synth or Both).
