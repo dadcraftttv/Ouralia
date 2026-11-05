@@ -486,16 +486,15 @@ RM_DOWN_MS = 4000       # the dip's ramp: slow, so it reads as making room, not 
 RM_UP_MS = 8000         # coming back is slower still
 SK_N = 5
 # Underwater (DadCraft, Nov 2: "can we build both? just so i could test them side by side"): while sound kinds
-# hears settled water ("underwater 1" gentle / "2" deeper from the app, 0 when it stops), the generated music and beat
-# (never the dry mic) go through two cascaded lop~ and a short wobbling delay. Index 0 unused; 1 gentle, 2 deeper.
-UW_CUTOFF = (0, 1600, 900)        # Hz, each of the two lop~ (the knob to tune first for gentle)
-UW_SHARE = (0, 0.2, 1.0)          # share of the wobbling delayed copy (gentle: light chorus; deeper: all of it)
-UW_DELAY_MS = (0, 10, 12)         # the delay's centre
-UW_DEPTH_MS = (0, 1, 3)           # +/- around the centre (the knob to tune first for deeper)
-UW_RATE_HZ = (0, 0.20, 0.25)      # how fast it wobbles
-UW_IN_MS = (0, 4000, 5000)        # fade in once water is heard
-UW_OUT_MS = (0, 6000, 8000)       # fade out once it stops
-UW_GLIDE_MS = 500                 # switching style mid-effect glides the delay, so it never jumps
+# hears settled water ("underwater" > 0 from the app, 0 when it stops), the generated music and beat (never the dry
+# mic) go through two cascaded lop~ and a wobbling delay. One style since Nov 5 (DadCraft: "Underwater as Deeper",
+# "go ahead and remove the gentle style"); Gentle was 1600 Hz, a 0.2 share of a 10 +/- 1 ms delay at 0.2 Hz, 4 s in, 6 s out.
+UW_CUTOFF = 900          # Hz, each of the two lop~
+UW_DELAY_MS = 12         # the delay's centre (only the delayed copy is heard)
+UW_DEPTH_MS = 3          # +/- around the centre (the knob to tune first)
+UW_RATE_HZ = 0.25        # how fast it wobbles
+UW_IN_MS = 5000          # fade in once water is heard
+UW_OUT_MS = 8000         # fade out once it stops
 UW_BUF_MS = 40
 # Mind the Gap (DadCraft, Nov 1, step 6: "go with 2"): while people talk (voice_talk 1, from sound kinds) the
 # chimes and room bells hold and the composer's bars wait; in a pause after speech a short phrase answers in key

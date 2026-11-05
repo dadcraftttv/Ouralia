@@ -173,12 +173,12 @@ final class SoundKindsRunner {
         }
     }
 
-    /** Underwater (DadCraft, Nov 2: "can we build both?"): 0 Off, 1 Gentle, 2 Deeper. While settled water is heard
+    /** Underwater (DadCraft, Nov 2; one style since Nov 5, the old Deeper): 0 off, 1 on. While settled water is heard
      *  the music and beat (never the mic) turn muffled and wobble; its own setting, independent of the trail. */
     static final String UW_ID = "underwater";
 
-    static int uwEnabled() {   // (on = Deeper since Nov 5, "Underwater as Deeper"; the patch still knows 1 Gentle)
-        return mixedEnabled() && ParamStore.get(UW_ID) >= 0.5f ? 2 : 0;
+    static int uwEnabled() {   // ("go ahead and remove the gentle style", Nov 5: the patch has only the old Deeper)
+        return mixedEnabled() && ParamStore.get(UW_ID) >= 0.5f ? 1 : 0;
     }
 
     /** Called with lock held, like {@link #waterTick}: the style to send if it changed (0 = water over, Music off,

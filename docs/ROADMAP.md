@@ -86,7 +86,8 @@ While water is heard, generated music (pad, chimes, room bells, beat, tones; nev
 dry mic) eases into a muffled low-pass with a slow pitch wobble/light chorus, fading in and out over seconds.
 Options written (Codex, Nov 2); DadCraft: "can we build both?" BUILT both (Nov 2) as one Dev Music setting,
 Underwater: Off / Gentle / Deeper. First listen (Nov 2): "i can't tell which i like better. i'll keep
-testing with the two options." Both kept; his pick when he has one. design/sound-kinds.md "Step 8".
+testing with the two options." Settled Nov 5: Deeper ("Underwater as Deeper"), Gentle REMOVED Nov 5 ("go ahead and
+remove the gentle style"). design/sound-kinds.md "Step 8" and "Step 13".
 
 **Birds (step 9, Nov 2):** options written (Codex, Nov 2); DadCraft: "do birds lift the Chimes". BUILT Nov 2
 (Dev): Birds Lift the Chimes, earned chimes turn to high Glass while birds are heard. Indoor listen (Nov 2,

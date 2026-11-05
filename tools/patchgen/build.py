@@ -37,51 +37,32 @@ def _esc(text):
 
 
 def add_underwater(P, x, y):
-    """Underwater (Nov 2): "underwater 1" (gentle) or "2" (deeper) from the app while sound kinds hears settled water,
-    "underwater 0" when it stops. The style picks the cutoff, the delayed copy's share, its centre, depth and wobble
-    rate (gliding UW_GLIDE_MS, so a style change mid-effect never jumps the delay); the amount fades in over the
-    style's UW_IN_MS and out over its UW_OUT_MS, from wherever it is. Bypass before anything arrives. The paths
-    themselves are uw_path(); they only ever take the music and the beat, never the mic."""
-    def pick(t, v):
-        return "((%s==1)*%s+(%s==2)*%s)" % (v, t[1], v, t[2])
+    """Underwater (Nov 2; one style since Nov 5, the old Deeper): "underwater" > 0 from the app while sound kinds hears
+    settled water, 0 when it stops. The amount fades in over UW_IN_MS and out over UW_OUT_MS, from wherever it is.
+    Bypass before anything arrives. The wobbling delay time (UW_DELAY_MS +/- UW_DEPTH_MS at UW_RATE_HZ) is shared by
+    the paths, uw_path(); they only ever take the music and the beat, never the mic."""
     P.obj("uw_r", "r underwater", x, y)
-    P.obj("uw_t", "t f f", x, y + 15); P.c("uw_r", "uw_t")
-    P.obj("uw_lb", "loadbang", x + 150, y); P.msg("uw_init", "1", x + 150, y + 15); P.c("uw_lb", "uw_init")
-    P.obj("uw_sty", _esc("expr $f1*($f1>0)+uwst*($f1<=0)"), x + 100, y + 30)   # 0 keeps the last style for the fade out
-    P.c("uw_t", "uw_sty", 1, 0); P.c("uw_init", "uw_sty")
-    P.obj("uw_sty_t", "t f f", x + 100, y + 45); P.c("uw_sty", "uw_sty_t")
-    P.obj("uw_st_v", "value uwst", x + 200, y + 60); P.c("uw_sty_t", "uw_st_v", 1, 0)
-    calc = "expr " + " ; ".join(pick(t, "$f1") for t in (UW_CUTOFF, UW_SHARE, UW_DELAY_MS, UW_DEPTH_MS, UW_RATE_HZ))
-    P.obj("uw_par", _esc(calc), x + 100, y + 60); P.c("uw_sty_t", "uw_par", 0, 0)
-    for k, name in ((1, "share"), (2, "base"), (3, "depth")):
-        P.obj(f"uw_{name}_pk", f"pack f {UW_GLIDE_MS}", x + 100 + 60 * k, y + 80)
-        P.obj(f"uw_{name}", "line~", x + 100 + 60 * k, y + 95)
-        P.c("uw_par", f"uw_{name}_pk", k, 0); P.c(f"uw_{name}_pk", f"uw_{name}")
-    P.obj("uw_osc", f"osc~ {UW_RATE_HZ[1]}", x + 340, y + 80); P.c("uw_par", "uw_osc", 4, 0)
-    P.sig2("uw_mod", "*~", "uw_osc", "uw_depth", x + 340, y + 110)
-    P.sig2("uw_dms", "+~", "uw_mod", "uw_base", x + 340, y + 125)
-    amt = "expr ($f1>0) ; ($f1>0)*%s+($f1<=0)*%s" % (pick(UW_IN_MS, "uwst"), pick(UW_OUT_MS, "uwst"))
-    P.obj("uw_amt_c", _esc(amt), x, y + 60); P.c("uw_t", "uw_amt_c", 0, 0)
+    amt = "expr ($f1>0) ; ($f1>0)*%d+($f1<=0)*%d" % (UW_IN_MS, UW_OUT_MS)
+    P.obj("uw_amt_c", _esc(amt), x, y + 60); P.c("uw_r", "uw_amt_c")
     P.obj("uw_amt_pk", "pack f f", x, y + 80)
     P.c("uw_amt_c", "uw_amt_pk", 1, 1); P.c("uw_amt_c", "uw_amt_pk", 0, 0)
     P.obj("uw_amt", "line~", x, y + 95); P.c("uw_amt_pk", "uw_amt")
     P.obj("uw_probe_r", "r uw_probe", x + 60, y + 110); P.obj("uw_probe", "snapshot~", x + 60, y + 125)   # (for the tests)
     P.obj("uw_probe_s", "s uw_level", x + 60, y + 140)
     P.c("uw_amt", "uw_probe"); P.c("uw_probe_r", "uw_probe"); P.c("uw_probe", "uw_probe_s")
+    P.obj("uw_osc", f"osc~ {UW_RATE_HZ}", x + 340, y + 80)
+    P.obj("uw_mod", f"*~ {UW_DEPTH_MS}", x + 340, y + 110); P.c("uw_osc", "uw_mod")
+    P.obj("uw_dms", f"+~ {UW_DELAY_MS}", x + 340, y + 125); P.c("uw_mod", "uw_dms")
 
 
 def uw_path(P, tag, src, x, y):
-    """One Underwater path: src -> two lop~ -> a copy through the wobbling delay mixed in by uw_share -> crossfaded
-    with src by uw_amt (linear: the two are correlated). Returns the output's name."""
-    P.obj(f"uw_{tag}_lp1", f"lop~ {UW_CUTOFF[1]}", x, y); P.c(src, f"uw_{tag}_lp1")
-    P.obj(f"uw_{tag}_lp2", f"lop~ {UW_CUTOFF[1]}", x, y + 15); P.c(f"uw_{tag}_lp1", f"uw_{tag}_lp2")
-    P.c("uw_par", f"uw_{tag}_lp1", 0, 1); P.c("uw_par", f"uw_{tag}_lp2", 0, 1)
+    """One Underwater path: src -> two lop~ -> the wobbling delay (only the delayed copy) -> crossfaded with src by
+    uw_amt (linear: the two are correlated). Returns the output's name."""
+    P.obj(f"uw_{tag}_lp1", f"lop~ {UW_CUTOFF}", x, y); P.c(src, f"uw_{tag}_lp1")
+    P.obj(f"uw_{tag}_lp2", f"lop~ {UW_CUTOFF}", x, y + 15); P.c(f"uw_{tag}_lp1", f"uw_{tag}_lp2")
     P.obj(f"uw_{tag}_dw", f"delwrite~ uw_buf_{tag} {UW_BUF_MS}", x + 80, y + 30); P.c(f"uw_{tag}_lp2", f"uw_{tag}_dw")
     P.obj(f"uw_{tag}_vd", f"delread4~ uw_buf_{tag}", x + 80, y + 45); P.c("uw_dms", f"uw_{tag}_vd")
-    P.sig2(f"uw_{tag}_d1", "-~", f"uw_{tag}_vd", f"uw_{tag}_lp2", x + 80, y + 60)
-    P.sig2(f"uw_{tag}_d1s", "*~", f"uw_{tag}_d1", "uw_share", x + 80, y + 75)
-    P.sig2(f"uw_{tag}_wet", "+~", f"uw_{tag}_lp2", f"uw_{tag}_d1s", x, y + 90)
-    P.sig2(f"uw_{tag}_d2", "-~", f"uw_{tag}_wet", src, x, y + 105)
+    P.sig2(f"uw_{tag}_d2", "-~", f"uw_{tag}_vd", src, x, y + 105)
     P.sig2(f"uw_{tag}_d2a", "*~", f"uw_{tag}_d2", "uw_amt", x, y + 120)
     return P.sig2(f"uw_{tag}_out", "+~", src, f"uw_{tag}_d2a", x, y + 135)
 
@@ -891,8 +872,8 @@ def build():
     # Underwater's four paths (music, music side, beat, beat side): the filters and the wobbling delay rest while it is
     # off (review performance item, Nov 4). Off, each path's output is exactly its input (the wet difference times
     # uw_amt = 0), so they wake on "underwater" > 0 and sleep after the longest fade out plus the delay buffer.
-    P.group("uw", r"^uw_(mu|ms|bt|bs)_(lp1|lp2|dw|vd|d1|d1s|wet|d2)$")
-    add_switch(P, "uw", ("underwater",), max(UW_OUT_MS) + UW_BUF_MS + 500)
+    P.group("uw", r"^uw_(mu|ms|bt|bs)_(lp1|lp2|dw|vd|d2)$")
+    add_switch(P, "uw", ("underwater",), UW_OUT_MS + UW_BUF_MS + 500)
     # Music in Stereo's side effects rest while the switch is off (DadCraft, Nov 4: "no need to use those resources
     # if the user has it off"). Off, the side is closed after them (ms_gate) and its input is 0, so their output is
     # never heard. Once the gate has closed and the longest line (the reverse echo's 2.1 s) holds only silence, the

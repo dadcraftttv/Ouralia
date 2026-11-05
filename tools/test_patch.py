@@ -3119,19 +3119,19 @@ check(bc0 == [0, 1, 2, 2, 0] and bc1 == [0, 1, 5, 5, 0] and bn_more,
 
 # ---- 7z6. underwater: while water is heard the music and beat go muffled and wobbly, never the mic (Nov 2) ----
 from patchgen.constants import UW_IN_MS, UW_OUT_MS
-def uw_amt(style, back=0):   # the amount halfway and fully in, then (back) halfway and fully out
+def uw_amt(style, back=0):   # (one style since Nov 5: any style > 0 is the old Deeper)   # the amount halfway and fully in, then (back) halfway and fully out
     e = fresh(wet=0, dry=0, music_on=1); e.listen("uw_level")
     def at(t):
         e.run(e.silence(t)); e.send_msg("uw_probe", "bang"); return e.heard["uw_level"][-1]
     a0 = at(0.1); e.send("underwater", style)
-    got = [a0, at(UW_IN_MS[style] / 2000), at(UW_IN_MS[style] / 2000 + 0.2)]
+    got = [a0, at(UW_IN_MS / 2000), at(UW_IN_MS / 2000 + 0.2)]
     e.send("underwater", 0)
-    return got + [at(UW_OUT_MS[style] / 2000), at(UW_OUT_MS[style] / 2000 + 0.2)]
-for st in (1, 2):
+    return got + [at(UW_OUT_MS / 2000), at(UW_OUT_MS / 2000 + 0.2)]
+for st in (1, 2):   # (the app sends 1 since Nov 5; a 2 from an older app still works)
     a = uw_amt(st)
     check(a[0] == 0 and abs(a[1] - 0.5) < 0.03 and a[2] > 0.999 and abs(a[3] - 0.5) < 0.03 and a[4] < 1e-3,
           "underwater %d: in over %d ms, out over %d ms (0, half, full, half, gone: %s)"
-          % (st, UW_IN_MS[st], UW_OUT_MS[st], " ".join("%.3f" % v for v in a)))
+          % (st, UW_IN_MS, UW_OUT_MS, " ".join("%.3f" % v for v in a)))
 def uw_out(style, secs=4, **over):
     e = fresh(wet=0, **over); r = np.random.default_rng(1)
     e.send("underwater", style); e.run((r.standard_normal(6 * SR) * 0.01).astype(np.float32))
@@ -3141,19 +3141,19 @@ check(rms(mic[0]) > 1e-3 and np.array_equal(mic[0], mic[1]), "underwater: the mi
 def uw_hf(y, lo=2500):   # dB of the energy above lo, relative to all of it
     X = np.abs(np.fft.rfft(y * np.hanning(len(y)))) ** 2; f = np.fft.rfftfreq(len(y), 1 / SR)
     return 10 * np.log10(X[f > lo].sum() / X.sum())
-mu = [uw_out(st, dry=0, music_on=1, music_pad=0.33, music_arp=0.4, beat_level=0) for st in (0, 1, 2)]
+mu = [uw_out(st, dry=0, music_on=1, music_pad=0.33, music_arp=0.4, beat_level=0) for st in (0, 1)]
 mh = [uw_hf(y) for y in mu]; ml = [20 * np.log10(rms(y) / rms(mu[0])) for y in mu]
-check(mh[1] < mh[0] - 10 and mh[2] < mh[1] - 5 and all(abs(v) < 3 for v in ml),
-      "underwater: the music above 2.5 kHz off/gentle/deeper %s dB, level %s dB" % (["%.1f" % v for v in mh], ["%.1f" % v for v in ml]))
+check(mh[1] < mh[0] - 15 and all(abs(v) < 3 for v in ml),
+      "underwater: the music above 2.5 kHz off/on %s dB, level %s dB" % (["%.1f" % v for v in mh], ["%.1f" % v for v in ml]))
 def uw_beat(style):
     e = fresh(wet=0, dry=0, beat_level=1); e.send("underwater", style); e.run(e.silence(6)); out = []
     for k in range(8):
         e.send("step", 0.5); out.append(e.run(e.silence(0.5))[:, 0])
     return np.concatenate(out)
-bt = [uw_beat(st) for st in (0, 1, 2)]
+bt = [uw_beat(st) for st in (0, 1)]
 bh = [uw_hf(y) for y in bt]; bl = [20 * np.log10(rms(y) / rms(bt[0])) for y in bt]
-check(bh[1] < bh[0] - 10 and bh[2] < bh[1] - 5 and all(abs(v) < 4 for v in bl),
-      "underwater: the beat above 2.5 kHz off/gentle/deeper %s dB, level %s dB" % (["%.1f" % v for v in bh], ["%.1f" % v for v in bl]))
+check(bh[1] < bh[0] - 15 and all(abs(v) < 4 for v in bl),
+      "underwater: the beat above 2.5 kHz off/on %s dB, level %s dB" % (["%.1f" % v for v in bh], ["%.1f" % v for v in bl]))
 
 # underwater asleep while off (review performance item, Nov 4): the four paths' filters and delay rest at 0, wake at
 # once, stay awake through the whole fade out, rest again after it, and work again on the next water
@@ -3161,10 +3161,10 @@ e = fresh(wet=0, dry=0, music_on=1, music_pad=0.33, music_arp=0.4); e.listen("sw
 e.run(e.silence(2)); asleep = e.heard["sw_uw"][-1:] in ([], [0])
 e.send("underwater", 2); y = e.run(e.silence(0.5))[:, 0]; awake = e.heard["sw_uw"][-1:] == [1]
 jump = np.max(np.abs(np.diff(y[:int(0.12 * SR)])))
-e.run(e.silence(UW_IN_MS[2] / 1000 + 0.5)); e.send("underwater", 0)
-e.run(e.silence(UW_OUT_MS[2] / 1000)); through_fade = e.heard["sw_uw"][-1:] == [1]
+e.run(e.silence(UW_IN_MS / 1000 + 0.5)); e.send("underwater", 0)
+e.run(e.silence(UW_OUT_MS / 1000)); through_fade = e.heard["sw_uw"][-1:] == [1]
 e.run(e.silence(4)); rests = e.heard["sw_uw"][-1:] == [0]
-e.send("underwater", 2); e.run(e.silence(UW_IN_MS[2] / 1000 + 0.5)); e.send_msg("uw_probe", "bang")
+e.send("underwater", 2); e.run(e.silence(UW_IN_MS / 1000 + 0.5)); e.send_msg("uw_probe", "bang")
 again = e.heard["sw_uw"][-1:] == [1] and e.heard["uw_level"][-1] > 0.999
 check(asleep and awake and through_fade and rests and again and jump < 0.08,
       "underwater: paths asleep off, awake at once, through the fade, asleep after, back again (%s %s %s %s %s, step %.4f)"
