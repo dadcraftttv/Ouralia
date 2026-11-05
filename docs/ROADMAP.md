@@ -44,7 +44,9 @@ each judgement's scores now in the session log for replays (design/sound-kinds.m
 mixes (talk by water, birds by a road), with Session Log on. **If he likes it** (DadCraft, Nov 4): Birds Lift the
 Chimes, Underwater, Water Leaves a Trail, Traffic Passes Through, Traffic Flow, Make Room for Music and Mind the Gap
 all go behind the one Mixed Surroundings switch; Underwater becomes its Deeper style; the Now line says "unsure" instead
-of quiet; every sound happening shapes the music ("both sounds, or as many that are happening").
+of quiet for sounds it doesn't know, real silence stays "quiet" (DadCraft: "leave real silence be what it is supposed to
+be"); every sound happening shapes the music ("both sounds, or as many that are happening"), with Water Trail and Birds
+Lift still taking turns (he went with Claude's recommendation).
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
