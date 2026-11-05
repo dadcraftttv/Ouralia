@@ -18,6 +18,11 @@ It runs on [Pure Data](https://puredata.info/) inside the app (through [libpd](h
 it can also play the original RjDj scenes. It will be free on Google Play. (Its working name was PdScenes.)
 
 <p align="center">
+<img src="docs/screenshots/now-line.gif" width="400" alt="The player while it plays: the Now line names what the phone hears as the room changes, quiet, voices, birds, music">
+<br><sub>rc6 on a phone, listening: the Now line names what it hears (quiet, voices, birds, music) as the room changes.</sub>
+</p>
+
+<p align="center">
 <img src="docs/screenshots/player.png" width="260" alt="The player: the Intensity dial around the Start button">
 &nbsp;
 <img src="docs/screenshots/music.png" width="260" alt="The Band tab: Mixed Surroundings and the seven responses under it, each with its own switch">
