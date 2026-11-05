@@ -19,7 +19,21 @@ the one list of what is not done, checked against the code. In the same commit t
 something: take it off "Open now", and mark its item (BUILT / REMOVED / SET ASIDE, the date, where it lives). A new
 idea goes into its item and into "Open now". Every item below keeps its history; "Open now" is the only to-do list.
 
-## Open now (checked against the code, 2026-10-22)
+## Open now (checked against the code, 2026-11-05, rc6)
+
+**In short (Nov 5, rc6, the first public beta; the entries below keep the history):**
+- **DadCraft's listens:** Mixed Surroundings with a running sink (knock or clink while it runs: the trail decorates an
+  earned chime), the roadside for Traffic Passes Through and Traffic Flow, outdoor birds. Then fixes from what fails.
+- **His calls:** do water and birds hold back for talk; Found Palette's default (a switch, off); learning from session
+  logs (not started).
+- **Tuning from replays:** Mixed Surroundings' `PRESENT_MIN` 0.2 was judgement; water may want lower (his sink
+  scored 0.1-0.26). Wind and singing only where real listening shows a problem (Codex, Nov 5).
+- **Testers' feedback** on rc6 (tester guide "What to test").
+- **Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.
+- **Release to Play** (item 14): the release key and the Play forms (docs/RELEASING.md).
+- Older, still waiting on DadCraft: the phone checks (call pause, pocket shaping), Clear Catches' verdict, a cost per
+  feature (item 22).
+
 
 **Project review (Codex, Nov 3):** [branch/code/performance review](PROJECT-REVIEW-2026-11-03.md).
 Finding 5 DONE Nov 4 (abe4da3): the test runner stops on native-build failure and prints diagnostics; regression tests in

@@ -6,9 +6,13 @@
 
 Ouralia is a free, open-source Android app in the spirit of **RjDj**, the "reactive music" app from 2008. Put on
 headphones and press Start: you hear the room around you, shaped by effects and set to music that the app makes up
-as it goes. The music follows how loud the room is, how you move, how bright it is and whether the phone is in your
-pocket. Walk and the beat follows your steps. Clap, and the room answers; knock, and the knock becomes the drums. Stay
-somewhere quiet a while and a gentle tune joins the beat.
+as it goes. The music follows what kind of sound is around you (talk, music, water, birds, traffic), how loud it is,
+how you move, how bright it is and whether the phone is in your pocket. Walk and the beat follows your steps. Clap,
+and the room answers; knock, and the knock becomes the drums. Stay somewhere quiet a while and a gentle tune joins
+the beat. Nothing plays on its own: every note answers something you can hear.
+
+Where RjDj's scenes were written by their authors, Ouralia is shaped by you: switch the responses you like on and
+off, set the sounds and levels, and save each setup as a preset for a walk, a kitchen or a park.
 
 It runs on [Pure Data](https://puredata.info/) inside the app (through [libpd](https://github.com/libpd/libpd)), and
 it can also play the original RjDj scenes. It will be free on Google Play. (Its working name was PdScenes.)
@@ -30,16 +34,18 @@ it can also play the original RjDj scenes. It will be free on Google Play. (Its 
   the current chord, a held hum gets an answering note, and a sung phrase gets a reply.
 - **Found sounds.** Knocks, taps and clicks the mic catches become the drums on the rhythm grid, and each part of
   the music can play its built-in synth sound, the found sounds, or both.
-- **Hearing what kind of sound it is** (test builds for now). The app can tell voices, music, traffic, birds, water
-  and steps apart on the phone itself, and answer them: the music makes room for music playing nearby, holds back
-  while people talk, lets a passing car sweep a chime from ear to ear, and more, each behind its own switch.
+- **Hearing what kind of sound it is** (ARM phones). The app tells voices, music, traffic, birds, water and steps
+  apart on the phone itself, and with **Mixed Surroundings** on it answers them: the music makes room for music
+  playing nearby, holds back while people talk and answers in the pauses, leaves a trail and goes underwater by
+  running water, turns chimes to high glass when birds sing, lets a passing car sweep a chime from ear to ear, and
+  eases the beat in a lull in traffic. Each response has its own switch.
 - **Realms** change the whole sound to fit the moment: Tranquil in a quiet room, Flux when it gets loud, Kinetic
   while you walk, Ghost after midnight, Pocket when the phone is put away. **Realm Hopper** moves between them by
   itself, and a soft warp tells you when it does.
 - **One dial, Intensity**, turns everything calmer or busier. **Movers** let sliders move by themselves, following
   the room, the phone's tilt or an XY pad.
 - **Scenes:** import original RjDj scenes (`.rj` folders or zips). Four official RjDj example scenes are built in.
-- **Presets** save a sound to come back to or share.
+- **Presets** save a sound, and which responses are on, to come back to or share.
 - **A desktop version** for Linux plays the same music as background for a stream ([desktop/](desktop/README.md)).
 
 ## Promises
@@ -51,8 +57,9 @@ it can also play the original RjDj scenes. It will be free on Google Play. (Its 
 
 ## Status
 
-In beta, tested by a small group. No test build is posted on GitHub right now: the repository was remade on
-Nov 2, 2026, and the next release starts fresh. What testers should know is in the [tester guide](docs/TESTER-GUIDE.md).
+**Public beta** since Nov 5, 2026: download the APK from [Releases](https://github.com/dadcraftttv/Ouralia/releases)
+(rc6, Android 9 or newer, headphones needed). What testers should know, and how to send feedback, is in the
+[tester guide](docs/TESTER-GUIDE.md).
 Made by DadCraft, a hobbyist musician, with AI coding assistants.
 
 ## Documents
@@ -77,8 +84,8 @@ You need a JDK 21 and the Android SDK (Android Studio brings both). The phone mu
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-`./gradlew assembleDev` builds **Ouralia Dev** (`app/build/outputs/apk/dev/app-dev.apk`), the test build with the
-newest features and the sound classifier. It installs beside the normal app, with its own settings.
+`./gradlew assembleDev` builds **Ouralia Dev** (`app/build/outputs/apk/dev/app-dev.apk`), for trying changes: it
+installs beside the normal app, with its own name and settings.
 
 Everything the build needs is in the repository, including our own build of `pd-core` (libpd for Android, in
 `third_party/maven/`, made by `tools/build_pdcore.sh` from our forks of pd-for-android and libpd).
@@ -90,7 +97,8 @@ How the code is laid out:
   `tools/patchgen/` and run `tools/make_patch.py`, never the `.pd` file itself.
 - `dcs/`: our own Pd objects in C (effects and instruments). After changing them, run `make -C dcs` and
   `tools/build_dcs_android.sh`.
-- `app/src/dev/`: the Ouralia Dev build's extras: the on-device sound classifier (YAMNet) and its notice.
+- `app/src/main/assets/sound_kinds/`: the on-device sound classifier (YAMNet), its notice and how its classes group
+  into kinds (`tools/sound_kinds/bench.py --export` writes them). `app/src/dev/` only names the Dev build.
 - `desktop/`: the Linux stream mode, which compiles the phone's own logic.
 
 **Tests:** `tools/run_tests.sh` runs everything: the patch through a desktop libpd (`tools/build_libpd.sh` builds

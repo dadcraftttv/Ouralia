@@ -150,7 +150,7 @@ This file is the index. Each feature's notes live in one of these (`grep -rn <fe
 - `docs/design/dcs-objects.md`: **Our own Pd objects** (`dcs/`): each object, its numbers and tests.
 - `docs/design/look.md`: **The look**: the Ouralia redesign, colours, cards, the player, icons.
 - `docs/design/desktop.md`: **Desktop stream mode** (`desktop/`).
-- `docs/design/sound-kinds.md`: **Sound kinds** (Ouralia Dev): YAMNet on the phone and the responses to what it hears
+- `docs/design/sound-kinds.md`: **Sound kinds** (every phone build on ARM since Nov 5): YAMNet on the phone and the responses to what it hears
   (Make Room for Music, Mind the Gap, water, birds, Music in Stereo, Traffic Passes Through, Traffic Flow).
 - `docs/design/status-log.md`: **Status log**: what happened when, newest last.
 
@@ -194,7 +194,8 @@ fix CI never had libpd: `make -C dcs` failed there on every run, unseen. `deskto
   100). The renames, effect families and rounded icons: good. rc5 is to be the first public beta, renamed to Ouralia,
   posted under GitHub Releases but not advertised until GitHub purges the old commits (still found Oct 21; gone Nov 2,
   when DadCraft deleted and remade the repo with no releases: the rc builds predate the kits). Before rc5:
-  the rename and the found-sound rhythm section (ROADMAP 16); everything else after rc5's feedback.
+  the rename and the found-sound rhythm section (ROADMAP 16); everything else after rc5's feedback. (Since then:
+  Evolving and the others are always on since Nov 1, and **rc6 (Nov 5) is the first public beta**: Status log.)
 - **What is open lives in one place: ROADMAP "Open now"** (Oct 22, after the ChatGPT / Grok / Kimi reviews kept
   suggesting things already built and showed the docs disagreeing: this section said the Oct 17 objects list was
   done, but dcs_listen~, dcs_dewind~, dcs_grain~ and the shimmer reverb were never built). The commit that builds,
