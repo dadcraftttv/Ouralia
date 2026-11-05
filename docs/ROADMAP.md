@@ -29,7 +29,12 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 - **Tuning from replays:** Mixed Surroundings' `PRESENT_MIN` 0.2 was judgement; water may want lower (his sink
   scored 0.1-0.26). The replay tool is BUILT (Nov 5, `tools/replay_kinds.py`, design/sound-kinds.md Step 16), and the
   windows are now measured in time: his sink replayed with water's own minimum at 0.12 holds water 40 s instead of 14 s.
-  Next: check that candidate over his other sessions, then his sink listen. Wind and singing only where real listening shows a problem (Codex, Nov 5).
+  Checked over his other sessions (Nov 5): no new water in 4 of 6; the noon one's extra water looks like a real tap.
+  Next: his sink listen on this build (Mixed and Session Log on), then replay it at 0.2 and 0.12.
+- **Raising quiet sound before YAMNet** (accuracy step 7, benched Nov 5, design/sound-kinds.md): up to 10 dB wins back
+  distant traffic/water/wind/steps, but raised quiet rooms get named as sounds. **His call:** judge quiet from the
+  un-raised mic level (nearly free) or a second YAMNet pass (~+3% of a core). Later, if singing/sink errors remain:
+  YAMNet embeddings with a small trained layer (step 4 of the list). Wind and singing only where real listening shows a problem (Codex, Nov 5).
 - **Singing and whistling count as music in the room** (seen Nov 5 on rc6: whistling read as music 0.59-0.98 and
   birds 0.33-0.80). The app's music group holds YAMNet's singing classes, and nothing tells your own voice from a
   radio, so with Mixed Surroundings on, ~8 s of singing in 20 can trigger Make Room for Music (the music and beat
