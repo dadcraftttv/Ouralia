@@ -28,6 +28,13 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   logs (not started).
 - **Tuning from replays:** Mixed Surroundings' `PRESENT_MIN` 0.2 was judgement; water may want lower (his sink
   scored 0.1-0.26). Wind and singing only where real listening shows a problem (Codex, Nov 5).
+- **Singing and whistling count as music in the room** (seen Nov 5 on rc6: whistling read as music 0.59-0.98 and
+  birds 0.33-0.80). The app's music group holds YAMNet's singing classes, and nothing tells your own voice from a
+  radio, so with Mixed Surroundings on, ~8 s of singing in 20 can trigger Make Room for Music (the music and beat
+  step back 6 dB, chimes need bigger sounds) just when Harmony and Call and Response should answer, and whistling can
+  turn chimes to glass (Birds Lift). Options for DadCraft: (a) singing classes out of the music group (YAMNet often
+  names singing "Music" itself, bench singing->music 5/10, so only partly); (b) Make Room holds off while Harmony's
+  tracker hears a held pitched voice near the mic; (c) leave it. His call.
 - **Testers' feedback** on rc6 (tester guide "What to test").
 - ~~**Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.~~ DONE Nov 5: topics and description
   set, a README GIF of the Now line from rc6 on the Moto. Still to make: a short clip with sound (DadCraft records it).

@@ -96,6 +96,45 @@ e = fresh()
 bad = [l for l in e.log if "couldn't create" in l or "error" in l.lower() or "bad" in l.lower()]
 check(not bad, "patch loads with no Pd errors" + (": %s" % bad if bad else ""))
 
+# [random]'s left inlet takes only a bang (Nov 5: the found pad sent its grain number there, so Pd printed "random:
+# no method for 'float'" every 60 ms on the phone and the grains never wandered). Every canvas, every feeder.
+def random_fed_floats(text):
+    stack, bad = [], []
+    def scan(cv):
+        o = cv["objs"]
+        for r, l in enumerate(o):
+            if not re.match(r"#X obj \d+ \d+ random\b", l):
+                continue
+            for s, out, d, i in cv["conns"]:
+                if d != r or i != 0:
+                    continue
+                w = o[s].split(); name = w[4] if len(w) > 4 else ""
+                if name in ("t", "trigger"):
+                    ok = w[5 + out] in ("b", "bang")
+                elif name in ("sel", "select"):
+                    ok = out < len(w) - 5          # not the last outlet, which passes the rest on
+                else:
+                    ok = name in ("b", "bang", "metro", "delay", "del", "loadbang") or (w[1] == "msg" and name in ("bang", "seed"))
+                if not ok:
+                    bad.append("%s <- %s outlet %d" % (l[:40], o[s][:50], out))
+    for ln in text.split(";\n"):
+        ln = ln.strip()
+        if ln.startswith("#N canvas"):
+            if stack:
+                stack[-1]["objs"].append("#X obj 0 0 (subpatch)")
+            stack.append({"objs": [], "conns": []})
+        elif ln.startswith("#X restore"):
+            scan(stack.pop())
+        elif stack and re.match(r"#X (obj|msg|floatatom|symbolatom|text|array)", ln):
+            stack[-1]["objs"].append(ln)
+        elif stack and ln.startswith("#X connect"):
+            stack[-1]["conns"].append(tuple(int(v) for v in ln.split()[2:6]))
+    for cv in stack:
+        scan(cv)
+    return bad
+fed = random_fed_floats(open(PATCH).read())
+check(not fed, "no [random] gets a number in its left inlet %s" % (fed or ""))
+
 jp = java_params()
 patch_text = open(PATCH).read()
 receivers = set(re.findall(r"#X obj \d+ \d+ r (\w+);", patch_text)) - {"tp_release", "comp_section", "traffic_state", "calm_tune", "calm_phrase", "calm_reset", "traffic_flow_state", "btf_probe", "music_pan0", "music_pan1", "music_pan2", "music_pan3", "chime_answer", "pad_room", "rm_probe", "uw_probe", "music_var", "chord_color", "new_pieces", "band_plays", "music_drift",   # (fixed since Oct 31: patch defaults, no setting)

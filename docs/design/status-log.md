@@ -139,4 +139,9 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   like to open this up to a public beta today." Docs brought up to date for it: tester guide (rc6 section, the new
   features moved into The Band tab, Mixed Surroundings' own part, privacy, what to test), README (public beta,
   shaped by you, sound kinds on ARM), NOTICE, PRIVACY, ROADMAP "Open now" summary, the Diagnostics switch's label.
+- **Nov 5, later: rc6 replaced before any download** (DadCraft: "replace the rc6, do not make rc6.1"). The
+  release build's classifier confirmed on the Moto (screen recording: the Now line naming voices 0.99, music, birds
+  while he talked and whistled); a README GIF made from it. The recording's log showed Pd printing "random: no method
+  for 'float'" over and over: the found pad's two `[random]`s got the grain number (design/music.md "found pad"),
+  fixed, with a patch-wide check. Whistling read as music and birds: ROADMAP "Open now" (singing and Make Room).
 

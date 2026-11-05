@@ -213,7 +213,10 @@
   `FP_SLOTS` (2) round-robin tables `fpad_<n>` (`fpad_n`: count, newest); never in a pocket. Each pad set
   (`fpad<k>` groups, 4 voices `fp<k><i>_*`) takes the newest take when it takes its chord; each voice is two
   `FP_GRAIN_MS` (120) grains, a new one every half grain, starting a whole number of the take's periods from where
-  the playing grain is (so a steady note stays steady), wandering in `FP_LOOP_S`, rate = chord note / take pitch
+  the playing grain is (so a steady note stays steady), wandering in `FP_LOOP_S` (fixed Nov 5: the grain number went
+  into `[random]`'s left inlet, so the wander target stayed 0 and every grain started near the take's attack, and Pd
+  printed "random: no method for 'float'" every 60 ms; a `[b]` now bangs it, and test_patch checks every `[random]`'s
+  left inlet in every canvas), rate = chord note / take pitch
   folded within a tritone (`FP_GAIN` 0.075: as loud as the synth pad). Each set's sound (synth or found, `fpw_m`)
   is latched at its chord change (a new take joins at the next one; a fading set is never cut; a Pad sounds change
   re-latches at once); the switches (`fpw_*`: active x register != Low x mode) run only what is heard, so with Pad
