@@ -31,7 +31,10 @@ budget (bytes, files, depth), Info.plist is bounded, provider failures fail the 
 Nov 3 sequence: Underwater gating DONE Nov 4 (paths asleep while off: 14.4% less patch time on the desktop, below
 the Moto's noise). Calm Builds FIXED Nov 4: the Moto's brief level dropouts
 kept restarting its quiet wait (design/music.md). The review's six steps are done; its other performance items are built (Nov 4): classifier resampling and
-allocations (Moto: the work around YAMNet ~8-9 -> 5-6 ms), the listener stops while Music is off, the music side FX idle while Music in Stereo is off. Reactive-first additions remain proposals for DadCraft to choose.
+allocations (Moto: the work around YAMNet ~8-9 -> 5-6 ms), the listener stops while Music is off, the music side FX idle while Music in Stereo is off. Reactive-first additions: DadCraft's picks (Nov 4): **2, captured sounds' identity, first** ("i like 2 the most");
+**3, mixed environments, second**; **4, authored experiences, kept for later**; **1, explaining changes, dropped**
+("showing why the music or sound changed is redundant - users should be aware of why something happened or changed,
+because the sonic environment around them changed").
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
