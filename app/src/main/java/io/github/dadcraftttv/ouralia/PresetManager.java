@@ -277,6 +277,10 @@ final class PresetManager {
 
     private PresetManager() { }
 
+    /** True where sound kinds can run (the Dev build; set by MainActivity). Elsewhere a saved preset leaves the
+     *  sound-kind settings out, so playing it in Dev never switches Mixed Surroundings off (Nov 5). */
+    static volatile boolean soundKinds = false;
+
     /** Every preset setting at its default, except what built-in presets leave alone (Params.builtInsLeave: how the
      *  band plays, the effects' voices, Intensity), so picking Robot doesn't stop your band. */
     private static Map<String, Float> defaults() {
@@ -463,7 +467,7 @@ final class PresetManager {
             JSONObject vals = new JSONObject();
             for (Param p : Params.ALL) {
                 Float v = values.get(p.id);
-                if (p.inPreset && v != null) {
+                if (p.inPreset && v != null && (soundKinds || !p.soundKinds)) {
                     vals.put(p.id, (double) v);
                 }
             }

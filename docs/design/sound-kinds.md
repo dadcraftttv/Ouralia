@@ -986,3 +986,15 @@ the old Deeper: constants are single numbers (UW_CUTOFF 900 Hz, UW_DELAY_MS 12 +
 only the delayed copy heard, UW_IN_MS 5 s, UW_OUT_MS 8 s; Gentle was 1600 Hz, a 0.2 share of 10 +/- 1 ms at 0.2 Hz,
 4 s in, 6 s out). The style picker, its stored value and the 500 ms style glide are gone; "underwater" > 0 is on (the
 app sends 1). Tests: 7z6 compares off/on (above 2.5 kHz at least 15 dB down, level within 3 dB music, 4 dB beat).
+
+## Step 14: Mixed Surroundings in presets (Claude Code, Nov 5; Dev only)
+
+DadCraft (Nov 5), after the RjDj question ("a user driven type of RjDj experience ... crafted by each user"; Claude
+and Codex both named presets the biggest gap): "lets move on to step 3". Mixed Surroundings and the seven under it are
+now `inPreset` (still not randomizable: dice stay a separate decision). `Params.mixedSet()` keeps them the user's:
+built-in presets don't set them (`builtInsLeave`) and Realms never change them (`realmsLeave`), so a Realm change can't
+switch Mixed off. A preset without them (saved before Nov 5) leaves them as they are (not `resetWhenAbsent`). Saving
+writes sound-kind settings only where sound kinds can run (`PresetManager.soundKinds`, set by MainActivity from
+`SoundKindsRunner.available()`): a release-build preset played in Dev never turns Mixed off. Tests: J (in presets,
+left by built-ins and Realms, a Dev round trip, left out without sound kinds, old presets leave them, a preset with
+them sets them; the Realm check made to fail once), T (outside Dev the round trip leaves sound kinds out).
