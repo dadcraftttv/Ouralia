@@ -55,7 +55,7 @@ android {
             // Pd loads its optional externals (fiddle~, bonk~, sigmund~, ...) from real files, so the
             // native libraries must be unpacked at install time instead of staying inside the apk.
             useLegacyPackaging = true
-            // Sound kinds (step 4c, Dev only): LiteRT on ARM only (DadCraft, Oct 31); x86 builds go without them.
+            // Sound kinds (step 4c, every build since Nov 5): LiteRT on ARM only (DadCraft, Oct 31); x86 goes without.
             excludes += setOf("lib/x86/libtensorflowlite_jni.so", "lib/x86_64/libtensorflowlite_jni.so")
         }
     }
@@ -71,6 +71,7 @@ dependencies {
     // 1.4.2 snapshot was (Pd 0.55.2, PdAudio.setDevicesId) plus the Oboe unplug fix (libpd #428, pd-for-android
     // #198). The last numbered release on Maven Central is 1.2.1-rc6 (2021, no device choice).
     implementation("io.github.libpd.android:pd-core:1.4.2-pdscenes.2")
-    // Sound kinds, step 4c (Oct 31, docs/design/sound-kinds.md): YAMNet on LiteRT (Apache 2.0), in Ouralia Dev only.
-    "devImplementation"("com.google.ai.edge.litert:litert:1.4.2")
+    // Sound kinds, step 4c (Oct 31, docs/design/sound-kinds.md): YAMNet on LiteRT (Apache 2.0). In every build since
+    // Nov 5 (DadCraft: "bring it in"; it was Ouralia Dev only).
+    implementation("com.google.ai.edge.litert:litert:1.4.2")
 }

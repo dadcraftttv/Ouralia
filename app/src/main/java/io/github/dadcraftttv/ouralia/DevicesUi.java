@@ -337,7 +337,7 @@ final class DevicesUi {
             diagLevel = new android.widget.ProgressBar(a, null, android.R.attr.progressBarStyleHorizontal);
             diagLevel.setMax(80);   // -80 .. 0 dB
             body.addView(diagLevel, new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, a.dp(10)));
-            if (SoundKindsRunner.available()) {   // sound kinds (Oct 31, step 4c): Ouralia Dev only
+            if (SoundKindsRunner.available()) {   // sound kinds (Oct 31, step 4c): ARM phones, every build since Nov 5
                 android.widget.Switch kinds = new android.widget.Switch(a);
                 kinds.setText(R.string.sound_kinds_switch);
                 a.look.label(kinds);

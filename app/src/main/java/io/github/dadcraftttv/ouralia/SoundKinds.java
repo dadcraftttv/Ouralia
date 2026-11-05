@@ -68,7 +68,7 @@ final class SoundKinds {
     private boolean unsure;
     private final boolean[] in = new boolean[NAMES.length];   // (this judgement's kinds clearly there)
 
-    /** The model, only in the Dev build (src/dev YamNet: LiteRT). */
+    /** The model (YamNet on LiteRT; the tests stand in a fake). */
     interface Model {
         /** 521 scores for SAMPLES samples at RATE. */
         float[] scores(float[] wave);

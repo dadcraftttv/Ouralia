@@ -998,3 +998,15 @@ writes sound-kind settings only where sound kinds can run (`PresetManager.soundK
 `SoundKindsRunner.available()`): a release-build preset played in Dev never turns Mixed off. Tests: J (in presets,
 left by built-ins and Realms, a Dev round trip, left out without sound kinds, old presets leave them, a preset with
 them sets them; the Realm check made to fail once), T (outside Dev the round trip leaves sound kinds out).
+
+## Step 15: sound kinds in every build (Claude Code, Nov 5)
+
+DadCraft (Nov 5), after `sound-kinds` merged into `main`: "bring it in". YamNet.java, yamnet.tflite, kinds.txt and
+the NOTICE moved from `app/src/dev/` to `app/src/main/`, LiteRT from `devImplementation` to `implementation`
+(`app/src/dev/` keeps only the "Ouralia Dev" name). `SoundKindsRunner.available()` is now the class being there
+**and** the phone's primary ABI being ARM (LiteRT's x86 libraries stay excluded, Oct 31: "ARM only is fine"), cached;
+off elsewhere, the sound-kind settings stay hidden as before. R8: `app/proguard-rules.pro` keeps YamNet (found by
+name, built by its Context constructor) and `org.tensorflow.lite.**`. The About licences list the YAMNet/LiteRT
+notice wherever the model is. PRIVACY.md: the section is no longer Dev only (still on-device, nothing saved or sent,
+no internet permission). The bench's `--export` now writes to `app/src/main/assets/sound_kinds`. Tests: a JVM stub
+`android.os.Build` (stubs2) stands in for an ARM phone.

@@ -65,8 +65,8 @@ behaviour changes, or tell DadCraft it needs one).
 - `dcs/` — our own Pd objects in C (prefix `dcs_`, BSD-3, loaded by `#X declare -lib dcs;`). After changing
   `dcs/src`: `make -C dcs`, `tools/build_dcs_android.sh` (commits `app/src/main/jniLibs/*/libdcs.so`), `tools/test_dcs.py`.
 - Selectable kits removed Oct 30 (on `main` since the Nov 5 merge): the built-in Synth
-  voices and Found sources remain (DESIGN-NOTES "Kits"). The sound classifier (YAMNet, LiteRT) ships only in Dev
-  (`app/src/dev/`).
+  voices and Found sources remain (DESIGN-NOTES "Kits"). The sound classifier (YAMNet, LiteRT) ships in every
+  phone build since Nov 5, ARM only (`SoundKindsRunner.available()`); `app/src/dev/` now only names Ouralia Dev.
 - `desktop/` — Linux stream mode (Swing + JACK via pw-jack), compiles the phone's logic classes unchanged.
 - `app/src/main/res/values/strings.xml` — escape apostrophes as `\'`.
 

@@ -36,14 +36,15 @@ tracking, no crash reporting. Android's automatic backup is turned off for it to
 
 Uninstalling the app deletes all of it.
 
-## Hearing what kind of sound it is (Ouralia Dev only)
+## Hearing what kind of sound it is
 
-The test build, **Ouralia Dev**, can also tell kinds of sound apart: voices, music, traffic, birds, water, steps or
-quiet. It does this on the phone itself with a small built-in model (Google's YAMNet, Apache 2.0; see NOTICE.md),
+On ARM phones (nearly all of them), Ouralia can also tell kinds of sound apart: voices, music, traffic, birds,
+water, steps or quiet. It does this on the phone itself with a small built-in model (Google's YAMNet, Apache 2.0; see NOTICE.md),
 only while one of its switches is on. The model looks at the last second or so of sound in memory and returns a
 score per kind; the sound itself is never saved, and nothing is sent anywhere (the app still has no internet
 permission). It understands no words: it can tell that someone is talking, not what they say. The event log notes
-the kind when it changes (for example "Heard: traffic 0.62"). The normal app doesn't include the model.
+the kind when it changes (for example "Heard: traffic 0.62"). (Until Nov 5, 2026 only the Ouralia Dev test build
+had the model.)
 
 ## Sensors
 

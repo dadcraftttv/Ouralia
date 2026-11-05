@@ -11,9 +11,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 /**
- * YAMNet on LiteRT (Oct 31, step 4c, Ouralia Dev only: docs/design/sound-kinds.md, NOTICE in assets/sound_kinds).
- * One thread, the model read from the Dev build's assets. {@link SoundKindsRunner} finds this class by name, so the
- * release build (without it or LiteRT) has no sound kinds.
+ * YAMNet on LiteRT (Oct 31, step 4c: docs/design/sound-kinds.md, NOTICE in assets/sound_kinds). One thread, the model
+ * read from the assets. In every build since Nov 5 (DadCraft: "bring it in"), ARM phones only. {@link SoundKindsRunner}
+ * finds this class by name (kept by app/proguard-rules.pro), so the desktop and test builds without it have none.
  */
 public final class YamNet implements SoundKinds.Model {
     private final Interpreter interpreter;

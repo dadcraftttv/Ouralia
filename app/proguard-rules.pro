@@ -16,3 +16,8 @@
 # Readable crash reports: keep line numbers, hide the source file names.
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile
+
+# Sound kinds (Nov 5, in release builds): SoundKindsRunner finds YamNet by name and builds it by its Context
+# constructor; LiteRT's native code calls back into its own Java classes.
+-keep class io.github.dadcraftttv.ouralia.YamNet { public <init>(android.content.Context); *; }
+-keep class org.tensorflow.lite.** { *; }
