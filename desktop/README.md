@@ -1,7 +1,7 @@
 # Ouralia desktop (stream mode)
 
 The phone app on Linux, as background music for a stream: the same built-in patch and the phone's own logic
-(settings, presets, movers, Realms, Intensity, Calm builds, motifs, call and response), fed by your mic and, if
+(settings, presets, movers, Realms, Intensity, Calm Builds, call and response), fed by your mic and, if
 you like, your computer's own sound, playing into a virtual output called **Ouralia** that OBS records. No
 sensors and no walking: the beat keeps the tempo you set (The Band tab, Rhythm, Set tempo), and the Realms follow the
 room's loudness and the time of day.
@@ -28,7 +28,8 @@ phone app's own format, so **Presets > Export current sound** writes a file the 
 reads one the phone exported. Desktop differences from the phone: the compressor starts off and the tempo starts
 on Set; settings that need a phone (pocket, handling, following your steps) are hidden; Kinetic, Pocket and
 Unstable never come (they need walking, a pocket or a shake). Not here yet: the movers' own controls (presets
-bring theirs). Stem packs and scenes stay on the phone.
+bring theirs), and hearing what kind of sound it is (Mixed Surroundings and the responses under it need the phone's
+sound classifier, so they are hidden here; Music in Stereo works). Scenes stay on the phone.
 
 Tip: in a quiet room a desktop mic's faint hiss gets echoed too, and with Echo scatter that hiss hops from ear to
 ear. Raise **Sound > Input & output > Noise gate threshold** (around -55 dB) so the gate closes between sounds.

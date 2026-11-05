@@ -664,6 +664,13 @@ final class Params {
         return BAND.contains(id) || STYLES.contains(id) || Intensity.ID.equals(id) || mixedSet(id);
     }
 
+    /** A setting that only does something where the sound classifier runs: every sound-kind setting except Music in
+     *  Stereo, which is patch-only (Nov 5: the desktop, with no classifier, hides these instead of showing switches
+     *  that do nothing). */
+    static boolean classifierOnly(Param p) {
+        return p.soundKinds && !"music_stereo".equals(p.id);
+    }
+
     /** Mixed Surroundings and the seven under it (in presets since Nov 5, DadCraft: "lets move on to step 3"): a
      *  user's own presets carry them, built-in presets and Realms never change them. */
     static boolean mixedSet(String id) {

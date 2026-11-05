@@ -60,3 +60,10 @@
   org.json refuses it). Picking an entry ticks "Also hear a game" (he picked it, the box stayed off, nothing came).
   Device names match without PipeWire's ".N" suffix (`DesktopEngine.base`), and menus store the plain name.
 - No walking stand-in on the desktop (DadCraft, Oct 19: the Rhythm's BPM setting is enough there).
+- **Sound kinds (Nov 5, DadCraft: "go ahead with the small fix"):** the classifier (YAMNet on LiteRT) runs only on
+  ARM phones, so the desktop hid nothing and showed Mixed Surroundings and its seven responses as switches that did
+  nothing. `Params.classifierOnly` (every `soundKinds` setting but Music in Stereo, which is patch-only) is left out
+  of the desktop's rows; DesktopTest checks the eight. Everything else since Oct 19 came along unchanged (same patch,
+  same shared logic): the reactive defaults, Calm Builds, Found Palette, the voices, Trailing Melody, the kit removal,
+  the found pad and Realm Beat Level fixes. Later, maybe: YAMNet on the desktop too (Linux LiteRT), so game sound and
+  voice chat could drive the responses on stream.
