@@ -32,7 +32,7 @@ There are two ways to use it:
 - **Wind Guard** (off by default): wind rumble on the mic pulled down outdoors, voices kept.
 - **World in Stereo** (off by default): on phones with two mics, the world in stereo, left and right.
 - **Clear Catches** (off by default): found sounds only from sounds well above the room's background.
-- **Room listener:** the Now line and Diagnostics say what the app thinks it hears (talking, music, traffic, wind, a crowd).
+- **Room listener:** Diagnostics says what the app thinks it hears (talking, music, traffic, wind, a crowd). (Off the Now line since Nov 5.)
 - **Diagnostics** counts dropouts (clicks or short gaps) since Start; the Input list marks Bluetooth mics and tells the phone's two mics apart.
 - **Scenes** that save their state now get it back the next time they start.
 - The notification shows Ouralia's own icon.

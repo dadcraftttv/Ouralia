@@ -46,7 +46,10 @@ Chimes, Underwater, Water Leaves a Trail, Traffic Passes Through, Traffic Flow, 
 all go behind the one Mixed Surroundings switch; Underwater becomes its Deeper style; the Now line says "unsure" instead
 of quiet for sounds it doesn't know, real silence stays "quiet" (DadCraft: "leave real silence be what it is supposed to
 be"); every sound happening shapes the music ("both sounds, or as many that are happening"), with Water Trail and Birds
-Lift still taking turns (he went with Claude's recommendation).
+Lift still taking turns (he went with Claude's recommendation). **First listen (Nov 5):** "i do like what Mixed Surroundings is
+doing", but a running sink read as "a crowd": that word was the old room listener's, now off the Now line (his call);
+YAMNet heard the sink as water but weakly, and its tap/sink/bath/toilet classes joined water (design/sound-kinds.md
+Step 12). Next: his sink listen on the new build, then the one-switch plan above.
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
