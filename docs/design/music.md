@@ -40,12 +40,17 @@
     that always finishes (quiet mid-fade doesn't revive it), then a fresh full wait. The reference is held while it
     plays and fades, so the noise that ended it cannot become the floor and revive it. Switch or Music off: gone at
     once. Event log "Calm tune starts/ends"; the Now line still says "building".
-  - **The tune (patch, `calm.py`):** the app sends `calm_phrase` (six chime steps 7..14, picked per build: starts
-    on a chord tone, moves a step or two, the second bar's downbeat a chord tone, ends home) and `calm_tune` 0..1.
-    The second-bar octave uses the current scale's length (5/6/7), tries up then down within steps 7..14,
-    otherwise keeps that chord tone: no upper-limit clamp collapsing different answers onto 14.
-    Notes fall on 16ths 0, 6 and 12 of each of two bars (`tick16`); they join downbeats first (ranks 0..5, note
-    joins past rank/6), velocity 0.2 -> 0.45. They go through `motif` (a chime at a scale step: key, register,
+  - **The tune (patch, `calm.py`):** six chime steps 7..14 and `calm_tune` 0..1. Every build is its own
+    (Nov 4; DadCraft asked if it always starts the same way with the same pattern, then: "do all three. the point
+    is that it should never sound the same"): the notes start on any step 7..13, move a step or two (a leap of
+    three one time in five), the fourth note a chord tone half the time (sometimes its octave, which uses the
+    scale's length 5/6/7, up then down within 7..14, else the chord tone kept: no clamp onto 14), and the end comes
+    home half the time, else near home or on a chord tone. The rhythm is picked per build: the six notes split
+    3+3, 2+4 or 4+2 over the two bars, each bar's places from 16ths 0, 2, 3, 4, 6, 8, 10, 11, 12, 14, at least two
+    16ths apart (also into the next pass). The rise's joining order is a fresh shuffle of ranks 0..5 (until Nov 4,
+    downbeats first). The app sends `calm_phrase` as the two-bar grid: 32 slots of a step or -1, then 32 ranks;
+    a slot plays when the level passes rank/6 (`tick16` slot = bar*16 + 16th). Velocity 0.2 -> 0.45. Test B
+    "variety": 60 seeded builds all differ (7 starts, 60 rhythms, 56 joining orders); test_patch "7z10e". They go through `motif` (a chime at a scale step: key, register,
     chime voice, Mix level, Music in Stereo places all apply; Chimes Only When Something Happens doesn't block it).
     No [random] in the patch. Only while the drums are sounding: the beat's own output (`beat_out`) above -60 dBFS
     within the last 3 s, so it never starts the drums and stops with them. No new voice for the chimes.
@@ -55,7 +60,8 @@
     intact so notes still join in their original order. In full, eight-bar sections have four two-bar passes:
     motif, exact repeat, one or two changed answer notes, then another answer with an optional breath (two rests).
     Each next section develops the previous full motif: starts a step from its last note, changes inner notes,
-    returns to its new opening. Reject the last 16 applied pitch sequences (rests ignored) and the last four
+    returns to its new opening half the time (Nov 4). The rhythm moves too: each new section keeps it, re-picks
+    one bar's places or picks a new rhythm (one in three each). Reject the last 16 applied pitch sequences (rests ignored) and the last four
     section contours; a bounded random search has an exhaustive fallback. A spacious fourth pass is followed by
     a full six-note motif. No increasing sparsity, onset moves, voice/level/effect changes, or harmony/bass changes.
   - **Phrase boundary:** `calm_phrase` now fills `ct_pending_phrase`; a sounding two-bar boundary copies it into

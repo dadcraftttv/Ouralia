@@ -321,10 +321,11 @@ final class DesktopApp {
             Integer calmReset = CalmBuild.takeReset();
             if (calmReset != null) PdBase.sendFloat("calm_reset", calmReset);
             float[] phrase = CalmBuild.takePhrase();   // (before its level, so the first note has its phrase)
-            if (phrase != null) {
-                Object[] steps = new Object[phrase.length];
-                for (int k = 0; k < phrase.length; k++) {
-                    steps[k] = phrase[k];
+            if (phrase != null) {   // sent as its two-bar grid: a step or -1 per 16th, then the ranks
+                float[] grid = CalmBuild.grid();
+                Object[] steps = new Object[grid.length];
+                for (int k = 0; k < grid.length; k++) {
+                    steps[k] = grid[k];
                 }
                 PdBase.sendList("calm_phrase", steps);
             }

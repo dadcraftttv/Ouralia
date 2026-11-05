@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Calm builds, the quiet tune (Nov 3): the app's level (calm_tune 0..1) and phrase (calm_phrase, six chime steps)
-become a two-bar chime phrase on the drum grid, only while the drums are sounding. No new voice: the notes go
+"""Calm builds, the quiet tune (Nov 3): the app's level (calm_tune 0..1) and phrase (calm_phrase: a step or -1 for each
+of the two bars' 32 16ths, then each one's rank in the rise; Nov 4, the app picks the rhythm and joining order per
+build) become a two-bar chime phrase on the drum grid, only while the drums are sounding. No new voice: the notes go
 through the motif path (a chime at a scale step, music.py), so key, chord register, chime voice, Mix level and
 Music in Stereo places all apply. No [random]: Java develops the phrase; Pd commits a pending list on the two-bar
 boundary and acknowledges it on calm_pass, so Java prepares ahead without estimating the drum clock."""
@@ -15,8 +16,8 @@ def _ex(P, name, formula, x, y):
 def add_calm_tune(P):
     x, y = 16200, 100
     P.obj('ct_r_lvl', 'r calm_tune', x, y); P.obj('ct_lvl', 'value ct_lvl', x, y + 15); P.c('ct_r_lvl', 'ct_lvl')
-    P.obj('ct_tab', f'table ct_phrase {CALM_NOTES}', x + 100, y)
-    P.obj('ct_pending_tab', f'table ct_pending_phrase {CALM_NOTES}', x + 400, y)
+    P.obj('ct_tab', f'table ct_phrase {2 * CALM_SLOTS}', x + 100, y)
+    P.obj('ct_pending_tab', f'table ct_pending_phrase {2 * CALM_SLOTS}', x + 400, y)
     P.obj('ct_r_ph', 'r calm_phrase', x + 400, y + 15)
     P.obj('ct_ph_t', 't b l', x + 400, y + 30); P.c('ct_r_ph', 'ct_ph_t')
     P.obj('ct_set', 'array set ct_pending_phrase', x + 460, y + 45); P.c('ct_ph_t', 'ct_set', 1)
@@ -56,10 +57,11 @@ def add_calm_tune(P):
     P.c('ct_commit_t', 'ct_pending_zero', 1)
     P.obj('ct_epoch_read', 'value ct_epoch', x + 400, y + 180); P.c('ct_commit_t', 'ct_epoch_read')
     P.obj('ct_pass_s', 's calm_pass', x + 400, y + 195); P.c('ct_epoch_read', 'ct_pass_s')
-    # Notes at 16ths 0, 6, 12 of each bar (k = 0..2), note i = bar*3 + k in time order. They join downbeats first:
-    # rank 2k + bar, note joins when the level passes rank / CALM_NOTES. Out: velocity (right), then step or -1.
-    play = (f'ct_lvl>0&&ct_drums>0&&fmod($f1,6)==0&&$f1<=12&&ct_lvl>(2*int($f1/6)+ct_bar)/{CALM_NOTES}')
-    _ex(P, 'ct_play', f'if({play},ct_phrase[int(ct_bar*3+int($f1/6))],-1);'
+    # Slot ct_bar*16 + tick16 of the grid: a step (or -1, no note) and its rank. A note joins when the level passes
+    # rank / CALM_NOTES, so the app's rank order is the rise's joining order. Out: velocity (right), then step or -1.
+    slot = f'int(ct_bar*16+$f1)'
+    play = (f'ct_lvl>0&&ct_drums>0&&ct_phrase[{slot}]>=0&&ct_lvl>ct_phrase[{slot}+{CALM_SLOTS}]/{CALM_NOTES}')
+    _ex(P, 'ct_play', f'if({play},ct_phrase[{slot}],-1);'
         f'{CALM_VEL_MIN}+{CALM_VEL_MAX - CALM_VEL_MIN}*ct_lvl', x, y + 180)
     P.c('ct_tt', 'ct_play')
     P.obj('ct_pk', 'pack f f', x, y + 210); P.c('ct_play', 'ct_pk', 1, 1)

@@ -536,7 +536,8 @@ TRAFFIC_GLIDE_MS = 3000
 TRAFFIC_RETURN_MS = 500
 
 # Calm builds, the quiet tune (Nov 3, calm.py): the app's level and phrase on the drum grid.
-CALM_NOTES = 6              # notes in the two-bar phrase (CalmBuild.NOTES)
+CALM_NOTES = 6              # notes in the two-bar phrase (CalmBuild.NOTES): the rank gate's steps
+CALM_SLOTS = 32             # the grid: two bars of 16ths (CalmBuild.SLOTS); the table holds steps, then ranks
 CALM_DRUM_DB = -60          # the drums are sounding: the beat's output above this (dBFS)...
 CALM_DRUM_HOLD_MS = 3000    # ...within this long (a bar's gaps keep it)
 CALM_VEL_MIN = 0.2          # the first note's velocity...

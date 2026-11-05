@@ -46,8 +46,9 @@ chime phrase grows over the drums that are already playing, trails off over 15 s
 Calm Builds"): a plucked bass joins past 0.4 of the build (design/music.md). Phrase development BUILT Nov 4
 (DadCraft: "it's getting stuck repeating the same phrase over and over"): eight-bar sections, changed answers,
 occasional rests, a new motif grown from the old; updates land on two-bar boundaries. Same sound and build/fade.
-Five-minute clip ready in `~/Downloads/calm-development-clips/`; review and phone listen pending, no install yet.
-Details: design/music.md "Development".
+Committed (fdde179) and on the Moto. Each build its own BUILT Nov 4 (DadCraft: "the point is that it should never
+sound the same"): any start, leaps and other endings, a rhythm and a joining order picked per build, the rhythm moving
+in long playing too. His listen next. Details: design/music.md "The tune", "Development".
 **Bass Voice (DadCraft, Nov 4):** BUILT: Synth / Glass Bowl for both basses; the found bass REMOVED ("I don't think
 Found Sounds work well in that area"). design/music.md "Bass Voice"; his listen next.
 

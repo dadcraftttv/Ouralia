@@ -67,6 +67,39 @@ public class B {
     check(CalmBuild.takePhrase()==null,"finished fade invalidates queued notes");
   }
   static float[] lastMotif;
+  // Nov 4 (DadCraft: "the point is that it should never sound the same"): each build its own notes, rhythm and order
+  static void variety() {
+    java.util.Set<String> builds=new java.util.HashSet<>(), starts=new java.util.HashSet<>(),
+        rhythms=new java.util.HashSet<>(), orders=new java.util.HashSet<>();
+    boolean wellFormed=true; int moving=0, n=60;
+    for(int seed=100;seed<100+n;seed++) {
+      CalmBuild.reset(); CalmBuild.scaleSize(7); CalmBuild.dice=new java.util.Random(seed);
+      quiet(31); CalmBuild.takeReset(); float[] p=CalmBuild.takePhrase(); float[] g=CalmBuild.grid();
+      int[] at=CalmBuild.onsets(), rk=CalmBuild.ranks();
+      builds.add(java.util.Arrays.toString(g)); starts.add(""+(int)p[0]);
+      rhythms.add(java.util.Arrays.toString(at)); orders.add(java.util.Arrays.toString(rk));
+      int[] sorted=rk.clone(); java.util.Arrays.sort(sorted);
+      wellFormed &= java.util.Arrays.equals(sorted,new int[]{0,1,2,3,4,5}) && g.length==64;
+      for(int i=0;i<6;i++){
+        wellFormed &= g[at[i]]==p[i] && g[32+at[i]]==rk[i] && (i==0 || at[i]-at[i-1]>=2);
+        int bar=at[i]/16; wellFormed &= bar==(i<2?0:i>=4?1:bar);   // a bar holds two to four notes
+      }
+      wellFormed &= 32-at[5]+at[0]>=2;   // and into the next pass
+      int sounding=0; for(int t=0;t<32;t++) if(g[t]>=0) sounding++;
+      wellFormed &= sounding==6;
+      java.util.Set<String> seen=new java.util.HashSet<>(); seen.add(java.util.Arrays.toString(at));
+      for(int pass=0;pass<64;pass++){   // after the rise the rhythm moves with the sections too
+        CalmBuild.phraseApplied(CalmBuild.epochForTests()); quiet(4.8); CalmBuild.takePhrase();
+        seen.add(java.util.Arrays.toString(CalmBuild.onsets()));
+      }
+      if(seen.size()>=3) moving++;
+    }
+    check(wellFormed,"variety: the grid holds the six notes at their places, at least two 16ths apart, ranks a shuffle");
+    check(builds.size()==n && starts.size()>=6 && rhythms.size()>=n*3/4 && orders.size()>=n*3/4,
+        "variety: "+n+" builds all differ ("+builds.size()+"), starts "+starts.size()+", rhythms "+rhythms.size()
+        +", joining orders "+orders.size());
+    check(moving>=n*3/4,"variety: the rhythm keeps moving in long playing ("+moving+" of "+n+" builds with 3+ rhythms)");
+  }
   public static void main(String[] a){
     Param cb=Params.byId("calm_build");
     check(cb!=null && cb.def==0f && cb.inPreset && !cb.resetWhenAbsent && !cb.sendToPd,"Calm builds: off by default, in presets (not reset by one without it), app-only");
@@ -125,7 +158,7 @@ public class B {
     double lo=99, hi=0; CalmBuild.wait01=Math::random;
     for(int i=0;i<200;i++){ CalmBuild.reset(); lo=Math.min(lo,CalmBuild.waitS()); hi=Math.max(hi,CalmBuild.waitS()); }
     check(lo>=30 && hi<=60 && hi-lo>20,"the wait falls anywhere between 30 s and a minute ("+lo+".."+hi+")");
-    CalmBuild.wait01=()->0; development();
+    CalmBuild.wait01=()->0; development(); variety();
     System.out.println(fails==0?"ALL PASSED":fails+" FAILED");
     if(fails>0) System.exit(1);
   }

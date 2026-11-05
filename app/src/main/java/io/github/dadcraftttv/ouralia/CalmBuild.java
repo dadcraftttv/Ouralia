@@ -34,8 +34,12 @@ final class CalmBuild {
      *  for a moment every 10-20 s). A dropout counts as quiet and never moves the reference: before, each one pulled
      *  the reference down, the room then read as noise and the wait never finished. Even a mic's own hiss is above. */
     static final float DROPOUT_DB = -80f;
-    /** The phrase: NOTES chime steps in time order, at 16ths 0, 6, 12 of each of two bars (calm.py). */
-    static final int NOTES = 6, LOW = 7, HIGH = 14;
+    /** The phrase: NOTES chime steps in time order. Each build picks where they fall on the two-bar grid of SLOTS
+     *  16ths and the order they join in during the rise (DadCraft, Nov 4: "the point is that it should never sound
+     *  the same"); the patch plays the grid it is sent (calm.py). */
+    static final int NOTES = 6, LOW = 7, HIGH = 14, SLOTS = 32;
+    /** Where a bar's notes may fall (16ths): the beats and off-beat 8ths, and the dotted 3 and 11. */
+    private static final int[] PLACES = {0, 2, 3, 4, 6, 8, 10, 11, 12, 14};
 
     enum Phase { WAITING, RISING, PLAYING, FADING }
 
@@ -50,6 +54,8 @@ final class CalmBuild {
     private static int bucket;
     private static double bucketS;
     private static final float[] phrase = new float[NOTES];
+    private static final int[] onsets = new int[NOTES], ranks = new int[NOTES];
+    private static final float[] grid = new float[2 * SLOTS];
     private static boolean phraseNew;
     private static int scaleSize = 7;
     private static int epoch;
@@ -172,28 +178,80 @@ final class CalmBuild {
         phaseS = 0;
     }
 
-    /** A gentle phrase: starts on a chord tone, moves a step or two, the second bar answers and comes home. */
+    /** A gentle phrase, new for each build (Nov 4: any start, a leap now and then, not always home), with its own
+     *  rhythm and joining order. Moves of a step or two mostly, sometimes three; the middle note is often a chord
+     *  tone (sometimes its octave); the end comes home half the time, else lands near home or on a chord tone. */
     private static void pickPhrase() {
         int[] chord = {LOW, LOW + 2, LOW + 4};
-        int start = chord[dice.nextInt(chord.length)];
+        int start = LOW + dice.nextInt(HIGH - LOW);
         int at = start;
         for (int i = 0; i < NOTES; i++) {
             if (i == 0) {
                 at = start;
-            } else if (i == 3) {
+            } else if (i == 3 && dice.nextBoolean()) {
                 at = chord[dice.nextInt(chord.length)];
                 if (dice.nextBoolean()) {
                     at = octave(at, scaleSize);
                 }
             } else if (i == NOTES - 1) {
-                at = start;   // home
+                int r = dice.nextInt(4);
+                at = r < 2 ? start : r == 2 ? near(start, step()) : chord[dice.nextInt(chord.length)];
             } else {
-                int move = dice.nextInt(4) + 1;   // 1..4 -> -2, -1, +1, +2
-                at = Math.max(LOW, Math.min(HIGH, at + (move <= 2 ? move - 3 : move - 2)));
+                at = near(at, step());
             }
             phrase[i] = at;
         }
+        pickRhythm(dice.nextInt(4));
+        for (int i = 0; i < NOTES; i++) {   // the rise's joining order: a shuffle
+            int j = dice.nextInt(i + 1);
+            ranks[i] = ranks[j];
+            ranks[j] = i;
+        }
         phraseNew = true;
+    }
+
+    /** A move: +-1 or +-2 (four in five), else +-3. */
+    private static int step() {
+        int r = dice.nextInt(10), size = r < 4 ? 1 : r < 8 ? 2 : 3;
+        return dice.nextBoolean() ? size : -size;
+    }
+
+    /** The notes' places: split 0/1 three and three, 2 two then four, 3 four then two; each bar its own places. */
+    private static void pickRhythm(int split) {
+        int first = split == 2 ? 2 : split == 3 ? 4 : 3;
+        pickBar(0, 0, first);
+        pickBar(1, first, NOTES - first);
+    }
+
+    /** n places in one bar, at least two 16ths apart (the chimes stay gentle), for notes from..from+n-1. */
+    private static void pickBar(int bar, int from, int n) {
+        int[] got = new int[n];
+        for (boolean ok = false; !ok; ) {
+            boolean[] used = new boolean[16];
+            for (int k = 0; k < n; k++) {
+                int at;
+                do {
+                    at = PLACES[dice.nextInt(PLACES.length)];
+                } while (used[at]);
+                used[at] = true;
+            }
+            int k = 0, last = -2;
+            ok = true;
+            for (int t = 0; t < 16; t++) {
+                if (!used[t]) continue;
+                ok &= t - last >= 2;
+                last = t;
+                got[k++] = t;
+            }
+        }
+        for (int k = 0; k < n; k++) {
+            onsets[from + k] = bar * 16 + got[k];
+        }
+    }
+
+    /** The bar (0 or 1) a note falls in. */
+    private static int barOf(int note) {
+        return onsets[note] / 16;
     }
 
     /** Try the octave in either direction; retain the chord tone if neither fits. Never clamp to HIGH. */
@@ -265,7 +323,7 @@ final class CalmBuild {
                 int a = 1 + dice.nextInt(4), b = 1 + dice.nextInt(4);
                 c[a] = near((int) c[a], dice.nextBoolean() ? 1 : -1);
                 c[b] = near((int) c[b], dice.nextBoolean() ? 2 : -2);
-                c[NOTES - 1] = c[0];
+                c[NOTES - 1] = dice.nextBoolean() ? c[0] : near((int) c[0], step());
             } else {
                 // Exhaustive fallback: 8^3 candidates, far more than the short forbidden history.
                 int k = attempt - 128, width = HIGH - LOW + 1;
@@ -278,6 +336,15 @@ final class CalmBuild {
         motif = next;
         contours.add(contour(motif));
         while (contours.size() > 4) contours.removeFirst();
+        int r = dice.nextInt(3);   // the rhythm moves too: a new rhythm, or one bar's places, or as it was
+        if (r == 0) {
+            pickRhythm(dice.nextInt(4));
+        } else if (r == 1) {
+            int first = 0;
+            while (first < NOTES && barOf(first) == 0) first++;
+            if (dice.nextBoolean()) pickBar(0, 0, first);
+            else pickBar(1, first, NOTES - first);
+        }
     }
 
     private static void nextPass() {
@@ -319,6 +386,29 @@ final class CalmBuild {
         }
         phraseNew = false;
         awaitingApplied = true;
+        Arrays.fill(grid, -1);
+        for (int i = 0; i < NOTES; i++) {
+            grid[onsets[i]] = phrase[i];
+            grid[SLOTS + onsets[i]] = ranks[i];
+        }
         return phrase.clone();
+    }
+
+    /** The phrase last taken, as the patch plays it: a step or -1 for each 16th of two bars, then each one's rank. */
+    static synchronized float[] grid() {
+        return grid.clone();
+    }
+
+    /** The current places (16ths of two bars) and joining ranks (tests). */
+    static synchronized int[] onsets() {
+        return onsets.clone();
+    }
+
+    static synchronized int epochForTests() {
+        return epoch;
+    }
+
+    static synchronized int[] ranks() {
+        return ranks.clone();
     }
 }
