@@ -38,6 +38,10 @@ because the sonic environment around them changed"). **Item 2 BUILT Nov 4 as Fou
 off by default; "all three together, and start slow"): distinct sounds kept for minutes, each step its own sound, a
 learned spot the sound caught there (design/rhythm.md "Found Palette"). His listen next: `~/Downloads/found-palette-clips/`,
 then the phone.
+**Item 3 STARTED Nov 4 as Mixed Surroundings** (`sk_mixed`, Music, Dev only, off by default; "go ahead and start on
+mixed surroundings"): each kind clearly there counts, Water Trail and Birds Lift take turns, "unsure" instead of quiet;
+each judgement's scores now in the session log for replays (design/sound-kinds.md "Step 12"). His listen next, in real
+mixes (talk by water, birds by a road), with Session Log on.
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 

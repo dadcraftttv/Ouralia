@@ -140,6 +140,35 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     boolean threw=false; try{ new SoundKinds("voices 1\n"); }catch(IllegalArgumentException e){ threw=true; }
     check(threw,"kinds.txt missing a kind is refused");
     check(SoundKinds.costLine(new long[]{3000000,1000000,2000000},3).equals("Sound kinds: 3 judgements, YAMNet median 2.0 ms, slowest 3.0 ms"),"the minute's cost line");
+    // Mixed Surroundings (Nov 4, the review's item 3): each kind clearly there counts, not only the leader
+    Param mixSetting=Params.byId("sk_mixed");
+    check(mixSetting!=null&&mixSetting.def==0f&&mixSetting.toggle&&!mixSetting.sendToPd&&!mixSetting.inPreset,
+        "mixed switch: off, app-controlled, outside presets");
+    for(boolean mx:new boolean[]{false,true}){
+      SoundKinds.mixed=mx; SoundKinds mq=new SoundKinds(kinds);
+      // talk by a fountain: voices lead three judgements in four, the water always there under them
+      for(int i=0;i<64;i++) mq.judge(i%4==3?sc(0,45,5,50):sc(0,60,5,35));
+      boolean talkW=mq.talking(), waterW=mq.water();
+      mq.reset();
+      // birds beside a road: traffic always loudest, birds clearly there
+      for(int i=0;i<96;i++) mq.judge(sc(3,45,4,30));
+      boolean birdsR=mq.birds(), roadR=mq.trafficScene();
+      if(!mx) check(talkW&&!waterW&&!birdsR&&roadR,"mixed off: as before, only the winner counts (talk "+talkW+", water "+waterW+", birds "+birdsR+", traffic "+roadR+")");
+      else check(talkW&&waterW&&birdsR&&roadR,"mixed on: talk by a fountain hears both (talk "+talkW+", water "+waterW+"), birds by a road both (birds "+birdsR+", traffic "+roadR+")");
+    }
+    SoundKinds.mixed=true; SoundKinds g=new SoundKinds(kinds);
+    for(int i=0;i<40;i++) g.judge(sc(5,40,4,35));
+    check(g.water()&&g.birds()&&g.waterLeads()&&!g.birdsLead(),"mixed: water and birds both heard, one gesture leads (water), the other waits");
+    int turns=0; boolean was=g.waterLeads();
+    for(int i=0;i<200;i++){ g.judge(i%2==0?sc(5,40,4,35):sc(5,35,4,40)); if(g.waterLeads()!=was){turns++;was=g.waterLeads();} }
+    check(turns==0,"mixed: an even mix doesn't flap between the gestures ("+turns+" changes)");
+    for(int i=0;i<40;i++) g.judge(sc(4,60,5,32));
+    check(g.birdsLead()&&!g.waterLeads()&&g.water(),"mixed: birds take over once clearly more, water still heard (Underwater keeps it)");
+    g.reset(); g.judge(sc(10,3)); g.judge(sc(10,3));
+    check(g.heardLine().equals("Heard: unsure")&&g.unsure(),"mixed: nothing scores, not silence: unsure, not quiet ("+g.heardLine()+")");
+    g.judge(sc(494,90)); g.judge(sc(494,90));
+    check(!g.unsure()&&g.heardLine().startsWith("Heard: quiet"),"mixed: YAMNet's silence is still quiet ("+g.heardLine()+")");
+    SoundKinds.mixed=false;
     if(fails==0) System.out.println("ALL PASSED");
   }
 }
