@@ -100,6 +100,7 @@
   lesson: one 1.4k-character [expr] of the choice was never created (no error seen); it is short steps now. Tests:
   test_patch "Found Palette" (fill/refresh/not kept, a minute on the least recently heard goes, each step one sound,
   a learned spot's sound). Clips: `~/Downloads/found-palette-clips/` (off, on; same made-up room, same level).
+  DadCraft (Nov 4): "i've listened to found palette and i like it."
 - **Clear Catches** (Oct 22, `fs_clean`, Rhythm, 0-30 dB, 0 = off by default, in presets with The Band). DadCraft's long session:
   found sounds "grainy, crackling", synth drums clean (his A/B). The log: 663 kicks caught in 41 minutes, half under
   -30 dB, many at the -45 dB floor (FS_MIN_DB). Every catch is levelled to the same drum loudness (its peak to 0.5,
