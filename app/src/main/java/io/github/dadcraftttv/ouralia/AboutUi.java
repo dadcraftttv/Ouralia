@@ -224,11 +224,11 @@ final class AboutUi {
                 {"Oboe and libpd (Apache 2.0)", "licenses/Apache-2.0.txt"},
                 {"Fonts: Sora, Inter, JetBrains Mono (OFL)", "licenses/fonts-OFL.txt"},
         }));
-        // Ouralia Dev only: the sound classifier's model (YAMNet, Apache 2.0) and its class names (CC BY-SA 4.0)
+        // The sound classifier's model (YAMNet, Apache 2.0) and its class names (CC BY-SA 4.0), in every build since Nov 5
         try (InputStream in = a.getAssets().open(YAMNET_NOTICE)) {
             docs.add(1, new String[]{"Sound kinds: YAMNet and LiteRT (Apache 2.0)", YAMNET_NOTICE});
         } catch (IOException e) {
-            // the normal build has no classifier, so nothing to list
+            // (a build without the model: nothing to list)
         }
         String[] names = new String[docs.size()];
         for (int i = 0; i < docs.size(); i++) {

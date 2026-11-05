@@ -15,10 +15,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 
 /**
- * Sound kinds' Android side (Oct 31, step 4c, Dev only: docs/design/sound-kinds.md). With the Diagnostics switch on
+ * Sound kinds' Android side (Oct 31, step 4c: docs/design/sound-kinds.md). With the Diagnostics switch on
  * and the built-in patch playing, it asks the patch for the mic (sk_on), and as each ring segment fills (sk_ready)
  * reads the two before it, runs YAMNet on its own thread and logs "Heard: ..." when the kind changes, plus each
- * minute's cost. The model is only in the Dev build (src/dev YamNet), so the release has no switch and no LiteRT.
+ * minute's cost. The model (YamNet, LiteRT) is in every phone build since Nov 5, ARM only (available()).
  */
 final class SoundKindsRunner {
     private static final String TAG = "SoundKinds";
@@ -99,14 +99,26 @@ final class SoundKindsRunner {
         sends.post(r);
     }
 
-    /** True in the Dev build (the model is there). */
+    private static volatile Boolean avail;
+
+    /** True where the model can run: the class is there (every phone build since Nov 5, not the desktop) and the phone
+     *  is ARM (LiteRT ships only ARM libraries here, DadCraft Oct 31: "ARM only is fine"). Off elsewhere, the sound-kind
+     *  settings stay hidden. */
     static boolean available() {
-        try {
-            Class.forName(MODEL_CLASS);
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
+        Boolean a = avail;
+        if (a == null) {
+            String[] abis = android.os.Build.SUPPORTED_ABIS;
+            boolean arm = abis != null && abis.length > 0 && abis[0] != null && abis[0].startsWith("arm");
+            boolean found;
+            try {
+                Class.forName(MODEL_CLASS);
+                found = true;
+            } catch (ClassNotFoundException e) {
+                found = false;
+            }
+            avail = a = arm && found;
         }
+        return a;
     }
 
     static boolean enabled(Context c) {

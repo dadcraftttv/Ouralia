@@ -164,8 +164,9 @@ PHONE_KINDS = [("voices", ["voices"]), ("music", ["music", "singing"]), ("traffi
                ("water", ["water"]), ("steps", ["steps"]), ("quiet", ["quiet"])]   # step 4c: singing folded into music
 
 def export(path, labels):
-    """The Dev app's files (app/src/dev/assets/sound_kinds): the model, and each kind's class numbers, one line each."""
-    dest = os.path.join(HERE, "..", "..", "app", "src", "dev", "assets", "sound_kinds")
+    """The app's files (app/src/main/assets/sound_kinds, in every build since Nov 5): the model, and each kind's class
+    numbers, one line each."""
+    dest = os.path.join(HERE, "..", "..", "app", "src", "main", "assets", "sound_kinds")
     os.makedirs(dest, exist_ok=True)
     with open(path, "rb") as f, open(os.path.join(dest, "yamnet.tflite"), "wb") as g:
         g.write(f.read())

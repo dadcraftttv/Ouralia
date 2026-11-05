@@ -1,4 +1,4 @@
-Sound kinds (step 4c, Ouralia Dev only; docs/design/sound-kinds.md)
+Sound kinds (step 4c; in every build since Nov 5, ARM phones only; docs/design/sound-kinds.md)
 
 yamnet.tflite: YAMNet, Google (tensorflow/models, research/audioset/yamnet), the "classification-tflite" v1 model
 from Kaggle (google/yamnet). Licensed under the Apache License, Version 2.0:

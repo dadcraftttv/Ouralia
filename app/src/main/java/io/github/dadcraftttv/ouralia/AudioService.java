@@ -121,7 +121,7 @@ public class AudioService extends Service {
     /** The room listener's judgements (dcs_listen~): talking, music, traffic, wind, crowd, twice a second. */
     private static final String ROOM_KIND = "room_kind", ROOM_FEAT = "room_feat";
     private static final RoomListener room = new RoomListener();
-    /** Sound kinds (Oct 31, step 4c, Dev only): the patch's mic ring has a new segment (SoundKindsRunner). */
+    /** Sound kinds (Oct 31, step 4c): the patch's mic ring has a new segment (SoundKindsRunner). */
     private static final String SK_READY = "sk_ready";
     static final String[] ROOM_KIND_NAMES = {"talking", "music", "traffic", "wind", "crowd"};
 

@@ -53,7 +53,8 @@ Step 12). Next: his sink listen on the new build. **One switch BUILT Nov 5** (ma
 the seven sit under Mixed Surroundings, each on by default with its own switch; Underwater on = Deeper (design/sound-kinds.md
 Step 13). His listen next: Mixed on with nothing else touched should bring them all. **Presets BUILT Nov 5** ("lets move on to step 3", after
 the RjDj question): your own presets carry Mixed and its seven; built-ins and Realms leave them (design/sound-kinds.md
-Step 14).
+Step 14). **In every build Nov 5** ("bring it in"): the classifier left Ouralia Dev for the release app, ARM
+phones only (design/sound-kinds.md Step 15).
 
 Order (DadCraft, Oct 22): the reviews' release and code-health points first, MainActivity's split chief among them.
 
