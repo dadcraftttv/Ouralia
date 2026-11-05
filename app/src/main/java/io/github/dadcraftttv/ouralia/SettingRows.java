@@ -193,7 +193,7 @@ final class SettingRows {
         Param moversSwitch = Params.byId(Params.moversSwitchId(section.id));
         Param onSwitch = Params.onSwitch(section);   // (both sit on the card's header)
         for (Param p : Params.ALL) {
-            if (p.section.equals(section.id) && p.moverOf == null && p != moversSwitch && p != onSwitch
+            if (p.section.equals(section.id) && p.moverOf == null && p.under == null && p != moversSwitch && p != onSwitch
                     && !(p.soundKinds && !SoundKindsRunner.available())) {
                 if (p.id.equals("music_key")) {   // Key and Scale: two tiles side by side, each opening a sheet
                     a.choiceUi.addKeyScaleTiles(body);
@@ -214,6 +214,7 @@ final class SettingRows {
                     continue;
                 }
                 addRow(body, p);
+                addUnderRows(body, p);
                 if (p.id.equals("tempo_bpm")) {
                     addTapTempo(body);
                 }
@@ -457,6 +458,25 @@ final class SettingRows {
         });
     }
 
+    /** The sub-switches under a master toggle, indented and compact, faded while it is off (still settable). */
+    private void addUnderRows(LinearLayout parent, Param master) {
+        LinearLayout box = null;
+        for (Param c : Params.ALL) {
+            if (master.id.equals(c.under) && !(c.soundKinds && !SoundKindsRunner.available())) {
+                if (box == null) {
+                    box = new LinearLayout(a);
+                    box.setOrientation(LinearLayout.VERTICAL);
+                    box.setPadding(a.dp(16), 0, 0, a.dp(4));
+                }
+                addRow(box, c, true);
+            }
+        }
+        if (box != null) {
+            parent.addView(box);
+            fadedUnless.put(box, master.id);
+        }
+    }
+
     /** The movement, speed and depth controls of one slider's mover, indented under it. */
     private void addMoverRows(LinearLayout parent, String sectionId, Param slider) {
         LinearLayout box = new LinearLayout(a);
@@ -472,8 +492,10 @@ final class SettingRows {
         moverUis.add(new MoverUi(sectionId, slider.id, box, details));
     }
 
-    /** Hides mover controls whose section has its Movers off; hides speed and depth while a mover is Off. */
+    /** Hides mover controls whose section has its Movers off; hides speed and depth while a mover is Off. Also fades
+     *  sub-switches whose master toggle is off. */
     void updateMoverUi() {
+        updateFadedRows();
         for (MoverUi m : moverUis) {
             boolean on = ParamStore.get(Params.moversSwitchId(m.sectionId)) >= 0.5f;
             boolean moving = Math.round(ParamStore.get(Params.moverId(m.paramId, "mv"))) != 0;

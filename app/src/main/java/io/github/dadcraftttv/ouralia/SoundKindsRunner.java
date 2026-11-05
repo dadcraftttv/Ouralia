@@ -56,11 +56,11 @@ final class SoundKindsRunner {
     static final String TRAFFIC_ID = "traffic_pass", FLOW_ID = "traffic_flow";
 
     static boolean flowEnabled() {
-        return available() && ParamStore.get(FLOW_ID) >= 0.5f;
+        return mixedEnabled() && ParamStore.get(FLOW_ID) >= 0.5f;
     }
 
     static boolean trafficEnabled() {
-        return available() && ParamStore.get(TRAFFIC_ID) >= 0.5f;
+        return mixedEnabled() && ParamStore.get(TRAFFIC_ID) >= 0.5f;
     }
 
     /** Both traffic states in one: pass + 4 * flow, each 0 off/reset, 1 listening, 2 permitted (pass) or settled
@@ -129,24 +129,30 @@ final class SoundKindsRunner {
     }
 
     static boolean roomEnabled() {
-        return available() && ParamStore.get(ROOM_ID) >= 0.5f;
+        return mixedEnabled() && ParamStore.get(ROOM_ID) >= 0.5f;
     }
 
     /** Mind the Gap (Nov 1, step 6): while people talk the chimes hold still and answer in the pauses. */
     static final String GAPS_ID = "voice_gaps";
 
     static boolean gapsEnabled() {
-        return available() && ParamStore.get(GAPS_ID) >= 0.5f;
+        return mixedEnabled() && ParamStore.get(GAPS_ID) >= 0.5f;
     }
 
     static final String WATER_ID = "water_trail";
     /** Mixed Surroundings (Nov 4): several kinds at once each count (SoundKinds.mixed). */
     static final String MIXED_ID = "sk_mixed";
+
+    /** The one switch (DadCraft, Nov 5): the seven sound-kind responses act only while Mixed Surroundings is on, each
+     *  still with its own sub-switch (on by default). */
+    static boolean mixedEnabled() {
+        return available() && ParamStore.get(MIXED_ID) >= 0.5f;
+    }
     /** Each judgement's seven scores go here (the service: SessionLog.kinds), so real mixes can be replayed. */
     static volatile java.util.function.Consumer<float[]> scoresSink;
 
     static boolean waterEnabled() {
-        return available() && ParamStore.get(WATER_ID) >= 0.5f;
+        return mixedEnabled() && ParamStore.get(WATER_ID) >= 0.5f;
     }
 
     /** Called with lock held: the value to send if it changed (Music off and no ears too), else -1. The caller
@@ -171,8 +177,8 @@ final class SoundKindsRunner {
      *  the music and beat (never the mic) turn muffled and wobble; its own setting, independent of the trail. */
     static final String UW_ID = "underwater";
 
-    static int uwEnabled() {
-        return available() ? Math.max(0, Math.min(2, Math.round(ParamStore.get(UW_ID)))) : 0;
+    static int uwEnabled() {   // (on = Deeper since Nov 5, "Underwater as Deeper"; the patch still knows 1 Gentle)
+        return mixedEnabled() && ParamStore.get(UW_ID) >= 0.5f ? 2 : 0;
     }
 
     /** Called with lock held, like {@link #waterTick}: the style to send if it changed (0 = water over, Music off,
@@ -198,7 +204,7 @@ final class SoundKindsRunner {
     static final String BIRDS_ID = "birds_lift";
 
     static boolean birdsEnabled() {
-        return available() && ParamStore.get(BIRDS_ID) >= 0.5f;
+        return mixedEnabled() && ParamStore.get(BIRDS_ID) >= 0.5f;
     }
 
     /** Called with lock held, like {@link #waterTick}: the value to send if it changed, else -1. */
@@ -231,7 +237,7 @@ final class SoundKindsRunner {
     /** Called each tick of the sound's loop: Make Room for Music, Mind the Gap or Water Leaves a Trail changed (row, preset, reset):
      *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
     static void settingsTick() {
-        SoundKinds.mixed = available() && ParamStore.get(MIXED_ID) >= 0.5f;
+        SoundKinds.mixed = mixedEnabled();
         boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled(), birds = birdsEnabled(), traffic = trafficEnabled(),
                 flow = flowEnabled();
         int uw = uwEnabled();

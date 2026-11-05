@@ -968,3 +968,16 @@ the clips for some reason not seen yet (the room, the phone's mic chain): his ne
 enough or `PRESENT_MIN` wants tuning for water. Also seen: voices holds YAMNet's Crowd (64) and Hubbub (65), so the
 voices blips over the sink may be those. The old listener's word left the Now line (DadCraft: "take the old
 listener's word off"); Diagnostics and the event log keep its scores.
+
+## Step 13: the one switch (Claude Code, Nov 5; Dev only)
+
+DadCraft (Nov 5): "go ahead and start on the one switch plan", choosing the master-switch way: Mixed Surroundings
+turns the seven responses on, each keeps its own switch (on Nov 1 he wanted Make Room for Music "as long the user can
+turn it on or off as they like"). `Param.under("sk_mixed")` marks Make Room for Music, Mind the Gap, Traffic Passes
+Through, Traffic Flow, Water Leaves a Trail, Underwater and Birds Lift the Chimes: SettingRows draws them compact and
+indented under Mixed Surroundings, faded while it is off (still settable); each `SoundKindsRunner.*Enabled()` needs
+`mixedEnabled()` too, so with Mixed off none acts and the runner doesn't listen for them. Their defaults are now on
+(existing installs keep stored values; DadCraft's Moto keeps his). Underwater became a switch, on = Deeper ("Underwater
+as Deeper"): a stored Gentle (1) or Deeper (2) loads as on; the patch still has Gentle, unused, for now. Mixed itself
+stays off by default. Tests: J (the seven under it, on by default, Underwater a switch, Deeper clamps to on), J2
+(Mixed off: none act; on: all, Underwater 2; one sub-switch off turns only that one off; made to fail once).

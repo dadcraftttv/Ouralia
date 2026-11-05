@@ -84,8 +84,8 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
         &&"music".equals(stereo.section)&&!stereo.inPreset&&!stereo.randomizable,
         "Music in Stereo: Dev Music switch, off, sent to Pd, outside presets and dice");
     Param waterSetting=Params.byId("water_trail");
-    check(waterSetting!=null&&waterSetting.def==0f&&waterSetting.toggle&&!waterSetting.sendToPd
-        &&!waterSetting.inPreset&&!waterSetting.randomizable,"water switch: off, app-controlled, outside presets and dice");
+    check(waterSetting!=null&&waterSetting.def==1f&&"sk_mixed".equals(waterSetting.under)&&waterSetting.toggle&&!waterSetting.sendToPd
+        &&!waterSetting.inPreset&&!waterSetting.randomizable,"water switch: on under Mixed Surroundings, app-controlled, outside presets and dice");
     k.reset(); for(int i=0;i<12;i++) k.judge(sc(5,60));
     check(!k.water(),"water: 12/32 below 40 percent");
     k.judge(sc(5,60)); check(k.water(),"water: 13/32 turns on");
@@ -99,8 +99,8 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     check(held,"water: half the window holds on without flapping");
     k.reset(); check(!k.water(),"reset forgets water");
     Param birdsSetting=Params.byId("birds_lift");
-    check(birdsSetting!=null&&birdsSetting.def==0f&&birdsSetting.toggle&&!birdsSetting.sendToPd
-        &&!birdsSetting.inPreset&&!birdsSetting.randomizable,"birds switch: off, app-controlled, outside presets and dice");
+    check(birdsSetting!=null&&birdsSetting.def==1f&&"sk_mixed".equals(birdsSetting.under)&&birdsSetting.toggle&&!birdsSetting.sendToPd
+        &&!birdsSetting.inPreset&&!birdsSetting.randomizable,"birds switch: on under Mixed Surroundings, app-controlled, outside presets and dice");
     for(int i=0;i<12;i++) k.judge(sc(4,60));
     check(!k.birds(),"birds: 12/32 below 40 percent");
     k.judge(sc(4,60)); check(k.birds()&&!k.water(),"birds: 13/32 turns on (water stays off)");
@@ -113,12 +113,13 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     check(held,"birds: calls with quiet gaps (a third of the window) hold on without flapping");
     k.reset(); check(!k.birds(),"reset forgets birds");
     Param uw=Params.byId("underwater");
-    check(uw!=null&&uw.def==0f&&uw.max==2f&&uw.choices!=null&&uw.choices.length==3&&!uw.sendToPd
-        &&!uw.inPreset&&!uw.randomizable&&uw.soundKinds,"underwater: Off/Gentle/Deeper, off, app-controlled, outside presets and dice");
+    check(uw!=null&&uw.def==1f&&uw.max==1f&&uw.toggle&&uw.choices==null&&"sk_mixed".equals(uw.under)&&!uw.sendToPd
+        &&!uw.inPreset&&!uw.randomizable&&uw.soundKinds,"underwater: a switch (on = Deeper) under Mixed Surroundings, outside presets and dice");
+    check(uw.clamp(2f)==1f,"a stored Deeper loads as on");
     Param trafficSetting=Params.byId("traffic_pass");
-    check(trafficSetting!=null&&trafficSetting.def==0f&&trafficSetting.toggle&&!trafficSetting.sendToPd
+    check(trafficSetting!=null&&trafficSetting.def==1f&&"sk_mixed".equals(trafficSetting.under)&&trafficSetting.toggle&&!trafficSetting.sendToPd
         &&trafficSetting.soundKinds&&trafficSetting.dcs&&"music".equals(trafficSetting.section)&&!trafficSetting.inPreset&&!trafficSetting.randomizable,
-        "traffic pass: independent Dev Music switch, off, outside presets and dice");
+        "traffic pass: Dev Music sub-switch under Mixed Surroundings, on, outside presets and dice");
     k.reset(); k.judge(sc(3,19),0); k.judge(sc(3,19),250);
     check(!k.trafficAllowed(),"traffic: 0.19 cannot enter");
     k.judge(sc(3,20),500); check(!k.trafficAllowed(),"traffic: one qualifying lead cannot enter");
@@ -144,6 +145,13 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     Param mixSetting=Params.byId("sk_mixed");
     check(mixSetting!=null&&mixSetting.def==0f&&mixSetting.toggle&&!mixSetting.sendToPd&&!mixSetting.inPreset,
         "mixed switch: off, app-controlled, outside presets");
+    // The one switch (Nov 5): the seven responses act only under Mixed Surroundings, each with its own sub-switch
+    String[] subs={"room_make","voice_gaps","traffic_pass","traffic_flow","water_trail","underwater","birds_lift"};
+    java.util.List<String> under=new java.util.ArrayList<>();
+    for(Param p:Params.ALL) if("sk_mixed".equals(p.under)) under.add(p.id);
+    check(under.equals(java.util.Arrays.asList(subs))||new java.util.HashSet<>(under).equals(new java.util.HashSet<>(java.util.Arrays.asList(subs))),
+        "exactly the seven responses sit under Mixed Surroundings: "+under);
+    for(String id:subs){ Param p=Params.byId(id); check(p.def==1f&&p.toggle,"sub-switch on by default: "+id); }
     for(boolean mx:new boolean[]{false,true}){
       SoundKinds.mixed=mx; SoundKinds mq=new SoundKinds(kinds);
       // talk by a fountain: voices lead three judgements in four, the water always there under them

@@ -234,37 +234,42 @@ final class Params {
             // back 6 dB and chimes need bigger sounds. A setting since Nov 1 (DadCraft: "i'm fine with that level of pull
             // back as long the user can turn it on or off as they like"), off by default. On, it listens by itself (no
             // Sound kinds switch needed). Only where sound kinds can run, kept out of presets and the dice.
-            new Param("room_make", "Make Room for Music (music playing in the room: the music and beat step back)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
+            new Param("room_make", "Make Room for Music (music playing in the room: the music and beat step back)", 0f, 1f, 1f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().under("sk_mixed"),
             // Mind the Gap (DadCraft, Nov 1, step 6: "go with 2"): while sound kinds hears people talking, the
             // chimes and room bells hold still and the chords and sections wait, then in each pause after someone
             // speaks 2-3 chimes answer in key. Off by default, only where sound kinds can run, like Make Room.
-            new Param("voice_gaps", "Mind the Gap (people talking: the chimes wait, then answer in the pauses)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
+            new Param("voice_gaps", "Mind the Gap (people talking: the chimes wait, then answer in the pauses)", 0f, 1f, 1f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().under("sk_mixed"),
             // Fixed music places (DadCraft, Nov 3), independent of presets and dice. No classifier needed.
             new Param("music_stereo", "Music in Stereo", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPreset().soundKinds(),
-            new Param("traffic_pass", "Traffic Passes Through", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().dcs(),
+            new Param("traffic_pass", "Traffic Passes Through", 0f, 1f, 1f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().under("sk_mixed").dcs(),
             // Traffic Flow (Nov 3): in a settled traffic scene a sustained lull eases the beat down 12 dB.
-            new Param("traffic_flow", "Traffic Flow", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().dcs(),
+            new Param("traffic_flow", "Traffic Flow", 0f, 1f, 1f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().under("sk_mixed").dcs(),
             // Water only extends a chime already earned by a sudden sound. Independent of presets and dice.
-            new Param("water_trail", "Water Leaves a Trail (water heard: at least two softer notes follow a chime)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
+            new Param("water_trail", "Water Leaves a Trail (water heard: at least two softer notes follow a chime)", 0f, 1f, 1f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().under("sk_mixed"),
             // Underwater (DadCraft, Nov 2: "can we build both? just so i could test them side by side"): while water is
             // heard the music and beat, never the mic, turn muffled with a slow wobble. Gentle and Deeper to compare.
-            new Param("underwater", "Underwater (water heard: the music goes muffled and wobbly)", 0f, 2f, 0f, "",
-                    Param.Curve.LINEAR).choices("Off", "Gentle", "Deeper").inSection("music").noPd().noPreset().soundKinds(),
+            // Since Nov 5 (DadCraft's one-switch plan: "Underwater as Deeper"): on means Deeper; Gentle stays in the
+            // patch, unused. A stored Gentle or Deeper loads as on.
+            new Param("underwater", "Underwater (water heard: the music goes muffled and wobbly)", 0f, 1f, 1f, "",
+                    Param.Curve.LINEAR).toggle().inSection("music").noPd().noPreset().soundKinds().under("sk_mixed"),
             // Birds Lift the Chimes (DadCraft, Nov 2: "do birds lift the Chimes"): while sound kinds hears birds, the
             // chimes already earned turn to high Glass, a little softer. Birds alone play nothing. Independent.
             // Mixed Surroundings (Nov 4, the review's item 3): a mix (talk by a fountain, birds by a road) counts each
             // kind that is clearly there, not only the loudest; Water Leaves a Trail and Birds Lift the Chimes take
             // turns rather than stack. Off by default until DadCraft's listen.
+            // One switch (DadCraft, Nov 5: "go ahead and start on the one switch plan", the master-switch way): the
+            // seven responses marked under("sk_mixed") act only while this is on, each on by default with its own
+            // switch so a listener can still turn one off (Make Room for Music: "as long the user can turn it on or off").
             new Param("sk_mixed", "Mixed Surroundings (several sounds heard at once each shape the music)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
-            new Param("birds_lift", "Birds Lift the Chimes (birds heard: earned chimes turn to high glass)", 0f, 1f, 0f, "",
-                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds(),
+            new Param("birds_lift", "Birds Lift the Chimes (birds heard: earned chimes turn to high glass)", 0f, 1f, 1f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().noPreset().soundKinds().under("sk_mixed"),
             // Notes only for bigger sounds (DadCraft, Oct 30: typing "just sounds like it's random notes responding with
             // no musical semblance"): small sudden sounds get no chime or found bell, only the found drums and groove.
             // On by default at his 20.5 dB (Oct 31), still a slider: "each manufacturer could set mic values differently".
