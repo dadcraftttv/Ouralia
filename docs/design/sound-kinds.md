@@ -1144,3 +1144,37 @@ Silence score tells a quiet room from a far road or tap.
 - **4d, Dev behind a switch.** The session log records the layer's answer so the replay tool can tune it on his
   sessions. **4e, his listen.**
 Singing/whistling vs music is a later question for the same kind of layer (parked by him, Nov 5).
+
+### Step 4a-4c, first results (Claude Code, Nov 6; bench only, nothing in the app)
+
+- **4a:** `tools/sound_kinds/embed_model.py` writes YAMNet with the embedding as a second output (scores identical,
+  label list kept).
+- **His recordings** (`~/Downloads/step4-recordings`, never committed or trained on): the Moto's own recorder filters
+  out steady hiss (noise reduction), so its far tap matched his empty office in every band. Re-recorded raw (a recorder
+  app on Voice recognition, Ouralia's own source): the office is steady at -62 dB; the far tap sat only 1-2 dB over it
+  and YAMNet heard no water: below anything worth answering. A distance sweep and more rooms are still to come; the
+  road waits ("i can't get to the road now").
+- **4b:** Commons has two usable real quiet rooms, so on his pick `tools/sound_kinds/step4_fetch.py` takes room tones
+  from Freesound with his API key (`~/.config/ouralia/freesound_key`, never in the repo), CC0 and CC-BY only, at most 3
+  per uploader, people/music/rain/sci-fi left out by name and tags: 61 rooms from 44 uploaders (houses, kitchens with
+  fridges, offices, bedrooms, a few computer rooms) and 12 real far-traffic clips heard from inside, for checking.
+  `step4_clips.json` lists each clip's uploader, licence and page (CC-BY's attribution; NOTICE when weights ship).
+- **4c:** `tools/sound_kinds/step4_train.py`: rooms at a phone room level (-65 to -45 dB), the bench's close clips
+  mixed in at 0-20 dB over the room, the Moto's path, five folds (rooms split by uploader, sounds by clip).
+  Held out, at 6-10 dB over the room:
+
+  | | 0.05 (Now line) | 0.2 (Mixed) | yes/no layer | seven-answer layer |
+  |---|---|---|---|---|
+  | quiet rooms named a sound | 14% | 2% | 5% | 4% |
+  | sounds found | 87-91% | 65-72% | 87-92% | 86-90% |
+  | traffic / water found | 67% / 87% | 18% / 58% | 71% / 92% | |
+
+  At the same quiet cost as the yes/no layer, a lower cutoff (0.109) finds 80% (traffic 42%, water 75%): the layer
+  earns its place on exactly the kinds the app misses. But in the windows only the layer finds, YAMNet's own top kind
+  is right just 55-58%, so a yes/no layer would add as many wrong names as right ones. The seven-answer layer (quiet +
+  the six kinds, softmax on the embedding, ~28 KB of weights) names them right 73-78% there (90-91% over all it hears).
+  His office stays quiet (2% of windows); his 1 dB far tap mostly too (8%). The real far-traffic clips: about what
+  0.05 finds, far more than 0.2.
+- **Not yet real:** the mixes model distance only as level; real distance also dulls the highs and adds the room's
+  echo. Next: that in the mixes, his distance sweep and more rooms, then 4d (Dev switch, the layer's answer in the
+  session log).
