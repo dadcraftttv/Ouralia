@@ -1074,3 +1074,38 @@ at phone+n), and a level gate can't separate them: a quiet room and a distant ro
 takes the distance gains back before it saves the rooms. **So the raise only works if quiet is judged from the
 un-raised level** (as Calm Builds already does) or from YAMNet's scores on the un-raised window (a second inference, about
 +3% of a core). That is a design choice for DadCraft before anything goes into the app.
+
+### Step 7, the two quiet routes checked (Claude Code, Nov 6; bench only, nothing in the app)
+
+DadCraft first agreed to Claude's pick, judging quiet from the un-raised level ("i agree with you for step 7"). It failed on
+his own sessions before any code was written. The app's adaptive floor (`hear` mic_db - room_db; 7 sessions, 12,978
+judgements) climbs under steady sound. Water sits a median 5.9 dB over it and voices 3.8 dB, the same as quiet rooms
+(3.6 dB); under 6 dB over the floor: quiet 59%, water 53%, voices 66%. Absolute level overlaps too (quiet median
+-51 dBFS, named kinds -44). He then said yes to benching the second pass ("yes, run that check").
+`bench.py --norm 10 --pass2 [--sil T] [--keep R]` adds phone+2/far+2: raised as +n, but a second YAMNet pass on the
+un-raised window makes it quiet when Silence is its top label (or its Silence score >= T). With `--keep R`, a window
+the un-raised pass calls quiet from weak scores also needs a raised score of R or more to count.
+`BENCH_QUIET_DEBUG=1` prints the quiet rooms' strongest raised scores.
+
+| max scores | traffic | water | wind | steps | real quiet room | made quiet rooms |
+|---|---|---|---|---|---|---|
+| far (today) | 1/12 | 9/17 | 2/12 | 9/12 | 1/1 | 9/9 |
+| far+n (raise only) | 12/12 | 15/17 | 6/12 | 11/12 | 1/1 | 8/9 |
+| far+2, Silence top label | 6/12 | 14/17 | 2/12 | 8/12 | 1/1 | 9/9 |
+| far+2, Silence >= 0.2 / 0.4 | 8/12, 9/12 | 15/17 | 3/12 | 9-10/12 | 1/1 | 9/9 |
+| **far+2, Silence >= 0.6** | **12/12** | **15/17** | 5/12 | **11/12** | 1/1 | **9/9** |
+| phone (today) | 12/12 | 16/17 | 6/12 | 9/12 | 1/1 | 7/9 |
+| phone+2, Silence >= 0.6 | 12/12 | 16/17 | 5/12 | 11/12 | **0/1** | 6/9 |
+| phone+2, Silence >= 0.6, keep 0.15-0.35 | 12/12 | 16/17 | 5/12 | 9/12 | 1/1 | 7/9 |
+| far+2, Silence >= 0.6, keep 0.15-0.35 | 6-8/12 | 14-15/17 | 1-2/12 | 9-10/12 | 1/1 | 9/9 |
+
+At phone level the raised library room reads water 0.26 and voices 0.20 (un-raised: voices 0.15), enough for "clearly
+there" water. The fan reads birds 0.11; the made rooms stay near 0.
+**His rooms don't have the bench's Silence scores.** In his sessions, the share of quiet judgements with Silence >= 0.6
+is 0-33% (6, 24, 8, 5, 0, 33, 19%); with >= 0.2 it is 5-95%. The made rooms are pure noise that YAMNet calls Silence
+outright, so the bench flatters the rule. In his house most quiet moments would get the plain raise, which is the
+cost the second pass was meant to remove.
+**Reading:** neither route keeps real quiet rooms quiet while winning back distance. Telling a quiet room from a far
+road isn't in the level or YAMNet's Silence score; it needs a trained layer on YAMNet's embeddings (accuracy step 4),
+and real quiet-room clips to train and check it on: public recordings, or ones DadCraft makes himself outside the app
+(the app never records). Step 7 is set aside; the bench flags stay for step 4.

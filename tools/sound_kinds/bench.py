@@ -34,6 +34,12 @@ NORM_TARGET = -35
 NORM_CAP = float(sys.argv[sys.argv.index("--norm") + 1]) if "--norm" in sys.argv else None
 NORM_GATE = float(sys.argv[sys.argv.index("--gate") + 1]) if "--gate" in sys.argv else -999   # (windows under it stay)
 CONDS = ("clean", "phone", "far") + (("phone+n", "far+n") if NORM_CAP is not None else ())
+# --pass2 (Nov 6, step 7's second pass): phone+2/far+2 raise as +n does, but quiet comes from a second YAMNet pass on the
+# un-raised window: quiet when Silence is its top label (or its Silence score >= --sil T); else the raised window names it
+PASS2 = NORM_CAP is not None and "--pass2" in sys.argv
+SIL_T = float(sys.argv[sys.argv.index("--sil") + 1]) if "--sil" in sys.argv else None
+KEEP_R = float(sys.argv[sys.argv.index("--keep") + 1]) if "--keep" in sys.argv else None   # (un-raised weak: raised needs R)
+CONDS += ("phone+2", "far+2") if PASS2 else ()
 
 def fetch(url, path):
     if not os.path.exists(path):
@@ -214,18 +220,29 @@ def main():
         except Exception as e:                            # a dead link or a decode failure: report, carry on
             print("skip %s: %s" % (c["name"][:50], str(e)[:80])); continue
         absolute = c["kind"] in ("quiet", "info")         # quiet rooms keep their own level
-        for cond, level in (("clean", -20), ("phone", -35), ("far", -50), ("phone+n", -35), ("far+n", -50)):
+        for cond, level in (("clean", -20), ("phone", -35), ("far", -50), ("phone+n", -35), ("far+n", -50),
+                            ("phone+2", -35), ("far+2", -50)):
             if cond not in CONDS:
                 continue
             far = cond.startswith("far")
             y = (x if absolute else at(x, -20)) if cond == "clean" else phone(x, db(x) - 15 * far if absolute else level)
             ws = windows(y, absolute)
-            if cond.endswith("+n"):
+            raw = [yam(w) for w in ws] if cond.endswith("+2") else None
+            if cond.endswith("+n") or cond.endswith("+2"):
                 ws = [w * 10 ** (min(NORM_CAP, max(0.0, NORM_TARGET - db(w))) / 20 * (db(w) >= NORM_GATE)) for w in ws]
             scores = [yam(w) for w in ws]
+            if raw:                                       # the un-raised pass says quiet: a Silence-only window
+                q = [(r.argmax() == silence) if SIL_T is None else (r[silence] >= SIL_T) for r in raw]
+                if KEEP_R is not None:                    # un-raised quiet only from weak scores: raised must be clear
+                    q = [qq or (name(r, "max") == "quiet" and max(sc[cols[k]].max() for k in KINDS if k != "quiet") < KEEP_R)
+                         for qq, r, sc in zip(q, raw, scores)]
+                scores = [np.where(np.arange(len(sc)) == silence, 1.0, 0.0) if qq else sc for sc, qq in zip(scores, q)]
             if c["kind"] == "info" and cond == "phone":
                 top = Counter(labels[s.argmax()] for s in scores).most_common(1)[0][0]
                 info.append("%s -> %s" % (c["name"], top))
+            if os.environ.get("BENCH_QUIET_DEBUG") and c["kind"] == "quiet" and cond in ("phone+2", "phone"):
+                top = sorted(((sc[cols[k]].max(), k) for sc in scores for k in KINDS if k != "quiet"), reverse=True)[:3]
+                print("DBG %-7s %-30s %s" % (cond, c["name"][:30], " ".join("%s %.2f" % (k, v) for v, k in top)))
             for how in ("max", "sum"):
                 names = [name(s, how) for s in scores]
                 res.append((c, cond, how, Counter(names).most_common(1)[0][0], names.count(c["kind"]) / len(names)))
