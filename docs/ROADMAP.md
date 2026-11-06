@@ -30,7 +30,8 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   scored 0.1-0.26). The replay tool is BUILT (Nov 5, `tools/replay_kinds.py`, design/sound-kinds.md Step 16), and the
   windows are now measured in time: his sink replayed with water's own minimum at 0.12 holds water 40 s instead of 14 s.
   Checked over his other sessions (Nov 5): no new water in 4 of 6; the noon one's extra water looks like a real tap.
-  Next: his sink listen on this build (Mixed and Session Log on), then replay it at 0.2 and 0.12.
+  His sink listen (Nov 6, 20261106-084028, phone next to the sink): water held 3:07 unbroken, the same at 0.2 and
+  0.12, so 0.12 stays unapplied (it only matters for a far tap, which step 7 couldn't fix either).
 - ~~Raising quiet sound before YAMNet~~ (accuracy step 7) **SET ASIDE Nov 6** (design/sound-kinds.md "Step 7, the
   two quiet routes checked"): neither the un-raised level (his sessions: the floor climbs under steady sound) nor a
   second YAMNet pass (his quiet rooms rarely reach Silence 0.6) keeps real quiet rooms quiet while winning back
