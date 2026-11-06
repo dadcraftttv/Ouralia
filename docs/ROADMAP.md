@@ -31,10 +31,10 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   windows are now measured in time: his sink replayed with water's own minimum at 0.12 holds water 40 s instead of 14 s.
   Checked over his other sessions (Nov 5): no new water in 4 of 6; the noon one's extra water looks like a real tap.
   Next: his sink listen on this build (Mixed and Session Log on), then replay it at 0.2 and 0.12.
-- **Raising quiet sound before YAMNet** (accuracy step 7, benched Nov 5, design/sound-kinds.md): up to 10 dB wins back
-  distant traffic/water/wind/steps, but raised quiet rooms get named as sounds. **His call:** judge quiet from the
-  un-raised mic level (nearly free) or a second YAMNet pass (~+3% of a core). Later, if singing/sink errors remain:
-  YAMNet embeddings with a small trained layer (step 4 of the list). Wind and singing only where real listening shows a problem (Codex, Nov 5).
+- ~~Raising quiet sound before YAMNet~~ (accuracy step 7) **SET ASIDE Nov 6** (design/sound-kinds.md "Step 7, the
+  two quiet routes checked"): neither the un-raised level (his sessions: the floor climbs under steady sound) nor a
+  second YAMNet pass (his quiet rooms rarely reach Silence 0.6) keeps real quiet rooms quiet while winning back
+  distance. Next for distance and the sink: YAMNet embeddings with a small trained layer (step 4 of the list), his call. Wind and singing only where real listening shows a problem (Codex, Nov 5).
 - **Singing and whistling count as music in the room** (seen Nov 5 on rc6: whistling read as music 0.59-0.98 and
   birds 0.33-0.80). The app's music group holds YAMNet's singing classes, and nothing tells your own voice from a
   radio, so with Mixed Surroundings on, ~8 s of singing in 20 can trigger Make Room for Music (the music and beat
