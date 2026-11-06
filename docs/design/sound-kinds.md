@@ -1205,3 +1205,36 @@ doesn't add them.
 **Cost:** quiet rooms named a sound in 6% of windows (0.2: 2%). One judgement doesn't switch a scene (they need ~40%
 of 8 s), so scattered windows may not be heard; 4d's session log will show how often it happens in his house.
 **Next:** his sink sweep and more rooms (real distance); then 4d.
+
+## Step 4d: Hear Far Sounds (Claude Code, Nov 6; Dev only, off by default; DadCraft's listen next)
+
+DadCraft: "go ahead and start on 4d". The layer from 4c is in the app behind **Hear Far Sounds** (`sk_layer`, under
+Mixed Surroundings, off; in presets with Mixed).
+- **The model:** `assets/sound_kinds/yamnet.tflite` is now the embed_model.py copy (the embedding as a second output,
+  int8, scale 0.02233, zero -128): scores identical, 40 bytes bigger. `bench.py --export` writes it that way too.
+  `YamNet.java` runs both outputs (`runForMultipleInputsOutputs`) and dequantizes the embedding.
+- **The layer:** `assets/sound_kinds/layer.bin` (28,712 bytes: 1024 x 7 weights with the standardisation folded in,
+  the bias and the cutoff 0.829 on 1 - P(quiet)), from `step4_train.py --export`; `Layer.java` reads it and gives the
+  seven probabilities (~7k multiply-adds). The Java and numpy probabilities match to 6 decimals on a window of his
+  recording. Without layer.bin sound kinds run as before.
+- **Only shippable clips** (`--ship`): the 4c bench layer had also learned from 15 CC BY-NC clips (ESC-50, Commons)
+  and the CC BY-SA ones; the shipped layer trains only on CC0, public domain and CC BY (58% of the mixes; the Freesound
+  rooms were all CC0/CC BY already). `step4_notice.py --write` puts the 39 CC BY recordings with their creators
+  (fetched once from Commons and Freesound, kept in clips.json "by") into NOTICE.txt. What it costs, held out:
+
+  | heard and named right | 0.2 | layer, all clips | + CC BY-SA 4.0 (`--sa4`) | shipped (CC0/PD/CC BY) |
+  |---|---|---|---|---|
+  | far, 10 dB over the room | 45% | 78% | 78% | 75% |
+  | next room, 10 dB | 33% | 64% | 63% | 59% |
+  | traffic / water / steps, 6-10 dB | 9 / 28 / 22 | 52 / 53 / 82 | 48 / 54 / 78 | 42 / 50 / 76 |
+  | quiet rooms named a sound | 2% | 6% | 6% | 5% |
+
+  His office: 0% in all three. CC BY-SA 4.0 would win back about half of the traffic loss (one-way compatible with
+  GPLv3, as the AudioSet names already are), if he wants it.
+- **What the switch does** (with Mixed on): the kind the layer hears (past its cutoff) also counts as clearly there,
+  beside YAMNet's own 0.2 rule (OR: a mix stays a mix; on the bench the OR adds ~1 point of quiet-room windows and 1-6
+  points of finds over the layer alone), even where YAMNet's top class is Silence; it stands in for quiet or unsure, and
+  the Now line says "Heard: water 0.62 (far)". Mixed off or the switch off: exactly as before.
+- **Session log:** each `kinds` line gets `"l":[...]` (the layer's seven probabilities, NAMES order) with the switch
+  on or off; `replay_kinds.py` reads it ("far layer heard" per kind), follows `sk_layer` from the log, and takes
+  `--layer on|off` and `--set layer_cut=...` (the default cutoff read from layer.bin).

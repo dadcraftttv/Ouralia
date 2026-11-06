@@ -58,6 +58,24 @@ with tempfile.TemporaryDirectory() as d:
     code, out = replay(path, "--mixed", "off")
     check("Mixed Surroundings off (--mixed)" in out and "0:13  water on" in out,
           "--mixed off: water counts while it is the kind, faint or not", out)
+    # Hear Far Sounds (step 4d, Nov 6): the same faint sink, the layer hearing water in it (0.8 against quiet 0.2)
+    rows2 = [{"t": 0.0, "ev": "start", "settings": {"sk_mixed": 1.0, "sk_layer": 1.0}}]
+    for r in rows[1:]:
+        r = dict(r)
+        if r["ev"] == "kinds":
+            r["l"] = [0, 0, 0, 0, 0.8, 0, 0.2] if 10 <= r["t"] < 30 else [0, 0, 0, 0, 0.01, 0, 0.99]
+        rows2.append(r)
+    path2 = os.path.join(d, "20990101-000100.jsonl")
+    with open(path2, "w") as f:
+        f.write("".join(json.dumps(r, separators=(",", ":")) + "\n" for r in rows2))
+    code, out = replay(path2, "--set", "layer_cut=0.5")
+    check(code == 0 and "Hear Far Sounds on (from the log)" in out and "0:13  water on" in out,
+          "the layer's answer is read: with its cutoff at 0.5 the faint sink turns water on at 0:13", out)
+    check(any(l.split()[:1] == ["water"] and l.split()[-2:] == ["->", "40%"] for l in out.splitlines()),
+          "far layer heard: water 40% of the time at that cutoff", out)
+    code, out = replay(path2, "--layer", "off", "--set", "layer_cut=0.5")
+    check("Hear Far Sounds off (--layer)" in out and "0:33  water on" in out and "0:13  water on" not in out,
+          "--layer off: as before, only the clear sink", out)
     code, out = replay(path, "--set", "nonsense=1")
     check(code != 0 and "unknown --set" in out, "an unknown --set is an error", out)
 

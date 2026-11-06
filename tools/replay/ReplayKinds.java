@@ -21,7 +21,9 @@ public final class ReplayKinds {
     static final String[] STATES = {"talking", "room music", "water", "birds", "traffic scene", "traffic pass", "unsure"};
     static final Pattern T = Pattern.compile("\"t\":([0-9.]+)"), EV = Pattern.compile("\"ev\":\"(\\w+)\""),
             V = Pattern.compile("\"v\":\\[([^\\]]*)\\]"), MIXED = Pattern.compile("\"sk_mixed\":([0-9.]+)"),
-            SET_MIXED = Pattern.compile("\"id\":\"sk_mixed\",\"v\":([0-9.]+)"), MIC = Pattern.compile("\"mic_db\":(-?[0-9.]+)"),
+            SET_MIXED = Pattern.compile("\"id\":\"sk_mixed\",\"v\":([0-9.]+)"),
+            L = Pattern.compile("\"l\":\\[([^\\]]*)\\]"), LAYER = Pattern.compile("\"sk_layer\":([0-9.]+)"),
+            SET_LAYER = Pattern.compile("\"id\":\"sk_layer\",\"v\":([0-9.]+)"), MIC = Pattern.compile("\"mic_db\":(-?[0-9.]+)"),
             TEXT = Pattern.compile("\"text\":\"((?:[^\"\\\\]|\\\\.)*)\"");
 
     /** One judgement as logged, or a mark / mixed change / level reading between them. */
@@ -29,6 +31,8 @@ public final class ReplayKinds {
         long ms;
         float[] v;          // the seven scores (null for the other rows)
         Boolean silent;     // "s":1 (null: an older log that didn't keep it)
+        float[] l;          // Hear Far Sounds' layer probabilities (step 4d; null before Nov 6 or without layer.bin)
+        Boolean layer;      // the sk_layer switch at a start or set row
         String mark;
         Boolean mixed;
         Float micDb;
@@ -40,11 +44,16 @@ public final class ReplayKinds {
         final int[] changes = new int[STATES.length];
         final long[] kindMs = new long[SoundKinds.NAMES.length];
         final long[] presentMs = new long[SoundKinds.NAMES.length];
+        final long[] layerMs = new long[SoundKinds.NAMES.length];   // (the layer heard the kind, switch on or off)
         final List<String> timeline = new ArrayList<>();
     }
 
+    static String layerArg;   // --layer on|off (null: as the log says)
+    static float layerCut = Float.NaN;   // --cut: the layer's own cutoff (tools/replay_kinds.py reads it from layer.bin)
+
     public static void main(String[] args) throws Exception {
         String kindsTxt = null, mixedArg = null;
+        float cut = Float.NaN;
         double from = 0, to = Double.MAX_VALUE;
         boolean scores = false, heard = false;
         List<String> sets = new ArrayList<>(), files = new ArrayList<>();
@@ -52,6 +61,8 @@ public final class ReplayKinds {
             switch (args[i]) {
                 case "--kinds": kindsTxt = args[++i]; break;
                 case "--mixed": mixedArg = args[++i]; break;
+                case "--layer": layerArg = args[++i]; break;
+                case "--cut": cut = Float.parseFloat(args[++i]); break;
                 case "--from": from = Double.parseDouble(args[++i]); break;
                 case "--to": to = Double.parseDouble(args[++i]); break;
                 case "--scores": scores = true; break;
@@ -60,6 +71,7 @@ public final class ReplayKinds {
                 default: files.add(args[i]);
             }
         }
+        layerCut = cut;
         String kinds = new String(Files.readAllBytes(Paths.get(kindsTxt)), StandardCharsets.UTF_8);
         for (String f : files) {
             replay(f, kinds, mixedArg, sets, (long) (from * 1000), to == Double.MAX_VALUE ? Long.MAX_VALUE : (long) (to * 1000), scores,
@@ -85,18 +97,24 @@ public final class ReplayKinds {
                     r.v = new float[p.length];
                     for (int i = 0; i < p.length; i++) r.v[i] = Float.parseFloat(p[i]);
                     r.silent = line.contains("\"s\":1") ? Boolean.TRUE : null;
+                    Matcher l = L.matcher(line);
+                    if (l.find()) {
+                        String[] q = l.group(1).split(",");
+                        if (q.length == SoundKinds.NAMES.length) {
+                            r.l = new float[q.length];
+                            for (int i = 0; i < q.length; i++) r.l[i] = Float.parseFloat(q[i]);
+                        }
+                    }
                     break;
                 }
-                case "start": {
-                    Matcher m = MIXED.matcher(line);
-                    if (!m.find()) continue;
-                    r.mixed = Float.parseFloat(m.group(1)) >= 0.5f;
-                    break;
-                }
+                case "start":
                 case "set": {
-                    Matcher m = SET_MIXED.matcher(line);
-                    if (!m.find()) continue;
-                    r.mixed = Float.parseFloat(m.group(1)) >= 0.5f;
+                    boolean start = ev.group(1).equals("start");
+                    Matcher m = (start ? MIXED : SET_MIXED).matcher(line), y = (start ? LAYER : SET_LAYER).matcher(line);
+                    if (m.find()) r.mixed = Float.parseFloat(m.group(1)) >= 0.5f;
+                    if (y.find()) r.layer = Float.parseFloat(y.group(1)) >= 0.5f;
+                    else if (start && r.mixed != null) r.layer = false;   // (a log from before the switch: off)
+                    if (r.mixed == null && r.layer == null) continue;
                     break;
                 }
                 case "hear": {
@@ -129,6 +147,7 @@ public final class ReplayKinds {
             case "quiet_floor": k.quietFloor = v; return true;
             case "strong": k.strong = v; return true;
             case "lead_ratio": k.leadRatio = v; return true;
+            case "layer_cut": k.layerCut = v; return true;
             default:
         }
         if (name.startsWith("present_min.")) {
@@ -166,6 +185,7 @@ public final class ReplayKinds {
     static Run run(List<Row> rows, String kinds, Boolean mixedArg, List<String> sets, long from, long to, boolean guessSilent,
             boolean heard) {
         SoundKinds k = new SoundKinds(kinds);
+        k.layerCut = layerCut;
         for (String s : sets) {
             if (!tune(k, s)) throw new IllegalArgumentException("unknown --set " + s + " (see --help)");
         }
@@ -176,13 +196,16 @@ public final class ReplayKinds {
         float[] mics = new float[5];   // (the last 5 s of mic levels: the loudest is shown, as the Moto's readings drop out)
         Arrays.fill(mics, Float.NaN);
         int micI = 0;
-        SoundKinds.mixed = false;
+        SoundKinds.mixed = SoundKinds.layerOn = false;
+        Boolean layerOn = layerArg == null ? null : layerArg.equals("on");
         for (Row r : rows) {
-            if (r.mixed != null) {
-                SoundKinds.mixed = mixedArg != null ? mixedArg : r.mixed;
+            if (r.mixed != null || r.layer != null) {
+                if (r.mixed != null) SoundKinds.mixed = mixedArg != null ? mixedArg : r.mixed;
+                if (r.layer != null) SoundKinds.layerOn = layerOn != null ? layerOn : r.layer;
                 continue;
             }
             if (mixedArg != null) SoundKinds.mixed = mixedArg;
+            if (layerOn != null) SoundKinds.layerOn = layerOn;
             if (r.micDb != null) {
                 mics[micI++ % mics.length] = r.micDb;
                 continue;
@@ -193,7 +216,7 @@ public final class ReplayKinds {
                 continue;
             }
             boolean silent = r.silent != null ? r.silent : guessSilent && quietLeads(r.v);
-            k.judgeKinds(r.v, silent, r.ms);
+            k.judgeKinds(r.v, silent, r.l, r.ms);
             long step = prev < 0 ? SoundKinds.STEP_MS : Math.max(0, Math.min(SoundKinds.MAX_STEP_MS, r.ms - prev));
             prev = r.ms;
             boolean[] now = states(k);
@@ -203,6 +226,7 @@ public final class ReplayKinds {
             if (inRange) {
                 if (kind >= 0) run.kindMs[kind] += step;
                 for (int i = 0; i < SoundKinds.QUIET; i++) if (k.present(i)) run.presentMs[i] += step;
+                if (k.layerKind() >= 0) run.layerMs[k.layerKind()] += step;
                 for (int i = 0; i < STATES.length; i++) if (now[i]) run.onMs[i] += step;
             }
             for (int i = 0; i < STATES.length; i++) {
@@ -219,7 +243,7 @@ public final class ReplayKinds {
             was = now;
             wasKind = kind;
         }
-        SoundKinds.mixed = false;
+        SoundKinds.mixed = SoundKinds.layerOn = false;
         return run;
     }
 
@@ -240,14 +264,16 @@ public final class ReplayKinds {
             boolean heard) throws Exception {
         List<Row> rows = read(file);
         List<Row> judgements = new ArrayList<>();
-        Boolean logMixed = null;
-        boolean silentLogged = false;
+        Boolean logMixed = null, logLayer = null;
+        boolean silentLogged = false, layerLogged = false;
         for (Row r : rows) {
             if (r.v != null) {
                 judgements.add(r);
                 silentLogged |= r.silent != null;
+                layerLogged |= r.l != null;
             }
             if (r.mixed != null && logMixed == null) logMixed = r.mixed;
+            if (r.layer != null && logLayer == null) logLayer = r.layer;
         }
         String name = Paths.get(file).getFileName().toString();
         if (judgements.isEmpty()) {
@@ -273,6 +299,10 @@ public final class ReplayKinds {
                 clock(end - first), clock(first), judgements.size(),
                 mixed != null ? (mixed ? "on (--mixed)" : "off (--mixed)") : logMixed == null ? "off (not in the log)"
                         : (logMixed ? "on" : "off") + " (from the log)");
+        if (layerLogged) {
+            System.out.printf(Locale.US, "  Hear Far Sounds %s; layer cutoff %.3f%n", layerArg != null ? layerArg + " (--layer)"
+                    : logLayer == null ? "off (not in the log)" : (logLayer ? "on" : "off") + " (from the log)", layerCut);
+        }
         if (steps.length > 0) {
             System.out.printf(Locale.US, "  steps: median %d ms; %d over 0.5 s, longest %.1f s at %s%n", sorted[steps.length / 2],
                     over, longest / 1000.0, clock(longestAt));
@@ -287,15 +317,18 @@ public final class ReplayKinds {
         Run base = run(rows, kinds, mixed, new ArrayList<>(), from, to, !silentLogged, heard);
         Run tuned = sets.isEmpty() ? null : run(rows, kinds, mixed, sets, from, to, !silentLogged, heard);
         for (long m : base.kindMs) span += m;
-        System.out.println("  kind     median   p90   max   clearly there" + (tuned != null ? " (tuned)" : "") + "   heard as the kind");
+        System.out.println("  kind     median   p90   max   clearly there" + (tuned != null ? " (tuned)" : "") + "   heard as the kind"
+                + (layerLogged ? "   far layer heard" + (tuned != null ? " (tuned)" : "") : ""));
         for (int k = 0; k < SoundKinds.NAMES.length; k++) {
             float[] col = new float[inRange.size()];
             for (int i = 0; i < col.length; i++) col[i] = inRange.get(i)[k];
             Arrays.sort(col);
             String present = k == SoundKinds.QUIET ? "-" : pct(base.presentMs[k], span)
                     + (tuned != null ? " -> " + pct(tuned.presentMs[k], span) : "");
-            System.out.printf(Locale.US, "  %-8s %5.2f  %5.2f  %5.2f   %-18s %s%n", SoundKinds.NAMES[k], q(col, 0.5), q(col, 0.9),
-                    q(col, 1), present, pct(base.kindMs[k], span) + (tuned != null ? " -> " + pct(tuned.kindMs[k], span) : ""));
+            String far = !layerLogged || k == SoundKinds.QUIET ? "" : "   " + pct(base.layerMs[k], span)
+                    + (tuned != null ? " -> " + pct(tuned.layerMs[k], span) : "");
+            System.out.printf(Locale.US, "  %-8s %5.2f  %5.2f  %5.2f   %-18s %-18s%s%n", SoundKinds.NAMES[k], q(col, 0.5), q(col, 0.9),
+                    q(col, 1), present, pct(base.kindMs[k], span) + (tuned != null ? " -> " + pct(tuned.kindMs[k], span) : ""), far);
         }
         System.out.println("  state           time on   changes" + (tuned != null ? "     tuned: time on   changes" : ""));
         for (int i = 0; i < STATES.length; i++) {

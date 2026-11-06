@@ -157,8 +157,12 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     String[] subs={"room_make","voice_gaps","traffic_pass","traffic_flow","water_trail","underwater","birds_lift"};
     java.util.List<String> under=new java.util.ArrayList<>();
     for(Param p:Params.ALL) if("sk_mixed".equals(p.under)) under.add(p.id);
-    check(under.equals(java.util.Arrays.asList(subs))||new java.util.HashSet<>(under).equals(new java.util.HashSet<>(java.util.Arrays.asList(subs))),
-        "exactly the seven responses sit under Mixed Surroundings: "+under);
+    java.util.Set<String> want=new java.util.HashSet<>(java.util.Arrays.asList(subs)); want.add("sk_layer");
+    check(new java.util.HashSet<>(under).equals(want),
+        "exactly the seven responses and Hear Far Sounds sit under Mixed Surroundings: "+under);
+    Param far=Params.byId("sk_layer");
+    check(far.def==0f&&far.toggle&&!far.sendToPd&&far.inPreset&&!far.randomizable&&Params.mixedSet("sk_layer"),
+        "Hear Far Sounds (step 4d): off by default, app-controlled, in presets with Mixed, outside dice");
     for(String id:subs){ Param p=Params.byId(id); check(p.def==1f&&p.toggle,"sub-switch on by default: "+id); }
     // In presets since Nov 5 ("lets move on to step 3"): a user's preset carries them, built-ins and Realms never move them
     java.util.List<String> mset=new java.util.ArrayList<>(java.util.Arrays.asList(subs)); mset.add("sk_mixed");
@@ -216,6 +220,41 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     g.judge(sc(494,90)); g.judge(sc(494,90));
     check(!g.unsure()&&g.heardLine().startsWith("Heard: quiet"),"mixed: YAMNet's silence is still quiet ("+g.heardLine()+")");
     SoundKinds.mixed=false;
+    // Hear Far Sounds (accuracy step 4d, Nov 6): the layer file and its answer
+    {
+      int in=1024,out=7; java.nio.ByteBuffer bb=java.nio.ByteBuffer.allocate(12+(in*out+out)*4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+      bb.putInt(in).putInt(out).putFloat(0.5f);
+      for(int i=0;i<in;i++)for(int o=0;o<out;o++) bb.putFloat(i==o?2f:0f);   // (input i drives output i)
+      for(int o=0;o<out;o++) bb.putFloat(o==0?1f:0f);                       // (bias toward quiet)
+      Layer ly=null; try{ ly=Layer.read(new java.io.ByteArrayInputStream(bb.array())); }catch(java.io.IOException e){ check(false,"layer.bin reads: "+e); }
+      float[] e0=new float[in]; float[] p0=ly.probs(e0); float sum=0; for(float v:p0) sum+=v;
+      check(ly.cutoff==0.5f&&Math.abs(sum-1)<1e-5&&p0[SoundKinds.QUIET]>p0[0],"layer: probabilities add to 1, quiet (file's first) maps to QUIET");
+      float[] e5=new float[in]; e5[5]=3f; float[] p5=ly.probs(e5);   // (output 5 = the file's fifth kind: water, NAMES[4])
+      check(p5[4]>0.9f,"layer: the file's kinds follow quiet, in NAMES' order ("+p5[4]+")");
+      boolean bad=false; try{ Layer.read(new java.io.ByteArrayInputStream(java.util.Arrays.copyOf(bb.array(),bb.capacity()-4))); }catch(java.io.IOException e){ bad=true; }
+      check(bad,"layer: a short file is refused");
+      float[] lw=new float[7]; lw[4]=0.6f; lw[SoundKinds.QUIET]=0.4f;   // (the layer hears water past a 0.5 cutoff)
+      float[] lq=new float[7]; lq[SoundKinds.QUIET]=0.9f; lq[4]=0.1f;
+      for(int mode=0;mode<3;mode++){   // 0: Mixed on, layer off   1: both on   2: Mixed off, layer on
+        SoundKinds.mixed=mode<2; SoundKinds.layerOn=mode>0; SoundKinds h=new SoundKinds(kinds); h.layerCut=0.5f;
+        for(int i=0;i<4;i++) h.judge(sc(5,3),lw,i*250L);   // (YAMNet: water 0.03, under the 0.05 floor: quiet or unsure)
+        if(mode==0) check(!h.present(4)&&h.layerKind()==4&&h.layerScores()[4]==0.6f,"layer off: its answer is kept for the log but water isn't there");
+        if(mode==1) check(h.present(4)&&!h.unsure()&&h.kind()==4&&h.heardLine().equals("Heard: water 0.60 (far)")&&Math.abs(h.score()-0.6f)<1e-6,
+            "layer on: far water counts, the Now line says so ("+h.heardLine()+")");
+        if(mode==2) check(!h.present(4)&&h.kind()==SoundKinds.QUIET,"Mixed off: the layer changes nothing");
+        if(mode==1){
+          for(int i=4;i<8;i++) h.judge(sc(5,3),lq,i*250L);
+          check(!h.present(4)&&h.layerKind()==-1,"layer on: under its cutoff nothing is added");
+          h.judge(sc(494,90),lw,9*250L);
+          check(h.present(4),"layer on: it counts even where YAMNet's top class is Silence");
+          h.judge(sc(0,60),lw,10*250L);
+          check(h.present(0)&&h.present(4),"layer on: YAMNet's voices and the layer's water both count");
+          h.judge(sc(0,60),null,11*250L);
+          check(h.layerScores()==null&&h.layerKind()==-1&&!h.present(4),"no layer (no layer.bin): as before");
+        }
+      }
+      SoundKinds.mixed=false; SoundKinds.layerOn=false;
+    }
     if(fails==0) System.out.println("ALL PASSED");
   }
 }

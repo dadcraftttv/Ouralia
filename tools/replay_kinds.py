@@ -12,23 +12,26 @@ Nov 4 (never audio). Pull the phone's sessions first: tools/pull_sessions.sh (--
     --scores                 each second's mean score per kind (narrow it with --from/--to)
     --heard                  the timeline also shows each change of the heard kind (the Now line) and of unsure
     --mixed on|off           replay as if Mixed Surroundings were on/off (default: as the log says)
+    --layer on|off           ... and Hear Far Sounds (step 4d; logs since Nov 6 keep the layer's answer, "far layer heard")
     --set NAME=VALUE         try another value beside the app's (repeatable); the report shows both. Names:
         present_min, present_min.<kind>     a kind counts as clearly there from this score (0.2; kinds: voices
                                             music traffic birds water steps)
         present_rel                         ... and at least this share of the strongest kind's (0.5)
         quiet_floor, strong, lead_ratio     (0.05, 0.5, 1.25)
+        layer_cut                           Hear Far Sounds' cutoff on 1 - P(quiet) (layer.bin's own)
         <window>.on, <window>.off, <window>.s   a scene window's on/off share and length in seconds
                                             (windows: talk room water birds traffic_scene)
   e.g.  tools/replay_kinds.py --last 1 --from 85 --to 135 --set present_min.water=0.12
 """
-import os, shutil, subprocess, sys, tempfile
+import os, shutil, struct, subprocess, sys, tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 SRC = os.path.join(REPO, "app/src/main/java/io/github/dadcraftttv/ouralia/SoundKinds.java")
 KINDS = os.path.join(REPO, "app/src/main/assets/sound_kinds/kinds.txt")
+LAYER = os.path.join(REPO, "app/src/main/assets/sound_kinds/layer.bin")
 BASE = os.path.join(os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), "ouralia")
-WITH_VALUE = {"--from", "--to", "--mixed", "--set", "--last"}
+WITH_VALUE = {"--from", "--to", "--mixed", "--layer", "--set", "--last"}
 
 
 def with_scores(path):
@@ -85,7 +88,11 @@ def main(argv):
         if c.returncode:
             sys.stderr.write(c.stderr[-3000:])
             return 1
-        r = subprocess.run([java, "-cp", out, "io.github.dadcraftttv.ouralia.ReplayKinds", "--kinds", KINDS] + opts + files,
+        cut = []
+        if os.path.exists(LAYER):   # (the layer's cutoff: little-endian float32 after its two int32 sizes)
+            with open(LAYER, "rb") as f:
+                cut = ["--cut", repr(struct.unpack("<2if", f.read(12))[2])]
+        r = subprocess.run([java, "-cp", out, "io.github.dadcraftttv.ouralia.ReplayKinds", "--kinds", KINDS] + cut + opts + files,
                            env=env, stderr=subprocess.PIPE, text=True)
         if r.returncode:
             sys.stderr.write("\n".join(l for l in r.stderr.splitlines() if "JAVA_TOOL_OPTIONS" not in l)[-3000:] + "\n")
