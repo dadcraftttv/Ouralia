@@ -27,7 +27,8 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   Passes Through and Traffic Flow, outdoor birds. Then fixes from what fails.
 - **His calls:** ~~do water and birds hold back for talk~~ **no need (Nov 6):** "the speech while running the water
   was fine, what i could hear back from Ouralia sounded like the chimes, underwater, so it fit" (his speech under
-  the tap never counted as talking); Found Palette's default (a switch, off); learning from session logs (not started).
+  the tap never counted as talking); ~~Found Palette's default~~ **stays a switch, off (Nov 6):** "Found Palette can
+  stay on it's current default"; ~~learning from session logs~~ **done Nov 6** (design/sound-kinds.md Step 17).
 - **Tuning from replays:** Mixed Surroundings' `PRESENT_MIN` 0.2 was judgement; water may want lower (his sink
   scored 0.1-0.26). The replay tool is BUILT (Nov 5, `tools/replay_kinds.py`, design/sound-kinds.md Step 16), and the
   windows are now measured in time: his sink replayed with water's own minimum at 0.12 holds water 40 s instead of 14 s.
