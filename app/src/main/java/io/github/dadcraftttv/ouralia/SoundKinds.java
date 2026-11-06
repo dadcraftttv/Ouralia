@@ -162,10 +162,28 @@ final class SoundKinds {
     final float[] presentMin = new float[NAMES.length];
     float presentRel = PRESENT_REL, quietFloor = QUIET_FLOOR, strong = STRONG, leadRatio = LEAD_RATIO;
 
+    /**
+     * Hear Far Sounds (accuracy step 4d, Nov 6; docs/design/sound-kinds.md "Accuracy step 4"; `sk_layer`, under Mixed
+     * Surroundings, off by default): a small layer on YAMNet's embedding ({@link Layer}) hears sounds across the room or
+     * in the next room that PRESENT_MIN misses. On (with Mixed on), the kind the layer names also counts as clearly
+     * there (YAMNet's own rule still counts too), and it stands in where YAMNet would say quiet or unsure. Off: as
+     * before. Its answer reaches the session log either way, so the replay tool can tune it.
+     */
+    static volatile boolean layerOn;
+    /** The layer's cutoff on 1 - P(quiet) (Layer.cutoff; the replay tool may try another). NaN: never heard. */
+    float layerCut = Float.NaN;
+    private final float[] layerP = new float[NAMES.length];
+    private boolean hasLayer, layerLed;
+    private int layerKind = -1;
+
     /** The model (YamNet on LiteRT; the tests stand in a fake). */
     interface Model {
         /** 521 scores for SAMPLES samples at RATE. */
         float[] scores(float[] wave);
+        /** The last call's 1024-value embedding (dequantized), or null when the model has none. */
+        default float[] embedding() {
+            return null;
+        }
         void close();
     }
 
@@ -323,6 +341,11 @@ final class SoundKinds {
 
     /** Monotonic milliseconds. */
     boolean judge(float[] scores, long now) {
+        return judge(scores, null, now);
+    }
+
+    /** With the layer's probabilities (Layer.probs, NAMES' order), or null when there is no layer. */
+    boolean judge(float[] scores, float[] layer, long now) {
         float[] k7 = new float[NAMES.length];
         for (int k = 0; k < NAMES.length; k++) {
             float m = 0;
@@ -337,7 +360,7 @@ final class SoundKinds {
                 top = c;
             }
         }
-        return judgeKinds(k7, top == cols[QUIET][0], now);
+        return judgeKinds(k7, top == cols[QUIET][0], layer, now);
     }
 
     /**
@@ -345,6 +368,24 @@ final class SoundKinds {
      * the replay tool runs exactly this.
      */
     boolean judgeKinds(float[] kinds, boolean yamnetSilent, long now) {
+        return judgeKinds(kinds, yamnetSilent, null, now);
+    }
+
+    /** ... and the layer's probabilities (null: none, as before 4d). */
+    boolean judgeKinds(float[] kinds, boolean yamnetSilent, float[] layer, long now) {
+        hasLayer = layer != null;
+        layerKind = -1;
+        if (hasLayer) {
+            System.arraycopy(layer, 0, layerP, 0, NAMES.length);
+            if (1 - layer[QUIET] >= layerCut) {
+                layerKind = 0;
+                for (int k = 1; k < QUIET; k++) {
+                    if (layer[k] > layer[layerKind]) {
+                        layerKind = k;
+                    }
+                }
+            }
+        }
         int step = lastNow == Long.MIN_VALUE ? (int) STEP_MS : (int) Math.max(0, Math.min(MAX_STEP_MS, now - lastNow));
         lastNow = now;
         int lead = 0;
@@ -379,10 +420,15 @@ final class SoundKinds {
             lead = QUIET;
         }
         boolean mix = mixed;
+        boolean far = mix && layerOn && layerKind >= 0;   // (Hear Far Sounds: the layer heard a sound)
+        layerLed = far && lead == QUIET;
+        if (layerLed) {
+            lead = layerKind;
+        }
         float a = Math.min(1f, (float) step / AVG_MS);
         waterAvg += (last[WATER] - waterAvg) * a;
         birdsAvg += (last[BIRDS] - birdsAvg) * a;
-        boolean rawUnsure = mix && !silent && last[best] < quietFloor;
+        boolean rawUnsure = mix && !silent && last[best] < quietFloor && !far;
         unsureN = rawUnsure != unsure ? unsureN + 1 : 0;
         if (unsure && (!mix || silent || last[best] >= strong)) {
             unsure = false;
@@ -392,7 +438,7 @@ final class SoundKinds {
             unsureN = 0;
         }
         for (int k = 0; k < QUIET; k++) {
-            in[k] = !silent && last[k] >= presentMin[k] && last[k] >= presentRel * last[best];
+            in[k] = !silent && last[k] >= presentMin[k] && last[k] >= presentRel * last[best] || far && k == layerKind;
         }
         candidateN = lead == candidate ? candidateN + 1 : 1;
         candidate = lead;
@@ -484,6 +530,21 @@ final class SoundKinds {
         return traffic && !talk.on();
     }
 
+    /** The heard kind's number: YAMNet's score, or the layer's probability where the layer stood in for quiet. */
+    float score() {
+        return kind < 0 ? 0 : layerLed && kind == layerKind ? layerP[kind] : last[kind];
+    }
+
+    /** The layer's last probabilities (NAMES' order), or null when the judgement had none. */
+    float[] layerScores() {
+        return hasLayer ? layerP.clone() : null;
+    }
+
+    /** The kind the layer heard in the last judgement (past its cutoff), or -1. */
+    int layerKind() {
+        return layerKind;
+    }
+
     /** The last judgement's numbers, one per kind. */
     float[] scores() {
         return last.clone();
@@ -491,7 +552,7 @@ final class SoundKinds {
 
     /** "Heard: birds 0.71" for the event log. */
     String heardLine() {
-        return kind < 0 ? "Heard: nothing yet" : unsure ? "Heard: unsure" : String.format(Locale.US, "Heard: %s %.2f", NAMES[kind], last[kind]);
+        return kind < 0 ? "Heard: nothing yet" : unsure ? "Heard: unsure" : String.format(Locale.US, layerLed && kind == layerKind ? "Heard: %s %.2f (far)" : "Heard: %s %.2f", NAMES[kind], score());
     }
 
     /** The minute's cost for the event log: how many judgements and how long YAMNet took (median, slowest). */
@@ -539,7 +600,8 @@ final class SoundKinds {
             w.clear();
         }
         gesture = -1;
-        unsure = silent = false;
+        unsure = silent = hasLayer = layerLed = false;
+        layerKind = -1;
         unsureN = 0;
         Arrays.fill(in, false);
         waterAvg = birdsAvg = 0;

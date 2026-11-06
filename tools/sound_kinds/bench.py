@@ -177,12 +177,13 @@ PHONE_KINDS = [("voices", ["voices"]), ("music", ["music", "singing"]), ("traffi
                ("water", ["water"]), ("steps", ["steps"]), ("quiet", ["quiet"])]   # step 4c: singing folded into music
 
 def export(path, labels):
-    """The app's files (app/src/main/assets/sound_kinds, in every build since Nov 5): the model, and each kind's class
-    numbers, one line each."""
+    """The app's files (app/src/main/assets/sound_kinds, in every build since Nov 5): the model (since Nov 6 with its
+    embedding as a second output, for Hear Far Sounds: embed_model.py), and each kind's class numbers, one per line."""
+    from embed_model import add_output, check
     dest = os.path.join(HERE, "..", "..", "app", "src", "main", "assets", "sound_kinds")
     os.makedirs(dest, exist_ok=True)
-    with open(path, "rb") as f, open(os.path.join(dest, "yamnet.tflite"), "wb") as g:
-        g.write(f.read())
+    add_output(path, os.path.join(dest, "yamnet.tflite"))
+    check(path, os.path.join(dest, "yamnet.tflite"))
     groups = json.load(open(os.path.join(HERE, "groups.json")))
     with open(os.path.join(dest, "kinds.txt"), "w") as f:
         f.write("# Made by tools/sound_kinds/bench.py --export from groups.json: a kind, then YAMNet's class numbers\n")

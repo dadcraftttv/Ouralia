@@ -109,11 +109,11 @@ public final class DesktopTest {
                         + ParamStore.get("mix_bass") + "), an unlocked one follows it (hats " + ParamStore.get("beat_hats") + ")");
 
         System.out.println(failed == 0 ? "ALL PASSED" : failed + " FAILED");
-        // no sound classifier here (Nov 5): its eight settings are hidden, Music in Stereo (patch only) stays
+        // no sound classifier here (Nov 5): its nine settings are hidden (Hear Far Sounds since Nov 6), Music in Stereo stays
         java.util.List<String> hidden = new java.util.ArrayList<>();
         for (Param q : Params.ALL) if (Params.classifierOnly(q)) hidden.add(q.id);
-        check(hidden.size() == 8 && hidden.contains("sk_mixed") && hidden.contains("water_trail") && hidden.contains("room_make")
-                && !Params.classifierOnly(Params.byId("music_stereo")), "classifier-only settings: the eight, not Music in Stereo " + hidden);
+        check(hidden.size() == 9 && hidden.contains("sk_layer") && hidden.contains("sk_mixed") && hidden.contains("water_trail") && hidden.contains("room_make")
+                && !Params.classifierOnly(Params.byId("music_stereo")), "classifier-only settings: the nine, not Music in Stereo " + hidden);
         System.exit(failed == 0 ? 0 : 1);
     }
 }

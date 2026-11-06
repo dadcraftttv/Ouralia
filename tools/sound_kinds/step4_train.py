@@ -16,7 +16,11 @@ Also checks his own recordings (~/Downloads/step4-recordings, never trained on),
 real quiet room. Embeddings are kept in tools/.sound_kinds_cache/step4_emb.npz (--fresh remakes them).
 Prints only the summary. Plan and results: docs/design/sound-kinds.md "Accuracy step 4 plan" and after.
 
-    tools/.venv/bin/python tools/sound_kinds/step4_train.py [--fresh] [--l2 3000]
+    tools/.venv/bin/python tools/sound_kinds/step4_train.py [--fresh] [--l2 3000] [--ship] [--sa4] [--export PATH]
+
+--ship trains only on clips whose licence lets the weights ship in the public repo and app (SHIP: CC0, public domain,
+CC BY; nothing NC, Nov 6 plan); --sa4 adds CC BY-SA 4.0 (one-way compatible with GPLv3). Held-out results are still
+on every clip. --export (implies --ship) writes the final layer for the app (4d, Nov 6): see export().
 """
 import glob, json, os, sys
 import numpy as np
@@ -38,6 +42,9 @@ SOUND_WINDOWS = 6      # per sound clip and distance
 FOLDS = 5
 PRESENT_MIN = 0.2
 QUIET_MAX = 0.02
+SHIP = {"CC0", "Public domain", "CC BY 3.0", "CC BY 4.0"} | ({"CC BY-SA 4.0"} if "--sa4" in sys.argv else set())
+EXPORT = sys.argv[sys.argv.index("--export") + 1] if "--export" in sys.argv else None
+SHIP_ONLY = "--ship" in sys.argv or EXPORT is not None
 L2 = float(sys.argv[sys.argv.index("--l2") + 1]) if "--l2" in sys.argv else 3000.0
 # distance: (direct-to-echo ratio in dB, echo time RT60 in s, low-pass Hz and slope in dB/oct), each a (lo, hi) range.
 # Across the room the direct sound and the room's echo are about even; far, the echo leads and the highs dull; in the
@@ -48,7 +55,7 @@ DISTANCES = {
     "far": ((-6, -3), (0.3, 0.8), (3000, 5000), 6),
     "next room": ((-12, -8), (0.4, 0.9), (1000, 2000), 18),
 }
-VERSION = "v2 " + json.dumps([SNRS, ROOM_DB, ROOM_WINDOWS, SOUND_WINDOWS, FOLDS, DISTANCES])
+VERSION = "v3 " + json.dumps([SNRS, ROOM_DB, ROOM_WINDOWS, SOUND_WINDOWS, FOLDS, DISTANCES])
 WIN, SR = bench.WIN, bench.SR
 rng = np.random.default_rng(4)
 
@@ -158,7 +165,7 @@ def embed(rooms, sounds):
     rng.shuffle(sfold)
     Q = [(rfold[ri],) + run(bench.phone(w, bench.db(w))) for ri, w, _ in room_w]
     by_fold = {f: [r for r in room_w if rfold[r[0]] == f] for f in range(FOLDS)}
-    M = []   # (fold, kind, distance, snr, emb, today)
+    M = []   # (fold, kind, distance, snr, licence, emb, today)
     for si, (c, x) in enumerate(sounds):
         f = sfold[si]
         for how in DISTANCES:
@@ -168,11 +175,12 @@ def embed(rooms, sounds):
                 ri, rw, lvl = by_fold[f][rng.integers(len(by_fold[f]))]
                 for snr in SNRS:
                     y = rw + bench.at(w, lvl + snr)
-                    M.append((f, c["kind"], how, snr) + run(bench.phone(y, bench.db(y))))
+                    M.append((f, c["kind"], how, snr, c.get("licence") or "") + run(bench.phone(y, bench.db(y))))
     d = {"version": np.array(VERSION),
          "qf": np.array([q[0] for q in Q]), "QE": np.array([q[1] for q in Q]), "Qt": np.array([q[2] for q in Q]),
          "mf": np.array([m[0] for m in M]), "MK": np.array([m[1] for m in M]), "MD": np.array([m[2] for m in M]),
-         "MS": np.array([m[3] for m in M]), "ME": np.array([m[4] for m in M]), "Mt": np.array([m[5] for m in M])}
+         "MS": np.array([m[3] for m in M]), "ML": np.array([m[4] for m in M]),
+         "ME": np.array([m[5] for m in M]), "Mt": np.array([m[6] for m in M])}
     np.savez(EMB, **d)
     return d
 
@@ -194,11 +202,27 @@ def fit_kinds(X, y, l2=L2, steps=1500, lr=0.2):
         W -= lr * (Z.T @ G / n + l2 * W / n)
         b -= lr * G.mean(0)
 
+    Wf, bf = W / sd[:, None], b - (mu / sd) @ W   # (the standardisation folded in: what the app runs)
+
     def f(E):
-        L = ((E - mu) / sd) @ W + b
+        L = E @ Wf + bf
         P = np.exp(L - L.max(1, keepdims=True))
         return P / P.sum(1, keepdims=True)
+    f.weights = (Wf, bf)
     return f, float(np.quantile(1 - f(X[y == 0])[:, 0], 1 - QUIET_MAX))
+
+
+def export(path, pr, cut):
+    """The app's layer (sound_kinds/layer.bin, read by Layer.java): little-endian; int32 inputs (1024) and outputs
+    (7: quiet, then KINDS), float32 cutoff on 1 - P(quiet), then the weights row by row (inputs x outputs) and the
+    bias. The embedding goes in dequantized (YAMNet's own scale and zero point)."""
+    Wf, bf = pr.weights
+    with open(path, "wb") as g:
+        g.write(np.array(Wf.shape, "<i4").tobytes())
+        g.write(np.array([cut], "<f4").tobytes())
+        g.write(Wf.astype("<f4").tobytes())
+        g.write(bf.astype("<f4").tobytes())
+    print(f"\nexported {path}: {os.path.getsize(path)} bytes, cutoff {cut:.4f}")
 
 
 def main():
@@ -208,12 +232,14 @@ def main():
     d = embed(rooms, sounds)
     qf, QE, Qt = d["qf"], d["QE"], d["Qt"]
     mf, MK, MD, MS, ME, Mt = d["mf"], d["MK"], d["MD"], d["MS"], d["ME"], d["Mt"]
-    print(f"windows: quiet {len(QE)}, mixes {len(ME)}")
+    ok = np.isin(d["ML"], list(SHIP)) if SHIP_ONLY else np.ones(len(ME), bool)
+    print(f"windows: quiet {len(QE)}, mixes {len(ME)}" + (f", trained on {ok.mean()*100:.0f}% (licences: "
+          f"{', '.join(sorted(SHIP))})" if SHIP_ONLY else ""))
     MKi = np.array([KINDS.index(k) + 1 for k in MK])
     heard, kind = np.zeros(len(ME), bool), np.zeros(len(ME), int)
     qheard = np.zeros(len(QE), bool)
     for f in range(FOLDS):
-        tr_q, tr_m = qf != f, (mf != f) & (MS >= MIN_SNR)
+        tr_q, tr_m = qf != f, (mf != f) & (MS >= MIN_SNR) & ok
         pr, cut = fit_kinds(np.vstack([QE[tr_q], ME[tr_m]]), np.r_[np.zeros(tr_q.sum(), int), MKi[tr_m]])
         P = pr(ME[mf == f])
         heard[mf == f] = 1 - P[:, 0] >= cut
@@ -224,22 +250,25 @@ def main():
 
     def pc(a):
         return f"{a.mean()*100:4.0f}%" if a.size else "    -"
-    print(f"\nheld out (folds); 'right' = heard and named the right kind      0.05   0.2 right | layer right")
-    print(f"  quiet rooms named a sound                                {pc(Qt[:, 0])} {pc(Qt[:, 1])}       | {pc(qheard)}"
-          "        (lower is better)")
+    print(f"\nheld out (folds); 'right' = heard and named the right kind      0.05   0.2 right | layer right | 0.2 or layer (the app's switch)")
+    print(f"  quiet rooms named a sound                                {pc(Qt[:, 0])} {pc(Qt[:, 1])}       | {pc(qheard)}       |  {pc((Qt[:, 1] > 0) | qheard)}"
+          "  (lower is better)")
     for how in DISTANCES:
         print(f"  {how}:")
         for snr in SNRS:
             s = (MD == how) & (MS == snr)
             print(f"    {snr:2d} dB over the room                                 {pc(Mt[s, 0])} {pc(Mt[s, 1])}"
-                  f" {pc(right_y[s])} | {pc(heard[s])} {pc(right_l[s])}" + ("  (not trained on)" if snr < MIN_SNR else ""))
+                  f" {pc(right_y[s])} | {pc(heard[s])} {pc(right_l[s])} |  {pc(right_y[s] | right_l[s])}" + ("  (not trained on)" if snr < MIN_SNR else ""))
     mid = (MS >= 6) & (MS <= 10)
-    print("  by kind at 6-10 dB, all distances (0.2 right | layer right)")
+    print("  by kind at 6-10 dB, all distances (0.2 right | layer right | 0.2 or layer)")
     for k in KINDS:
         s = mid & (MK == k)
-        print(f"    {k:8} {pc(right_y[s])} | {pc(right_l[s])}")
+        print(f"    {k:8} {pc(right_y[s])} | {pc(right_l[s])} | {pc(right_y[s] | right_l[s])}")
     # final layer on everything, for the checks
-    pr, cut = fit_kinds(np.vstack([QE, ME[MS >= MIN_SNR]]), np.r_[np.zeros(len(QE), int), MKi[MS >= MIN_SNR]])
+    tr = (MS >= MIN_SNR) & ok
+    pr, cut = fit_kinds(np.vstack([QE, ME[tr]]), np.r_[np.zeros(len(QE), int), MKi[tr]])
+    if EXPORT:
+        export(EXPORT, pr, cut)
     print(f"\nchecks (whole recordings, final layer; windows named a sound, and the layer's most named kind)"
           f"   0.05   0.2  layer")
 

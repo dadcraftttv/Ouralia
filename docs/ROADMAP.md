@@ -41,6 +41,10 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   distance. Next for distance and the sink: YAMNet embeddings with a small trained layer (step 4 of the list),
   **started Nov 6** on his pick (quiet room vs far sound; public clips to train, his recordings to check; plan:
   design/sound-kinds.md "Accuracy step 4 plan"). Wind and singing only where real listening shows a problem (Codex, Nov 5).
+  **4d built Nov 6** (Dev, on `sound-kinds`): **Hear Far Sounds** (`sk_layer`, under Mixed, off), the layer in the
+  app, trained only on CC0 / public domain / CC BY clips (NOTICE lists them). Open: 4e, his listen (switch on vs off
+  with a sound across the room or next door); his sink sweep and more quiet rooms (checks); session logs through
+  `replay_kinds.py` to see how often the layer names a sound in his quiet house.
 - **Singing and whistling count as music in the room** (seen Nov 5 on rc6: whistling read as music 0.59-0.98 and
   birds 0.33-0.80). The app's music group holds YAMNet's singing classes, and nothing tells your own voice from a
   radio, so with Mixed Surroundings on, ~8 s of singing in 20 can trigger Make Room for Music (the music and beat

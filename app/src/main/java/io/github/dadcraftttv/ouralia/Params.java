@@ -268,6 +268,11 @@ final class Params {
             // switch so a listener can still turn one off (Make Room for Music: "as long the user can turn it on or off").
             new Param("sk_mixed", "Mixed Surroundings (several sounds heard at once each shape the music)", 0f, 1f, 0f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().soundKinds(),
+            // Hear Far Sounds (accuracy step 4d, Nov 6; docs/design/sound-kinds.md "Accuracy step 4"): a small layer on
+            // YAMNet's embedding also counts sounds across the room or in the next room. Off by default (Dev, his
+            // listen next: 4e).
+            new Param("sk_layer", "Hear Far Sounds (also answers sounds across the room or next door)", 0f, 1f, 0f, "",
+                    Param.Curve.LINEAR).inSection("music").toggle().noPd().soundKinds().under("sk_mixed"),
             new Param("birds_lift", "Birds Lift the Chimes (birds heard: earned chimes turn to high glass)", 0f, 1f, 1f, "",
                     Param.Curve.LINEAR).inSection("music").toggle().noPd().soundKinds().under("sk_mixed"),
             // Notes only for bigger sounds (DadCraft, Oct 30: typing "just sounds like it's random notes responding with
