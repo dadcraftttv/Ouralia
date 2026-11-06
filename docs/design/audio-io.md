@@ -113,7 +113,12 @@
   universal as possible." Stays off by default.
 - **Calls and other audio** (DadCraft's rule): the app never requests audio focus (Start must not pause the user's music).
   `AudioService.checkForCall` reads the audio mode every 0.5 s: call/ringing/VoIP -> `computeAudio(false)` until it ends
-  (MODE_IN_COMMUNICATION is ignored while our own Bluetooth mic set it). An `AudioPlaybackCallback` counts the listed players
+  (MODE_IN_COMMUNICATION is ignored while our own Bluetooth mic set it). **Reopened after every call** (Nov 6, DadCraft:
+  twice that day the sound "never came back after the phone call was over", EarFun earbuds): as the phone rings, Telecom
+  moves Bluetooth earbuds to the call link (logcat: `connectBtAudio ... TYPE_BLUETOOTH_SCO`), which closes our streams,
+  and libpd only closes them (`setAutoReopen(false)`), so un-muting played into nothing (the event log: the mic level
+  frozen, "no judgements this minute"). Now `reopenAfterCall` stops and starts the engine 2 s after the call ends (the
+  earbuds' music link needs a moment), as `afterHeadphonesLost` does; even a declined call needs it. An `AudioPlaybackCallback` counts the listed players
   (Android lists only playing ones and hides uid/device from other apps; Moto G: 1 alone, 2 with Musicolet); more than our own -> `duck 0.3` (~3 dB, 600 ms ramp, after the limiter; scenes
   get `#volume` scaled instead). Only slight: the app's effects must still be heard.
 - **Start path:** the Bluetooth-mic link wait runs on a background thread (`starting`, `startGeneration` cancels it on
