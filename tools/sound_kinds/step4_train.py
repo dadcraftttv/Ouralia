@@ -1,39 +1,55 @@
 #!/usr/bin/env python3
-"""Accuracy step 4c (Nov 6): can a small layer on YAMNet's embedding tell a quiet room from a sound at a distance?
+"""Accuracy step 4c (Nov 6): can a small layer on YAMNet's embedding tell a quiet room from a sound at a distance,
+and name the sound?
 
 Quiet: the real room tones from step4_fetch.py (Freesound, CC0/CC-BY), each set to a phone room level (-65 to -45 dB).
-Sound: the bench's close clips (clips.json: voices, music, traffic, birds, water, steps) mixed into a room tone at
+Sound: the bench's close clips (clips.json: voices, music, traffic, birds, water, steps), moved away (DISTANCES: the
+room's echo and dulled highs, "Go ahead with the realistic distance in the mixes", Nov 6), mixed into a room tone at
 0-20 dB over it, then the Moto's path (bench.phone: mic high-pass and the app's compressor). A mix counts as a sound
 from MIN_SNR dB up; 0 and 3 dB are only reported (his far tap sat ~1 dB over his office: below anything to answer).
+The layer: a softmax over quiet and the six kinds (classes weighted equal), a window is a sound when 1 - P(quiet)
+passes a cutoff set on the training folds so quiet rooms are named a sound no more often than QUIET_MAX.
 Checked by folds: rooms split by uploader, sounds by clip, so every result is on recordings the layer never saw.
 Today's rules beside it: YAMNet names a kind (Silence not on top, best kind >= QUIET_FLOOR 0.05, the Now line), and
-Mixed Surroundings' "clearly there" (best kind >= PRESENT_MIN 0.2). The layer's classes are weighted equal, and its
-cutoff is set on the training folds so quiet rooms are named a sound no more often than QUIET_MAX.
+Mixed Surroundings' "clearly there" (best kind >= PRESENT_MIN 0.2), named by YAMNet's top kind.
 Also checks his own recordings (~/Downloads/step4-recordings, never trained on), the real far clips, and the bench's
-two real quiet rooms. Prints only the summary. Plan: docs/design/sound-kinds.md "Accuracy step 4 plan".
+real quiet room. Embeddings are kept in tools/.sound_kinds_cache/step4_emb.npz (--fresh remakes them).
+Prints only the summary. Plan and results: docs/design/sound-kinds.md "Accuracy step 4 plan" and after.
 
-    tools/.venv/bin/python tools/sound_kinds/step4_train.py [--l2 10,100,1000]   (regularization strengths to compare)
+    tools/.venv/bin/python tools/sound_kinds/step4_train.py [--fresh] [--l2 3000]
 """
 import glob, json, os, sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import bench  # noqa: E402  (decode, phone, at, db, clip_audio, windows, model)
+import bench  # noqa: E402  (phone, at, db, clip_audio, windows, model, SR, WIN, QUIET_FLOOR)
 from embed_model import add_output  # noqa: E402
 
 CACHE = os.path.join(HERE, "..", ".sound_kinds_cache")
+EMB = os.path.join(CACHE, "step4_emb.npz")
 MINE = os.path.expanduser("~/Downloads/step4-recordings")
 KINDS = ["voices", "music", "traffic", "birds", "water", "steps"]
 SNRS = [0, 3, 6, 10, 15, 20]
 MIN_SNR = 6
 ROOM_DB = (-65, -45)
 ROOM_WINDOWS = 20      # per room tone, spread over it
+SOUND_WINDOWS = 6      # per sound clip and distance
 FOLDS = 5
 PRESENT_MIN = 0.2
 QUIET_MAX = 0.02
-L2S = [float(v) for v in sys.argv[sys.argv.index("--l2") + 1].split(",")] if "--l2" in sys.argv else [10.0]
-WIN = bench.WIN
+L2 = float(sys.argv[sys.argv.index("--l2") + 1]) if "--l2" in sys.argv else 3000.0
+# distance: (direct-to-echo ratio in dB, echo time RT60 in s, low-pass Hz and slope in dB/oct), each a (lo, hi) range.
+# Across the room the direct sound and the room's echo are about even; far, the echo leads and the highs dull; in the
+# next room the wall or door takes the highs and nearly all of it is echo.
+DISTANCES = {
+    "near": None,
+    "room": ((0, 6), (0.3, 0.8), (7000, 10000), 6),
+    "far": ((-6, -3), (0.3, 0.8), (3000, 5000), 6),
+    "next room": ((-12, -8), (0.4, 0.9), (1000, 2000), 18),
+}
+VERSION = "v2 " + json.dumps([SNRS, ROOM_DB, ROOM_WINDOWS, SOUND_WINDOWS, FOLDS, DISTANCES])
+WIN, SR = bench.WIN, bench.SR
 rng = np.random.default_rng(4)
 
 
@@ -56,15 +72,16 @@ ESCALE, EZERO = EO["quantization"]
 
 
 def run(w):
-    """(embedding, today's verdicts: (names a kind at 0.05, a kind clearly there at 0.2))"""
+    """(embedding, today: [names a kind at 0.05, clearly there at 0.2, best kind score, YAMNet's top kind index])"""
     IT.set_tensor(INP, w.astype(np.float32))
     IT.invoke()
     s = IT.get_tensor(SC)[0]
     e = (IT.get_tensor(EO["index"]).reshape(-1).astype(np.float32) - EZERO) * ESCALE
-    best = max(s[COLS[k]].max() for k in KINDS)
+    g = [s[COLS[k]].max() for k in KINDS]
     on = s.argmax() != SILENCE
-    top = max(range(len(KINDS)), key=lambda i: s[COLS[KINDS[i]]].max())
-    return e, (bool(on and best >= bench.QUIET_FLOOR), bool(on and best >= PRESENT_MIN), float(best * on), top)
+    best = max(g)
+    return e, [float(on and best >= bench.QUIET_FLOOR), float(on and best >= PRESENT_MIN), float(best * on),
+               float(int(np.argmax(g)))]
 
 
 def spread(x, n):
@@ -76,8 +93,35 @@ def spread(x, n):
 def decode(path, secs=60):
     import subprocess
     raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-map", "0:a", "-t", str(secs), "-ac", "1", "-ar",
-                          str(bench.SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
+                          str(SR), "-f", "f32le", "-"], capture_output=True, check=True).stdout
     return np.frombuffer(raw, np.float32).copy()
+
+
+def lowpass(x, hz, slope):
+    f = np.fft.rfft(x)
+    r = np.fft.rfftfreq(len(x), 1 / SR) / hz
+    return np.fft.irfft(f / np.sqrt(1 + r ** (2 * slope / 6)), len(x))
+
+
+def rms(x):
+    return np.sqrt(np.mean(x ** 2)) + 1e-12
+
+
+def distance(x, how):
+    """The clip as heard from further away: its direct sound (dulled) plus the room's echo at the given ratio."""
+    if DISTANCES[how] is None:
+        return x
+    drr, rt, lp, slope = DISTANCES[how]
+    drr, rt, lp = rng.uniform(*drr), rng.uniform(*rt), rng.uniform(*lp)
+    n = int(rt * SR)
+    t = np.arange(n) / SR
+    tail = rng.standard_normal(n) * 10 ** (-3 * t / rt)           # -60 dB at RT60
+    tail = lowpass(tail, 4000, 6) * np.minimum(1, t / 0.005)      # (walls take the highs first; no echo before 5 ms)
+    m = 1 << int(np.ceil(np.log2(len(x) + n)))
+    echo = np.fft.irfft(np.fft.rfft(x, m) * np.fft.rfft(tail, m), m)[:len(x)]
+    direct = lowpass(x, lp, slope)
+    echo = echo * rms(direct) / rms(echo) * 10 ** (-drr / 20)
+    return lowpass(direct + echo, lp, slope) if how == "next room" else direct + echo
 
 
 def load():
@@ -91,31 +135,49 @@ def load():
     for c in json.load(open(os.path.join(HERE, "clips.json"))):
         if c["kind"] in KINDS:
             try:
-                x = bench.clip_audio(c)
+                sounds.append((c, bench.at(bench.clip_audio(c), -20)))
             except Exception:
                 continue
-            ws = bench.windows(bench.at(x, -20), False)   # (the windows the sound is in, not its gaps)
-            sounds.append((c, ws))
     return rooms, far, sounds
 
 
-def fit(X, y, l2=10.0, steps=1500, lr=0.2):
-    """Logistic regression, the two classes weighted equal; returns (score function, cutoff) with the cutoff set so
-    at most QUIET_MAX of the training quiet windows score over it."""
-    mu, sd = X.mean(0), X.std(0) + 1e-6
-    Z = (X - mu) / sd
-    cw = np.where(y == 1, 0.5 / y.mean(), 0.5 / (1 - y.mean()))
-    w, b = np.zeros(X.shape[1]), 0.0
-    for _ in range(steps):
-        p = 1 / (1 + np.exp(-(Z @ w + b)))
-        g = (p - y) * cw
-        w -= lr * (Z.T @ g / len(y) + l2 * w / len(y))
-        b -= lr * g.mean()
-    f = lambda E: 1 / (1 + np.exp(-(((E - mu) / sd) @ w + b)))
-    return f, float(np.quantile(f(X[y == 0]), 1 - QUIET_MAX))
+def embed(rooms, sounds):
+    if "--fresh" not in sys.argv and os.path.exists(EMB):
+        d = np.load(EMB, allow_pickle=False)
+        if str(d["version"]) == VERSION:
+            return {k: d[k] for k in d.files}
+    room_w = []   # (room index, window at its level, level)
+    for ri, (c, x) in enumerate(rooms):
+        lvl = rng.uniform(*ROOM_DB)
+        for w in spread(x, ROOM_WINDOWS):
+            if bench.db(w) > -100:
+                room_w.append((ri, bench.at(w, lvl), lvl))
+    ufold = {u: i % FOLDS for i, u in enumerate(sorted({c["by"] for c, _ in rooms}))}
+    rfold = [ufold[c["by"]] for c, _ in rooms]
+    sfold = [i % FOLDS for i in range(len(sounds))]
+    rng.shuffle(sfold)
+    Q = [(rfold[ri],) + run(bench.phone(w, bench.db(w))) for ri, w, _ in room_w]
+    by_fold = {f: [r for r in room_w if rfold[r[0]] == f] for f in range(FOLDS)}
+    M = []   # (fold, kind, distance, snr, emb, today)
+    for si, (c, x) in enumerate(sounds):
+        f = sfold[si]
+        for how in DISTANCES:
+            ws = bench.windows(distance(x, how), False)          # (the windows the sound is in, not its gaps)
+            ws = [ws[i] for i in np.unique(np.linspace(0, len(ws) - 1, min(len(ws), SOUND_WINDOWS)).astype(int))]
+            for w in ws:
+                ri, rw, lvl = by_fold[f][rng.integers(len(by_fold[f]))]
+                for snr in SNRS:
+                    y = rw + bench.at(w, lvl + snr)
+                    M.append((f, c["kind"], how, snr) + run(bench.phone(y, bench.db(y))))
+    d = {"version": np.array(VERSION),
+         "qf": np.array([q[0] for q in Q]), "QE": np.array([q[1] for q in Q]), "Qt": np.array([q[2] for q in Q]),
+         "mf": np.array([m[0] for m in M]), "MK": np.array([m[1] for m in M]), "MD": np.array([m[2] for m in M]),
+         "MS": np.array([m[3] for m in M]), "ME": np.array([m[4] for m in M]), "Mt": np.array([m[5] for m in M])}
+    np.savez(EMB, **d)
+    return d
 
 
-def fit_kinds(X, y, l2=3000.0, steps=1500, lr=0.2):
+def fit_kinds(X, y, l2=L2, steps=1500, lr=0.2):
     """Softmax over quiet (0) and the six kinds (1..6), classes weighted equal; returns (probabilities, quiet cutoff):
     a window is a sound when 1 - P(quiet) passes the cutoff (at most QUIET_MAX of training quiet over it)."""
     mu, sd = X.mean(0), X.std(0) + 1e-6
@@ -126,7 +188,8 @@ def fit_kinds(X, y, l2=3000.0, steps=1500, lr=0.2):
     W, b = np.zeros((X.shape[1], c)), np.zeros(c)
     for _ in range(steps):
         L = Z @ W + b
-        P = np.exp(L - L.max(1, keepdims=True)); P /= P.sum(1, keepdims=True)
+        P = np.exp(L - L.max(1, keepdims=True))
+        P /= P.sum(1, keepdims=True)
         G = (P - Y) * cw[y][:, None]
         W -= lr * (Z.T @ G / n + l2 * W / n)
         b -= lr * G.mean(0)
@@ -142,106 +205,56 @@ def main():
     rooms, far, sounds = load()
     print(f"rooms {len(rooms)} (from {len({c['by'] for c, _ in rooms})} uploaders), sounds {len(sounds)} clips, "
           f"far {len(far)}")
-    # room windows at a phone room level
-    room_w = []   # (room index, window at its level, level)
-    for ri, (c, x) in enumerate(rooms):
-        lvl = rng.uniform(*ROOM_DB)
-        for w in spread(x, ROOM_WINDOWS):
-            if bench.db(w) > -100:
-                room_w.append((ri, bench.at(w, lvl), lvl))
-    ufold = {u: i % FOLDS for i, u in enumerate(sorted({c["by"] for c, _ in rooms}))}
-    rfold = [ufold[c["by"]] for c, _ in rooms]
-    sfold = [i % FOLDS for i in range(len(sounds))]
-    rng.shuffle(sfold)
-    # embeddings: quiet windows, then mixes (each sound window into a room window of the same fold, each SNR)
-    Q = [(rfold[ri],) + run(bench.phone(w, bench.db(w))) for ri, w, _ in room_w]
-    M = []   # (fold, kind, snr, emb, today)
-    by_fold = {f: [r for r in room_w if rfold[r[0]] == f] for f in range(FOLDS)}
-    for si, (c, ws) in enumerate(sounds):
-        f = sfold[si]
-        for w in ws:
-            ri, rw, lvl = by_fold[f][rng.integers(len(by_fold[f]))]
-            for snr in SNRS:
-                y = rw + bench.at(w, lvl + snr)
-                M.append((f, c["kind"], snr) + run(bench.phone(y, bench.db(y))))
-    print(f"windows: quiet {len(Q)}, mixes {len(M)}")
-    # folds
-    qf = np.array([q[0] for q in Q]); QE = np.array([q[1] for q in Q]); Qt = np.array([q[2] for q in Q])  # (n, 2)
-    mf = np.array([m[0] for m in M]); MK = np.array([m[1] for m in M]); MS = np.array([m[2] for m in M])
-    ME = np.array([m[3] for m in M]); Mt = np.array([m[4] for m in M])
-    QP, MP = [], []
-    for l2 in L2S:
-        qp, mp = np.zeros(len(Q), bool), np.zeros(len(M), bool)
-        for f in range(FOLDS):
-            tr_q, tr_m = qf != f, (mf != f) & (MS >= MIN_SNR)
-            X = np.vstack([QE[tr_q], ME[tr_m]])
-            y = np.r_[np.zeros(tr_q.sum()), np.ones(tr_m.sum())]
-            pred, cut = fit(X, y, l2=l2)
-            qp[qf == f] = pred(QE[qf == f]) >= cut
-            mp[mf == f] = pred(ME[mf == f]) >= cut
-        QP.append(qp); MP.append(mp)
-
-    def row(label, t, ls, note=""):
-        print(f"  {label:30} {t[:, 0].mean()*100:4.0f}%  {t[:, 1].mean()*100:4.0f}%"
-              + "".join(f"  {l.mean()*100:5.0f}%" for l in ls) + note)
-    print("\nheld out (folds)               0.05   0.2" + "".join(f"  l2={v:<4g}" for v in L2S))
-    row("quiet rooms named a sound", Qt, QP, "   (lower is better)")
-    for snr in SNRS:
-        s = MS == snr
-        row(f"sound {snr:2d} dB over the room", Mt[s], [m[s] for m in MP], "   (not trained on)" if snr < MIN_SNR else "")
-    print("  by kind at 6-10 dB")
-    for k in KINDS:
-        s = (MK == k) & (MS >= 6) & (MS <= 10)
-        row("  " + k, Mt[s], [m[s] for m in MP])
-    # when the layer hears a sound, does YAMNet's strongest kind (however weak) name it right?
-    # the seven-answer layer: names the kind too
-    kp, kk = np.zeros(len(M), bool), np.zeros(len(M), int)
-    qk = np.zeros(len(Q), bool)
+    d = embed(rooms, sounds)
+    qf, QE, Qt = d["qf"], d["QE"], d["Qt"]
+    mf, MK, MD, MS, ME, Mt = d["mf"], d["MK"], d["MD"], d["MS"], d["ME"], d["Mt"]
+    print(f"windows: quiet {len(QE)}, mixes {len(ME)}")
     MKi = np.array([KINDS.index(k) + 1 for k in MK])
+    heard, kind = np.zeros(len(ME), bool), np.zeros(len(ME), int)
+    qheard = np.zeros(len(QE), bool)
     for f in range(FOLDS):
         tr_q, tr_m = qf != f, (mf != f) & (MS >= MIN_SNR)
-        X = np.vstack([QE[tr_q], ME[tr_m]])
-        y = np.r_[np.zeros(tr_q.sum(), int), MKi[tr_m]]
-        pr, cut = fit_kinds(X, y, l2=L2S[-1])
+        pr, cut = fit_kinds(np.vstack([QE[tr_q], ME[tr_m]]), np.r_[np.zeros(tr_q.sum(), int), MKi[tr_m]])
         P = pr(ME[mf == f])
-        kp[mf == f] = 1 - P[:, 0] >= cut
-        kk[mf == f] = P[:, 1:].argmax(1) + 1
-        qk[qf == f] = 1 - pr(QE[qf == f])[:, 0] >= cut
-    print(f"  seven-answer layer: quiet rooms named a sound {qk.mean()*100:.0f}%")
-    for snr in SNRS:
-        s = MS == snr
-        miss = s & (Mt[:, 1] == 0) & kp
-        print(f"    {snr:2d} dB: heard {kp[s].mean()*100:3.0f}%, kind right {(kk[s & kp] == MKi[s & kp]).mean()*100:3.0f}%"
-              f"; where 0.2 misses: kind right {(kk[miss] == MKi[miss]).mean()*100 if miss.any() else 0:3.0f}%"
-              f" (YAMNet's top {(Mt[miss][:, 3] + 1 == MKi[miss]).mean()*100 if miss.any() else 0:3.0f}%)")
-    print("  YAMNet's top kind right, where the layer hears a sound (last l2):")
-    for snr in SNRS:
-        s = (MS == snr) & MP[-1]
-        right = np.array([KINDS[int(t)] for t in Mt[s][:, 3]]) == MK[s]
-        weak = s & (Mt[:, 1] == 0)
-        rw = np.array([KINDS[int(t)] for t in Mt[weak][:, 3]]) == MK[weak]
-        print(f"    {snr:2d} dB: {right.mean()*100:3.0f}% (where 0.2 misses: {rw.mean()*100 if len(rw) else 0:3.0f}% of {len(rw)})")
-    # the simple alternative: today's rule with a lower cutoff, at the same quiet cost as the layer
-    qb, mb = Qt[:, 2], Mt[:, 2]
-    for l2, qp in zip(L2S, QP):
-        t = float(np.quantile(qb, 1 - qp.mean()))
-        mid = (MS >= 6) & (MS <= 10)
-        print(f"  same quiet cost as l2={l2:g} ({qp.mean()*100:.0f}%): a cutoff of {t:.3f} finds 6-10 dB sounds "
-              f"{(mb[mid] >= t).mean()*100:.0f}% (layer {MP[L2S.index(l2)][mid].mean()*100:.0f}%), traffic "
-              f"{(mb[mid & (MK == 'traffic')] >= t).mean()*100:.0f}%, water {(mb[mid & (MK == 'water')] >= t).mean()*100:.0f}%")
+        heard[mf == f] = 1 - P[:, 0] >= cut
+        kind[mf == f] = P[:, 1:].argmax(1) + 1
+        qheard[qf == f] = 1 - pr(QE[qf == f])[:, 0] >= cut
+    top = Mt[:, 3].astype(int) + 1
+    right_l, right_y = heard & (kind == MKi), (Mt[:, 1] > 0) & (top == MKi)
+
+    def pc(a):
+        return f"{a.mean()*100:4.0f}%" if a.size else "    -"
+    print(f"\nheld out (folds); 'right' = heard and named the right kind      0.05   0.2 right | layer right")
+    print(f"  quiet rooms named a sound                                {pc(Qt[:, 0])} {pc(Qt[:, 1])}       | {pc(qheard)}"
+          "        (lower is better)")
+    for how in DISTANCES:
+        print(f"  {how}:")
+        for snr in SNRS:
+            s = (MD == how) & (MS == snr)
+            print(f"    {snr:2d} dB over the room                                 {pc(Mt[s, 0])} {pc(Mt[s, 1])}"
+                  f" {pc(right_y[s])} | {pc(heard[s])} {pc(right_l[s])}" + ("  (not trained on)" if snr < MIN_SNR else ""))
+    mid = (MS >= 6) & (MS <= 10)
+    print("  by kind at 6-10 dB, all distances (0.2 right | layer right)")
+    for k in KINDS:
+        s = mid & (MK == k)
+        print(f"    {k:8} {pc(right_y[s])} | {pc(right_l[s])}")
     # final layer on everything, for the checks
-    X = np.vstack([QE, ME[MS >= MIN_SNR]])
-    y = np.r_[np.zeros(len(QE)), np.ones((MS >= MIN_SNR).sum())]
-    pred, cut = fit(X, y, l2=L2S[-1])
-    print(f"\nchecks (l2={L2S[-1]:g}) (whole recordings, final layer, cutoff {cut:.2f}; windows named a sound)       0.05   0.2  layer")
+    pr, cut = fit_kinds(np.vstack([QE, ME[MS >= MIN_SNR]]), np.r_[np.zeros(len(QE), int), MKi[MS >= MIN_SNR]])
+    print(f"\nchecks (whole recordings, final layer; windows named a sound, and the layer's most named kind)"
+          f"   0.05   0.2  layer")
 
     def check(name, x):
         rs = [run(bench.phone(w, bench.db(w))) for w in spread(x, 60) if bench.db(w) > -100]
         if not rs:
             return
         E = np.array([r[0] for r in rs]); t = np.array([r[1] for r in rs])
-        print(f"  {name[:58]:58} {bench.db(x):4.0f} dB {t[:, 0].mean()*100:4.0f}%  {t[:, 1].mean()*100:4.0f}%"
-              f"  {(pred(E) >= cut).mean()*100:4.0f}%")
+        P = pr(E); on = 1 - P[:, 0] >= cut
+        ks = np.bincount(P[on, 1:].argmax(1), minlength=len(KINDS)) if on.any() else np.zeros(len(KINDS), int)
+        most = f"{KINDS[int(ks.argmax())]} {ks.max()}/{on.sum()}" if on.any() else ""
+        yon = t[:, 1] > 0
+        yk = np.bincount(t[yon, 3].astype(int), minlength=len(KINDS))
+        ymost = f"{KINDS[int(yk.argmax())]} {yk.max()}/{yon.sum()}" if yon.any() else ""
+        print(f"  {name[:56]:56} {bench.db(x):4.0f} dB {pc(t[:, 0])} {pc(t[:, 1])} {pc(on)}  {most:18} (0.2: {ymost})")
     for p in sorted(glob.glob(os.path.join(MINE, "*2.wav"))):
         check("his " + os.path.basename(p), decode(p))
     for c in json.load(open(os.path.join(HERE, "clips.json"))):
