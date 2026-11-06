@@ -1178,3 +1178,30 @@ Singing/whistling vs music is a later question for the same kind of layer (parke
 - **Not yet real:** the mixes model distance only as level; real distance also dulls the highs and adds the room's
   echo. Next: that in the mixes, his distance sweep and more rooms, then 4d (Dev switch, the layer's answer in the
   session log).
+
+### Step 4c with realistic distance (Claude Code, Nov 6; bench only)
+
+DadCraft: "go ahead with the realistic distance in the mixes". Each close clip is also heard from three distances
+before mixing: across the room (direct and the room's echo about even, RT60 0.3-0.8 s, highs dulled from 7-10 kHz),
+far (echo 3-6 dB over the direct, highs from 3-5 kHz) and the next room (echo 8-12 dB over, highs taken from 1-2 kHz
+at 18 dB/oct, as through a wall or door). Now only the seven-answer layer (l2 3000), and "right" means heard and named
+the right kind (today: Mixed's 0.2 with YAMNet's top kind). Held out (embeddings kept in the cache, `--fresh` remakes):
+
+| at 10 dB over the room | 0.2 right | layer right | (layer heard) |
+|---|---|---|---|
+| near | 71% | 84% | 92% |
+| across the room | 56% | 79% | 91% |
+| far | 45% | 78% | 90% |
+| next room | 33% | 64% | 92% |
+| quiet rooms named a sound | 2% | 6% | |
+
+By kind at 6-10 dB over all distances (0.2 right | layer right): voices 81 | 88, music 86 | 84, traffic 9 | 52,
+birds 68 | 82, water 28 | 53, steps 22 | 82. The further away, the more the layer adds; it hears a sound in the next
+room nearly as well as close, though it names it right less often there.
+Checks: his office 0% named; his 1 dB far tap 23%, all as steps (the dish clanks; not water). The real far traffic
+from inside is named traffic by the layer (the dorm, the apartment, through windows); three outdoor road recordings
+are named water and a night city birds, but YAMNet's own 0.2 names them the same: the layer inherits those names, it
+doesn't add them.
+**Cost:** quiet rooms named a sound in 6% of windows (0.2: 2%). One judgement doesn't switch a scene (they need ~40%
+of 8 s), so scattered windows may not be heard; 4d's session log will show how often it happens in his house.
+**Next:** his sink sweep and more rooms (real distance); then 4d.
