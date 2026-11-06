@@ -620,7 +620,7 @@ A preset file holds the effect sliders, their movers, the Music and Rhythm level
 
 **Earbud and headset mics are much quieter than the phone's.** They are made for your voice right next to them, not for hearing a room, so a USB-C, wired or Bluetooth headset mic can sound silent at first. If you pick one as Input, open **Input & output**, raise **Input gain** (around 8 worked for USB-C earbuds, against 1 to 2.5 for the phone mic) and lower **Noise gate threshold**, all the way to -80 if needed (-80 switches the gate off). When you go back to the phone's mic, turn them back, or it will be loud and hissy. The app keeps one set of these settings for every mic, because Android gives many headsets the same generic name and the app can't tell them apart.
 
-**Phone calls and other apps.** When a call rings or starts, including calls in apps like WhatsApp, the app goes silent and says so. It plays again by itself when the call ends. When another app plays sound, like music or navigation, the app turns itself down a little (about 3 dB) so you can hear both, and comes back up when the other sound stops. It never pauses your music app. This works on Android 12 and newer.
+**Phone calls and other apps.** When a call rings or starts, including calls in apps like WhatsApp, the app goes silent and says so. It plays again by itself about two seconds after the call ends (it reopens the sound, so the music starts fresh). When another app plays sound, like music or navigation, the app turns itself down a little (about 3 dB) so you can hear both, and comes back up when the other sound stops. It never pauses your music app. This works on Android 12 and newer.
 
 ## What to test and how to send feedback
 
