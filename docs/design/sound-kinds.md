@@ -1109,3 +1109,18 @@ cost the second pass was meant to remove.
 road isn't in the level or YAMNet's Silence score; it needs a trained layer on YAMNet's embeddings (accuracy step 4),
 and real quiet-room clips to train and check it on: public recordings, or ones DadCraft makes himself outside the app
 (the app never records). Step 7 is set aside; the bench flags stay for step 4.
+
+## Step 17: his session logs read, and "unsure" smoothed (Claude Code, Nov 6)
+
+DadCraft: "go ahead with the session log analysis", then "yes, go ahead and smooth it". The 7 pulled sessions with
+scores (58 min, no Like/Flat/Note marks) were lined up with the `hear` fields. What they showed: birds and traffic
+lead only in sub-second blips that the scene windows already filter (birds never came on, a traffic pass twice); the
+busy places he named (a grocery store, his son's jiu jitsu dojo) were judged about right: weak voices with beeps and
+music behind at the store, steady real voices at the dojo; walking (the step sensor) and YAMNet's steps agree in a
+pocket, and walking without heard steps fits quiet indoor floors; walking ended a Calm build 7 times of 29, 5 of them
+real walks. The one misreading on the screen: "unsure" was set per judgement and flickered up to 32 times a minute.
+
+Now it waits like the heard kind: it changes after `UNSURE_N` (4, about a second) judgements in a row say otherwise;
+YAMNet's silence or a STRONG kind ends it at once. Replayed (Mixed on): Nov 4 20:56 136 -> 12 changes, the grocery
+store 418 -> 36, the sink 66 -> 2. Only the Now line and the replay tool read it, so the music is unchanged. J checks a
+single unsure judgement among voices, and a voices blip among unsure, flip nothing (both fail with a wait of 1).
