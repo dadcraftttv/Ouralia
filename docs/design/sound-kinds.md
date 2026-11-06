@@ -1124,3 +1124,23 @@ Now it waits like the heard kind: it changes after `UNSURE_N` (4, about a second
 YAMNet's silence or a STRONG kind ends it at once. Replayed (Mixed on): Nov 4 20:56 136 -> 12 changes, the grocery
 store 418 -> 36, the sink 66 -> 2. Only the Now line and the replay tool read it, so the music is unchanged. J checks a
 single unsure judgement among voices, and a voices blip among unsure, flip nothing (both fail with a wait of 1).
+
+## Accuracy step 4 plan: quiet room vs far sound (Claude Code, Nov 6)
+
+DadCraft: "lets look into accuracy step 4"; he picked the first question (quiet room vs far sound) and the data
+(public clips to train, a few of his own recordings to check). Step 7 showed the gap: neither level nor YAMNet's
+Silence score tells a quiet room from a far road or tap.
+- **4a, the embedding.** The app's model outputs only the 521 scores. Its 1024-value embedding is tensor 115
+  (`layer28/reduce_mean`, int8, scale 0.02233, zero point -128), just before the last layer. Adding it as a second
+  output (flatbuffers + ai_edge_litert's schema, a one-time tool) was tried Nov 6: the scores stay identical, the
+  file is the same size, and the phone does no extra work.
+- **4b, the set.** Public clips only where the licence is CC0 or CC-BY (Wikimedia Commons, FSD50K's CC0/CC-BY
+  files; nothing NC, since the weights ship in a public repo and app). Quiet rooms; real sounds at a distance (the
+  bench's far condition and real far recordings); the same sounds close. His recordings (a recorder app, outside
+  Ouralia, which never records) are kept for checking only and never committed.
+- **4c, train on the desktop.** Logistic regression on the embedding, about 4 KB of weights. Checked on recordings
+  it never saw (split by recording, not by window). Gate: far traffic, water and steps come back as step 7's raise
+  did (traffic 1 -> 12/12, water 9 -> 15/17, steps 9 -> 11/12) while quiet rooms stay quiet, his own included.
+- **4d, Dev behind a switch.** The session log records the layer's answer so the replay tool can tune it on his
+  sessions. **4e, his listen.**
+Singing/whistling vs music is a later question for the same kind of layer (parked by him, Nov 5).

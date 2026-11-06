@@ -38,7 +38,9 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 - ~~Raising quiet sound before YAMNet~~ (accuracy step 7) **SET ASIDE Nov 6** (design/sound-kinds.md "Step 7, the
   two quiet routes checked"): neither the un-raised level (his sessions: the floor climbs under steady sound) nor a
   second YAMNet pass (his quiet rooms rarely reach Silence 0.6) keeps real quiet rooms quiet while winning back
-  distance. Next for distance and the sink: YAMNet embeddings with a small trained layer (step 4 of the list), his call. Wind and singing only where real listening shows a problem (Codex, Nov 5).
+  distance. Next for distance and the sink: YAMNet embeddings with a small trained layer (step 4 of the list),
+  **started Nov 6** on his pick (quiet room vs far sound; public clips to train, his recordings to check; plan:
+  design/sound-kinds.md "Accuracy step 4 plan"). Wind and singing only where real listening shows a problem (Codex, Nov 5).
 - **Singing and whistling count as music in the room** (seen Nov 5 on rc6: whistling read as music 0.59-0.98 and
   birds 0.33-0.80). The app's music group holds YAMNet's singing classes, and nothing tells your own voice from a
   radio, so with Mixed Surroundings on, ~8 s of singing in 20 can trigger Make Room for Music (the music and beat
