@@ -57,8 +57,9 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 - ~~**Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.~~ DONE Nov 5: topics and description
   set, a README GIF of the Now line from rc6 on the Moto. Still to make: a short clip with sound (DadCraft records it).
 - **Release to Play** (item 14): the release key and the Play forms (docs/RELEASING.md).
-- Older, still waiting on DadCraft: the phone checks (call pause, pocket shaping), Clear Catches' verdict, a cost per
-  feature (item 22).
+- Older, still waiting on DadCraft: the phone check of pocket shaping, Clear Catches' verdict, a cost per feature
+  (item 22). (~~Call pause~~ **checked Nov 6**: the sound now comes back after a call, design/audio-io.md "Calls and
+  other audio"; DadCraft: "that worked ... hung up and Ouralia came back".)
 
 
 **Project review (Codex, Nov 3):** [branch/code/performance review](PROJECT-REVIEW-2026-11-03.md).
