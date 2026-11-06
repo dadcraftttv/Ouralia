@@ -21,6 +21,13 @@ final class SoundKinds {
     static final int ENTER_N = 2;
     /** A lead this sure changes the kind at once (the 2 s check, Oct 31: birds took ~3 s with two in a row). */
     static final float STRONG = 0.5f;
+    /**
+     * "Unsure" waits like the heard kind (Nov 6, his session logs: set per judgement it flickered up to 32 times a
+     * minute on the Now line; DadCraft: "yes, go ahead and smooth it"): it changes after UNSURE_N judgements in a row
+     * (about a second) say otherwise, except that YAMNet's silence or a STRONG kind ends it at once. Replayed on his
+     * logs, 2 left the grocery store at 15 changes a minute, 4 brings it to 4 (Mixed on). Only the Now line reads it.
+     */
+    static final int UNSURE_N = 4;
     /** The patch's ring: SEGS segments (patchgen SK_N); the SEGS - 1 whole ones are read each time. */
     static final int SEGS = 5;
     /**
@@ -145,6 +152,7 @@ final class SoundKinds {
     private int gesture = -1;   // WATER or BIRDS while both are heard (mixed only)
     private float waterAvg, birdsAvg;
     private boolean unsure, silent;
+    private int unsureN;   // (judgements in a row that disagree with unsure)
     private final boolean[] in = new boolean[NAMES.length];   // (this judgement's kinds clearly there)
 
     /**
@@ -374,7 +382,15 @@ final class SoundKinds {
         float a = Math.min(1f, (float) step / AVG_MS);
         waterAvg += (last[WATER] - waterAvg) * a;
         birdsAvg += (last[BIRDS] - birdsAvg) * a;
-        unsure = mix && !silent && last[best] < quietFloor;
+        boolean rawUnsure = mix && !silent && last[best] < quietFloor;
+        unsureN = rawUnsure != unsure ? unsureN + 1 : 0;
+        if (unsure && (!mix || silent || last[best] >= strong)) {
+            unsure = false;
+            unsureN = 0;
+        } else if (unsureN >= UNSURE_N) {
+            unsure = rawUnsure;
+            unsureN = 0;
+        }
         for (int k = 0; k < QUIET; k++) {
             in[k] = !silent && last[k] >= presentMin[k] && last[k] >= presentRel * last[best];
         }
@@ -524,6 +540,7 @@ final class SoundKinds {
         }
         gesture = -1;
         unsure = silent = false;
+        unsureN = 0;
         Arrays.fill(in, false);
         waterAvg = birdsAvg = 0;
     }

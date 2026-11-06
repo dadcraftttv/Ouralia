@@ -202,8 +202,17 @@ public class J {   // sound kinds (step 4c): the 16 kHz resampler, the kinds and
     check(turns==0,"mixed: an even mix doesn't flap between the gestures ("+turns+" changes)");
     for(int i=0;i<40;i++) g.judge(sc(4,60,5,32));
     check(g.birdsLead()&&!g.waterLeads()&&g.water(),"mixed: birds take over once clearly more, water still heard (Underwater keeps it)");
-    g.reset(); g.judge(sc(10,3)); g.judge(sc(10,3));
+    g.reset(); for(int i=0;i<SoundKinds.UNSURE_N;i++) g.judge(sc(10,3));
     check(g.heardLine().equals("Heard: unsure")&&g.unsure(),"mixed: nothing scores, not silence: unsure, not quiet ("+g.heardLine()+")");
+    for(int i=0;i<4;i++) g.judge(sc(0,30));
+    int flips=0; boolean u=g.unsure();
+    for(int i=0;i<80;i++){ g.judge(i%3==0?sc(10,3):sc(0,30)); if(g.unsure()!=u){flips++;u=g.unsure();} }
+    check(!u&&flips==0,"mixed: one unsure judgement among voices doesn't flip the Now line ("+flips+" changes)");
+    for(int i=0;i<80;i++){ g.judge(i%6==5?sc(0,30):sc(10,3)); if(g.unsure()!=u){flips++;u=g.unsure();} }
+    check(u&&flips==1,"mixed: unsure mostly, with a voices blip now and then, stays unsure ("+flips+" changes)");
+    g.judge(sc(0,80));
+    check(!g.unsure(),"mixed: a strong kind ends unsure at once");
+    for(int i=0;i<SoundKinds.UNSURE_N;i++) g.judge(sc(10,3));
     g.judge(sc(494,90)); g.judge(sc(494,90));
     check(!g.unsure()&&g.heardLine().startsWith("Heard: quiet"),"mixed: YAMNet's silence is still quiet ("+g.heardLine()+")");
     SoundKinds.mixed=false;

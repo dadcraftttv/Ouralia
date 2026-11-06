@@ -208,7 +208,7 @@ public final class ReplayKinds {
             for (int i = 0; i < STATES.length; i++) {
                 if (now[i] != was[i] && inRange) {
                     run.changes[i]++;
-                    if (!heard && i == STATES.length - 1) continue;   // (unsure flips with single judgements: --heard)
+                    if (!heard && i == STATES.length - 1) continue;   // (unsure changes often in busy places: --heard)
                     run.timeline.add(String.format(Locale.US, "%s  %s %s%s", clock(r.ms), STATES[i], now[i] ? "on" : "off",
                             detail(k, i, mic)));
                 }
