@@ -22,10 +22,12 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 ## Open now (checked against the code, 2026-11-05, rc6)
 
 **In short (Nov 5, rc6, the first public beta; the entries below keep the history):**
-- **DadCraft's listens:** Mixed Surroundings with a running sink (knock or clink while it runs: the trail decorates an
-  earned chime), the roadside for Traffic Passes Through and Traffic Flow, outdoor birds. Then fixes from what fails.
-- **His calls:** do water and birds hold back for talk; Found Palette's default (a switch, off); learning from session
-  logs (not started).
+- **DadCraft's listens:** ~~Mixed Surroundings with a running sink~~ **heard Nov 6** (dishes, tap running): "when i
+  clanked dishes i did hear music answer, but it sounded underwater as i expected it to"; the roadside for Traffic
+  Passes Through and Traffic Flow, outdoor birds. Then fixes from what fails.
+- **His calls:** ~~do water and birds hold back for talk~~ **no need (Nov 6):** "the speech while running the water
+  was fine, what i could hear back from Ouralia sounded like the chimes, underwater, so it fit" (his speech under
+  the tap never counted as talking); Found Palette's default (a switch, off); learning from session logs (not started).
 - **Tuning from replays:** Mixed Surroundings' `PRESENT_MIN` 0.2 was judgement; water may want lower (his sink
   scored 0.1-0.26). The replay tool is BUILT (Nov 5, `tools/replay_kinds.py`, design/sound-kinds.md Step 16), and the
   windows are now measured in time: his sink replayed with water's own minimum at 0.12 holds water 40 s instead of 14 s.
