@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Nov 5, 2026 · DadCraft · for rc6 (0.9.0-rc6), the first public beta
+Nov 6, 2026 · DadCraft · for rc6.1 (0.9.0-rc6.1), the first public beta
 
 **Coming from rc5.2 or older?** rc6 installs over it and keeps your settings and presets. The kits are gone (the
 Classic synth voices and Found sounds are unchanged), so an old preset's kit choices are ignored. The release history
@@ -18,6 +18,8 @@ There are two ways to use it:
 - **Scenes (optional).** Ready-made experiences from the original RjDj, which react to sound and to how you move the phone. The app comes with four official RjDj example scenes to try (see "The four built-in scenes" below). You can also import other scenes you already have, as a zip file or folder.
 
 ## What's new
+
+**New in rc6.1 (Nov 6):** a fix. With Bluetooth earbuds, any phone call (even one you declined while it rang) left the app silent until you restarted it. Now the sound comes back by itself about two seconds after the call ends. rc6.1 installs over rc6 and keeps your settings.
 
 **New in rc6 (Oct 30-Nov 5), the first public beta:**
 
