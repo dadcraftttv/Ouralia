@@ -385,8 +385,39 @@ public class AudioService extends Service {
         if (!outputLost) {
             PdBase.computeAudio(!call);
         }
-        logEvent(call ? "Paused for a phone call" : "Call over, playing again");
+        handler.removeCallbacks(reopenAfterCall);
+        if (!call) {
+            handler.postDelayed(reopenAfterCall, CALL_REOPEN_MS);
+        }
+        logEvent(call ? "Paused for a phone call" : "Call over, reopening the sound");
         notifyStateChanged();
+    }
+
+    /**
+     * A call (even one only ringing, then declined) moves Bluetooth earbuds from their music link to the call link,
+     * and that closes the app's streams. libpd doesn't reopen them (setAutoReopen(false), see headphonesLost), so the
+     * sound stayed silent after the call (DadCraft, Nov 6: twice that day, EarFun earbuds; logcat showed Telecom's
+     * TYPE_BLUETOOTH_SCO route as the phone rang). So the sound is reopened a moment after every call, the way
+     * afterHeadphonesLost does: the earbuds' music link needs a moment to come back after the call link closes.
+     */
+    private static final long CALL_REOPEN_MS = 2000;
+    private final Runnable reopenAfterCall = this::reopenAfterCall;
+
+    private void reopenAfterCall() {
+        if (!running || pausedForCall || outputLost) {
+            return;
+        }
+        stopEngine();
+        try {
+            startEngine();
+            lastError = null;
+            logEvent("Sound reopened after the call");
+        } catch (IOException | RuntimeException e) {
+            Log.w(TAG, "Couldn't reopen after a call", e);
+            logEvent("Stopped: couldn't reopen the sound after the call (" + e.getMessage() + ")");
+            lastError = getString(R.string.err_start_failed, e.getMessage());
+            shutDown();
+        }
     }
 
     private final AudioManager.AudioPlaybackCallback playbackWatcher = new AudioManager.AudioPlaybackCallback() {
@@ -1272,6 +1303,7 @@ public class AudioService extends Service {
         outputLost = false;
         SceneGraphics.SCENE.clear();
         handler.removeCallbacks(afterHeadphonesLost);
+        handler.removeCallbacks(reopenAfterCall);
         getSystemService(AudioManager.class).unregisterAudioDeviceCallback(outputWatcher);
         getSystemService(AudioManager.class).unregisterAudioPlaybackCallback(playbackWatcher);
         pausedForCall = false;
