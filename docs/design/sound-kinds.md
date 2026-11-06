@@ -1230,7 +1230,9 @@ Mixed Surroundings, off; in presets with Mixed).
   | quiet rooms named a sound | 2% | 6% | 6% | 5% |
 
   His office: 0% in all three. CC BY-SA 4.0 would win back about half of the traffic loss (one-way compatible with
-  GPLv3, as the AudioSet names already are), if he wants it.
+  GPLv3, as the AudioSet names already are). **The rule stays CC0 / public domain / CC BY** (DadCraft, Nov 6: "keep
+  the rule, drop it from the list. we can come back to it if anyone ever downloads the app and sends feedback to that
+  effect."): `--sa4` stays in the tool, unused.
 - **What the switch does** (with Mixed on): the kind the layer hears (past its cutoff) also counts as clearly there,
   beside YAMNet's own 0.2 rule (OR: a mix stays a mix; on the bench the OR adds ~1 point of quiet-room windows and 1-6
   points of finds over the layer alone), even where YAMNet's top class is Silence; it stands in for quiet or unsure, and
