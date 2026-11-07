@@ -151,8 +151,10 @@ a feature on and off; DadCraft's phone). (The long session: done Oct 22. DESIGN-
 MainActivity was: BUILT Oct 22, docs/design/ and tools/patchgen/.)
 
 **Release to Play (release prep, item 14 Release; steps and drafts in docs/RELEASING.md):** DadCraft makes the release
-key (the build picks it up from ~/.gradle) and turns on Play App Signing; the Play Console forms (foreground
-services, Data safety, store listing) from the drafts there.
+key (the build picks it up from ~/.gradle) and sets up Play App Signing with that same key (GitHub/Play parity,
+Nov 7); the Play Console forms (foreground services, Data safety) from the drafts there; his edit of the description;
+12 testers for 14 days. Built Nov 7: the .aab in release_apk.sh, Play screenshots, feature graphic, description
+draft. Then rc7 (versionCode 19), the first release-key build, on both.
 
 **Shimmer Style (Oct 23, item 18):** DadCraft found Classic Shimmer metallic on real-world sounds. Built Mist behind a
 switch (Reverb, Shimmer Style; Classic stays the default); Sparkle set aside (back pocket, his "still sounds wrong").
