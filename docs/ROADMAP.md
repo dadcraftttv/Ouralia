@@ -19,7 +19,7 @@ the one list of what is not done, checked against the code. In the same commit t
 something: take it off "Open now", and mark its item (BUILT / REMOVED / SET ASIDE, the date, where it lives). A new
 idea goes into its item and into "Open now". Every item below keeps its history; "Open now" is the only to-do list.
 
-## Open now (checked against the code, 2026-11-05, rc6; rc6.1 Nov 6 adds only the call fix)
+## Open now (checked against the code, 2026-11-05, rc6; rc6.1 Nov 6 adds only the call fix, rc6.2 only the Now line without Realm Hopper)
 
 **In short (Nov 5, rc6, the first public beta; the entries below keep the history):**
 - **DadCraft's listens:** Mixed Surroundings with a running sink (knock or clink while it runs: the trail decorates an

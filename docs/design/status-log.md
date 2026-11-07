@@ -148,3 +148,5 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   one declined while ringing) moved them to the call link and closed the streams, which libpd doesn't reopen, so the
   app stayed silent until a restart. Now the sound reopens 2 s after every call (design/audio-io.md). The rest of
   `sound-kinds` since rc6 stays on the Dev path until the next release (DadCraft).
+- **Nov 6: rc6.2** (0.9.0-rc6.2, versionCode 18), rc6.1 plus only the Now line without Realm Hopper (DadCraft: "that
+  fix should go into rc6.1"): his demo clip had Realm Hopper off, so the line naming what the app hears never showed.
