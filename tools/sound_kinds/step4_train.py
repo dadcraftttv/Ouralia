@@ -16,7 +16,7 @@ Also checks his own recordings (~/Downloads/step4-recordings, never trained on),
 real quiet room. Embeddings are kept in tools/.sound_kinds_cache/step4_emb.npz (--fresh remakes them).
 Prints only the summary. Plan and results: docs/design/sound-kinds.md "Accuracy step 4 plan" and after.
 
-    tools/.venv/bin/python tools/sound_kinds/step4_train.py [--fresh] [--l2 3000] [--ship] [--sa4] [--export PATH]
+    tools/.venv/bin/python tools/sound_kinds/step4_train.py [--fresh] [--l2 3000] [--ship] [--sa4] [--cut X] [--export PATH]
 
 --ship trains only on clips whose licence lets the weights ship in the public repo and app (SHIP: CC0, public domain,
 CC BY; nothing NC, Nov 6 plan); --sa4 adds CC BY-SA 4.0 (one-way compatible with GPLv3). Held-out results are still
@@ -46,6 +46,8 @@ SHIP = {"CC0", "Public domain", "CC BY 3.0", "CC BY 4.0"} | ({"CC BY-SA 4.0"} if
 EXPORT = sys.argv[sys.argv.index("--export") + 1] if "--export" in sys.argv else None
 SHIP_ONLY = "--ship" in sys.argv or EXPORT is not None
 L2 = float(sys.argv[sys.argv.index("--l2") + 1]) if "--l2" in sys.argv else 3000.0
+# --cut X: a fixed cutoff on 1 - P(quiet) instead of the QUIET_MAX quantile (Nov 6: his sink, 0.75 vs 0.829)
+CUT = float(sys.argv[sys.argv.index("--cut") + 1]) if "--cut" in sys.argv else None
 # distance: (direct-to-echo ratio in dB, echo time RT60 in s, low-pass Hz and slope in dB/oct), each a (lo, hi) range.
 # Across the room the direct sound and the room's echo are about even; far, the echo leads and the highs dull; in the
 # next room the wall or door takes the highs and nearly all of it is echo.
@@ -209,7 +211,7 @@ def fit_kinds(X, y, l2=L2, steps=1500, lr=0.2):
         P = np.exp(L - L.max(1, keepdims=True))
         return P / P.sum(1, keepdims=True)
     f.weights = (Wf, bf)
-    return f, float(np.quantile(1 - f(X[y == 0])[:, 0], 1 - QUIET_MAX))
+    return f, CUT if CUT is not None else float(np.quantile(1 - f(X[y == 0])[:, 0], 1 - QUIET_MAX))
 
 
 def export(path, pr, cut):
