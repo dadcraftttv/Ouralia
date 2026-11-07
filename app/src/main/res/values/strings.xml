@@ -25,6 +25,7 @@
     <string name="sleep_off">Off</string>
     <string name="sleep_minutes">%1$d minutes</string>
     <string name="now_line">Now: %1$s \u00b7 %2$s</string>
+    <string name="now_line_plain">Now: %s</string>
     <string name="sub_mic">Microphone</string>
     <string name="sub_pocket">Pocket and handling</string>
     <string name="sub_pocket_hint">Keeps cloth, footsteps and fingers on the phone from swamping the sound.</string>

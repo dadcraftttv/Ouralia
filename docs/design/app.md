@@ -92,7 +92,9 @@
   tabs, sliders, lock boxes and the pad; the step accelerometer tried at 100 Hz and put back to 200 (DadCraft, Oct 13:
   walking was noticed too late).
 - **Screen:** a bar pinned to the bottom (thumb reach while walking) holds the status, a "Now: <world> · why" line
-  (night/walking/pocket/room words from `Worlds.room*()`, refreshed 1/s while visible), Start/Stop, Hold world
+  (night/walking/pocket/room words from `Worlds.room*()`, refreshed 1/s while visible; since Nov 6 shown whenever the
+  built-in sound plays, as "Now: why" without the Realm, night and shaken when Realm Hopper is off: DadCraft's demo clip
+  had Hopper off and never showed what the app heard), Start/Stop, Hold world
   (`Worlds.setHeld`: the selector keeps listening but nothing changes; a stop lets go) and Save sound (a preset named
   like "Thu 8-12" from the live values). Only Input & output and Music start unfolded. `refreshRows` skips rows in
   folded sections (they catch up when opened).
