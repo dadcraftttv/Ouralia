@@ -150,3 +150,7 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   `sound-kinds` since rc6 stays on the Dev path until the next release (DadCraft).
 - **Nov 6: rc6.2** (0.9.0-rc6.2, versionCode 18), rc6.1 plus only the Now line without Realm Hopper (DadCraft: "that
   fix should go into rc6.1"): his demo clip had Realm Hopper off, so the line naming what the app hears never showed.
+- **Nov 7: rc7** (0.9.0-rc7, versionCode 19), everything merged from sound-kinds (DadCraft: "get everything merged":
+  the unsure wait on the Now line, Hear Far Sounds behind its switch, off, the session-log zip fix) and the first
+  build signed with the release key, the same on GitHub and Play (DadCraft: "lets keep parity with github and play
+  store"; RELEASING.md "Parity"). rc6.2 and earlier were debug-signed: testers uninstall once.

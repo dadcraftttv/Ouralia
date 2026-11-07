@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Nov 6, 2026 · DadCraft · for rc6.2 (0.9.0-rc6.2), the first public beta
+Nov 7, 2026 · DadCraft · for rc7 (0.9.0-rc7), the public beta
 
 **Coming from rc5.2 or older?** rc6 installs over it and keeps your settings and presets. The kits are gone (the
 Classic synth voices and Found sounds are unchanged), so an old preset's kit choices are ignored. The release history
@@ -18,6 +18,12 @@ There are two ways to use it:
 - **Scenes (optional).** Ready-made experiences from the original RjDj, which react to sound and to how you move the phone. The app comes with four official RjDj example scenes to try (see "The four built-in scenes" below). You can also import other scenes you already have, as a zip file or folder.
 
 ## What's new
+
+**New in rc7 (Nov 7):**
+- **Uninstall once (export your presets first).** rc7 is signed with Ouralia's own release key, the same one the Google Play version uses, so from now on the GitHub and Play versions can update each other. Earlier test builds (rc6.2 and before) used a test key, and Android won't install rc7 over them ("App not installed"). Use Presets > Export on each preset you want to keep, uninstall the old Ouralia, install rc7 and Import them again. After this, every update installs over the last as before.
+- **A steadier Now line:** when the app isn't sure what it hears, it waits about a second before changing the line, so it no longer flickers between names.
+- **Hear Far Sounds** (The Band, under Mixed Surroundings, off at first): a second, small check that tells a quiet room from a sound that is far away, like a running tap across the kitchen. Being tried: see its entry below.
+- **Session logs:** a fix for sending logs while a session is still being written.
 
 **New in rc6.2 (Nov 6):** the **Now:** line under the status now shows whenever the built-in sound plays, so you can see what the app hears (voices, water, birds...), walking and how the room sounds, even with Realm Hopper off. rc6.2 installs over rc6.1 and keeps your settings.
 
@@ -165,7 +171,7 @@ Presets and scenes you save or import stay in the app's private storage on your 
 You need an Android phone or tablet with **Android 9 or newer**, and headphones or earbuds.
 
 1. **Put on headphones first.** If the sound comes out of the phone speaker, the microphone hears it and it screeches back (feedback). The app only plays into headphones or earbuds, never the phone speaker, so it will not start until some are connected. If you unplug them while it runs, it stops by itself. Wired or Bluetooth both work; wired is better (see Audio devices below).
-2. Install the APK. If you already have an earlier copy, just install over it; your saved presets and settings stay. Only if Android refuses with "App not installed" do you need to uninstall the old copy first (see "Starting fresh with Reset" for what that erases). Android may ask you to allow installs from the app you opened it from, and Play Protect may show an "unknown developer" warning. Choose **More details > Install anyway**.
+2. Install the APK. If you already have an earlier copy, just install over it; your saved presets and settings stay. Only if Android refuses with "App not installed" (as it will once, going from rc6.2 or earlier to rc7: see "New in rc7") do you need to uninstall the old copy first (see "Starting fresh with Reset" for what that erases). Android may ask you to allow installs from the app you opened it from, and Play Protect may show an "unknown developer" warning. Choose **More details > Install anyway**.
 3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone, then a short guided tour points out the small buttons and has you press **Start** (the round button in the player at the bottom of the screen) and try Echo on your own voice. You can see it all again under Setup, About.
 4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on The Band tab, Realm Hopper on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
 5. Press **Stop** when finished.

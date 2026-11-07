@@ -63,7 +63,7 @@ it can also play the original RjDj scenes. It will be free on Google Play. (Its 
 ## Status
 
 **Public beta** since Nov 5, 2026: download the APK from [Releases](https://github.com/dadcraftttv/Ouralia/releases)
-(rc6.2, Android 9 or newer, headphones needed). What testers should know, and how to send feedback, is in the
+(rc7, Android 9 or newer, headphones needed). What testers should know, and how to send feedback, is in the
 [tester guide](docs/TESTER-GUIDE.md).
 Made by DadCraft, a hobbyist musician, with AI coding assistants.
 
