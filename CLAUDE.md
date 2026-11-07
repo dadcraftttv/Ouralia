@@ -85,6 +85,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
 - **`tools/run_tests.sh quick <words>`** — while working: only the Pd test sections whose title matches (e.g.
   `quick glitch`, `quick pocket`), plus the Java tests. `tools/run_tests.sh list` shows the section titles.
 - Android build: `./gradlew assembleDebug`. Real-device check is DadCraft's.
+- Sound kinds on real places: `tools/pull_sessions.sh --dev`, then `tools/replay_kinds.py` (session logs' scores
+  through the app's SoundKinds; `--set` tries other cutoffs; `--help`). Never audio: only the logged scores.
 - `tools/test_release.py` (in both tiers) guards the permissions, backup off and the name. A new permission means
   updating PRIVACY.md and its list.
 

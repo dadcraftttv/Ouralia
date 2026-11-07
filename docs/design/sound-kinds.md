@@ -1010,3 +1010,233 @@ name, built by its Context constructor) and `org.tensorflow.lite.**`. The About 
 notice wherever the model is. PRIVACY.md: the section is no longer Dev only (still on-device, nothing saved or sent,
 no internet permission). The bench's `--export` now writes to `app/src/main/assets/sound_kinds`. Tests: a JVM stub
 `android.os.Build` (stubs2) stands in for an ARM phone.
+
+## Step 16: the replay tool and time-based windows (Claude Code, Nov 5)
+
+DadCraft (Nov 5), after asking what else could improve accuracy: "go ahead with the replay tool and the time-based
+windows" (both from the 2026-11-03 review: "start with deterministic replay of scores", and "use elapsed time for
+context windows: the current judgement-count windows stretch when work is skipped").
+
+**Time-based windows.** The five scene windows (talk 8 s, water 8 s, birds 8 s, room music 20 s, traffic scene 20 s)
+were rings of 32 or 80 judgements, so their length was 8 s only at one judgement every 0.25 s. Now each is a
+`SoundKinds.Window` of milliseconds: a judgement counts for the time since the one before (`STEP_MS` 250 the first
+time, at most `MAX_STEP_MS` 1 s, since a judgement hears ~1 s), and the window holds its last span. A gap is time no
+kind was heard, and faster judgements no longer shrink a window. The gestures' ~8 s averages move by step/`AVG_MS`
+the same way. At one judgement every 250 ms the shares equal the old counts exactly (13 of 32 = 3.25 s of 8 s;
+on/off compared in whole ms), so every number tuned on the counts holds; test J's old checks pass unchanged and
+three new ones (a judgement a second apart: on after 4, not 13; a 10 s gap empties the window; twice as fast still
+needs 3.2 s) fail on the old code. The runner passes real time (`SoundKindsRunner.clock`, which the J2 test steps).
+On the Moto this changes little: the six score-logging sessions (Nov 4-5) judged every 256-257 ms (median) with
+at most 3 steps over 0.5 s in a session (the longest 0.8 s), so the old windows were 8.2 s and now are 8 s. It matters
+where judgements are skipped (a slower phone, a busy moment).
+
+**The replay tool.** `tools/replay_kinds.py` runs a session log's logged scores back through the app's own
+`SoundKinds` (`judgeKinds`, the same code `judge` uses after reducing YAMNet's 521 scores to the seven), with
+Mixed Surroundings as the log says (`--mixed` overrides). It prints the judgement steps (gaps), each kind's
+median/p90/max score, how much of the time each was clearly there and was the heard kind, the time each scene was on
+and its changes, and a timeline of scene changes with DadCraft's marks and the recent mic level (`--heard` adds
+every change of the Now line's kind; `--scores` gives each second's scores; `--from/--to` narrows it). `--set
+NAME=VALUE` replays a second time with other numbers and shows both: `present_min` (all kinds, or one:
+`present_min.water`), `present_rel`, `quiet_floor`, `strong`, `lead_ratio`, and each window's `.on`, `.off`, `.s`.
+These are `SoundKinds` instance fields that only the tool changes; the app keeps the constants. `presentMin` is per kind
+now, so water can have its own minimum. The session log's kinds line gains `"s":1` when YAMNet's own top class was
+Silence (needed to tell quiet from unsure); older logs don't have it, and the tool guesses it from the quiet group
+leading the six kinds (it says so). `tools/pull_sessions.sh --dev` copies Ouralia Dev's sessions (adb can't read
+the release app's). Test: `tools/test_replay_kinds.py` (both tiers), a made-up log.
+
+**First replay: his sink (session 20261105-083424, sink ~1:30-2:08, mic about -27 dB).** Water's median score there
+was 0.15 (p90 0.26), clearly there (at least 0.2) 17% of that stretch, and the water scene was on 14 s with 2 changes.
+With `--set present_min.water=0.12`: clearly there 53%, on 40 s with 1 change. That is a candidate, not a decision:
+the same replay over his other sessions (talk, music, walks) has to show water doesn't come on where there was none,
+and his next sink listen says whether it feels right. Seen in passing: the logged mic level drops to -97/-98 dB for a
+second at a time (the Moto's dropouts, as in Calm Builds, Nov 4); the timeline shows the loudest of the last 5 s.
+
+## Accuracy step 7 on the bench: raising quiet sound before YAMNet (Claude Code, Nov 5; bench only, nothing in the app)
+
+DadCraft asked for quick wins within 20 minutes; this was step 7 of the accuracy list (the far condition lost traffic,
+water and wind to "quiet"). `bench.py --norm CAP [--gate DB]` adds the conditions phone+n and far+n: each 0.975 s
+window raised toward -35 dBFS by at most CAP dB, never lowered, and left alone under the gate. 40 s a run.
+
+| max scores | traffic | water | wind | steps | music | real quiet room | made quiet rooms |
+|---|---|---|---|---|---|---|---|
+| far (today) | 1/12 | 9/17 | 2/12 | 9/12 | 9/10 | 1/1 | 9/9 |
+| far+n, cap 10 dB | **12/12** | **15/17** | **6/12** | **11/12** | 10/10 | 1/1 | 8/9 |
+| far+n, cap 20 dB | 12/12 | 16/17 | 5/12 | 11/12 | 10/10 | 0/1 | 7/9 |
+| phone+n, cap 10 dB | 12/12 | 16/17 | 5/12 | 11/12 | 10/10 | **0/1** | **5/9** |
+| far+n, cap 10, gate -55 | 7/12 | 14/17 | 3/12 | 8/12 | 9/10 | 1/1 | 9/9 |
+| phone+n, cap 10, gate -60 | 12/12 | 16/17 | 5/12 | 11/12 | 10/10 | 0/1 | 6/9 |
+
+At phone level without the raise: traffic 12/12, water 16/17, wind 6/12, steps 9/12, quiet 1/1 and 7/9. Voices, birds and
+music are unchanged throughout.
+**Reading:** raising quiet sound by up to 10 dB wins back almost everything lost at a distance, at no cost to
+louder sound. But quiet rooms raised as well start being named as sounds (the real library room and 4 of 9 made ones
+at phone+n), and a level gate can't separate them: a quiet room and a distant road sit at the same level, so the gate
+takes the distance gains back before it saves the rooms. **So the raise only works if quiet is judged from the
+un-raised level** (as Calm Builds already does) or from YAMNet's scores on the un-raised window (a second inference, about
++3% of a core). That is a design choice for DadCraft before anything goes into the app.
+
+### Step 7, the two quiet routes checked (Claude Code, Nov 6; bench only, nothing in the app)
+
+DadCraft first agreed to Claude's pick, judging quiet from the un-raised level ("i agree with you for step 7"). It failed on
+his own sessions before any code was written. The app's adaptive floor (`hear` mic_db - room_db; 7 sessions, 12,978
+judgements) climbs under steady sound. Water sits a median 5.9 dB over it and voices 3.8 dB, the same as quiet rooms
+(3.6 dB); under 6 dB over the floor: quiet 59%, water 53%, voices 66%. Absolute level overlaps too (quiet median
+-51 dBFS, named kinds -44). He then said yes to benching the second pass ("yes, run that check").
+`bench.py --norm 10 --pass2 [--sil T] [--keep R]` adds phone+2/far+2: raised as +n, but a second YAMNet pass on the
+un-raised window makes it quiet when Silence is its top label (or its Silence score >= T). With `--keep R`, a window
+the un-raised pass calls quiet from weak scores also needs a raised score of R or more to count.
+`BENCH_QUIET_DEBUG=1` prints the quiet rooms' strongest raised scores.
+
+| max scores | traffic | water | wind | steps | real quiet room | made quiet rooms |
+|---|---|---|---|---|---|---|
+| far (today) | 1/12 | 9/17 | 2/12 | 9/12 | 1/1 | 9/9 |
+| far+n (raise only) | 12/12 | 15/17 | 6/12 | 11/12 | 1/1 | 8/9 |
+| far+2, Silence top label | 6/12 | 14/17 | 2/12 | 8/12 | 1/1 | 9/9 |
+| far+2, Silence >= 0.2 / 0.4 | 8/12, 9/12 | 15/17 | 3/12 | 9-10/12 | 1/1 | 9/9 |
+| **far+2, Silence >= 0.6** | **12/12** | **15/17** | 5/12 | **11/12** | 1/1 | **9/9** |
+| phone (today) | 12/12 | 16/17 | 6/12 | 9/12 | 1/1 | 7/9 |
+| phone+2, Silence >= 0.6 | 12/12 | 16/17 | 5/12 | 11/12 | **0/1** | 6/9 |
+| phone+2, Silence >= 0.6, keep 0.15-0.35 | 12/12 | 16/17 | 5/12 | 9/12 | 1/1 | 7/9 |
+| far+2, Silence >= 0.6, keep 0.15-0.35 | 6-8/12 | 14-15/17 | 1-2/12 | 9-10/12 | 1/1 | 9/9 |
+
+At phone level the raised library room reads water 0.26 and voices 0.20 (un-raised: voices 0.15), enough for "clearly
+there" water. The fan reads birds 0.11; the made rooms stay near 0.
+**His rooms don't have the bench's Silence scores.** In his sessions, the share of quiet judgements with Silence >= 0.6
+is 0-33% (6, 24, 8, 5, 0, 33, 19%); with >= 0.2 it is 5-95%. The made rooms are pure noise that YAMNet calls Silence
+outright, so the bench flatters the rule. In his house most quiet moments would get the plain raise, which is the
+cost the second pass was meant to remove.
+**Reading:** neither route keeps real quiet rooms quiet while winning back distance. Telling a quiet room from a far
+road isn't in the level or YAMNet's Silence score; it needs a trained layer on YAMNet's embeddings (accuracy step 4),
+and real quiet-room clips to train and check it on: public recordings, or ones DadCraft makes himself outside the app
+(the app never records). Step 7 is set aside; the bench flags stay for step 4.
+
+## Step 17: his session logs read, and "unsure" smoothed (Claude Code, Nov 6)
+
+DadCraft: "go ahead with the session log analysis", then "yes, go ahead and smooth it". The 7 pulled sessions with
+scores (58 min, no Like/Flat/Note marks) were lined up with the `hear` fields. What they showed: birds and traffic
+lead only in sub-second blips that the scene windows already filter (birds never came on, a traffic pass twice); the
+busy places he named (a grocery store, his son's jiu jitsu dojo) were judged about right: weak voices with beeps and
+music behind at the store, steady real voices at the dojo; walking (the step sensor) and YAMNet's steps agree in a
+pocket, and walking without heard steps fits quiet indoor floors; walking ended a Calm build 7 times of 29, 5 of them
+real walks. The one misreading on the screen: "unsure" was set per judgement and flickered up to 32 times a minute.
+
+Now it waits like the heard kind: it changes after `UNSURE_N` (4, about a second) judgements in a row say otherwise;
+YAMNet's silence or a STRONG kind ends it at once. Replayed (Mixed on): Nov 4 20:56 136 -> 12 changes, the grocery
+store 418 -> 36, the sink 66 -> 2. Only the Now line and the replay tool read it, so the music is unchanged. J checks a
+single unsure judgement among voices, and a voices blip among unsure, flip nothing (both fail with a wait of 1).
+
+## Accuracy step 4 plan: quiet room vs far sound (Claude Code, Nov 6)
+
+DadCraft: "lets look into accuracy step 4"; he picked the first question (quiet room vs far sound) and the data
+(public clips to train, a few of his own recordings to check). Step 7 showed the gap: neither level nor YAMNet's
+Silence score tells a quiet room from a far road or tap.
+- **4a, the embedding.** The app's model outputs only the 521 scores. Its 1024-value embedding is tensor 115
+  (`layer28/reduce_mean`, int8, scale 0.02233, zero point -128), just before the last layer. Adding it as a second
+  output (flatbuffers + ai_edge_litert's schema, a one-time tool) was tried Nov 6: the scores stay identical, the
+  file is the same size, and the phone does no extra work.
+- **4b, the set.** Public clips only where the licence is CC0 or CC-BY (Wikimedia Commons, FSD50K's CC0/CC-BY
+  files; nothing NC, since the weights ship in a public repo and app). Quiet rooms; real sounds at a distance (the
+  bench's far condition and real far recordings); the same sounds close. His recordings (a recorder app, outside
+  Ouralia, which never records) are kept for checking only and never committed.
+- **4c, train on the desktop.** Logistic regression on the embedding, about 4 KB of weights. Checked on recordings
+  it never saw (split by recording, not by window). Gate: far traffic, water and steps come back as step 7's raise
+  did (traffic 1 -> 12/12, water 9 -> 15/17, steps 9 -> 11/12) while quiet rooms stay quiet, his own included.
+- **4d, Dev behind a switch.** The session log records the layer's answer so the replay tool can tune it on his
+  sessions. **4e, his listen.**
+Singing/whistling vs music is a later question for the same kind of layer (parked by him, Nov 5).
+
+### Step 4a-4c, first results (Claude Code, Nov 6; bench only, nothing in the app)
+
+- **4a:** `tools/sound_kinds/embed_model.py` writes YAMNet with the embedding as a second output (scores identical,
+  label list kept).
+- **His recordings** (`~/Downloads/step4-recordings`, never committed or trained on): the Moto's own recorder filters
+  out steady hiss (noise reduction), so its far tap matched his empty office in every band. Re-recorded raw (a recorder
+  app on Voice recognition, Ouralia's own source): the office is steady at -62 dB; the far tap sat only 1-2 dB over it
+  and YAMNet heard no water: below anything worth answering. A distance sweep and more rooms are still to come; the
+  road waits ("i can't get to the road now").
+- **4b:** Commons has two usable real quiet rooms, so on his pick `tools/sound_kinds/step4_fetch.py` takes room tones
+  from Freesound with his API key (`~/.config/ouralia/freesound_key`, never in the repo), CC0 and CC-BY only, at most 3
+  per uploader, people/music/rain/sci-fi left out by name and tags: 61 rooms from 44 uploaders (houses, kitchens with
+  fridges, offices, bedrooms, a few computer rooms) and 12 real far-traffic clips heard from inside, for checking.
+  `step4_clips.json` lists each clip's uploader, licence and page (CC-BY's attribution; NOTICE when weights ship).
+- **4c:** `tools/sound_kinds/step4_train.py`: rooms at a phone room level (-65 to -45 dB), the bench's close clips
+  mixed in at 0-20 dB over the room, the Moto's path, five folds (rooms split by uploader, sounds by clip).
+  Held out, at 6-10 dB over the room:
+
+  | | 0.05 (Now line) | 0.2 (Mixed) | yes/no layer | seven-answer layer |
+  |---|---|---|---|---|
+  | quiet rooms named a sound | 14% | 2% | 5% | 4% |
+  | sounds found | 87-91% | 65-72% | 87-92% | 86-90% |
+  | traffic / water found | 67% / 87% | 18% / 58% | 71% / 92% | |
+
+  At the same quiet cost as the yes/no layer, a lower cutoff (0.109) finds 80% (traffic 42%, water 75%): the layer
+  earns its place on exactly the kinds the app misses. But in the windows only the layer finds, YAMNet's own top kind
+  is right just 55-58%, so a yes/no layer would add as many wrong names as right ones. The seven-answer layer (quiet +
+  the six kinds, softmax on the embedding, ~28 KB of weights) names them right 73-78% there (90-91% over all it hears).
+  His office stays quiet (2% of windows); his 1 dB far tap mostly too (8%). The real far-traffic clips: about what
+  0.05 finds, far more than 0.2.
+- **Not yet real:** the mixes model distance only as level; real distance also dulls the highs and adds the room's
+  echo. Next: that in the mixes, his distance sweep and more rooms, then 4d (Dev switch, the layer's answer in the
+  session log).
+
+### Step 4c with realistic distance (Claude Code, Nov 6; bench only)
+
+DadCraft: "go ahead with the realistic distance in the mixes". Each close clip is also heard from three distances
+before mixing: across the room (direct and the room's echo about even, RT60 0.3-0.8 s, highs dulled from 7-10 kHz),
+far (echo 3-6 dB over the direct, highs from 3-5 kHz) and the next room (echo 8-12 dB over, highs taken from 1-2 kHz
+at 18 dB/oct, as through a wall or door). Now only the seven-answer layer (l2 3000), and "right" means heard and named
+the right kind (today: Mixed's 0.2 with YAMNet's top kind). Held out (embeddings kept in the cache, `--fresh` remakes):
+
+| at 10 dB over the room | 0.2 right | layer right | (layer heard) |
+|---|---|---|---|
+| near | 71% | 84% | 92% |
+| across the room | 56% | 79% | 91% |
+| far | 45% | 78% | 90% |
+| next room | 33% | 64% | 92% |
+| quiet rooms named a sound | 2% | 6% | |
+
+By kind at 6-10 dB over all distances (0.2 right | layer right): voices 81 | 88, music 86 | 84, traffic 9 | 52,
+birds 68 | 82, water 28 | 53, steps 22 | 82. The further away, the more the layer adds; it hears a sound in the next
+room nearly as well as close, though it names it right less often there.
+Checks: his office 0% named; his 1 dB far tap 23%, all as steps (the dish clanks; not water). The real far traffic
+from inside is named traffic by the layer (the dorm, the apartment, through windows); three outdoor road recordings
+are named water and a night city birds, but YAMNet's own 0.2 names them the same: the layer inherits those names, it
+doesn't add them.
+**Cost:** quiet rooms named a sound in 6% of windows (0.2: 2%). One judgement doesn't switch a scene (they need ~40%
+of 8 s), so scattered windows may not be heard; 4d's session log will show how often it happens in his house.
+**Next:** his sink sweep and more rooms (real distance); then 4d.
+
+## Step 4d: Hear Far Sounds (Claude Code, Nov 6; Dev only, off by default; DadCraft's listen next)
+
+DadCraft: "go ahead and start on 4d". The layer from 4c is in the app behind **Hear Far Sounds** (`sk_layer`, under
+Mixed Surroundings, off; in presets with Mixed).
+- **The model:** `assets/sound_kinds/yamnet.tflite` is now the embed_model.py copy (the embedding as a second output,
+  int8, scale 0.02233, zero -128): scores identical, 40 bytes bigger. `bench.py --export` writes it that way too.
+  `YamNet.java` runs both outputs (`runForMultipleInputsOutputs`) and dequantizes the embedding.
+- **The layer:** `assets/sound_kinds/layer.bin` (28,712 bytes: 1024 x 7 weights with the standardisation folded in,
+  the bias and the cutoff 0.829 on 1 - P(quiet)), from `step4_train.py --export`; `Layer.java` reads it and gives the
+  seven probabilities (~7k multiply-adds). The Java and numpy probabilities match to 6 decimals on a window of his
+  recording. Without layer.bin sound kinds run as before.
+- **Only shippable clips** (`--ship`): the 4c bench layer had also learned from 15 CC BY-NC clips (ESC-50, Commons)
+  and the CC BY-SA ones; the shipped layer trains only on CC0, public domain and CC BY (58% of the mixes; the Freesound
+  rooms were all CC0/CC BY already). `step4_notice.py --write` puts the 39 CC BY recordings with their creators
+  (fetched once from Commons and Freesound, kept in clips.json "by") into NOTICE.txt. What it costs, held out:
+
+  | heard and named right | 0.2 | layer, all clips | + CC BY-SA 4.0 (`--sa4`) | shipped (CC0/PD/CC BY) |
+  |---|---|---|---|---|
+  | far, 10 dB over the room | 45% | 78% | 78% | 75% |
+  | next room, 10 dB | 33% | 64% | 63% | 59% |
+  | traffic / water / steps, 6-10 dB | 9 / 28 / 22 | 52 / 53 / 82 | 48 / 54 / 78 | 42 / 50 / 76 |
+  | quiet rooms named a sound | 2% | 6% | 6% | 5% |
+
+  His office: 0% in all three. CC BY-SA 4.0 would win back about half of the traffic loss (one-way compatible with
+  GPLv3, as the AudioSet names already are). **The rule stays CC0 / public domain / CC BY** (DadCraft, Nov 6: "keep
+  the rule, drop it from the list. we can come back to it if anyone ever downloads the app and sends feedback to that
+  effect."): `--sa4` stays in the tool, unused.
+- **What the switch does** (with Mixed on): the kind the layer hears (past its cutoff) also counts as clearly there,
+  beside YAMNet's own 0.2 rule (OR: a mix stays a mix; on the bench the OR adds ~1 point of quiet-room windows and 1-6
+  points of finds over the layer alone), even where YAMNet's top class is Silence; it stands in for quiet or unsure, and
+  the Now line says "Heard: water 0.62 (far)". Mixed off or the switch off: exactly as before.
+- **Session log:** each `kinds` line gets `"l":[...]` (the layer's seven probabilities, NAMES order) with the switch
+  on or off; `replay_kinds.py` reads it ("far layer heard" per kind), follows `sk_layer` from the log, and takes
+  `--layer on|off` and `--set layer_cut=...` (the default cutoff read from layer.bin).

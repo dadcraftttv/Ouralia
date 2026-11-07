@@ -3,6 +3,8 @@ Sound kinds (step 4c; in every build since Nov 5, ARM phones only; docs/design/s
 yamnet.tflite: YAMNet, Google (tensorflow/models, research/audioset/yamnet), the "classification-tflite" v1 model
 from Kaggle (google/yamnet). Licensed under the Apache License, Version 2.0:
 https://www.apache.org/licenses/LICENSE-2.0
+Changed by Ouralia (Nov 6, accuracy step 4d): its 1024-value embedding (layer28/reduce_mean) is added as a second
+output by tools/sound_kinds/embed_model.py; the network and its scores are unchanged.
 
 The class names inside it come from the AudioSet ontology, Google, licensed under Creative Commons
 Attribution-ShareAlike 4.0 (https://creativecommons.org/licenses/by-sa/4.0/), used here under GPLv3 by CC's one-way
@@ -10,3 +12,45 @@ compatibility declaration. kinds.txt groups those classes into Ouralia's kinds (
 
 The model runs on LiteRT (com.google.ai.edge.litert:litert 1.4.2, Google), also licensed under the Apache License,
 Version 2.0 (the full text is under "Oboe and libpd (Apache 2.0)" in this list).
+
+layer.bin (Hear Far Sounds, accuracy step 4d; docs/design/sound-kinds.md "Accuracy step 4")
+
+A small layer on YAMNet's embedding, trained by tools/sound_kinds/step4_train.py on public recordings:
+61 room tones from Freesound (freesound.org) and 43 sound clips from Wikimedia Commons
+and Freesound (by way of the ESC-50 set), each kept under its own licence: CC0, public domain or CC BY.
+The layer holds no audio, only numbers learned from it. The clips were cut, levelled, mixed and given room
+echo for training. The CC BY recordings, with their creators:
+
+- "Surround Room Tone (soft)" by blouhond, CC BY 4.0, https://freesound.org/people/blouhond/sounds/163604/
+- "Computer server room.WAV" by DangerLaef, CC BY 4.0, https://freesound.org/people/DangerLaef/sounds/274473/
+- "Computer Server Room Ambience Loop.wav" by DeVern, CC BY 3.0, https://freesound.org/people/DeVern/sounds/610761/
+- "AMBIENCE 1.WAV" by HumanSolarian, CC BY 3.0, https://freesound.org/people/HumanSolarian/sounds/457078/
+- "room-tone 616 PM  240215_0604" by klankbeeld, CC BY 4.0, https://freesound.org/people/klankbeeld/sounds/753518/
+- "room-tone 615 PM  240215_0604" by klankbeeld, CC BY 4.0, https://freesound.org/people/klankbeeld/sounds/753517/
+- "room-tone 611 PM  240215_0604" by klankbeeld, CC BY 4.0, https://freesound.org/people/klankbeeld/sounds/753516/
+- "Living Room Room Tone.wav" by mixxythepixxy, CC BY 4.0, https://freesound.org/people/mixxythepixxy/sounds/348013/
+- "Dining Room Room Tone.wav" by mixxythepixxy, CC BY 4.0, https://freesound.org/people/mixxythepixxy/sounds/348012/
+- "nixeno - Room AMB 3.mp3" by nixeno, CC BY 4.0, https://freesound.org/people/nixeno/sounds/415803/
+- "Computer cooling fan.wav" by Sea Fury, CC BY 3.0, https://freesound.org/people/Sea%20Fury/sounds/54637/
+- "Turbine Room.wav" by Sea Fury, CC BY 3.0, https://freesound.org/people/Sea%20Fury/sounds/54638/
+- "Empty (medium) Room - Tone | Stereo MS" by sons_pt, CC BY 4.0, https://freesound.org/people/sons_pt/sounds/255523/
+- "Empty (large) Room - Tone | Stereo MS" by sons_pt, CC BY 4.0, https://freesound.org/people/sons_pt/sounds/255522/
+- "Birdsong volga st.ogg" by CopperAlchemy, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Birdsong_volga_st.ogg
+- "Common Blackbird song (Turdus merula).ogg" by Diana Tudor, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Common_Blackbird_song_(Turdus_merula).ogg
+- "Open and close bathroom door (Gravity Sound).wav" by Gravity Sound, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Open_and_close_bathroom_door_(Gravity_Sound).wav
+- "Typing on Keychron V1 Ultra (Red Linear Switch).wav" by C40115, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Typing_on_Keychron_V1_Ultra_(Red_Linear_Switch).wav
+- "Walking on gravel (Gravity Sound).mp3" by Gravity Sound, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Walking_on_gravel_(Gravity_Sound).mp3
+- "Audio sound of a busy traffic in Porthacourt.ogg" by ElemePodcast, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Audio_sound_of_a_busy_traffic_in_Porthacourt.ogg
+- "WWS City Bus MAN SG 220 – engine.oga" by Work With Sounds / Technical Museum of Slovenia, CC BY 4.0, https://commons.wikimedia.org/wiki/File:WWS_City_Bus_MAN_SG_220_%E2%80%93_engine.oga
+- "1-187207-A-20.wav" by k3pp, CC BY 3.0, https://freesound.org/s/187207/
+- "Clip talking to Frank Houghton (TUS) about Gambling Legislation and Gambling Regulator in Ireland (2026).ogg" by Darren J. Prior, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Clip_talking_to_Frank_Houghton_(TUS)_about_Gambling_Legislation_and_Gambling_Regulator_in_Ireland_(2026).ogg
+- "Jibril talking.ogg" by Jibriil voice, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Jibril_talking.ogg
+- "Kyoto women conversation in 1964.ogg" by 国立国語研究所（上村幸雄、徳川宗賢）, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Kyoto_women_conversation_in_1964.ogg
+- "Rediker-Talking-SOAS-London.ogg" by SOAS University of London, CC BY 3.0, https://commons.wikimedia.org/wiki/File:Rediker-Talking-SOAS-London.ogg
+- "Steven Weinberg talking to Richard Dawkins.ogg" by Memoirs of Professor Richard Dawkins, CC BY 3.0, https://commons.wikimedia.org/wiki/File:Steven_Weinberg_talking_to_Richard_Dawkins.ogg
+- "Talking-with-consumers-about-energy-reductions-recommendations-from-a-motivational-interviewing-Audio1.oga" by Klonek F, Kauffeld S, CC BY 4.0, https://commons.wikimedia.org/wiki/File:Talking-with-consumers-about-energy-reductions-recommendations-from-a-motivational-interviewing-Audio1.oga
+- "1-28135-A-11.wav" by HerbertBoland, CC BY 3.0, https://freesound.org/s/28135/
+- "1-28135-B-11.wav" by HerbertBoland, CC BY 3.0, https://freesound.org/s/28135/
+
+The other 74 are CC0 or public domain (listed in tools/sound_kinds/step4_clips.json and clips.json).
+Licences: https://creativecommons.org/licenses/by/3.0/ , https://creativecommons.org/licenses/by/4.0/
