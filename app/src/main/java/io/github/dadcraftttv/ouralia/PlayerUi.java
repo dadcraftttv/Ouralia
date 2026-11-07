@@ -295,7 +295,9 @@ final class PlayerUi {
             sleepButton.setText(R.string.sleep_timer);
         }
         miniSave.setVisibility(snapButton.getVisibility());
-        if (!worlds) {
+        // Shown whenever the built-in sound plays (DadCraft, Nov 6: it was hidden with Realm Hopper off, so a demo clip
+        // never showed what the app hears). Without Realm Hopper it leaves out the Realm and the Realm-only reasons.
+        if (!builtIn) {
             nowLine.setVisibility(View.GONE);
             return;
         }
@@ -309,11 +311,11 @@ final class PlayerUi {
         }
         List<String> why = new ArrayList<>();
         int minute = Worlds.minuteOfDayNow();
-        if (minute >= WorldSelector.NIGHT_START_MINUTE && minute < WorldSelector.NIGHT_END_MINUTE) {
+        if (worlds && minute >= WorldSelector.NIGHT_START_MINUTE && minute < WorldSelector.NIGHT_END_MINUTE) {
             why.add(a.getString(R.string.why_night));
         }
         double nowS = android.os.SystemClock.elapsedRealtimeNanos() / 1e9;
-        if (WorldSelector.UNSTABLE.equals(id)) {
+        if (worlds && WorldSelector.UNSTABLE.equals(id)) {
             why.add(a.getString(R.string.why_shaken));
         }
         if (StepDetector.walking(nowS)) {
@@ -344,8 +346,9 @@ final class PlayerUi {
             int[] kit = AudioService.kit();
             why.add(a.getString(R.string.why_kit, kit[0], kit[1], kit[2], kit[3]));
         }
-        String line = a.getString(R.string.now_line, name, String.join(" \u00b7 ", why));
-        if (Worlds.isHeld()) {
+        String reasons = String.join(" \u00b7 ", why);
+        String line = worlds ? a.getString(R.string.now_line, name, reasons) : a.getString(R.string.now_line_plain, reasons);
+        if (worlds && Worlds.isHeld()) {
             line = a.getString(R.string.now_line_held, line);
         }
         nowLine.setText(line);

@@ -180,7 +180,7 @@ The screen has five tabs. Two things stay at the bottom on every tab, in reach o
 The full player shows:
 
 - **The Intensity dial:** slide your finger around the ring. You feel a light tick every 5 steps.
-- **The status line**, including the audio rate your phone is using. Under it a **Now:** line shows the Realm playing and why (see The Realms tab), and while the Rhythm plays, the tempo ("walking 112 BPM") and the found-sound kit ("kit K2 S1 H3 · 24 caught": how many kicks, snares and hats it holds, and how many sounds it has caught in all).
+- **The status line**, including the audio rate your phone is using. Under it a **Now:** line shows what the app hears and notices, and the Realm playing and why when Realm Hopper is on (see The Realms tab), and while the Rhythm plays, the tempo ("walking 112 BPM") and the found-sound kit ("kit K2 S1 H3 · 24 caught": how many kicks, snares and hats it holds, and how many sounds it has caught in all).
 - **Save sound** and **Hold Realm** (appears when Realm Hopper is on).
 - **Sleep Timer** (while the sound plays): pick 15, 30, 45, 60 or 90 minutes. The sound plays on, fades out slowly over the last 5 minutes (the room and the music together), then stops by itself. The button counts down ("Sleep in 23 min"); pick Off to cancel. Stop also cancels it.
 
@@ -566,7 +566,7 @@ There is also an **Unstable** Realm, switched off unless you pick a preset for i
 
 Being in a pocket doesn't stop the other Realms. In your pocket, walking still gives Kinetic, a loud and lively place still gives Flux, a quiet one Tranquil, and late night Ghost. Pocket only plays when none of them fits. Whatever Realm is playing, the pocket's own protection rides on top: Pocket hush and Mic-down protection (under Input & output).
 
-The **Now:** line in the full player names the Realm and why it was chosen, for example "Now: Kinetic · walking · ordinary room (-45 dB)": night, walking, a pocket, and how the room sounds (quiet, ordinary, loud but steady, or loud and lively). New: the **room listener** adds what kind of place it sounds like, when it's sure: "talking nearby", "music nearby", "a crowd", "traffic" or "wind". For now it only listens and changes nothing, so tell Dad when it gets it wrong (or right), and where you were. Tap **Hold Realm** to keep the current Realm, for example through doorways and shops where light and noise keep changing. Tap **Let go** to release it. Stopping the sound also lets go.
+The **Now:** line in the full player names the Realm and why it was chosen, for example "Now: Kinetic · walking · ordinary room (-45 dB)". With Realm Hopper off it still shows, without the Realm: "Now: walking · ordinary room (-45 dB)". The reasons: night, walking, a pocket, and how the room sounds (quiet, ordinary, loud but steady, or loud and lively). New: the **room listener** adds what kind of place it sounds like, when it's sure: "talking nearby", "music nearby", "a crowd", "traffic" or "wind". For now it only listens and changes nothing, so tell Dad when it gets it wrong (or right), and where you were. Tap **Hold Realm** to keep the current Realm, for example through doorways and shops where light and noise keep changing. Tap **Let go** to release it. Stopping the sound also lets go.
 
 **Choosing what each Realm plays.** Each Realm has a menu where you pick which preset it plays (the built-in ones are called "Tranquil realm", "Kinetic realm" and so on, and any preset you saved can be used), or turn that Realm off. Sliders you've **locked** are never changed by a Realm.
 
