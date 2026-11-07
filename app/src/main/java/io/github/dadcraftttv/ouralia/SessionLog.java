@@ -131,8 +131,10 @@ final class SessionLog {
         write(s.append("]}"));
     }
 
-    /** A sound-kinds judgement's seven scores (SoundKinds.NAMES order), for replaying real mixes (Nov 4). */
-    static void kinds(float[] scores) {
+    /** A sound-kinds judgement's seven scores (SoundKinds.NAMES order), for replaying real mixes (Nov 4), and
+     *  "s":1 when YAMNet's own top class was Silence (Nov 5: the replay needs it to tell quiet from unsure), and "l":
+     *  Hear Far Sounds' layer probabilities in the same order (step 4d, Nov 6; logged with the switch off too). */
+    static void kinds(float[] scores, boolean silent, float[] layer) {
         if (!recording) {
             return;
         }
@@ -140,7 +142,18 @@ final class SessionLog {
         for (int i = 0; i < scores.length; i++) {
             s.append(i == 0 ? "" : ",").append(num(scores[i]));
         }
-        write(s.append("]}"));
+        s.append(']');
+        if (silent) {
+            s.append(",\"s\":1");
+        }
+        if (layer != null) {
+            s.append(",\"l\":[");
+            for (int i = 0; i < layer.length; i++) {
+                s.append(i == 0 ? "" : ",").append(num(layer[i]));
+            }
+            s.append(']');
+        }
+        write(s.append('}'));
     }
 
     /** DadCraft's note at this moment ("flat", "like", or anything typed). */
@@ -176,6 +189,11 @@ final class SessionLog {
     /** stop(), then waits (up to 2 s) for the file to be closed: for a program about to exit. */
     static void stopAndWait() {
         stop();
+        awaitWriter();
+    }
+
+    /** Waits (up to 2 s) for the file work queued so far: the open, the lines, the close. */
+    static void awaitWriter() {
         try {
             writer.submit(() -> { }).get(2, java.util.concurrent.TimeUnit.SECONDS);
         } catch (Exception ignored) {
@@ -299,10 +317,11 @@ final class SessionLog {
                 for (int k = 2; f.exists(); k++) {   // (two sessions in one second: each its own file)
                     f = new File(d, stamp + "-" + k + ".jsonl");
                 }
+                current = f;   // (before the file exists, so finished() never offers it while it opens)
                 out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8));
-                current = f;
             } catch (IOException e) {
                 out = null;
+                current = null;
             }
         });
         recording = true;

@@ -274,7 +274,8 @@ def main():
         return 1
     jobs = {"java": lambda: sh(["tools/javatests/run.sh"], env=env),
             "test_run_tests.py": lambda: sh(["python3", "tools/test_run_tests.py"]),
-            "test_release.py": lambda: sh(["python3", "tools/test_release.py"])}   # (cheap: also in quick)
+            "test_release.py": lambda: sh(["python3", "tools/test_release.py"]),
+            "test_replay_kinds.py": lambda: sh(["python3", "tools/test_replay_kinds.py"], env=env)}   # (cheap: also in quick)
     if not quick:
         jobs["desktop"] = lambda: sh(["desktop/test.sh"], env=env)
         for t in OTHER_PD:

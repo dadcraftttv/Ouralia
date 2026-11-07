@@ -32,6 +32,7 @@ final class SoundKindsRunner {
     private static Handler worker;
     private static Handler sends;   // (one thread for every Pd send, in the order the state was computed)
     private static SoundKinds.Model model;
+    private static Layer layer;   // (Hear Far Sounds, step 4d; null without layer.bin)
     private static SoundKinds kinds;
     private static int seg, ticks, rate;
     private static volatile boolean busy;
@@ -160,8 +161,22 @@ final class SoundKindsRunner {
     static boolean mixedEnabled() {
         return available() && ParamStore.get(MIXED_ID) >= 0.5f;
     }
-    /** Each judgement's seven scores go here (the service: SessionLog.kinds), so real mixes can be replayed. */
-    static volatile java.util.function.Consumer<float[]> scoresSink;
+
+    /** Hear Far Sounds (accuracy step 4d, Nov 6; SoundKinds.layerOn): under Mixed Surroundings, off by default. */
+    static final String LAYER_ID = "sk_layer";
+
+    static boolean layerEnabled() {
+        return mixedEnabled() && ParamStore.get(LAYER_ID) >= 0.5f;
+    }
+    /** Each judgement's seven scores, whether YAMNet heard silence and the layer's probabilities (null: no layer) go
+     *  here (the service: SessionLog.kinds), so real mixes can be replayed (tools/replay_kinds.py). */
+    interface KindsSink {
+        void accept(float[] scores, boolean silent, float[] layer);
+    }
+
+    static volatile KindsSink scoresSink;
+    /** Monotonic milliseconds for the judgements (the scene windows are measured in time); the tests step it. */
+    static volatile java.util.function.LongSupplier clock = () -> System.nanoTime() / 1_000_000;
 
     static boolean waterEnabled() {
         return mixedEnabled() && ParamStore.get(WATER_ID) >= 0.5f;
@@ -250,6 +265,7 @@ final class SoundKindsRunner {
      *  listen or not, and tell the patch at once (only stepping back or holding if music or talk is heard now). */
     static void settingsTick() {
         SoundKinds.mixed = mixedEnabled();
+        SoundKinds.layerOn = layerEnabled();
         boolean room = roomEnabled(), gaps = gapsEnabled(), water = waterEnabled(), birds = birdsEnabled(), traffic = trafficEnabled(),
                 flow = flowEnabled();
         int uw = uwEnabled();
@@ -370,12 +386,20 @@ final class SoundKindsRunner {
                     }
                     SoundKinds.Model m = (SoundKinds.Model) Class.forName(MODEL_CLASS)
                             .getConstructor(Context.class).newInstance(c);
+                    Layer ly = null;
+                    try (java.io.InputStream in = c.getAssets().open("sound_kinds/layer.bin")) {
+                        ly = Layer.read(in);
+                        k.layerCut = ly.cutoff;
+                    } catch (IOException e) {   // (sound kinds still run without it, as before 4d)
+                        Log.w(TAG, "no layer", e);
+                    }
                     synchronized (lock) {
                         if (thread != owner) {
                             m.close();
                             return;
                         }
                         model = m;
+                        layer = ly;
                         kinds = k;
                         seg = size / SoundKinds.SEGS;
                         judged = dropped = 0;
@@ -417,6 +441,7 @@ final class SoundKindsRunner {
             worker = null;
             stoppedModel = model;
             model = null;
+            layer = null;
             if (kinds != null) {
                 kinds.reset();
             }
@@ -486,6 +511,7 @@ final class SoundKindsRunner {
 
     private static void judge(int k, Handler owner) {
         SoundKinds.Model m;
+        Layer ly;
         SoundKinds ks;
         int s, r;
         Consumer<String> l;
@@ -494,6 +520,7 @@ final class SoundKindsRunner {
                 return;
             }
             m = model;
+            ly = layer;
             ks = kinds;
             s = seg;
             r = rate;
@@ -517,6 +544,8 @@ final class SoundKindsRunner {
         }
         long t0 = System.nanoTime();
         float[] scores = m.scores(wave);
+        float[] emb = ly != null ? m.embedding() : null;
+        float[] lp = emb != null ? ly.probs(emb) : null;   // (Hear Far Sounds' layer: ~7k multiply-adds)
         long took = System.nanoTime() - t0, whole = System.nanoTime() - start;
         boolean changed, roomChanged, room, talkChanged, talk, step, gaps;
         int water, uw, birds, traffic;
@@ -531,9 +560,9 @@ final class SoundKindsRunner {
                 nanos[judged++] = took;
             }
             boolean wasRoom = ks.roomMusic(), wasTalk = ks.talking();
-            changed = ks.judge(scores);
-            java.util.function.Consumer<float[]> sink = scoresSink;
-            if (sink != null) sink.accept(ks.scores());   // (each judgement's scores: real mixes to replay)
+            changed = ks.judge(scores, lp, clock.getAsLong());   // (real time: the windows are measured in it)
+            KindsSink sink = scoresSink;
+            if (sink != null) sink.accept(ks.scores(), ks.silent(), ks.layerScores());   // (real mixes to replay)
             line = ks.heardLine();
             room = ks.roomMusic();
             roomChanged = room != wasRoom;
@@ -592,7 +621,7 @@ final class SoundKindsRunner {
 
     static float score() {
         synchronized (lock) {
-            return kinds != null && kinds.kind() >= 0 ? kinds.scores()[kinds.kind()] : 0;
+            return kinds != null ? kinds.score() : 0;
         }
     }
 

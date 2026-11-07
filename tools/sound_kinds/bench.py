@@ -27,6 +27,19 @@ MAX_WINDOWS = 12                      # per clip, spread over its first 40 s
 KEEP_DB = 20                          # windows this far under the clip's loudest are gaps, not the sound
 QUIET_FLOOR = 0.05                    # no kind scores this much: the room is quiet (0.1 hid quiet traffic)
 GATE = 0.8                            # 8 of 10 clips named right
+# --norm CAP (Nov 5, accuracy step 7): each window raised toward NORM_TARGET before YAMNet, by at most CAP dB, never
+# lowered; adds the conditions phone+n and far+n, so what it wins at a distance and what it costs (quiet rooms heard
+# as sounds) are both counted
+NORM_TARGET = -35
+NORM_CAP = float(sys.argv[sys.argv.index("--norm") + 1]) if "--norm" in sys.argv else None
+NORM_GATE = float(sys.argv[sys.argv.index("--gate") + 1]) if "--gate" in sys.argv else -999   # (windows under it stay)
+CONDS = ("clean", "phone", "far") + (("phone+n", "far+n") if NORM_CAP is not None else ())
+# --pass2 (Nov 6, step 7's second pass): phone+2/far+2 raise as +n does, but quiet comes from a second YAMNet pass on the
+# un-raised window: quiet when Silence is its top label (or its Silence score >= --sil T); else the raised window names it
+PASS2 = NORM_CAP is not None and "--pass2" in sys.argv
+SIL_T = float(sys.argv[sys.argv.index("--sil") + 1]) if "--sil" in sys.argv else None
+KEEP_R = float(sys.argv[sys.argv.index("--keep") + 1]) if "--keep" in sys.argv else None   # (un-raised weak: raised needs R)
+CONDS += ("phone+2", "far+2") if PASS2 else ()
 
 def fetch(url, path):
     if not os.path.exists(path):
@@ -164,12 +177,13 @@ PHONE_KINDS = [("voices", ["voices"]), ("music", ["music", "singing"]), ("traffi
                ("water", ["water"]), ("steps", ["steps"]), ("quiet", ["quiet"])]   # step 4c: singing folded into music
 
 def export(path, labels):
-    """The app's files (app/src/main/assets/sound_kinds, in every build since Nov 5): the model, and each kind's class
-    numbers, one line each."""
+    """The app's files (app/src/main/assets/sound_kinds, in every build since Nov 5): the model (since Nov 6 with its
+    embedding as a second output, for Hear Far Sounds: embed_model.py), and each kind's class numbers, one per line."""
+    from embed_model import add_output, check
     dest = os.path.join(HERE, "..", "..", "app", "src", "main", "assets", "sound_kinds")
     os.makedirs(dest, exist_ok=True)
-    with open(path, "rb") as f, open(os.path.join(dest, "yamnet.tflite"), "wb") as g:
-        g.write(f.read())
+    add_output(path, os.path.join(dest, "yamnet.tflite"))
+    check(path, os.path.join(dest, "yamnet.tflite"))
     groups = json.load(open(os.path.join(HERE, "groups.json")))
     with open(os.path.join(dest, "kinds.txt"), "w") as f:
         f.write("# Made by tools/sound_kinds/bench.py --export from groups.json: a kind, then YAMNet's class numbers\n")
@@ -207,13 +221,29 @@ def main():
         except Exception as e:                            # a dead link or a decode failure: report, carry on
             print("skip %s: %s" % (c["name"][:50], str(e)[:80])); continue
         absolute = c["kind"] in ("quiet", "info")         # quiet rooms keep their own level
-        for cond, level in (("clean", -20), ("phone", -35), ("far", -50)):
-            y = (x if absolute else at(x, -20)) if cond == "clean" else phone(x, db(x) - 15 * (cond == "far") if absolute else level)
+        for cond, level in (("clean", -20), ("phone", -35), ("far", -50), ("phone+n", -35), ("far+n", -50),
+                            ("phone+2", -35), ("far+2", -50)):
+            if cond not in CONDS:
+                continue
+            far = cond.startswith("far")
+            y = (x if absolute else at(x, -20)) if cond == "clean" else phone(x, db(x) - 15 * far if absolute else level)
             ws = windows(y, absolute)
+            raw = [yam(w) for w in ws] if cond.endswith("+2") else None
+            if cond.endswith("+n") or cond.endswith("+2"):
+                ws = [w * 10 ** (min(NORM_CAP, max(0.0, NORM_TARGET - db(w))) / 20 * (db(w) >= NORM_GATE)) for w in ws]
             scores = [yam(w) for w in ws]
+            if raw:                                       # the un-raised pass says quiet: a Silence-only window
+                q = [(r.argmax() == silence) if SIL_T is None else (r[silence] >= SIL_T) for r in raw]
+                if KEEP_R is not None:                    # un-raised quiet only from weak scores: raised must be clear
+                    q = [qq or (name(r, "max") == "quiet" and max(sc[cols[k]].max() for k in KINDS if k != "quiet") < KEEP_R)
+                         for qq, r, sc in zip(q, raw, scores)]
+                scores = [np.where(np.arange(len(sc)) == silence, 1.0, 0.0) if qq else sc for sc, qq in zip(scores, q)]
             if c["kind"] == "info" and cond == "phone":
                 top = Counter(labels[s.argmax()] for s in scores).most_common(1)[0][0]
                 info.append("%s -> %s" % (c["name"], top))
+            if os.environ.get("BENCH_QUIET_DEBUG") and c["kind"] == "quiet" and cond in ("phone+2", "phone"):
+                top = sorted(((sc[cols[k]].max(), k) for sc in scores for k in KINDS if k != "quiet"), reverse=True)[:3]
+                print("DBG %-7s %-30s %s" % (cond, c["name"][:30], " ".join("%s %.2f" % (k, v) for v, k in top)))
             for how in ("max", "sum"):
                 names = [name(s, how) for s in scores]
                 res.append((c, cond, how, Counter(names).most_common(1)[0][0], names.count(c["kind"]) / len(names)))
@@ -223,7 +253,7 @@ def main():
 
     print("YAMNet on this desktop: %.1f ms per window (median, one thread)" % (1000 * np.median(times)))
     for how in ("max", "sum"):
-        for cond in ("clean", "phone", "far"):
+        for cond in CONDS:
             rows = [r for r in res if r[1] == cond and r[2] == how and r[0]["kind"] in KINDS]
             line = []
             for k in KINDS:
@@ -234,7 +264,7 @@ def main():
                 line.append("%s %d/%d%s" % (k, hit, len(rr), "" if hit >= GATE * len(rr) else "!"))
                 if real and syn:
                     line[-1] += "(+synth %d/%d)" % (sum(r[3] == k for r in syn), len(syn))
-            print("%-5s %-5s %s" % (how, cond, "  ".join(line)))
+            print("%-5s %-7s %s" % (how, cond, "  ".join(line)))
     rows = [r for r in res if r[1] == "phone" and r[2] == "max" and r[0]["kind"] in KINDS]
     conf = Counter((r[0]["kind"], r[3]) for r in rows if r[3] != r[0]["kind"])
     print("phone/max wrong as:", ", ".join("%s->%s %d" % (a, b, n) for (a, b), n in conf.most_common()))
