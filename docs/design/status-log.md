@@ -144,4 +144,7 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   while he talked and whistled); a README GIF made from it. The recording's log showed Pd printing "random: no method
   for 'float'" over and over: the found pad's two `[random]`s got the grain number (design/music.md "found pad"),
   fixed, with a patch-wide check. Whistling read as music and birds: ROADMAP "Open now" (singing and Make Room).
-
+- **Nov 6: rc6.1** (0.9.0-rc6.1, versionCode 17), rc6 plus only the call fix: with Bluetooth earbuds, any call (even
+  one declined while ringing) moved them to the call link and closed the streams, which libpd doesn't reopen, so the
+  app stayed silent until a restart. Now the sound reopens 2 s after every call (design/audio-io.md). The rest of
+  `sound-kinds` since rc6 stays on the Dev path until the next release (DadCraft).
