@@ -118,7 +118,8 @@
   always be optional, like everything else in the app"): a button in About and Licenses (`AboutUi.sessionLogs`) shows
   how many finished sessions are kept and their size, with **Email them** and **Delete all** (confirmed). Email them
   zips the newest finished sessions that fit in 18 MB (`SessionLog.pack`, under Gmail's 25 MB once encoded; the
-  open session is never sent or deleted), into `cache/share/ouralia-sessions.zip`, and opens Android's share sheet
+  open session is never sent or deleted: the writer thread marks a new file as open before creating it, so a Send
+  or Delete all while it opens can't take it, Nov 6), into `cache/share/ouralia-sessions.zip`, and opens Android's share sheet
   with the address, subject and phone line filled in; `LogShare` (our own small ContentProvider, not exported, no
   androidx) lets only the chosen app read that one file. The share sheet, not a mail-only selector: the test phone
   has three apps answering `mailto:` (two of them shopping apps), and the selector fell back anyway. Checked on the
