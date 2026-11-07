@@ -96,8 +96,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   carrying them, Found Palette, Calm Builds, Pad/Chime/Bass Voice, Trailing Melody, Music in Stereo.
   ~/Downloads/Ouralia-0.9.0-rc6.apk (mapping file beside it). Older rcs: DESIGN-NOTES Status log. A fix on an rc is
   rcN.1 (versionCode always +1). **rc6.1** (0.9.0-rc6.1, versionCode 17, Nov 6) = rc6 + only the call fix (sound
-  reopens 2 s after a call; Bluetooth earbuds left it silent), ~/Downloads/Ouralia-0.9.0-rc6.1.apk. Next: rc7 /
-  versionCode 18.
+  reopens 2 s after a call; Bluetooth earbuds left it silent), ~/Downloads/Ouralia-0.9.0-rc6.1.apk. **rc6.2** (0.9.0-rc6.2, versionCode 18, Nov 6) = rc6.1 + only
+  the Now line shown without Realm Hopper, ~/Downloads/Ouralia-0.9.0-rc6.2.apk. Next: rc7 / versionCode 19.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). World in Stereo (Oct 22): DadCraft likes it,
   an option for phones that support it, never the default ("as close to universal as possible"). Clear Catches

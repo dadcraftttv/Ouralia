@@ -11,8 +11,8 @@ android {
         // libpd's pd-core (Oboe backend) requires API 28+, i.e. Android 9 and newer.
         minSdk = 28
         targetSdk = 36
-        versionCode = 17
-        versionName = "0.9.0-rc6.1"
+        versionCode = 18
+        versionName = "0.9.0-rc6.2"
     }
 
     // The Play release key, when DadCraft has made one: its path and passwords live in ~/.gradle/gradle.properties
