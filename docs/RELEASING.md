@@ -60,9 +60,58 @@ uninstall once (exporting presets first).
   https://github.com/dadcraftttv/Ouralia/blob/main/PRIVACY.md
 - **Content rating.** No user content, no ads, no purchases, no location.
 - **Store listing.** Short description (80 characters): "Turn the world around you into music, live, in your
-  headphones." Screenshots: `docs/screenshots/` are the right shape; Play wants at least two per form factor.
-  Icon: `docs/icon/ouralia-icon-512.png`.
+  headphones." Full description: below. Screenshots: `docs/screenshots/play/` (rc6.2 on the Moto, Nov 7, cropped
+  to 1246x2492: Play refuses a long side more than twice the short one, and the phone's own 1220x2712, like the
+  older 540x1143 ones in `docs/screenshots/`, is over that). Feature graphic (1024x500, required):
+  `docs/icon/ouralia-feature-1024x500.png` (`tools/make_feature_graphic.py`). Icon: `docs/icon/ouralia-icon-512.png`. Category: Music & Audio.
 - **Target audience:** 13 and over. An app aimed at children takes on Play's Families rules.
+
+**Full description** (draft, Nov 7, about 2200 of Play's 4000 characters; DadCraft edits). Paste each paragraph and
+bullet as one line: Play keeps the line breaks.
+
+```
+Put on headphones, press Start, and hear the room around you turned into music.
+
+Ouralia listens through your phone's microphone and plays the world back to you, reshaped by effects and set to
+music that it makes up as it goes. Nothing plays on its own: every note answers something you can hear.
+
+WHAT IT DOES
+• The world, reshaped: echo that flies around your head, reverb, glitches that bring back bits of what you just
+  heard, pitch, a vocoder, filters, chorus, flanger, phaser and more, all on the live sound around you.
+• Music that listens: chords, a melody, a bass line and a beat in a key you choose. Sounds in the room ring the
+  current chord, a held hum gets an answering note, a sung phrase gets a reply.
+• Found sounds: knocks, taps and clicks the mic catches become the drums.
+• It knows what it hears: voices, music, traffic, birds, water and steps, told apart on the phone itself. The
+  music makes room for music playing nearby, holds back while people talk, goes underwater by running water and
+  turns to high glass when birds sing. Each response has its own switch.
+• Walk and the beat follows your steps. Stay somewhere quiet and a gentle tune joins in.
+• Realms change the whole sound to fit the moment: a quiet room, a loud street, a walk, after midnight, the phone
+  in your pocket. Realm Hopper moves between them by itself.
+• One dial, Intensity, turns everything calmer or busier.
+• Presets save your sound for a walk, a kitchen or a park, to come back to or share.
+• Plays classic reactive-music scenes (.rj) too.
+
+YOURS TO SHAPE
+Ouralia isn't one fixed piece of music. Switch the responses you like on and off, set the sounds and levels, and
+make it your own.
+
+PRIVATE BY DESIGN
+• No internet permission: the app can't send anything anywhere.
+• The microphone is never recorded or saved. What it hears lives in memory for a few seconds.
+• No ads, no accounts, no tracking.
+
+HEADPHONES ONLY
+Ouralia plays only through headphones or earbuds, never the phone speaker (the mic would hear it and howl).
+
+FREE AND OPEN SOURCE
+Built on Pure Data (libpd). Source code, GPL-3.0: github.com/dadcraftttv/Ouralia
+Made by DadCraft, a hobbyist musician.
+```
+
+**The .aab.** With the release key in `~/.gradle/gradle.properties`, `tools/release_apk.sh` also writes
+`Ouralia-<version>.aab` (Play refuses a debug-signed bundle, so without the key it says so and makes none). Upload
+the `-mapping.txt` beside it in Play Console (App bundle explorer, Downloads) so Play's crash reports are readable.
+A Play versionCode can never be reused or go down, so the first Play upload takes the next free code.
 
 ## After any release
 
