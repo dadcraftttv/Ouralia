@@ -58,7 +58,7 @@ public class O {   // Session Log: a file per session, only the kept receivers, 
     check(!oldest.exists()&&SessionLog.sessions().size()==2,"past the cap the oldest goes, the rest stay ("+SessionLog.sessions().size()+")");
     SessionLog.maxTotalBytes=50L*1024*1024;
     // Send session logs (Oct 30): a zip of the newest that fit, never the one being written; Delete all.
-    Thread.sleep(1100); SessionLog.second(true,false,false);
+    Thread.sleep(1100); SessionLog.second(true,false,false); SessionLog.awaitWriter();   // (the new file open, as in the app a second later)
     check(SessionLog.recording()&&SessionLog.finished().size()==2,"the open session isn't offered ("+SessionLog.finished().size()+")");
     File zip=new File(tmp,"share/s.zip");
     int[] all=SessionLog.pack(zip,1L<<20);

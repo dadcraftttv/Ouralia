@@ -189,6 +189,11 @@ final class SessionLog {
     /** stop(), then waits (up to 2 s) for the file to be closed: for a program about to exit. */
     static void stopAndWait() {
         stop();
+        awaitWriter();
+    }
+
+    /** Waits (up to 2 s) for the file work queued so far: the open, the lines, the close. */
+    static void awaitWriter() {
         try {
             writer.submit(() -> { }).get(2, java.util.concurrent.TimeUnit.SECONDS);
         } catch (Exception ignored) {
@@ -312,10 +317,11 @@ final class SessionLog {
                 for (int k = 2; f.exists(); k++) {   // (two sessions in one second: each its own file)
                     f = new File(d, stamp + "-" + k + ".jsonl");
                 }
+                current = f;   // (before the file exists, so finished() never offers it while it opens)
                 out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8));
-                current = f;
             } catch (IOException e) {
                 out = null;
+                current = null;
             }
         });
         recording = true;
