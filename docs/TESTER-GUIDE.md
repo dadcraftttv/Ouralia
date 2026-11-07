@@ -173,7 +173,7 @@ You need an Android phone or tablet with **Android 9 or newer**, and headphones 
 1. **Put on headphones first.** If the sound comes out of the phone speaker, the microphone hears it and it screeches back (feedback). The app only plays into headphones or earbuds, never the phone speaker, so it will not start until some are connected. If you unplug them while it runs, it stops by itself. Wired or Bluetooth both work; wired is better (see Audio devices below).
 2. Install the APK. If you already have an earlier copy, just install over it; your saved presets and settings stay. Only if Android refuses with "App not installed" (as it will once, going from rc6.2 or earlier to rc7: see "New in rc7") do you need to uninstall the old copy first (see "Starting fresh with Reset" for what that erases). Android may ask you to allow installs from the app you opened it from, and Play Protect may show an "unknown developer" warning. Choose **More details > Install anyway**.
 3. Open the app. On a new install a few short welcome pages explain the basics and ask for the microphone, then a short guided tour points out the small buttons and has you press **Start** (the round button in the player at the bottom of the screen) and try Echo on your own voice. You can see it all again under Setup, About.
-4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on The Band tab, Realm Hopper on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
+4. **It starts quiet, on purpose.** A new install has everything switched off, so at first you hear only the world around you through your headphones. Turn one thing on, listen to what it does, then try the next: Echo level on the Sound tab, Beat level and Music on the Score tab, Realm Hopper on the Realms tab, and Intensity in the card. If you hear nothing at all, try raising **Input gain** under Input & output. (If you already had an earlier copy installed, your settings stay as they were.)
 5. Press **Stop** when finished.
 
 Start with the volume low. Some settings can get loud.
@@ -182,7 +182,7 @@ Start with the volume low. Some settings can get loud.
 
 The screen has five tabs. Two things stay at the bottom on every tab, in reach of your thumb when you walk:
 
-- **The tab bar:** icons for **Sound**, **The Band**, **Realms**, **Scenes** and **Setup**. The tab you are on widens and shows its name. Each tab keeps its own place when you scroll, and the app opens on the tab you used last.
+- **The tab bar:** icons for **Sound**, **Score**, **Realms**, **Scenes** and **Setup**. The tab you are on widens and shows its name. Each tab keeps its own place when you scroll, and the app opens on the tab you used last.
 - **The player**, just above it: the round **Start / Stop** button inside a small ring that shows Intensity, a line saying what is happening (the Realm playing, if one is, and Intensity; warnings show in red), and **Save sound** (the bookmark button: keeps the sound you are hearing as a preset in one tap). **Tap the middle of the player** to open it full size. Close it by dragging it down, tapping outside it, or Back.
 
 The full player shows:
@@ -201,7 +201,7 @@ Inside a tab, settings are grouped in cards. Tap a card's heading to open or fol
 | Tab | What is on it |
 | --- | --- |
 | Sound | Presets and shortcuts, the XY pad, Input & output, and all the effects |
-| The Band | Rhythm and Music |
+| Score | Rhythm and Music |
 | Realms | Realm Hopper: the sound changing by itself to fit where you are |
 | Scenes | Choosing and importing scenes, the scene's touch pad, its volume sliders |
 | Setup | Audio devices, diagnostics, appearance, behavior, Reset everything, About |
@@ -249,7 +249,7 @@ Right at the end of the chain there is also a built-in safety limiter. It gently
 
 ### Sing in Key (Voice)
 
-Pulls your singing onto the notes of the Music key and scale (set on The Band tab, even if the music is off).
+Pulls your singing onto the notes of the Music key and scale (set on the Score tab, even if the music is off).
 
 - **Sing in key:** 0 is off. 1 puts every note right on the scale. In between nudges you part of the way.
 - **Sing in key glide:** how fast a note is pulled. 0 jumps straight there (the robotic pop-star sound). Higher is
@@ -407,7 +407,7 @@ Places the sound in your headphones.
 - **Pan:** all the way left, all the way right, or in the middle.
 - **Ear delay:** delays one ear slightly, which tricks your brain into hearing the sound as coming from the side.
 
-## The Band tab
+## The Score tab
 
 Everything that turns the room into music: the Rhythm (the beat) and the Music (notes, chords and harmony).
 

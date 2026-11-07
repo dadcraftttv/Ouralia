@@ -3,7 +3,7 @@
 The phone app on Linux, as background music for a stream: the same built-in patch and the phone's own logic
 (settings, presets, movers, Realms, Intensity, Calm Builds, call and response), fed by your mic and, if
 you like, your computer's own sound, playing into a virtual output called **Ouralia** that OBS records. No
-sensors and no walking: the beat keeps the tempo you set (The Band tab, Rhythm, Set tempo), and the Realms follow the
+sensors and no walking: the beat keeps the tempo you set (Score tab, Rhythm, Set tempo), and the Realms follow the
 room's loudness and the time of day.
 
 ## Run it
