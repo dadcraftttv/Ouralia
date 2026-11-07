@@ -26,7 +26,7 @@ behaviour changes, or tell DadCraft it needs one).
   beside the release app with its own settings). He listens after each first audible change; a branch merges to `main`
   only on his "yes", a step he doesn't like is dropped. `sound-kinds` (with `reactive`: kit removal, the reactive-first
   steps, sound kinds, Mixed Surroundings as the one switch, presets) merged into `main` Nov 5 (DadCraft: "merge
-  everything from dev into main"); the rc releases predate it.
+  everything from dev into main"); the rc releases predate it. Merged again Nov 7 (DadCraft: "get everything merged"): main has all of sound-kinds.
 - Only DadCraft judges sound. Make a change, tell him exactly what to listen for, wait for his report.
   Getting a sound's shape, tone and feel right takes rounds of listening: that is expected. Before his first listen,
   check what can be measured, so his rounds go on feel and not on faults (Shimmer Style, Oct 23):
@@ -100,6 +100,9 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   rcN.1 (versionCode always +1). **rc6.1** (0.9.0-rc6.1, versionCode 17, Nov 6) = rc6 + only the call fix (sound
   reopens 2 s after a call; Bluetooth earbuds left it silent), ~/Downloads/Ouralia-0.9.0-rc6.1.apk. **rc6.2** (0.9.0-rc6.2, versionCode 18, Nov 6) = rc6.1 + only
   the Now line shown without Realm Hopper, ~/Downloads/Ouralia-0.9.0-rc6.2.apk. Next: rc7 / versionCode 19.
+  **From rc7: GitHub and Play in parity** (DadCraft, Nov 7): one commit and versionCode per release, the APK on
+  GitHub and the .aab on Play, both signed by the release key (Play App Signing with our own key; RELEASING.md
+  "Parity"). Debug-signed rc6.x installs must uninstall once for rc7.
 - **Defaults:** new sounds stay opt-in (the old sound the default) except Glitch voice (New; the old one is Legacy)
   Distortion quality (Smooth) and Soft Steps (`walk_ease`, Oct 21). World in Stereo (Oct 22): DadCraft likes it,
   an option for phones that support it, never the default ("as close to universal as possible"). Clear Catches

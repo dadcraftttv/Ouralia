@@ -39,11 +39,17 @@ ouraliaKeyAlias=ouralia
 ouraliaKeyPassword=...
 ```
 
-From then on, release builds are signed with it (`tools/release_apk.sh` prints the signer). With **Play App
-Signing** (Play's default), this key only uploads, and Google holds the key that signs what phones install, so a lost
-upload key can be replaced. The test APKs so far (rc4-rc5.2, none on GitHub since the Nov 2
-repo remake) are signed with the debug key: an APK signed with the new key can't install over them, so testers
-uninstall once (exporting presets first).
+From then on, release builds (the APK and the .aab) are signed with it (`tools/release_apk.sh` prints the signer).
+
+**Parity: GitHub and Play ship the same app with the same key** (DadCraft, Nov 7: "lets keep parity with github and
+play store"). Every release is one commit and one versionCode: its APK goes on GitHub, its .aab on Play, both signed
+by this key. So that Play's installs carry the same signature (and a phone can update from either), set up **Play
+App Signing with our own key**, not the key Google offers to make: in Play Console, App integrity, "Use a different
+key" / export and upload a key from a Java keystore, and run the PEPK command it shows on `~/ouralia-release.jks`
+(check Console's current wording). The same key stays the upload key. The trade-off: Google can't replace this key
+if it's lost, so a lost key ends updates on both sides. The two backups matter. The rc4-rc6.2 test APKs were
+signed with the debug key, so the first release-key build (rc7) can't install over them: testers export presets,
+uninstall once and install rc7 (the tester guide and release notes say so).
 
 **Play Console forms**, drafted from what the app does (check them against Play's current wording):
 
