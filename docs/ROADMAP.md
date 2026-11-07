@@ -53,6 +53,10 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   names singing "Music" itself, bench singing->music 5/10, so only partly); (b) Make Room holds off while Harmony's
   tracker hears a held pitched voice near the mic; (c) leave it. **DadCraft (Nov 5): "lets leave it for now and
   iterate later in dev."**
+- **Test flake: the session-log zip checks** (tools/javatests/test/O.java, seen Nov 6 in the rc6.1 full tier, then
+  passed 4 runs in a row). `SessionLog.start()` opens the new file and sets `current` on the writer thread, so a check
+  right after `second()` can count the open session as finished under load. Fix: the test waits for the writer (a
+  small hook) before checking. In the app only a Send in the same instant a session opens could hit it.
 - **Testers' feedback** on rc6 (tester guide "What to test").
 - ~~**Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.~~ DONE Nov 5: topics and description
   set, a README GIF of the Now line from rc6 on the Moto. Still to make: a short clip with sound (DadCraft records it).
