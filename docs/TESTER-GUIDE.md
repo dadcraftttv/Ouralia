@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Nov 7, 2026 · DadCraft · for rc7 (0.9.0-rc7), the public beta
+Nov 7, 2026 · DadCraft · for rc7.1 (0.9.0-rc7.1), the public beta
 
 **Coming from rc5.2 or older?** rc6 installs over it and keeps your settings and presets. The kits are gone (the
 Classic synth voices and Found sounds are unchanged), so an old preset's kit choices are ignored. The release history
@@ -18,6 +18,8 @@ There are two ways to use it:
 - **Scenes (optional).** Ready-made experiences from the original RjDj, which react to sound and to how you move the phone. The app comes with four official RjDj example scenes to try (see "The four built-in scenes" below). You can also import other scenes you already have, as a zip file or folder.
 
 ## What's new
+
+**New in rc7.1 (Nov 9):** the same app as rc7 with a new version number, the first build on Google Play (Play had used rc7's number on an upload that didn't go through). rc7.1 installs over rc7 and keeps your settings.
 
 **New in rc7 (Nov 7):**
 - **Uninstall once (export your presets first).** rc7 is signed with Ouralia's own release key, the same one the Google Play version uses, so from now on the GitHub and Play versions can update each other. Earlier test builds (rc6.2 and before) used a test key, and Android won't install rc7 over them ("App not installed"). Use Presets > Export on each preset you want to keep, uninstall the old Ouralia, install rc7 and Import them again. After this, every update installs over the last as before.

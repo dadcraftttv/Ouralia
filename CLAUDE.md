@@ -100,7 +100,8 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   rcN.1 (versionCode always +1). **rc6.1** (0.9.0-rc6.1, versionCode 17, Nov 6) = rc6 + only the call fix (sound
   reopens 2 s after a call; Bluetooth earbuds left it silent), ~/Downloads/Ouralia-0.9.0-rc6.1.apk. **rc6.2** (0.9.0-rc6.2, versionCode 18, Nov 6) = rc6.1 + only
   the Now line shown without Realm Hopper, ~/Downloads/Ouralia-0.9.0-rc6.2.apk. **rc7** (0.9.0-rc7, versionCode 19, Nov 7) = everything from sound-kinds, the
-  first release-key build (APK on GitHub, .aab on Play). Next: rc8 / versionCode 20.
+  first release-key build (APK on GitHub, .aab on Play). **rc7.1** (0.9.0-rc7.1, versionCode 20, Nov 9) = rc7 + only
+  the version number: Play had used code 19 on a first upload made before the signing key was set. Next: rc8 / versionCode 21.
   **From rc7: GitHub and Play in parity** (DadCraft, Nov 7): one commit and versionCode per release, the APK on
   GitHub and the .aab on Play, both signed by the release key (Play App Signing with our own key; RELEASING.md
   "Parity"). Debug-signed rc6.x installs must uninstall once for rc7.
