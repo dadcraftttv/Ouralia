@@ -168,10 +168,11 @@ final class SoundKindsRunner {
     static boolean layerEnabled() {
         return mixedEnabled() && ParamStore.get(LAYER_ID) >= 0.5f;
     }
-    /** Each judgement's seven scores, whether YAMNet heard silence and the layer's probabilities (null: no layer) go
-     *  here (the service: SessionLog.kinds), so real mixes can be replayed (tools/replay_kinds.py). */
+    /** Each judgement's seven scores, whether YAMNet heard silence, the layer's probabilities (null: no layer) and
+     *  YAMNet's own 521 scores go here (the service: SessionLog.kinds), so real mixes can be replayed
+     *  (tools/replay_kinds.py). */
     interface KindsSink {
-        void accept(float[] scores, boolean silent, float[] layer);
+        void accept(float[] scores, boolean silent, float[] layer, float[] yamnet);
     }
 
     static volatile KindsSink scoresSink;
@@ -562,7 +563,7 @@ final class SoundKindsRunner {
             boolean wasRoom = ks.roomMusic(), wasTalk = ks.talking();
             changed = ks.judge(scores, lp, clock.getAsLong());   // (real time: the windows are measured in it)
             KindsSink sink = scoresSink;
-            if (sink != null) sink.accept(ks.scores(), ks.silent(), ks.layerScores());   // (real mixes to replay)
+            if (sink != null) sink.accept(ks.scores(), ks.silent(), ks.layerScores(), scores);   // (real mixes to replay)
             line = ks.heardLine();
             room = ks.roomMusic();
             roomChanged = room != wasRoom;

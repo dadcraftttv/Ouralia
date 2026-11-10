@@ -131,10 +131,23 @@ final class SessionLog {
         write(s.append("]}"));
     }
 
+    /** YAMNet's steady machine sounds, in no kind: Mechanical fan, Air conditioning, Hum, Mains hum, Whir, White and
+     *  Pink noise, Vacuum cleaner, Hair dryer, Blender (here, not in SoundKinds: desktop and the tests build this
+     *  file without it). */
+    static final int[] MACHINES = {406, 407, 490, 510, 482, 514, 515, 371, 367, 363};
+
     /** A sound-kinds judgement's seven scores (SoundKinds.NAMES order), for replaying real mixes (Nov 4), and
      *  "s":1 when YAMNet's own top class was Silence (Nov 5: the replay needs it to tell quiet from unsure), and "l":
      *  Hear Far Sounds' layer probabilities in the same order (step 4d, Nov 6; logged with the switch off too). */
     static void kinds(float[] scores, boolean silent, float[] layer) {
+        kinds(scores, silent, layer, null);
+    }
+
+    /** ... and from YAMNet's own 521 scores (null: none), log only, nothing judges on them (DadCraft, Nov 9: a
+     *  bathroom fan he marked fell through the seven kinds, partly as water): "y" its top three classes as
+     *  [class, score] and "m" [class, score] of the strongest MACHINES class, so a fan can be looked for
+     *  in a log before it gets a kind of its own (tools/replay_kinds.py --machines). */
+    static void kinds(float[] scores, boolean silent, float[] layer, float[] yamnet) {
         if (!recording) {
             return;
         }
@@ -152,6 +165,29 @@ final class SessionLog {
                 s.append(i == 0 ? "" : ",").append(num(layer[i]));
             }
             s.append(']');
+        }
+        if (yamnet != null) {
+            int[] top = {-1, -1, -1};
+            for (int c = 0; c < yamnet.length; c++) {
+                for (int j = 0; j < 3; j++) {
+                    if (top[j] < 0 || yamnet[c] > yamnet[top[j]]) {
+                        System.arraycopy(top, j, top, j + 1, 2 - j);
+                        top[j] = c;
+                        break;
+                    }
+                }
+            }
+            s.append(",\"y\":[");
+            for (int j = 0; j < 3 && top[j] >= 0; j++) {
+                s.append(j == 0 ? "[" : ",[").append(top[j]).append(',').append(num(yamnet[top[j]])).append(']');
+            }
+            int m = MACHINES[0];
+            for (int c : MACHINES) {
+                if (c < yamnet.length && yamnet[c] > yamnet[m]) {
+                    m = c;
+                }
+            }
+            s.append("],\"m\":[").append(m).append(',').append(num(yamnet[m])).append(']');
         }
         write(s.append('}'));
     }

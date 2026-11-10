@@ -53,6 +53,10 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   names singing "Music" itself, bench singing->music 5/10, so only partly); (b) Make Room holds off while Harmony's
   tracker hears a held pitched voice near the mic; (c) leave it. **DadCraft (Nov 5): "lets leave it for now and
   iterate later in dev."**
+- **A fan is in no kind** (DadCraft's marked bathroom fan, Nov 7 session): it read as nothing, partly as water.
+  His pick (Nov 9): log first. Each judgement now keeps YAMNet's top classes and its strongest machine class
+  (`replay_kinds.py --machines`, design/sound-kinds.md Step 18). Next: his fan again with Session Log on, then his
+  call: a machines kind with its own response, or recognised and kept out of water/traffic.
 - **Testers' feedback** on rc6 (tester guide "What to test").
 - ~~**Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.~~ DONE Nov 5: topics and description
   set, a README GIF of the Now line from rc6 on the Moto. Still to make: a short clip with sound (DadCraft records it).

@@ -21,6 +21,8 @@ public class O {   // Session Log: a file per session, only the kept receivers, 
     SessionLog.mark("flat \"here\"\n");
     SessionLog.kinds(new float[]{0.5f,0,0,0,0.25f,0,0},false,null); SessionLog.kinds(new float[]{0,0,0,0,0,0,0.9f},true,null);
     SessionLog.kinds(new float[]{0,0,0,0,0.1f,0,0.2f},true,new float[]{0,0,0,0,0.75f,0,0.25f});
+    float[] y=new float[521]; y[494]=0.3f; y[406]=0.6f; y[407]=0.2f; y[5]=0.1f;
+    SessionLog.kinds(new float[]{0,0,0,0,0,0,0.3f},false,null,y);
     ParamStore.set("music_on",ParamStore.get("music_on")>=0.5f?0f:1f);
     SessionLog.second(true,false,true);
     SessionLog.stopAndWait();
@@ -33,6 +35,8 @@ public class O {   // Session Log: a file per session, only the kept receivers, 
         "kinds lines: seven scores, and \"s\":1 when YAMNet heard silence (the replay tool reads both)");
     check(text.contains(",0.2000],\"s\":1,\"l\":[0.000,0.000,0.000,0.000,0.7500,0.000,0.2500]}"),
         "kinds lines: Hear Far Sounds' layer probabilities as \"l\" (step 4d)");
+    check(text.contains(",0.3000],\"y\":[[406,0.6000],[494,0.3000],[407,0.2000]],\"m\":[406,0.6000]}"),
+        "kinds lines: YAMNet's top three classes as \"y\" and the strongest machine class as \"m\" (Nov 9)");
     check(lines[0].contains("\"ev\":\"start\"")&&lines[0].contains("\"settings\":{")&&lines[lines.length-1].contains("\"ev\":\"stop\""),"starts with the settings, ends with stop");
     check(text.contains("\"src\":\"chime_deg\",\"v\":[3.000]")&&text.contains("\"src\":\"comp_chord\""),"the patch's notes and chords kept");
     check(!text.contains("mic_level"),"what the log doesn't keep is left out");

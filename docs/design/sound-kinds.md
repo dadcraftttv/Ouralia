@@ -1240,3 +1240,19 @@ Mixed Surroundings, off; in presets with Mixed).
 - **Session log:** each `kinds` line gets `"l":[...]` (the layer's seven probabilities, NAMES order) with the switch
   on or off; `replay_kinds.py` reads it ("far layer heard" per kind), follows `sk_layer` from the log, and takes
   `--layer on|off` and `--set layer_cut=...` (the default cutoff read from layer.bin).
+
+## Step 18: a fan in no kind, logged (Claude Code, Nov 9; log only, nothing heard changes)
+
+**What he found:** a bathroom exhaust fan he marked in a Dev session (20261107-110934, marks at 1:00 and 3:31, mic
+-42 dB against -47 before) never showed as anything: the seven kinds stayed under 0.1, except water, which turned
+on 2:09-3:11 (max 0.59, the fan's hiss as running water), and birds up to 0.26. Hear Far Sounds' layer named
+something in 43% of the fan stretch (12% before), but only one of the same seven. A fan is in no kind. YAMNet has
+classes for it (Mechanical fan 406, Air conditioning 407, Hum 490, Mains hum 510, Whir 482, White/Pink noise
+514/515, Vacuum cleaner 371, Hair dryer 367, Blender 363), and the log kept only the seven kind scores, so whether
+YAMNet itself called it a fan can't be seen.
+**His pick (Nov 9: "3 is fine"):** log first, decide later; the options were a new machines kind with its own
+response, a recognised-but-ignored kind that keeps fans out of water and traffic, or logging only.
+**Built:** each `kinds` line also keeps `"y"` (YAMNet's top three classes as [class, score]) and `"m"` ([class,
+score] of the strongest of `SessionLog.MACHINES`). Nothing judges on them. `tools/replay_kinds.py --machines`
+reports them per 10 s beside the marks (the machine score's median/p90/max, how often a machine class is on top,
+YAMNet's commonest top classes). Next: his fan again with Session Log on, then his choice between the kinds.
