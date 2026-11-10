@@ -55,8 +55,9 @@ idea goes into its item and into "Open now". Every item below keeps its history;
   iterate later in dev."**
 - **A fan is in no kind** (DadCraft's marked bathroom fan, Nov 7 session): it read as nothing, partly as water.
   His pick (Nov 9): log first. Each judgement now keeps YAMNet's top classes and its strongest machine class
-  (`replay_kinds.py --machines`, design/sound-kinds.md Step 18). Next: his fan again with Session Log on, then his
-  call: a machines kind with its own response, or recognised and kept out of water/traffic.
+  (`replay_kinds.py --machines`, design/sound-kinds.md Step 18). **His call (Nov 10):** "i'm not sure what we
+  should do with machine sounds other than ignore them": recognised and kept out of the kinds (no response of their
+  own). Next: his fan again with Session Log on, `--machines` on it to set where a machine counts, then the build.
 - **Testers' feedback** on rc6 (tester guide "What to test").
 - ~~**Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.~~ DONE Nov 5: topics and description
   set, a README GIF of the Now line from rc6 on the Moto. Still to make: a short clip with sound (DadCraft records it).
