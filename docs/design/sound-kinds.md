@@ -1277,3 +1277,20 @@ tones) and letting it veto water/traffic.
 **Far-layer cutoff 0.75 (Nov 10, `step4_train.py --ship --cut 0.75`):** quiet rooms named a sound 9% (shipped 0.829:
 5%); far 10 dB 77% (75%), next room 10 dB 63% (59%), traffic/water/steps 50/53/78 (42/50/76). Too costly in quiet
 rooms: 0.829 stays.
+**Teaching the layer (Nov 10, scratch, DadCraft: "go ahead with 1"):** the 50 fan/air-con clips (728 windows,
+-55 to -35 dB) added to the layer's quiet set, held out by uploader; also 630 windows of water/traffic/voices/steps
+over a running fan (6 and 10 dB above it).
+| held out | shipped recipe | + machines as quiet | + machines, cutoff from rooms only |
+|---|---|---|---|
+| quiet rooms named a sound | 4.7% | 1.3% | 3.9% |
+| fans/air con named a sound (layer) | 29% | 9.5% | 18% |
+| far / next room, 10 dB | 75 / 61% | 65 / 52% | 73 / 60% |
+| traffic / water / steps, 6-10 dB | 44 / 50 / 80% | 25 / 38 / 65% | 41 / 47 / 79% |
+| over a fan: traffic / water / steps | 73 / 75 / 75% | 57 / 69 / 60% | 67 / 75 / 72% |
+The fair version (last column) cuts the layer's own fan false alarms by a third for 1-3 points of real sounds (6 of
+traffic over a fan). **A veto doesn't work:** dropping the 0.2 path's water/traffic when the layer says quiet clears
+0-2% of the fan misreads, because the misread windows fool the layer too. **The misreads that matter are whole
+clips:** 4 of 50 machine clips read as one kind for 40%+ of their windows (one as water 50%, like his fan; three as
+traffic 40-75%), and all four had a machine score of only 0.02-0.04. Neither a machine-score gate nor the layer
+catches them. So: his Saturday log first. If his fan scores a machine class, the gate (T 0.2) is safe to build; if
+not, ignoring machines needs something new (e.g. a sound that doesn't change for minutes), designed against his log.
