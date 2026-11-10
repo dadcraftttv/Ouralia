@@ -1256,3 +1256,24 @@ response, a recognised-but-ignored kind that keeps fans out of water and traffic
 score] of the strongest of `SessionLog.MACHINES`). Nothing judges on them. `tools/replay_kinds.py --machines`
 reports them per 10 s beside the marks (the machine score's median/p90/max, how often a machine class is on top,
 YAMNet's commonest top classes). Next: his fan again with Session Log on, then his choice between the kinds.
+**His call (Nov 10):** "i'm not sure what we should do with machine sounds other than ignore them": recognised and
+kept out of the kinds, no response of their own.
+**Freesound bench (Nov 10; scratch script, clips in the gitignored cache, never committed):** 30 fan clips, 20 air
+con/HVAC/dehumidifier, 25 running taps (CC0/CC BY), the phone path at -35 and -45 dB, 1605 windows.
+| | water >= 0.2 | traffic >= 0.2 | machine score median / p90 | a machine class on top |
+|---|---|---|---|---|
+| fans | 2% | 10% | 0.06 / 0.41 | 31% |
+| air con | 0% | 7% | 0.08 / 0.26 | 38% |
+| taps | 65% | 0% | 0.00 / 0.06 | 2% |
+YAMNet's commonest top classes on fans and air con: White noise, then **Vehicle**, Silence, Inside small room.
+A gate on the machine score ("ignore water/traffic when it is >= T") is safe for taps (T 0.2: 1% of tap windows,
+no tap clip lost) and for real traffic (bench traffic clips: 0% dropped), **but it misses the misreads**: the fan
+windows that read as water or traffic mostly had no machine score at all (traffic misreads: median 0.03; T 0.1
+clears 15%, T 0.2 3%). When YAMNet mistakes a fan, it doesn't also call it a fan. So these clips misread fans as
+traffic, not water, and his fan (water up to 0.59) is unlike them. Next: his Saturday log ("y" and "m" show what
+YAMNet called his fan). If his fan scores a machine class, the gate works; if not, the other way is teaching the
+Hear Far Sounds layer that fans are quiet rooms (its quiet set already has a few fridge/HVAC/computer-fan room
+tones) and letting it veto water/traffic.
+**Far-layer cutoff 0.75 (Nov 10, `step4_train.py --ship --cut 0.75`):** quiet rooms named a sound 9% (shipped 0.829:
+5%); far 10 dB 77% (75%), next room 10 dB 63% (59%), traffic/water/steps 50/53/78 (42/50/76). Too costly in quiet
+rooms: 0.829 stays.
