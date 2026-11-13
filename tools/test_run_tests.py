@@ -61,5 +61,24 @@ class PrerequisiteTests(unittest.TestCase):
                 sections.assert_called_once()
 
 
+class ReadsTests(unittest.TestCase):
+    """A section runs only the earlier statements it reads from (Nov 13: 7z6 hung pulling in 137 it didn't need)."""
+    def reads(self, src):
+        import ast
+        return run_tests.reads(ast.parse(src).body[0])
+
+    def test_loop_variable_and_body_assignments_are_local(self):
+        self.assertEqual(self.reads("for st in (1, 2):\n    a = f(st)\n    check(a)\n"), {"f", "check"})
+
+    def test_read_before_the_loop_sets_it_still_counts(self):
+        self.assertEqual(self.reads("for k in ks:\n    g(prev)\n    prev = k\n"), {"ks", "g", "prev"})
+
+    def test_after_an_empty_loop_the_target_counts(self):
+        self.assertIn("x", self.reads("for x in xs:\n    pass\nelse:\n    h(x)\n"))
+
+    def test_with_target_is_local(self):
+        self.assertEqual(self.reads("with open(p) as fh:\n    t = fh.read()\n    use(t)\n"), {"open", "p", "use"})
+
+
 if __name__ == "__main__":
     unittest.main()

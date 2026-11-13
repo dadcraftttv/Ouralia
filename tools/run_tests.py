@@ -51,7 +51,29 @@ def bound_in(node):
 def reads(node, local=frozenset()):
     """Global names a statement (or a function's body) reads."""
     out = set()
+    def assigned(st):   # names a plain assignment binds for every statement after it in its block
+        if not isinstance(st, (ast.Assign, ast.AnnAssign)):
+            return set()
+        ts = st.targets if isinstance(st, ast.Assign) else [st.target]
+        return {el.id for t in ts for el in (t.elts if isinstance(t, ast.Tuple) else [t]) if isinstance(el, ast.Name)}
+    def block(sts, loc):   # in order: `for a in ..: y = f(a); g(y)` reads neither a nor y from before
+        for st in sts:     # (Nov 13: 7z6 read `a` and `st` from older loops and dragged 137 statements with them)
+            visit(st, loc)
+            loc = loc | assigned(st)
     def visit(n, loc):
+        if isinstance(n, ast.For):
+            visit(n.iter, loc); visit(n.target, loc)
+            block(n.body, loc | {x.id for x in ast.walk(n.target) if isinstance(x, ast.Name)})
+            block(n.orelse, loc)   # (the target is unset after an empty loop)
+            return
+        if isinstance(n, (ast.While, ast.If)):
+            visit(n.test, loc); block(n.body, loc); block(n.orelse, loc)
+            return
+        if isinstance(n, ast.With):
+            for it in n.items:
+                visit(it, loc)
+            block(n.body, loc | {x.id for it in n.items if it.optional_vars for x in ast.walk(it.optional_vars) if isinstance(x, ast.Name)})
+            return
         if isinstance(n, SCOPES):
             loc = loc | bound_in(n)
         if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load) and n.id not in loc:
