@@ -19,52 +19,35 @@ the one list of what is not done, checked against the code. In the same commit t
 something: take it off "Open now", and mark its item (BUILT / REMOVED / SET ASIDE, the date, where it lives). A new
 idea goes into its item and into "Open now". Every item below keeps its history; "Open now" is the only to-do list.
 
-## Open now (checked against the code, 2026-11-05, rc6; rc6.1 Nov 6 adds only the call fix, rc6.2 only the Now line without Realm Hopper; rc7 Nov 7 = sound-kinds merged, the release key; rc7.1 Nov 9 only the version, for Play)
+## Open now (checked 2026-11-13: main = rc7.1, Nov 9; sound-kinds adds machine logging and test-runner fixes, nothing new for users)
 
-**In short (Nov 5, rc6, the first public beta; the entries below keep the history):**
-- **DadCraft's listens:** ~~Mixed Surroundings with a running sink~~ **heard Nov 6** (dishes, tap running): "when i
-  clanked dishes i did hear music answer, but it sounded underwater as i expected it to"; the roadside for Traffic
-  Passes Through and Traffic Flow, outdoor birds. Then fixes from what fails.
-- **His calls:** ~~do water and birds hold back for talk~~ **no need (Nov 6):** "the speech while running the water
-  was fine, what i could hear back from Ouralia sounded like the chimes, underwater, so it fit" (his speech under
-  the tap never counted as talking); ~~Found Palette's default~~ **stays a switch, off (Nov 6):** "Found Palette can
-  stay on it's current default"; ~~learning from session logs~~ **done Nov 6** (design/sound-kinds.md Step 17).
-- **Tuning from replays:** Mixed Surroundings' `PRESENT_MIN` 0.2 was judgement; water may want lower (his sink
-  scored 0.1-0.26). The replay tool is BUILT (Nov 5, `tools/replay_kinds.py`, design/sound-kinds.md Step 16), and the
-  windows are now measured in time: his sink replayed with water's own minimum at 0.12 holds water 40 s instead of 14 s.
-  Checked over his other sessions (Nov 5): no new water in 4 of 6; the noon one's extra water looks like a real tap.
-  His sink listen (Nov 6, 20261106-084028, phone next to the sink): water held 3:07 unbroken, the same at 0.2 and
-  0.12, so 0.12 stays unapplied (it only matters for a far tap, which step 7 couldn't fix either).
-- ~~Raising quiet sound before YAMNet~~ (accuracy step 7) **SET ASIDE Nov 6** (design/sound-kinds.md "Step 7, the
-  two quiet routes checked"): neither the un-raised level (his sessions: the floor climbs under steady sound) nor a
-  second YAMNet pass (his quiet rooms rarely reach Silence 0.6) keeps real quiet rooms quiet while winning back
-  distance. Next for distance and the sink: YAMNet embeddings with a small trained layer (step 4 of the list),
-  **started Nov 6** on his pick (quiet room vs far sound; public clips to train, his recordings to check; plan:
-  design/sound-kinds.md "Accuracy step 4 plan"). Wind and singing only where real listening shows a problem (Codex, Nov 5).
-  **4d built Nov 6** (Dev, on `sound-kinds`): **Hear Far Sounds** (`sk_layer`, under Mixed, off), the layer in the
-  app, trained only on CC0 / public domain / CC BY clips (NOTICE lists them). Open: 4e, his listen (switch on vs off
-  with a sound across the room or next door); his sink sweep and more quiet rooms (checks); session logs through
-  `replay_kinds.py` to see how often the layer names a sound in his quiet house.
-- **Singing and whistling count as music in the room** (seen Nov 5 on rc6: whistling read as music 0.59-0.98 and
-  birds 0.33-0.80). The app's music group holds YAMNet's singing classes, and nothing tells your own voice from a
-  radio, so with Mixed Surroundings on, ~8 s of singing in 20 can trigger Make Room for Music (the music and beat
-  step back 6 dB, chimes need bigger sounds) just when Harmony and Call and Response should answer, and whistling can
-  turn chimes to glass (Birds Lift). Options for DadCraft: (a) singing classes out of the music group (YAMNet often
-  names singing "Music" itself, bench singing->music 5/10, so only partly); (b) Make Room holds off while Harmony's
-  tracker hears a held pitched voice near the mic; (c) leave it. **DadCraft (Nov 5): "lets leave it for now and
-  iterate later in dev."**
-- **A fan is in no kind** (DadCraft's marked bathroom fan, Nov 7 session): it read as nothing, partly as water.
-  His pick (Nov 9): log first. Each judgement now keeps YAMNet's top classes and its strongest machine class
-  (`replay_kinds.py --machines`, design/sound-kinds.md Step 18). **His call (Nov 10):** "i'm not sure what we
-  should do with machine sounds other than ignore them": recognised and kept out of the kinds (no response of their
-  own). Next: his fan again with Session Log on, `--machines` on it to set where a machine counts, then the build.
-- **Testers' feedback** on rc6 (tester guide "What to test").
-- ~~**Before advertising** (item 22): GitHub repo topics, maybe a short demo GIF.~~ DONE Nov 5: topics and description
-  set, a README GIF of the Now line from rc6 on the Moto. Still to make: a short clip with sound (DadCraft records it).
-- **Release to Play** (item 14): the release key and the Play forms (docs/RELEASING.md).
+**In short (Nov 13; the entries below keep the history):**
+- **DadCraft's listens (Ouralia Dev):**
+  - Hear Far Sounds (`sk_layer`, accuracy step 4e): switch on vs off with a sound across the room or next door; a
+    distance sweep (tap running, step back about 1 m every 10 s) to find where it stops; more quiet rooms.
+  - The roadside (Traffic Passes Through, Traffic Flow) and outdoor birds (Birds Lift the Chimes).
+  - The Now line somewhere busy with Mixed on: unsure should hold, not flicker.
+  - The found pad: hum a steady note with Pad Sounds on Found.
+  - Then fixes from what fails.
+- **A fan is in no kind** (his bathroom fan, Nov 7): machine sounds get recognised and ignored (DadCraft, Nov 10).
+  The Freesound bench and the far-layer try (design/sound-kinds.md Step 18) leave it to his fan's own log, Saturday
+  Nov 14 at the earliest: if YAMNet gives it a machine score, a gate; if not, a new idea (e.g. unchanging for
+  minutes). Then the build.
+- **Singing and whistling count as music in the room** (Nov 5): can trigger Make Room for Music and turn chimes to
+  glass. Options (a) singing out of the music group, (b) Make Room holds off for a held voice near the mic, (c)
+  leave it. **DadCraft (Nov 5): "lets leave it for now and iterate later in dev."**
+- **Play Store** (item 14, docs/RELEASING.md): rc7.1 on closed testing since Nov 9; 12+ testers for 14 days, then
+  apply for production. His call before production: keep the personal account (shows his legal name under "About
+  the developer") or go organization.
+- **Testers' feedback** on rc6-rc7.1 (tester guide "What to test").
+- **Later, on his word:** the next release (rc8, versionCode 21); The Band Plays rename.
 - Older, still waiting on DadCraft: the phone check of pocket shaping, Clear Catches' verdict, a cost per feature
-  (item 22). (~~Call pause~~ **checked Nov 6**: the sound now comes back after a call, design/audio-io.md "Calls and
-  other audio"; DadCraft: "that worked ... hung up and Ouralia came back".)
+  (item 22).
+
+Settled since Nov 5 (history in the entries below and design/sound-kinds.md): the sink with Mixed heard (Nov 6);
+water/birds needn't hold back for talk, Found Palette stays an off switch (Nov 6); learning from session logs done
+(Step 17); water's 0.12 minimum stays unapplied (Step 16); raising quiet sound before YAMNet SET ASIDE (Step 7); the
+far cutoff stays 0.829 (Nov 10); the call pause checked (Nov 6); a demo clip with sound dropped (Nov 10).
 
 
 **Project review (Codex, Nov 3):** [branch/code/performance review](PROJECT-REVIEW-2026-11-03.md).
