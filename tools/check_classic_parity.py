@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Compare kit-free audio to Kit Classic at a reference commit, in isolated seeded processes.
 
-Run with tools/.venv/bin/python tools/check_classic_parity.py [0515f8d].
+Run with tools/.venv/bin/python tools/check_classic_parity.py [c97e816].
 Only synthetic input is used. Temporary patches/audio are removed when the check ends.
 """
 import itertools
@@ -130,4 +130,4 @@ if __name__ == '__main__':
     elif sys.argv[1:2] == ['--render']:
         render(*sys.argv[2:])
     else:
-        sys.exit(compare(sys.argv[1] if len(sys.argv) > 1 else '0515f8d'))
+        sys.exit(compare(sys.argv[1] if len(sys.argv) > 1 else 'c97e816'))

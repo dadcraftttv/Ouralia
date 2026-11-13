@@ -97,7 +97,7 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
   choices/defaults unchanged; three reactive controls kept. The vocoder's note messages remain after removing
   their kit plumbing; expanded parity caught and corrected an initial frequency-read regression. No C/native
   changes, Harmony Organ and Chip crusher retained, composer frozen. Old saved state/presets ignore kit keys,
-  keep surviving values/locks and save without kit data (5 Java checks). Fixed-seed reference 0515f8d: 55/55
+  keep surviving values/locks and save without kit data (5 Java checks). Fixed-seed reference c97e816: 55/55
   16-second synthetic renders sample-identical (4 parts × 3 sources × 4 control cases, 3 composer cases,
   4 vocoder carriers), peak difference 0; baseline Pd diagnostics identical too. Dev assemble and desktop
   tests/application compile passed. Maestro unchanged: 371 passed, 1 skipped. Full tier: 166/167 Pd sections and all 11 supporting suites passed (294 s).

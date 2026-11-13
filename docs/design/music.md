@@ -302,7 +302,7 @@
   (GLASS_RING_X 1.2 x Classic's), a 6 ms rise, x1.612 to match Classic. Built from plain objects (no expr~): one
   vline~ fade in dB below full, scaled per partial, +100, dbtorms~; a second vline~ is the rise and level. The
   fundamental is Classic's own oscillator. With Classic the glass lines never start and Classic's sum is x1:
-  check_classic_parity against 1f938ec 55/55 sample-identical. Its signal objects join the voice's switch~ group
+  check_classic_parity against cbf7d78 55/55 sample-identical. Its signal objects join the voice's switch~ group
   (left outside, they made a DSP loop: silence). Walking notes share the voices, so they change too; found notes
   don't. Pd test "Chime Voice Glass" (E4 328 Hz: strike +0.2 dB against Classic, 2.76x partial -12 dB vs -83,
   -35 dB 0.4 s on). DadCraft's A/B (Oct 31): "Glass sounds great. can we keep both options and have a Both option
@@ -314,7 +314,7 @@
   that area." So Bass Voice replaces Bass Sound (`bass_src`; the found bass's `fb_*` voice, its `fbass` group,
   `FB_GAIN` and its test are gone; stored `bass_src` values are simply ignored). Glass Bowl is the Pad Voice's bowl
   (a pure tone, a twin `BASS_BOWL_BEAT_HZ` 0.31 Hz above at `PAD_BOWL_TWIN_LEVEL`, the octave at `PAD_BOWL_OCTAVE`)
-  at `BASS_BOWL_UP` 2 x the bass note, 131-262 Hz: the register of the first, lower Glass Bowl pad (0c8bedd, before
+  at `BASS_BOWL_UP` 2 x the bass note, 131-262 Hz: the register of the first, lower Glass Bowl pad (26314a9, before
   the octave up), and a pure tone at 65 Hz would be lost in earbuds. The held bass: each new note eases in over
   `PAD_BOWL_SWELL_MS` 4 s (on top of the bass's own dip and rise). Calm Builds' bass: each note eases in over
   `CALM_BOWL_RISE_MS` 300 and rings down over `CALM_BOWL_RING_MS` 2.6 s into the next, no pluck. The tones
@@ -517,7 +517,7 @@ all four chord notes. See dcs-objects "Kits: REMOVED Oct 30" for removal scope a
 
 ## Removed and restored, Nov 1
 
-Song Shape, Chord Colours, New Pieces, The Band Plays and Wandering Home were removed (Ouralia 1277104; DadCraft: "if
+Song Shape, Chord Colours, New Pieces, The Band Plays and Wandering Home were removed (Ouralia ebc0714; DadCraft: "if
 the room or environment doesn't drive it, then lets take them out"), then restored the same day, all five (DadCraft:
 "no no no, i want that stuff in the drums. can we add that code back in?"; asked which, "Everything removed").
 Then (Nov 1) made the fixed behaviour, switches removed: DadCraft, "can we make those being on the default and remove

@@ -68,7 +68,7 @@ idea goes into its item and into "Open now". Every item below keeps its history;
 
 
 **Project review (Codex, Nov 3):** [branch/code/performance review](PROJECT-REVIEW-2026-11-03.md).
-Finding 5 DONE Nov 4 (abe4da3): the test runner stops on native-build failure and prints diagnostics; regression tests in
+Finding 5 DONE Nov 4 (3ed38e3): the test runner stops on native-build failure and prints diagnostics; regression tests in
 both tiers. Finding 6 DONE Nov 4: CI also runs on pushes to `sound-kinds`, fails on a stale `test_scene.pd`, builds
 Debug and Ouralia Dev; `desktop/test.sh` also compiles the desktop app. Finding 1 DONE Nov 4: Music in Stereo off closes the side after its effects, so a held
 Freeze no longer keeps it wide. Finding 2 DONE Nov 4: the classifier runner's Pd sends go through one queue in

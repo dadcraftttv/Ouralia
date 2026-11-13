@@ -595,7 +595,7 @@ bright with no lows (chirps). So he had not heard the high Glass yet. His call: 
 high glass one. The found beat should stop gathering chirps (events.log shows "Skipped a chirp"). If chirps now
 earn chimes by themselves too often, 8 dB is the knob.
 
-**His re-listen (Nov 2, 2878343, indoors):** "knocking during birdsong now gives a high glass chime". The event
+**His re-listen (Nov 2, d7e356d, indoors):** "knocking during birdsong now gives a high glass chime". The event
 log for that run: 13 chirps skipped and none caught once birds had settled; 3 hats were caught in the first second
 or so of birds, before the window turned on (it needs about 3 s of birds judgements). A few chirps were still
 answered as sung phrases (not asked about). Outdoors later.
@@ -834,7 +834,7 @@ a passing car can yield a pad opening without a bell, and muted pad plus no earn
 
 **Listening/checks:** compare the switch Off/On at fixed settings with Music in Stereo on, first steady traffic
 then separated passes, followed by talk/handling/wind. Listen for the pad opening on the rise and at most one earned
-bell crossing; check that a continuous engine does not keep retriggering. Claude Code reviewed it (Nov 3, 74dc295).
+bell crossing; check that a continuous engine does not keep retriggering. Claude Code reviewed it (Nov 3, 845bbbe).
 Moto CPU A/B (Nov 3, Ouralia Dev playing, Music + Music in Stereo + Birds Lift the Chimes on so the listener runs;
 `top` 2 s samples, a flaky USB link kept 14 and 20 of 30): Traffic off median 62.0% of a core, on 59.25%, ranges
 54-67% both: no measurable cost (target <2 extra points), 0 underruns in logcat. DadCraft's roadside verdict remains open. Desktop checks
@@ -842,7 +842,7 @@ and measurements are recorded in the handoff and below once complete; these do n
 
 Rough desktop patch-only CPU A/B (three repetitions, median process time, 24 s synthetic audio each): old
 0.778 s, traffic off 0.807 s, on 0.823 s. About 0.19 percentage points of a desktop core beyond the old path,
-0.07 beyond Off; this excludes YAMNet and is not a phone estimate. Actual pre-change 421f9bf versus the new patch
+0.07 beyond Off; this excludes YAMNet and is not a phone estimate. Actual pre-change 07ae7ce versus the new patch
 with traffic off: fixed-seed synthetic pad/chime passage sample-identical in mono and stereo, peak difference 0.
 
 **Verification:** full tier passed, 185 Pd sections plus all Java, desktop, release and eight supporting Pd suites
