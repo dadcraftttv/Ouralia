@@ -1294,3 +1294,17 @@ clips:** 4 of 50 machine clips read as one kind for 40%+ of their windows (one a
 traffic 40-75%), and all four had a machine score of only 0.02-0.04. Neither a machine-score gate nor the layer
 catches them. So: his Saturday log first. If his fan scores a machine class, the gate (T 0.2) is safe to build; if
 not, ignoring machines needs something new (e.g. a sound that doesn't change for minutes), designed against his log.
+
+**"Doesn't change for minutes", checked on his logs (Claude Code, Nov 13; analysis only, nothing built; DadCraft: "go
+ahead with 1 and 2").** His Nov 7 fan session (20261107-110934; the fan was already on at the start) against his
+other 24 sessions with scores (~6 h, 1373 windows). Per 30 s window (10 s hop): the level's median and interquartile
+range (the Moto's brief dropouts make the plain spread useless: 60 dB swings with the fan alone), the strongest of
+the six kinds' mean score, and quiet's. The fan's fingerprint: level -34 to -39 dB, IQR ~2 dB, no kind above 0.09,
+quiet 0.03 or less: steady, not quiet, and nothing. A rule of IQR <= 3 dB, every kind < 0.1, quiet < 0.05 matches
+16 of 33 fan windows and 4 of 1373 elsewhere (0.3%, all in 20261105-172546 at ~-40 dB: maybe a machine too). His
+real tap (Nov 6 sink session) can't match: 15-20 dB louder and water >= 0.2. **But** the fan's water misread
+(2:04-2:40, water up to 0.59, birds 0.26) came with the level 3-6 dB above the fan's steady level, so a background
+rule alone wouldn't hold it back: it needs "a kind must rise clearly above a steady background", or it was real
+water (DadCraft doesn't remember whether he moved the phone or ran a tap then; on Saturday a mark for each move or
+tap settles it). His Saturday log still decides first: a machine
+score makes the gate the simpler build; this is the fallback, and its measure is ready.
