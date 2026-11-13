@@ -61,6 +61,31 @@ class PrerequisiteTests(unittest.TestCase):
                 sections.assert_called_once()
 
 
+class TimeLimitTests(unittest.TestCase):
+    """A stuck section fails with its name instead of holding the tier forever (Nov 13)."""
+    def test_sh_gives_up_on_a_stuck_command(self):
+        import time
+        t0 = time.time()
+        code, text = run_tests.sh(["sleep", "5"], timeout=0.3)
+        self.assertEqual(code, 124)
+        self.assertIn("TIMED OUT", text)
+        self.assertLess(time.time() - t0, 3)
+
+    def test_a_stuck_section_fails_with_its_title(self):
+        import os, tempfile
+        calls = []
+        def stuck(cmd, **kw):
+            calls.append(kw.get("timeout"))
+            return 124, "realloc called\nTIMED OUT after 300 s"
+        with tempfile.TemporaryDirectory() as d, patch.object(run_tests, "COSTS", os.path.join(d, "costs.json")), \
+                patch.object(run_tests, "sh", side_effect=stuck):
+            fails, out, n = run_tests.run_patch_sections(lambda t: "7z6. underwater" in t, 1)
+        self.assertEqual((fails, n), (1, 1))
+        self.assertTrue(calls and calls[0] >= run_tests.SECTION_MIN_LIMIT)
+        self.assertIn("[7z6. underwater", out[0])
+        self.assertIn("TIMED OUT", out[0])
+
+
 class ReadsTests(unittest.TestCase):
     """A section runs only the earlier statements it reads from (Nov 13: 7z6 hung pulling in 137 it didn't need)."""
     def reads(self, src):

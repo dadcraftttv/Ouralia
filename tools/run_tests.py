@@ -22,6 +22,7 @@ PY = os.path.join(TOOLS, ".venv", "bin", "python")
 LIB = os.path.join(TOOLS, ".libpd", "libpd.so")
 PATCH_TESTS = os.path.join(TOOLS, "test_patch.py")
 COSTS = os.path.join(TOOLS, ".test_costs.json")
+SECTION_MIN_LIMIT = 300   # s: the least a test_patch section gets before it counts as stuck (4x its usual time if more)
 OTHER_PD = ["test_scene_loader.py", "test_scene_sensors.py", "test_rj_analysis.py", "test_bundled_scenes.py",
             "test_scene_helpers.py", "test_scene_graphics.py", "test_dcs.py", "test_fx_port.py"]
 SCOPES = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ListComp, ast.SetComp, ast.DictComp, ast.GeneratorExp)
@@ -223,8 +224,12 @@ def worker(path, lib, ids):
 
 
 # ---------------------------------------------------------------- the runner
-def sh(cmd, cwd=ROOT, env=None):
-    p = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True)
+def sh(cmd, cwd=ROOT, env=None, timeout=None):
+    try:
+        p = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired as ex:   # (the child is killed; what it printed so far comes back with the note)
+        part = lambda b: b.decode(errors="replace") if isinstance(b, bytes) else (b or "")
+        return 124, part(ex.stdout) + part(ex.stderr) + "\nTIMED OUT after %.0f s" % timeout
     return p.returncode, p.stdout + p.stderr
 
 
@@ -239,8 +244,12 @@ def run_patch_sections(pick, workers):
     # every section in a process of its own: Pd draws its random seeds from a per-process counter, so a section then
     # hears the same random choices whatever else runs (full or quick, any machine): its result is repeatable
     bins = [[est(k), [k]] for k in sorted(ks, key=est, reverse=True)]     # (longest first)
+    # a stuck section fails on its own instead of holding the tier forever (Nov 13: 7z6 hung for minutes unnoticed);
+    # generous, as the tier runs every core at once: the longest section takes ~150 s under that load
+    limit = lambda b: max(SECTION_MIN_LIMIT, 4 * b[0])
     def go(b):
-        return sh([PY, os.path.abspath(__file__), "--worker", PATCH_TESTS, LIB] + [str(k) for k in sorted(b[1])])
+        return sh([PY, os.path.abspath(__file__), "--worker", PATCH_TESTS, LIB] + [str(k) for k in sorted(b[1])],
+                  timeout=limit(b))
     fails, out = 0, []
     with ThreadPoolExecutor(max(1, workers)) as ex:
         for b, (code, text) in zip(bins, ex.map(go, bins)):
@@ -257,7 +266,8 @@ def run_patch_sections(pick, workers):
                 elif "FAIL" in line or "Traceback" in line or "Error" in line[:40]:
                     out.append(line[line.find("FAIL"):] if "FAIL" in line else line)
             if code and not any("@@fails" in l for l in text.splitlines()):
-                out.append("FAIL: a worker stopped: " + text.strip().splitlines()[-1] if text.strip() else "FAIL: a worker stopped")
+                last = text.strip().splitlines()[-1] if text.strip() else "no output"
+                out.append("FAIL: [%s] a worker stopped: %s" % (sections[b[1][0]]["title"].strip("- ")[:60], last))
                 fails += 1
     json.dump(costs, open(COSTS, "w"), indent=0, sort_keys=True)
     return fails, out, len(ks)
