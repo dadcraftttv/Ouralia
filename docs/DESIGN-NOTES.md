@@ -118,6 +118,11 @@ This is not a phone estimate. The later Moto A/B and DadCraft's verdict are reco
 - `app/src/main/res/values/strings.xml` — escape apostrophes as `\'` (an unescaped one broke the aapt build once).
 
 ## Dependencies
+- **Native debug symbols** (Nov 26, after Play's warning on 1.0.0; DadCraft: "fix it for 1.0.1"): the shipped .so
+  files are stripped, so their symbol tables (debug info dropped, 6 MB) live in `third_party/native-symbols/`
+  (`pd-core.zip`, `dcs.zip`, refreshed by the two build scripts). `tools/native_symbols.py` matches them to the
+  bundle's libraries by build ID; `release_apk.sh` writes the zip for Play, test_release.py checks they still match.
+  The binaries stay byte-identical (no change to what plays). Oboe and TensorFlow Lite: prebuilt, none.
 - **pd-core is our own build** (Oct 16; 1.4.2-pdscenes.2 since Oct 22: `PdAudio.setInputPreset` and `inputChannels` in
   `audioRuntimeInfo`, for the room in stereo): `io.github.libpd.android:pd-core` from `third_party/maven` (committed;
   `settings.gradle.kts` takes the libpd group only from there, exclusiveContent). `tools/build_pdcore.sh` rebuilds it from

@@ -116,7 +116,11 @@ Made by DadCraft, a hobbyist musician.
 
 **The .aab.** With the release key in `~/.gradle/gradle.properties`, `tools/release_apk.sh` also writes
 `Ouralia-<version>.aab` (Play refuses a debug-signed bundle, so without the key it says so and makes none). Upload
-the `-mapping.txt` beside it in Play Console (App bundle explorer, Downloads) so Play's crash reports are readable.
+the `-mapping.txt` beside it in Play Console (App bundle explorer, Downloads) so Play's crash reports are readable,
+and `-native-debug-symbols.zip` in the same place (native debug symbols) so crashes inside libpd, pd-core's objects
+and dcs are too (since 1.0.1; Oboe and TensorFlow Lite come stripped from Maven and stay without). The zip is made from
+`third_party/native-symbols/`, which `tools/build_pdcore.sh` and `tools/build_dcs_android.sh` refresh: commit it
+with the binaries (test_release.py fails if they don't match).
 A Play versionCode can never be reused or go down, so the first Play upload takes the next free code.
 
 ## After any release

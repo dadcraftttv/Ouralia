@@ -39,5 +39,7 @@ rm -rf "$OUT/$VERSION"
 mkdir -p "$OUT"
 cp -r "PdCore/pd-core/build/repos/releases/io/github/libpd/android/pd-core/$VERSION" "$OUT/"
 cp PdCore/pd-core/build/repos/releases/io/github/libpd/android/pd-core/maven-metadata.xml* "$OUT/"
+# the symbol tables of this very build, for Play's crash reports (commit third_party/native-symbols with the aar)
+python3 "$H/native_symbols.py" store pd-core "$D/PdCore/pd-core/build/intermediates/ndkBuild/release/obj/local"
 echo "pd-core $VERSION built from $REPO $COMMIT:"
 sha256sum "$OUT/$VERSION/pd-core-$VERSION.aar"

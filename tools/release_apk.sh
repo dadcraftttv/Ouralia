@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Builds a release APK and lays out what a release needs (docs/RELEASING.md): the APK named for its version, its
 # SHA-256, and R8's mapping file (to read crash reports from the shrunk build). Publishes nothing.
+# With the .aab also Ouralia-<version>-native-debug-symbols.zip: our C libraries' symbol tables for Play.
 #   tools/release_apk.sh [--replace]  -> ~/Downloads/Ouralia-<version>.apk, .sha256 and -mapping.txt
 # With the Play release key in ~/.gradle/gradle.properties, also Ouralia-<version>.aab for Play (Play refuses a bundle
 # signed with the debug key, so without the key there is no .aab).
@@ -23,7 +24,10 @@ python3 tools/test_release.py | tail -1
 cp app/build/outputs/apk/release/app-release.apk "$OUT.apk"
 cp app/build/outputs/mapping/release/mapping.txt "$OUT-mapping.txt"
 (cd "$(dirname "$OUT")" && sha256sum "$(basename "$OUT").apk" > "$(basename "$OUT").sha256")
-[ -n "$HAS_KEY" ] && cp app/build/outputs/bundle/release/app-release.aab "$OUT.aab"
+if [ -n "$HAS_KEY" ]; then
+    cp app/build/outputs/bundle/release/app-release.aab "$OUT.aab"
+    python3 tools/native_symbols.py bundle "$OUT.aab" "$OUT-native-debug-symbols.zip"
+fi
 SIGNER=$("$(ls -d "${ANDROID_HOME:-$HOME/Android/Sdk}"/build-tools/* | tail -1)/apksigner" verify --print-certs "$OUT.apk" \
     | sed -n 's/.*certificate DN: //p' | head -1)
 echo "Ouralia $VERSION (versionCode $CODE), commit $(git rev-parse --short HEAD)"
@@ -33,6 +37,7 @@ echo "  signed by: $SIGNER"
 echo "  mapping: $OUT-mapping.txt (keep it with the APK; not for the release page)"
 if [ -n "$HAS_KEY" ]; then
     echo "  $OUT.aab (for Play; upload the mapping file with it)"
+    echo "  $OUT-native-debug-symbols.zip (for Play too, App bundle explorer: native debug symbols)"
     echo "  aab signed by: $(keytool -printcert -jarfile "$OUT.aab" | sed -n 's/^Owner: //p' | head -1)"
 else
     echo "  no .aab: the Play release key isn't set up (docs/RELEASING.md)"

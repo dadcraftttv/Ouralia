@@ -17,4 +17,6 @@ for abi in armeabi-v7a arm64-v8a x86 x86_64; do
     mkdir -p "$ROOT/app/src/main/jniLibs/$abi"
     cp "$W/libs/$abi/libdcs.so" "$ROOT/app/src/main/jniLibs/$abi/"     # (not libpd.so: pd-core brings it)
 done
+# the symbol tables of this very build, for Play's crash reports (commit third_party/native-symbols with libdcs.so)
+python3 "$H/native_symbols.py" store dcs "$W/obj/local"
 echo "libdcs.so built:"; ls -la "$ROOT"/app/src/main/jniLibs/*/libdcs.so

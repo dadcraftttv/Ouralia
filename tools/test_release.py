@@ -60,5 +60,11 @@ for apk in apks if tools else []:
     check(pkg and pkg.group(1) == want_pkg, "%s: package %s" % (name, pkg.group(1) if pkg else "?"))
     check(label and label.group(1) == want_label, "%s: named %s (%s)" % (name, want_label, label.group(1) if label else "?"))
 
+# Play's native crash reports: the stored symbol tables belong to the libraries we ship (tools/native_symbols.py)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import native_symbols
+bad = native_symbols.mismatches()
+check(not bad, "native debug symbols match pd-core and libdcs.so" + (": " + "; ".join(bad[:4]) if bad else ""))
+
 print("ALL PASSED" if not fails else "%d FAILED" % fails)
 sys.exit(1 if fails else 0)
