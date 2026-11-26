@@ -91,7 +91,7 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   updating PRIVACY.md and its list.
 
 ## Current state (keep this short: history goes in DESIGN-NOTES "Status log")
-- **Release:** rc6 (0.9.0-rc6, versionCode 16, Nov 5) = **the first public beta** (DadCraft: "i'd like to open
+- **Release:** 1.0.0 (Nov 26, below). rc6 (0.9.0-rc6, versionCode 16, Nov 5) = **the first public beta** (DadCraft: "i'd like to open
   this up to a public beta today"), a GitHub pre-release, debug key. Everything since rc5.2: kits removed, the music
   answers the world (chimes only for a heard cause, Notes Only for Bigger Sounds, the pad under a steady sound),
   sound kinds in every phone build (ARM) with Mixed Surroundings as the one switch over its seven responses, presets
@@ -101,7 +101,9 @@ Setup: `export JAVA_HOME=~/.jdks/jbr-21.0.11 PATH=$JAVA_HOME/bin:$PATH`; libpd v
   reopens 2 s after a call; Bluetooth earbuds left it silent), ~/Downloads/Ouralia-0.9.0-rc6.1.apk. **rc6.2** (0.9.0-rc6.2, versionCode 18, Nov 6) = rc6.1 + only
   the Now line shown without Realm Hopper, ~/Downloads/Ouralia-0.9.0-rc6.2.apk. **rc7** (0.9.0-rc7, versionCode 19, Nov 7) = everything from sound-kinds, the
   first release-key build (APK on GitHub, .aab on Play). **rc7.1** (0.9.0-rc7.1, versionCode 20, Nov 9) = rc7 + only
-  the version number: Play had used code 19 on a first upload made before the signing key was set. Next: rc8 / versionCode 21.
+  the version number: Play had used code 19 on a first upload made before the signing key was set. **1.0.0**
+  (versionCode 21, Nov 26) = the first full release, Play production (DadCraft: "make that our 1.0 release"): all of
+  sound-kinds. Next: 1.0.1 / versionCode 22 (a fix), 1.1.0 for new features.
   **From rc7: GitHub and Play in parity** (DadCraft, Nov 7): one commit and versionCode per release, the APK on
   GitHub and the .aab on Play, both signed by the release key (Play App Signing with our own key; RELEASING.md
   "Parity"). Debug-signed rc6.x installs must uninstall once for rc7.

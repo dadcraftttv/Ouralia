@@ -19,7 +19,7 @@ the one list of what is not done, checked against the code. In the same commit t
 something: take it off "Open now", and mark its item (BUILT / REMOVED / SET ASIDE, the date, where it lives). A new
 idea goes into its item and into "Open now". Every item below keeps its history; "Open now" is the only to-do list.
 
-## Open now (checked 2026-11-13: main = rc7.1, Nov 9; sound-kinds adds machine logging and test-runner fixes, nothing new for users)
+## Open now (checked 2026-11-26: main = 1.0.0, Nov 26, with all of sound-kinds)
 
 **In short (Nov 13; the entries below keep the history):**
 - **DadCraft's listens (Ouralia Dev):**

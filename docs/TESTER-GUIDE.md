@@ -1,6 +1,6 @@
 # Beta Tester Guide
 
-Nov 7, 2026 · DadCraft · for rc7.1 (0.9.0-rc7.1), the public beta
+Nov 26, 2026 · DadCraft · for 1.0.0, the first full release
 
 **Coming from rc5.2 or older?** rc6 installs over it and keeps your settings and presets. The kits are gone (the
 Classic synth voices and Found sounds are unchanged), so an old preset's kit choices are ignored. The release history
@@ -18,6 +18,10 @@ There are two ways to use it:
 - **Scenes (optional).** Ready-made experiences from the original RjDj, which react to sound and to how you move the phone. The app comes with four official RjDj example scenes to try (see "The four built-in scenes" below). You can also import other scenes you already have, as a zip file or folder.
 
 ## What's new
+
+**New in 1.0.0 (Nov 26):** the first full release, on Google Play and GitHub. It installs over rc7 or rc7.1 and keeps your settings.
+- **The Band tab is now Score** (it isn't really a band any more). Older notes below still call it The Band.
+- **Session logs** (when switched on) also note the top three sounds the classifier heard and its strongest machine sound (fans, air con), to help teach it to ignore machines.
 
 **New in rc7.1 (Nov 9):** the same app as rc7 with a new version number, the first build on Google Play (Play had used rc7's number on an upload that didn't go through). rc7.1 installs over rc7 and keeps your settings.
 

@@ -18,7 +18,7 @@ The steps for a release, in order. Nothing is published until DadCraft says so.
    - `Ouralia-<version>-mapping.txt`, R8's map from the shrunk names back to ours. Keep it, don't publish it: a
      crash report from that APK can only be read with it (`retrace` in the SDK's cmdline-tools).
 5. **On the phone.** Install that APK (`adb install -r`), press Start, listen. DadCraft's ears decide.
-6. **Publish** (when DadCraft asks): `gh release create v<version> --prerelease` with the APK, notes saying what
+6. **Publish** (when DadCraft asks): `gh release create v<version>` with the APK (`--prerelease` only for an rc), notes saying what
    changed, how to install, and the SHA-256 line. Then push the commits.
 
 ## Before the first Play release

@@ -157,3 +157,7 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
 - **Nov 9: rc7.1** (0.9.0-rc7.1, versionCode 20) = rc7 with only the version raised, the first Play build: Play
   App Signing set to the release key via PEPK (SHA-256 4E:B3:00:62...71:FF), but a first .aab upload made before
   that took versionCode 19 and Play never reuses a code (DadCraft: "build rc7.1").
+- **Nov 26: 1.0.0** (versionCode 21), the first full release: Play accepted Ouralia for production and asked for a
+  new version (DadCraft: "lets get everything merged into main and make that our 1.0 release"). sound-kinds merged
+  (fast-forward): the Band tab is now Score, the Session Log keeps YAMNet's top three classes and its strongest
+  machine class, test-runner fixes. GitHub and Play in parity, the release key.
