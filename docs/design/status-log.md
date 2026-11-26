@@ -160,4 +160,5 @@ CLAUDE.md keeps only what is open now; its old "Current state" list, as it stood
 - **Nov 26: 1.0.0** (versionCode 21), the first full release: Play accepted Ouralia for production and asked for a
   new version (DadCraft: "lets get everything merged into main and make that our 1.0 release"). sound-kinds merged
   (fast-forward): the Band tab is now Score, the Session Log keeps YAMNet's top three classes and its strongest
-  machine class, test-runner fixes. GitHub and Play in parity, the release key.
+  machine class, test-runner fixes. GitHub and Play in parity, the release key; GitHub release v1.0.0 and Play
+  production published the same day (Play Console: "App update published").
